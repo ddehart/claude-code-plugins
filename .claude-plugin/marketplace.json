@@ -1,0 +1,14 @@
+{
+  "name": "ddehart-plugins",
+  "owner": {
+    "name": "Derek DeHart"
+  },
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "source": "./plugins/dev-workflow",
+      "description": "Reusable dev workflow agents: test running, branch creation, and conventional commits",
+      "version": "1.0.0"
+    }
+  ]
+}

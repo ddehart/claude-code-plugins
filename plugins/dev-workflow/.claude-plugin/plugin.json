@@ -1,0 +1,9 @@
+{
+  "name": "dev-workflow",
+  "description": "Dev workflow agents for test running, branch creation, and conventional commits",
+  "version": "1.0.0",
+  "author": {
+    "name": "Derek DeHart"
+  },
+  "keywords": ["git", "testing", "commits", "branches", "workflow"]
+}
