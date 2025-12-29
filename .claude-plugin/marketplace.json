@@ -7,7 +7,7 @@
     {
       "name": "dev-workflow",
       "source": "./plugins/dev-workflow",
-      "description": "Reusable dev workflow agents: test running, branch creation, and conventional commits",
+      "description": "Reusable dev workflow agents: test running, branch creation, conventional commits, and Linear issue management",
       "version": "1.0.0"
     }
   ]
