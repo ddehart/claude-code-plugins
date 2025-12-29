@@ -76,8 +76,26 @@ Return: Confirmation with new status
 - assignee (user name, email, ID, or "me")
 
 **Example Markdown description:**
+
+When constructing multiline descriptions, use actual newlines in the description parameter, not escape sequences:
+
 ```
-description: "**Summary**\n\nBrief description of the issue.\n\n**Steps to Reproduce**\n- Step 1\n- Step 2\n\n**Expected Behavior**\n\nWhat should happen."
+mcp__linear__create_issue(
+  team: "TeamName",
+  title: "Bug in login flow",
+  description: "**Summary**
+
+Bug occurs when user attempts to login with SSO.
+
+**Steps to Reproduce**
+- Navigate to login page
+- Click SSO button
+- Enter credentials
+
+**Expected Behavior**
+
+User should be redirected to dashboard."
+)
 ```
 
 ## Status Transitions
