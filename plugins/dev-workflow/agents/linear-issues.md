@@ -22,6 +22,7 @@ Your responsibility is to interact with Linear via MCP tools to manage issues, k
 The Linear MCP server must be configured and enabled in the project:
 - Linear API key set in environment or MCP config
 - `@anthropic/mcp-linear` or equivalent MCP server running
+- Verify tool availability with `/mcp list` (tool names should match `mcp__linear__*` pattern)
 
 If Linear tools fail with connection or auth errors, escalate immediately.
 
@@ -71,9 +72,19 @@ Return: Confirmation with new status
 **Optional fields:**
 - description (Markdown supported - see example below)
 - state (status name, type, or ID - e.g., "Todo", "In Progress", "Done")
-- priority (0=None, 1=Urgent, 2=High, 3=Normal, 4=Low)
+- priority (see priority values below)
 - labels (array of label names or IDs)
 - assignee (user name, email, ID, or "me")
+
+**Priority values:**
+
+| Value | Label  |
+|-------|--------|
+| 0     | None   |
+| 1     | Urgent |
+| 2     | High   |
+| 3     | Normal |
+| 4     | Low    |
 
 **Example Markdown description:**
 
