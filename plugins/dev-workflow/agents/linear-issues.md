@@ -19,7 +19,15 @@ Your responsibility is to interact with Linear via MCP tools to manage issues, k
 
 ## Prerequisites
 
-The Linear MCP server must be configured and enabled in the project. If Linear tools fail with connection or auth errors, escalate immediately.
+The Linear MCP server must be configured and enabled in the project:
+- Linear API key set in environment or MCP config
+- `@anthropic/mcp-linear` or equivalent MCP server running
+
+If Linear tools fail with connection or auth errors, escalate immediately.
+
+## Terminology
+
+The `state` parameter in Linear API refers to issue status (e.g., "Todo", "In Progress", "Done"). This document uses "status" when discussing the concept and `state` when showing API parameters.
 
 ## Common Operations
 
@@ -61,16 +69,38 @@ Return: Confirmation with new status
 - title
 
 **Optional fields:**
-- description (Markdown supported)
+- description (Markdown supported - see example below)
 - state (status name, type, or ID - e.g., "Todo", "In Progress", "Done")
 - priority (0=None, 1=Urgent, 2=High, 3=Normal, 4=Low)
 - labels (array of label names or IDs)
 - assignee (user name, email, ID, or "me")
 
+**Example Markdown description:**
+```
+description: "**Summary**\n\nBrief description of the issue.\n\n**Steps to Reproduce**\n- Step 1\n- Step 2\n\n**Expected Behavior**\n\nWhat should happen."
+```
+
 ## Status Transitions
 
 1. Get available statuses: `mcp__linear__list_issue_statuses(team: "TeamName")`
 2. Update issue with status name: `mcp__linear__update_issue(id: "ABC-123", state: "Done")`
+
+## Common Workflows
+
+### Create and Assign Issue
+1. Get team list if needed: `mcp__linear__list_teams()`
+2. Create issue with assignee: `mcp__linear__create_issue(team: "...", title: "...", assignee: "me", state: "In Progress")`
+3. Report created issue ID and URL
+
+### Triage Issues
+1. List unassigned issues: `mcp__linear__list_issues(team: "...", state: "Backlog")`
+2. For each issue to triage, update with assignee and status
+3. Summarize changes made
+
+### Close Completed Work
+1. Get issue details: `mcp__linear__get_issue(id: "ABC-123")`
+2. Verify work is complete
+3. Update status: `mcp__linear__update_issue(id: "ABC-123", state: "Done")`
 
 ## Output Format
 
@@ -94,7 +124,10 @@ Found X issues:
 - Linear MCP server not configured or connection fails
 - Authentication errors (token expired, invalid permissions)
 - Team unknown and user hasn't specified which team
+- Multiple teams match a fuzzy name (ask user to clarify)
 - Ambiguous request (e.g., "update the issue" without specifying which one)
+- Issue not found (may be archived or deleted)
+- Permission denied when updating an issue (user may not have access)
 - Rate limiting or API errors from Linear
 
 ## Quality Assurance
@@ -102,5 +135,6 @@ Found X issues:
 - Get team list first if team context is unknown
 - Confirm issue exists before updating
 - Validate status name exists before status transitions
+- Validate priority is within 0-4 range before creating/updating
 - Summarize API responses concisely (don't dump raw JSON)
 - Include issue identifiers (ABC-123) in all responses for easy reference
