@@ -260,11 +260,17 @@ Escalate to main thread when:
 - **Check failures**: Tests fail, linters error, builds break
 - **PR conflicts**: Merge conflicts require resolution
 - **GitHub auth failures**: gh CLI not authenticated or lacks permissions
+  - Authentication errors: `gh auth login` required
+  - Rate limiting: API rate limit exceeded (wait or use different token)
+  - Permission errors: Insufficient repo access (read, write, or admin needed)
+- **Network failures**: Connection timeouts, DNS failures, GitHub API unavailable
 - **Cannot determine PR number**: Ambiguous context (multiple open PRs, not on feature branch)
 - **User approval needed**: Merge strategy choice, handling critical feedback
 - **Code fixes required**: Review feedback requires implementation changes
-- **Linear issue creation**: Recommend creating issues for deferred work (main thread decides)
+- **Issue creation**: Recommend creating GitHub/Linear issues for deferred work (main thread decides)
 - **Parsing errors**: Review data format is unexpected or corrupted
+  - Malformed JSON from gh CLI output
+  - Missing expected fields in API responses
 - **Branch protection**: Required approvals not met, protected branch rules
 
 ## Quality Assurance
@@ -290,7 +296,7 @@ Before returning results, verify:
 - Structure PR bodies with conventional formats
 
 **What this agent does NOT do:**
-- Modify code files (use Edit/Write tools)
+- Modify code files (uses Edit/Write tools)
 - Implement fixes for review feedback
 - Create Linear issues (recommend to main thread)
 - Respond to review comments
