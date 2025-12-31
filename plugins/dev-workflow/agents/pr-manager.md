@@ -62,6 +62,7 @@ For subsequent review checks after fixes are pushed:
    ```bash
    gh pr view <number> --json comments --jq '.comments | map(select(.createdAt > "<last-check-timestamp>"))'
    ```
+   **Note:** The agent is stateless - each invocation starts fresh. The main thread must provide the `<last-check-timestamp>` from the previous check as a parameter.
 2. Re-run check monitoring workflow
 3. Report only new feedback
 
