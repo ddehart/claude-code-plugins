@@ -17,6 +17,7 @@ plugins/
       test-runner.md                # Test execution agent
       branch-creator.md             # Git branch creation agent
       commit-creator.md             # Conventional commits agent
+      pr-manager.md                 # Pull request workflow manager
 ```
 
 **Key concepts:**
