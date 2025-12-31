@@ -62,7 +62,7 @@ For subsequent review checks after fixes are pushed:
    ```bash
    gh pr view <number> --json comments --jq '.comments | map(select(.createdAt > "<last-check-timestamp>"))'
    ```
-   **Note:** The agent is stateless - each invocation starts fresh. The main thread must provide the `<last-check-timestamp>` from the previous check as a parameter (ISO 8601 format: `2024-01-15T10:30:00Z`).
+   **Note:** The agent is stateless - each invocation starts fresh. The main thread must provide the `<last-check-timestamp>` from the previous check as a parameter (ISO 8601 format: `2025-01-15T10:30:00Z`).
 2. Re-run check monitoring workflow
 3. Report only new feedback
 
@@ -297,7 +297,7 @@ Before returning results, verify:
 - Structure PR bodies with conventional formats
 
 **What this agent does NOT do:**
-- Modify code files (uses Edit/Write tools)
+- Modify code files (cannot use Edit/Write tools)
 - Implement fixes for review feedback
 - Create Linear issues (recommend to main thread)
 - Respond to review comments
