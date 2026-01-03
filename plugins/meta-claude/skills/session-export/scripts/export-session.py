@@ -15,6 +15,42 @@ from pathlib import Path
 HOME_DIR = os.path.expanduser("~")
 
 
+def generate_edit_diff(old_string, new_string, max_lines=15):
+    """Generate a simple diff showing added/removed lines.
+
+    Args:
+        old_string: The original text being replaced
+        new_string: The new text replacing it
+        max_lines: Maximum lines to show in diff (truncate if larger)
+
+    Returns:
+        Tuple of (diff_lines, added_count, removed_count)
+    """
+    old_lines = old_string.split('\n') if old_string else []
+    new_lines = new_string.split('\n') if new_string else []
+
+    added = len(new_lines)
+    removed = len(old_lines)
+
+    diff_lines = []
+
+    # Show removed lines (limited)
+    for line in old_lines[:max_lines // 2]:
+        diff_lines.append(f"-{line}")
+
+    if len(old_lines) > max_lines // 2:
+        diff_lines.append(f"  ... ({len(old_lines) - max_lines // 2} more removed)")
+
+    # Show added lines (limited)
+    for line in new_lines[:max_lines // 2]:
+        diff_lines.append(f"+{line}")
+
+    if len(new_lines) > max_lines // 2:
+        diff_lines.append(f"  ... ({len(new_lines) - max_lines // 2} more added)")
+
+    return diff_lines, added, removed
+
+
 def format_tool_params(params, tool_name=''):
     """Format tool parameters for display - match native format."""
     if not params:
@@ -82,12 +118,15 @@ def extract_session_info(entries):
     """Extract session metadata from entries."""
     info = {
         'version': 'unknown',
-        'model': 'claude-sonnet-4-5-20250929',
+        'model': None,
         'cwd': '~',
         'summary': None
     }
 
-    for entry in entries[:10]:  # Check first few entries
+    # Count model occurrences to find the most common one
+    model_counts = {}
+
+    for entry in entries:
         if entry.get('type') == 'summary' and 'summary' in entry:
             info['summary'] = entry['summary']
         if 'version' in entry:
@@ -100,17 +139,59 @@ def extract_session_info(entries):
             else:
                 info['cwd'] = cwd
         if 'message' in entry and 'model' in entry['message']:
-            info['model'] = entry['message']['model']
+            model = entry['message']['model']
+            # Only count actual Claude models, not internal references
+            if model and model.startswith('claude-') and 'code' not in model:
+                model_counts[model] = model_counts.get(model, 0) + 1
+
+    # Pick the most common model
+    if model_counts:
+        info['model'] = max(model_counts, key=model_counts.get)
 
     return info
 
 
+def parse_model_display_name(model_id):
+    """Parse model ID to friendly display name.
+
+    Examples:
+        claude-opus-4-5-20251101 -> Opus 4.5
+        claude-sonnet-4-5-20250929 -> Sonnet 4.5
+        claude-3-5-sonnet-20241022 -> Sonnet 3.5
+    """
+    if not model_id:
+        return "Claude"
+
+    model_id = model_id.lower()
+
+    # Extract model family and version
+    if 'opus' in model_id:
+        family = 'Opus'
+    elif 'sonnet' in model_id:
+        family = 'Sonnet'
+    elif 'haiku' in model_id:
+        family = 'Haiku'
+    else:
+        return "Claude"
+
+    # Extract version number (e.g., "4-5" -> "4.5", "3-5" -> "3.5")
+    import re
+    version_match = re.search(r'(\d+)-(\d+)', model_id)
+    if version_match:
+        version = f"{version_match.group(1)}.{version_match.group(2)}"
+        return f"{family} {version}"
+
+    return family
+
+
 def format_header(info):
     """Format session header - match native format exactly."""
+    model_display = parse_model_display_name(info.get('model', ''))
+
     lines = []
     lines.append("")  # Leading blank line
     lines.append(" * ▐▛███▜▌ *   Claude Code v" + info['version'])  # Leading space
-    lines.append("* ▝▜█████▛▘ *  Sonnet 4.5 · Claude API")
+    lines.append(f"* ▝▜█████▛▘ *  {model_display} · Claude API")
     lines.append(" *  ▘▘ ▝▝  *   " + info['cwd'])
     lines.append("")
     return '\n'.join(lines)
@@ -189,11 +270,22 @@ def format_assistant_message(entry):
 
             # Format parameters - keep concise for verbose tools
             if tool_name == 'Edit':
-                # For edits, just show the file being edited
+                # For edits, show file and diff summary
                 file_path = tool_input.get('file_path', '')
                 filename = Path(file_path).name if file_path else 'file'
-                lines.append(f"⏺ Updated {filename}")
-                lines.append("  ⎿  /plan to preview")
+                old_string = tool_input.get('old_string', '')
+                new_string = tool_input.get('new_string', '')
+
+                diff_lines, added, removed = generate_edit_diff(old_string, new_string)
+
+                lines.append(f"⏺ Update({filename})")
+                lines.append(f"  ⎿  Added {added} lines, removed {removed} lines")
+
+                # Show diff preview (indented)
+                for diff_line in diff_lines[:10]:  # Limit to 10 lines
+                    lines.append(f"     {diff_line}")
+                if len(diff_lines) > 10:
+                    lines.append(f"     ... ({len(diff_lines) - 10} more diff lines)")
             elif tool_name == 'Write':
                 # For writes, just show the file
                 file_path = tool_input.get('file_path', '')
@@ -242,6 +334,12 @@ def format_tool_result_entry(entry):
             continue
 
         if block.get('type') == 'tool_result':
+            # Skip interrupted requests (noise in export)
+            if block.get('is_error'):
+                content_str = str(block.get('content', ''))
+                if 'Request interrupted' in content_str:
+                    continue
+
             result_content = block.get('content', '')
 
             # Handle agent results specially
@@ -297,6 +395,14 @@ def export_session(jsonl_path, output_path):
     # Process entries in order
     for i, entry in enumerate(entries):
         entry_type = entry.get('type', '')
+
+        # Handle compaction boundary - add visual separator
+        if entry_type == 'system' and entry.get('subtype') == 'compact_boundary':
+            output_lines.append("═" * 80)
+            output_lines.append(" Conversation compacted · ctrl+o for history ")
+            output_lines.append("═" * 80)
+            output_lines.append("")
+            continue
 
         if entry_type == 'user':
             formatted = format_user_message(entry)
