@@ -8,6 +8,7 @@ Requires Python 3.6+ (for f-strings and pathlib).
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -21,11 +22,14 @@ def generate_edit_diff(old_string, new_string, max_lines=15):
     Args:
         old_string: The original text being replaced
         new_string: The new text replacing it
-        max_lines: Maximum lines to show in diff (truncate if larger)
+        max_lines: Maximum lines to show in diff (truncate if larger, minimum 2)
 
     Returns:
         Tuple of (diff_lines, added_count, removed_count)
     """
+    # Ensure max_lines is at least 2 to prevent division issues
+    max_lines = max(max_lines, 2)
+
     old_lines = old_string.split('\n') if old_string else []
     new_lines = new_string.split('\n') if new_string else []
 
@@ -175,7 +179,6 @@ def parse_model_display_name(model_id):
         return "Claude"
 
     # Extract version number (e.g., "4-5" -> "4.5", "3-5" -> "3.5")
-    import re
     version_match = re.search(r'(\d+)-(\d+)', model_id)
     if version_match:
         version = f"{version_match.group(1)}.{version_match.group(2)}"
