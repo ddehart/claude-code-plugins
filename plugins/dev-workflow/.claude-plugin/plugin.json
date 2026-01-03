@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow",
   "description": "Dev workflow agents for test running, branch creation, conventional commits, pull request management, and Linear issue management",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": {
     "name": "Derek DeHart"
   },
