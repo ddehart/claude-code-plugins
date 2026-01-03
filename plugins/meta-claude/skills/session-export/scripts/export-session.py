@@ -2,11 +2,17 @@
 """
 Export Claude Code session JSONL to UI-style readable text format.
 Mimics the output of the /export command.
+
+Requires Python 3.6+ (for f-strings and pathlib).
 """
 
 import json
+import os
 import sys
 from pathlib import Path
+
+# Get home directory dynamically
+HOME_DIR = os.path.expanduser("~")
 
 
 def format_tool_params(params, tool_name=''):
@@ -17,10 +23,7 @@ def format_tool_params(params, tool_name=''):
     # For Read operations - just show filename
     if tool_name == 'Read' and 'file_path' in params:
         file_path = params['file_path']
-        # Extract just the filename or relative path
-        if file_path.startswith('/Users/derek/Developer/cordelle/'):
-            relative = file_path.replace('/Users/derek/Developer/cordelle/', '')
-            return relative
+        # Extract just the filename for display
         return file_path.split('/')[-1]
 
     # For simple single params, show just the value (no key)
@@ -92,8 +95,8 @@ def extract_session_info(entries):
         if 'cwd' in entry:
             # Show relative to home directory, matching native format
             cwd = entry['cwd']
-            if cwd.startswith('/Users/derek/'):
-                info['cwd'] = '~/' + cwd[len('/Users/derek/'):]
+            if cwd.startswith(HOME_DIR):
+                info['cwd'] = '~' + cwd[len(HOME_DIR):]
             else:
                 info['cwd'] = cwd
         if 'message' in entry and 'model' in entry['message']:
@@ -264,10 +267,25 @@ def format_tool_result_entry(entry):
 def export_session(jsonl_path, output_path):
     """Export JSONL session to UI-style readable text format."""
 
-    with open(jsonl_path, 'r') as f:
-        lines = f.readlines()
+    # Read and parse JSONL file with error handling
+    try:
+        with open(jsonl_path, 'r') as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        print(f"✗ Error: Session file not found: {jsonl_path}")
+        sys.exit(1)
+    except PermissionError:
+        print(f"✗ Error: Permission denied reading: {jsonl_path}")
+        sys.exit(1)
 
-    entries = [json.loads(line) for line in lines]
+    # Parse JSON lines with error handling
+    entries = []
+    for i, line in enumerate(lines):
+        try:
+            entries.append(json.loads(line))
+        except json.JSONDecodeError as e:
+            print(f"✗ Error: Invalid JSON on line {i + 1}: {e}")
+            sys.exit(1)
 
     # Extract session info
     info = extract_session_info(entries)
@@ -305,12 +323,18 @@ def export_session(jsonl_path, output_path):
                             output_lines.append("")
                         break
 
-    # Write to file
+    # Write to file with error handling
     output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(output_path, 'w') as f:
-        f.write('\n'.join(output_lines))
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write('\n'.join(output_lines))
+    except PermissionError:
+        print(f"✗ Error: Permission denied writing to: {output_path}")
+        sys.exit(1)
+    except OSError as e:
+        print(f"✗ Error: Failed to write file: {e}")
+        sys.exit(1)
 
     print(f"✓ Exported session to: {output_path}")
     if info['summary']:
