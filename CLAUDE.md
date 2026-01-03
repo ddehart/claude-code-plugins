@@ -18,12 +18,20 @@ plugins/
       branch-creator.md             # Git branch creation agent
       commit-creator.md             # Conventional commits agent
       pr-manager.md                 # Pull request workflow manager
+  meta-claude/
+    .claude-plugin/plugin.json      # Plugin metadata
+    skills/
+      session-export/
+        SKILL.md                    # Session export skill definition
+        scripts/
+          export-session.py         # Python export utility
 ```
 
 **Key concepts:**
 - Marketplace definition at root level registers this repo as a plugin source
 - Each plugin has its own `.claude-plugin/plugin.json` with metadata
-- Agents are Markdown files with YAML frontmatter defining name, description, tools, and model
+- **Agents** are Markdown files in `agents/` with YAML frontmatter (name, description, tools, model)
+- **Skills** are Markdown files in `skills/<skill-name>/SKILL.md` with YAML frontmatter (name, description, allowed-tools)
 
 ## Agent Definition Format
 
@@ -41,6 +49,25 @@ model: haiku
 ```
 
 The `description` field is critical - it tells Claude when to proactively invoke the agent.
+
+## Skill Definition Format
+
+Skills use YAML frontmatter followed by Markdown instructions:
+
+```yaml
+---
+name: skill-name
+description: What the skill does and when to use it (triggers for activation)
+allowed-tools: ["Read", "Write", "Bash", "Glob"]
+---
+
+# Skill instructions in Markdown
+```
+
+Skills differ from agents:
+- Skills are model-invoked (Claude decides when to activate based on description)
+- Agents are explicitly delegated via the Task tool
+- Skills can include supporting scripts in a `scripts/` subdirectory
 
 ## No Build System
 
