@@ -47,8 +47,9 @@ Your responsibility is to manage the complete PR lifecycle: creation, monitoring
    - If checks pass, continue to step 3
 3. Get the review decision and fetch reviews/comments:
    ```bash
-   gh pr view <number> --json reviewDecision,reviews,comments,reviewThreads
+   gh pr view <number> --json reviewDecision,reviews,comments
    ```
+   - `reviewDecision`: `APPROVED`, `CHANGES_REQUESTED`, `REVIEW_REQUIRED`, or empty (no reviews yet)
 4. Cross-reference feedback with commits (see Commit-Aware Feedback Analysis below)
 5. Categorize remaining outstanding issues by impact:
    - **Critical**: Security vulnerabilities, bugs causing failures
@@ -69,19 +70,28 @@ Your responsibility is to manage the complete PR lifecycle: creation, monitoring
 
 Cross-reference review comments with commits to identify which issues were addressed:
 
-1. Fetch review threads with file paths and timestamps:
+1. Fetch reviews and comments with timestamps:
    ```bash
-   gh pr view <number> --json reviewThreads --jq '.reviewThreads[] | {path: .path, line: .line, createdAt: .comments[0].createdAt, body: .comments[0].body}'
+   # Get formal reviews (APPROVED, CHANGES_REQUESTED, COMMENTED)
+   gh pr view <number> --json reviews --jq '.reviews[] | {author: .author.login, state: .state, date: .submittedAt, body: .body}'
+
+   # Get PR comments (including bot reviews like Claude)
+   gh pr view <number> --json comments --jq '.comments[] | {author: .author.login, date: .createdAt, body: .body}'
    ```
 
-2. Get PR commits with their changed files:
+2. Get PR commits with their changed files (requires API call for file details):
    ```bash
-   gh pr view <number> --json commits --jq '.commits[] | {sha: .oid[0:7], date: .committedDate, files: .changedFiles}'
+   # Basic commit info from gh pr view
+   gh pr view <number> --json commits --jq '.commits[] | {sha: .oid[0:7], date: .committedDate}'
+
+   # For file-level details, use the API (replace owner/repo)
+   gh api repos/{owner}/{repo}/pulls/<number>/files --jq '.[] | {filename: .filename, status: .status}'
    ```
 
-3. For each review comment, check if the file was modified in a subsequent commit:
-   - **Outstanding**: No commit after the comment touched the file → still needs attention
-   - **Likely Resolved**: File was modified in a commit after the comment → probably addressed
+3. For each review comment, check if related files were modified in a subsequent commit:
+   - **Outstanding**: No commit after the comment touched relevant files → still needs attention
+   - **Likely Resolved**: Files were modified in a commit after the comment → probably addressed
+   - **Note**: Comments without specific file references (general feedback) require manual assessment
 
 4. Structure the output to clearly separate outstanding vs likely-resolved issues (see Output Formats)
 
@@ -115,8 +125,9 @@ Use commit SHA as natural checkpoint for tracking review cycles:
 - `gh run watch <run-id> --exit-status` - Watch workflow run with real-time progress
 - `gh pr checks <number> --watch --required` - Fallback: monitor checks until completion
 - `gh pr checks <number> --json` - Get structured check data
-- `gh pr view <number> --json reviewDecision,reviews,comments,reviewThreads` - Fetch verdict and feedback
-- `gh pr view <number> --json commits` - Get PR commits with changed files
+- `gh pr view <number> --json reviewDecision,reviews,comments` - Fetch verdict and feedback
+- `gh pr view <number> --json commits` - Get PR commits (basic info)
+- `gh api repos/{owner}/{repo}/pulls/<number>/files` - Get detailed file changes per PR
 - `git log -n <count> --oneline` - Review recent commits for PR description
 
 ### Flags & Options
@@ -163,7 +174,7 @@ Next steps:
 
 ### Latest Review Verdict
 **CHANGES_REQUESTED** by @reviewer
-(or **APPROVED** / **REVIEW_REQUIRED** / **PENDING**)
+(or **APPROVED** / **REVIEW_REQUIRED** / **No reviews yet**)
 
 ### Outstanding Issues (still need attention)
 1. [High] Security: Unsanitized user input in auth.ts:45
@@ -257,14 +268,17 @@ gh run watch $RUN_ID --exit-status
 #   ✓ lint (32s)
 
 # 3. Get review decision and feedback
-gh pr view 42 --json reviewDecision,reviews,comments,reviewThreads
+gh pr view 42 --json reviewDecision,reviews,comments
+# reviewDecision: "APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED", or "" (empty = no reviews)
 
-# 4. Get commits to cross-reference with comments
+# 4. Get commits and file changes to cross-reference with comments
 gh pr view 42 --json commits --jq '.commits[] | {sha: .oid[0:7], date: .committedDate}'
+gh api repos/owner/repo/pulls/42/files --jq '.[].filename'
 
 # 5. Analyze which feedback was addressed by subsequent commits
-# - Comment on auth.ts at 10:00, no commit touched auth.ts after → Outstanding
-# - Comment on utils.ts at 10:00, commit at 11:00 modified utils.ts → Likely Resolved
+# - Comment mentions auth.ts at 10:00, no commit touched auth.ts after → Outstanding
+# - Comment mentions utils.ts at 10:00, commit at 11:00 modified utils.ts → Likely Resolved
+# - General comments without file references → require manual assessment
 
 # 6. Generate structured report (see "Review Feedback Report" format)
 ```
@@ -330,6 +344,8 @@ Escalate to main thread when:
 - **Parsing errors**: Review data format is unexpected or corrupted
   - Malformed JSON from gh CLI output
   - Missing expected fields in API responses
+  - jq query returns empty/null (e.g., `.[0]` on empty array)
+- **No workflow run found**: `gh run list` returns empty results (workflow hasn't started yet, use fallback)
 - **Branch protection**: Required approvals not met, protected branch rules
 
 ## Quality Assurance
@@ -337,8 +353,9 @@ Escalate to main thread when:
 Before returning results, verify:
 
 - ✅ PR operations completed successfully (check exit codes)
+- ✅ Workflow run monitoring completed or fell back to `gh pr checks` appropriately
 - ✅ Check monitoring ran until completion (not interrupted)
-- ✅ Review verdict (APPROVED/CHANGES_REQUESTED/PENDING) extracted and shown prominently
+- ✅ Review verdict (APPROVED/CHANGES_REQUESTED/empty) extracted and shown prominently
 - ✅ Comments cross-referenced with commits to identify resolved vs outstanding
 - ✅ Outstanding issues clearly separated from likely-resolved issues
 - ✅ Output is formatted clearly and actionably
