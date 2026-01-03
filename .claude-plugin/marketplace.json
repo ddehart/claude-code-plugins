@@ -9,6 +9,12 @@
       "source": "./plugins/dev-workflow",
       "description": "Reusable dev workflow agents: test running, branch creation, conventional commits, pull request management, and Linear issue management",
       "version": "1.1.0"
+    },
+    {
+      "name": "meta-claude",
+      "source": "./plugins/meta-claude",
+      "description": "Claude Code productivity skills: session export, transcript management, and self-reflection tools",
+      "version": "1.0.0"
     }
   ]
 }
