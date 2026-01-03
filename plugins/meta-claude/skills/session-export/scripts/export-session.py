@@ -23,8 +23,8 @@ def format_tool_params(params, tool_name=''):
     # For Read operations - just show filename
     if tool_name == 'Read' and 'file_path' in params:
         file_path = params['file_path']
-        # Extract just the filename for display
-        return file_path.split('/')[-1]
+        # Extract just the filename for display (cross-platform)
+        return Path(file_path).name
 
     # For simple single params, show just the value (no key)
     if len(params) == 1 and isinstance(list(params.values())[0], str):
@@ -191,14 +191,14 @@ def format_assistant_message(entry):
             if tool_name == 'Edit':
                 # For edits, just show the file being edited
                 file_path = tool_input.get('file_path', '')
-                filename = file_path.split('/')[-1] if file_path else 'file'
+                filename = Path(file_path).name if file_path else 'file'
                 lines.append(f"⏺ Updated {filename}")
                 lines.append("  ⎿  /plan to preview")
             elif tool_name == 'Write':
                 # For writes, just show the file
                 file_path = tool_input.get('file_path', '')
                 content_lines = tool_input.get('content', '').count('\n') + 1
-                filename = file_path.split('/')[-1] if file_path else 'file'
+                filename = Path(file_path).name if file_path else 'file'
                 lines.append(f"⏺ Write({filename} - {content_lines} lines)")
                 lines.append("  ⎿  ")
             elif tool_name == 'Bash':
