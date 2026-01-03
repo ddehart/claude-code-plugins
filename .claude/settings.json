@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
-    "dev-workflow@ddehart-plugins": true
+    "dev-workflow@ddehart-plugins": true,
+    "meta-claude@ddehart-plugins": true
   }
 }
