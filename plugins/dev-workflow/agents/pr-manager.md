@@ -38,11 +38,16 @@ Your responsibility is to manage the complete PR lifecycle: creation, monitoring
 2. Get the HEAD commit SHA and watch the workflow run:
    ```bash
    HEAD_SHA=$(gh pr view <number> --json headRefOid --jq '.headRefOid')
-   RUN_ID=$(gh run list --commit $HEAD_SHA --limit 1 --json databaseId --jq '.[0].databaseId')
-   gh run watch $RUN_ID --exit-status
+   RUN_ID=$(gh run list --commit $HEAD_SHA --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+   if [ -z "$RUN_ID" ]; then
+     # No workflow run yet - fall back to basic check watching
+     gh pr checks <number> --watch --required
+   else
+     gh run watch $RUN_ID --exit-status
+   fi
    ```
    - `gh run watch` shows real-time workflow progress with step-by-step output
-   - If no run found yet, fall back to: `gh pr checks <number> --watch --required`
+   - The `// empty` jq operator handles missing/empty results gracefully
    - If checks fail, STOP and report failures to main thread with details
    - If checks pass, continue to step 3
 3. Get the review decision and fetch reviews/comments:
@@ -84,13 +89,16 @@ Cross-reference review comments with commits to identify which issues were addre
    # Basic commit info from gh pr view
    gh pr view <number> --json commits --jq '.commits[] | {sha: .oid[0:7], date: .committedDate}'
 
-   # For file-level details, use the API (replace owner/repo)
-   gh api repos/{owner}/{repo}/pulls/<number>/files --jq '.[] | {filename: .filename, status: .status}'
+   # For file-level details, use the API
+   # Get owner/repo from current repo context
+   REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+   gh api repos/$REPO/pulls/<number>/files --jq '.[] | {filename: .filename, status: .status}'
    ```
 
 3. For each review comment, check if related files were modified in a subsequent commit:
    - **Outstanding**: No commit after the comment touched relevant files → still needs attention
    - **Likely Resolved**: Files were modified in a commit after the comment → probably addressed
+   - **Note**: This is a heuristic—file modification doesn't guarantee the specific issue was fixed
    - **Note**: Comments without specific file references (general feedback) require manual assessment
 
 4. Structure the output to clearly separate outstanding vs likely-resolved issues (see Output Formats)
@@ -127,7 +135,7 @@ Use commit SHA as natural checkpoint for tracking review cycles:
 - `gh pr checks <number> --json` - Get structured check data
 - `gh pr view <number> --json reviewDecision,reviews,comments` - Fetch verdict and feedback
 - `gh pr view <number> --json commits` - Get PR commits (basic info)
-- `gh api repos/{owner}/{repo}/pulls/<number>/files` - Get detailed file changes per PR
+- `gh api repos/$REPO/pulls/<number>/files` - Get detailed file changes (REPO from `gh repo view`)
 - `git log -n <count> --oneline` - Review recent commits for PR description
 
 ### Flags & Options
@@ -259,13 +267,17 @@ gh pr status
 
 HEAD_SHA=$(gh pr view 42 --json headRefOid --jq '.headRefOid')
 
-# 2. Get workflow run and watch it
-RUN_ID=$(gh run list --commit $HEAD_SHA --limit 1 --json databaseId --jq '.[0].databaseId')
-gh run watch $RUN_ID --exit-status
-# Shows real-time progress:
-#   ✓ build (1m 23s)
-#   ✓ test (2m 45s)
-#   ✓ lint (32s)
+# 2. Get workflow run and watch it (with fallback for empty results)
+RUN_ID=$(gh run list --commit $HEAD_SHA --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+if [ -z "$RUN_ID" ]; then
+  gh pr checks 42 --watch --required
+else
+  gh run watch $RUN_ID --exit-status
+  # Shows real-time progress:
+  #   ✓ build (1m 23s)
+  #   ✓ test (2m 45s)
+  #   ✓ lint (32s)
+fi
 
 # 3. Get review decision and feedback
 gh pr view 42 --json reviewDecision,reviews,comments
@@ -273,7 +285,8 @@ gh pr view 42 --json reviewDecision,reviews,comments
 
 # 4. Get commits and file changes to cross-reference with comments
 gh pr view 42 --json commits --jq '.commits[] | {sha: .oid[0:7], date: .committedDate}'
-gh api repos/owner/repo/pulls/42/files --jq '.[].filename'
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+gh api repos/$REPO/pulls/42/files --jq '.[].filename'
 
 # 5. Analyze which feedback was addressed by subsequent commits
 # - Comment mentions auth.ts at 10:00, no commit touched auth.ts after → Outstanding
