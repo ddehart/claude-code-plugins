@@ -82,6 +82,32 @@ Changes are validated by ensuring:
 2. Agent Markdown files have valid YAML frontmatter
 3. Agent instructions are clear and actionable
 
+## Development Workflow
+
+Checklist for adding or updating plugin components (agents, skills, hooks):
+
+### 1. Setup
+- [ ] Create feature branch: `feat/<component-name>` or `fix/<issue>`
+
+### 2. Implement
+- [ ] Create/update component file(s) in appropriate location
+- [ ] Follow format for component type (see sections below)
+
+### 3. Update Metadata
+- [ ] `plugins/<plugin>/.claude-plugin/plugin.json` - bump version, update description/keywords
+- [ ] `.claude-plugin/marketplace.json` - bump version, update description
+
+### 4. Update Documentation
+- [ ] `README.md` - update component tables and usage section
+
+### 5. Commit & PR
+- [ ] Commit with conventional format: `feat(<scope>): description`
+- [ ] Create PR and watch for review feedback
+
+### 6. Merge & Verify
+- [ ] Merge PR after checks pass
+- [ ] Test component works as expected
+
 ## Adding New Agents
 
 1. Create `plugins/<plugin-name>/agents/<agent-name>.md`
