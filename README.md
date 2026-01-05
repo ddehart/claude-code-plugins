@@ -16,7 +16,7 @@ Personal Claude Code plugin marketplace with reusable dev workflow agents.
 
 ### dev-workflow
 
-Dev workflow agents for test running, branch creation, conventional commits, and pull request management.
+Dev workflow agents for test running, branch creation, conventional commits, pull request management, Linear issue management, and browser verification.
 
 **Agents included:**
 
@@ -26,6 +26,8 @@ Dev workflow agents for test running, branch creation, conventional commits, and
 | `branch-creator` | Create properly named Git branches following conventions |
 | `commit-creator` | Create commits following Conventional Commits standard |
 | `pr-manager` | Manage pull request workflows (create, monitor checks, review feedback, merge) |
+| `linear-issues` | Manage Linear issues (create, update, view, search, status transitions) |
+| `chrome-verifier` | Verify deployed features via browser automation, returning concise summaries |
 
 ## Usage
 
@@ -35,6 +37,8 @@ Once installed, the agents are automatically available. Claude will proactively 
 - Ask to create a branch
 - Ask to commit changes
 - Ask to create, monitor, or merge pull requests
+- Ask to manage Linear issues
+- Ask to verify a deployment or check a live site
 
 ## Updating
 
