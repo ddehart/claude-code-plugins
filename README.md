@@ -35,10 +35,22 @@ Dev workflow agents and skills for test running, branch creation, conventional c
 |-------|-------------|
 | `spec-writing` | Interview users to refine rough ideas into comprehensive, implementation-ready specifications |
 
+### meta-claude
+
+Claude Code productivity skills for session management, self-documentation, and self-reflection.
+
+**Skills included:**
+
+| Skill | Description |
+|-------|-------------|
+| `session-export` | Export Claude Code session transcripts from JSONL logs to readable text format |
+| `self-documentation` | Explain Claude Code features, capabilities, and tools; record observations about undocumented behaviors |
+
 ## Usage
 
 Once installed, the agents and skills are automatically available. Claude will proactively use them when you:
 
+**dev-workflow:**
 - Ask to run tests
 - Ask to create a branch
 - Ask to commit changes
@@ -47,8 +59,15 @@ Once installed, the agents and skills are automatically available. Claude will p
 - Ask to verify a deployment or check a live site
 - Ask to write, create, or refine a spec
 
+**meta-claude:**
+- Ask about Claude Code features ("How do skills work?", "What can you do?")
+- Ask decision questions ("Should I use a skill or slash command?")
+- Ask to export a session transcript
+- Report discovering undocumented behavior
+
 ## Updating
 
 ```bash
 /plugin update dev-workflow@ddehart-plugins
+/plugin update meta-claude@ddehart-plugins
 ```
