@@ -1,9 +1,9 @@
 {
   "name": "dev-workflow",
-  "description": "Dev workflow agents for test running, branch creation, conventional commits, pull request management, Linear issue management, and browser verification",
-  "version": "1.2.0",
+  "description": "Dev workflow agents and skills: test running, branch creation, conventional commits, pull request management, Linear issue management, browser verification, and spec writing",
+  "version": "1.3.0",
   "author": {
     "name": "Derek DeHart"
   },
-  "keywords": ["git", "testing", "commits", "branches", "workflow", "linear", "issues", "pull-requests", "pr", "browser", "verification", "chrome"]
+  "keywords": ["git", "testing", "commits", "branches", "workflow", "linear", "issues", "pull-requests", "pr", "browser", "verification", "chrome", "spec", "requirements", "specifications"]
 }

@@ -7,8 +7,8 @@
     {
       "name": "dev-workflow",
       "source": "./plugins/dev-workflow",
-      "description": "Reusable dev workflow agents: test running, branch creation, conventional commits, pull request management, Linear issue management, and browser verification",
-      "version": "1.2.0"
+      "description": "Reusable dev workflow agents and skills: test running, branch creation, conventional commits, pull request management, Linear issue management, browser verification, and spec writing",
+      "version": "1.3.0"
     },
     {
       "name": "meta-claude",
