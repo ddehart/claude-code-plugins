@@ -180,22 +180,6 @@ Based on user choice:
 }
 ```
 
-## Workflow: Release Notes Updates
-
-**Important:** Index updates happen only in the source repo, not on user machines.
-
-When maintaining the reference files (as repo maintainer):
-
-1. Run `/release-notes` to get latest Claude Code releases
-2. Identify releases newer than the "Latest Release" in `undocumented.md`
-3. For each new feature:
-   - Check if official docs exist (fetch docs map)
-   - If documented: Add to appropriate thematic file
-   - If undocumented: Add to `undocumented.md`
-4. Check if any previously undocumented features now have docs (migrate them)
-5. Update "Latest Release" header
-6. Commit and release via plugin update
-
 ## Error Handling
 
 | Scenario | Action |
