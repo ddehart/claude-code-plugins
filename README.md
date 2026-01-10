@@ -71,3 +71,16 @@ Once installed, the agents and skills are automatically available. Claude will p
 /plugin update dev-workflow@ddehart-plugins
 /plugin update meta-claude@ddehart-plugins
 ```
+
+## Naming Conventions
+
+**Skills** use action-oriented names that pass the "adept at" test:
+- Ask: "Would you say someone is adept at ___?"
+- Examples: `spec-writing`, `self-documentation`, `session-export`
+- Pattern: Noun-gerund or compound action words representing a craft/expertise
+
+**Agents** use role-oriented names describing their function:
+- Examples: `test-runner`, `branch-creator`, `pr-manager`, `chrome-verifier`
+- Pattern: Noun-noun compounds representing a specialized role
+
+This distinction reflects their nature: skills teach expertise (something you're "adept at"), while agents perform tasks (roles that "run" or "manage" things).
