@@ -19,7 +19,9 @@ This skill conducts structured interviews using `AskUserQuestion` to surface req
 
 **Key principle:** Ask non-obvious questions that probe assumptions, surface edge cases, and force tradeoffs.
 
-**Activation:** This skill activates automatically when the user asks to write, create, or refine a spec. No slash command required - Claude should invoke this skill proactively when spec-writing is needed.
+**Activation:** This skill activates in two ways:
+- **Automatic:** Claude invokes it proactively when the user asks to write, create, or refine a spec
+- **Explicit:** Users can invoke directly with `/spec-writing [prompt or @file]`
 
 ## Workflow
 
