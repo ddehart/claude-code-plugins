@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and behavioral understanding. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.0.74 (as of 2025-12-22)
+**Latest Release**: v2.1.3 (as of 2026-01-09)
 
 ---
 
@@ -364,6 +364,124 @@ skills: code-quality-standards, security-patterns
 ```bash
 export CLAUDE_CODE_SHELL=/bin/zsh
 ```
+
+---
+
+## IS_DEMO Environment Variable
+
+**What it is**: Environment variable to indicate demo/streaming mode
+
+**Introduced**: v2.1.0 (2026-01)
+
+**What we know**:
+- Set `IS_DEMO=1` when streaming or recording sessions
+- Likely affects UI presentation (hide personal info, clean up output)
+- Helps with presentation modes for demos and content creation
+
+**Expected configuration**:
+```bash
+export IS_DEMO=1
+claude
+```
+
+---
+
+## Teleport and Remote-Env Commands
+
+**What it is**: Resume remote sessions from claude.ai in the CLI
+
+**Introduced**: v2.1.0 (2026-01)
+
+**What we know**:
+- `/teleport` - Resume a remote session by ID or open picker
+- `/remote-env` - Configure remote session environment
+- Claude.ai subscribers can sync sessions between web and CLI
+- Enables starting work on web, continuing in CLI seamlessly
+
+**Expected workflow**:
+1. Start session on claude.ai
+2. Use `/teleport` in CLI to resume that session
+3. Work continues with full CLI capabilities
+4. Changes sync back to web session
+
+---
+
+## Unreachable Permission Rule Warnings
+
+**What it is**: Warnings for permission rules that can never match due to precedence
+
+**Introduced**: v2.1.3 (2026-01)
+
+**What we know**:
+- Claude Code warns when permission rules are unreachable
+- Helps debug complex permission configurations
+- Indicates when a more specific rule shadows a broader one
+
+**Example warning scenario**:
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(git status:*)"  // Unreachable - already covered by git:*
+    ]
+  }
+}
+```
+
+---
+
+## Real-time Thinking in Transcript Mode
+
+**What it is**: Show thinking blocks in real-time when verbose output is enabled
+
+**Introduced**: v2.1.0 (2026-01)
+
+**What we know**:
+- Ctrl+O verbose/transcript mode now shows thinking blocks as they stream
+- Previously thinking blocks only appeared after completion
+- Enables watching Claude's reasoning process in real-time
+- Useful for understanding complex decision-making
+
+---
+
+## Claude in Chrome Improvements
+
+**What it is**: Enhanced Chrome extension capabilities for browser control
+
+**Introduced**: Multiple versions (v2.0.72+, ongoing improvements)
+
+**What we know**:
+- Chrome extension at https://claude.ai/chrome
+- Enables browser automation: navigate, read content, interact with elements, take screenshots
+- More powerful than WebFetch - active browser control vs. passive fetching
+- Continuous improvements to capabilities and reliability
+
+**Use cases**:
+- Web application testing
+- Form automation
+- Content extraction
+- UI verification
+
+---
+
+## VSCode Extension Updates
+
+**What it is**: Ongoing improvements to the VS Code extension
+
+**Introduced**: Various versions (v2.0.74+, ongoing)
+
+**What we know**:
+- Regular feature parity improvements with CLI
+- Performance enhancements
+- UI/UX refinements
+- Bug fixes and stability improvements
+
+**Recent improvements** (general pattern):
+- Better integration with VS Code features
+- Improved session management
+- Enhanced diff viewing
+- More responsive UI updates
 
 ---
 
