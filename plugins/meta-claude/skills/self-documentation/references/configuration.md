@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2025-01-09
+**Last updated**: 2026-01-09
 
 ---
 
@@ -64,11 +64,14 @@ Settings, permissions, memory, and customization options for Claude Code.
 **Key concepts**:
 - **Three modes**: Allow (auto-approve), Ask (confirmation prompt), Deny (block tool use)
 - **Configuration**: settings.json at user (`~/.claude/`), project (`.claude/`, shared), or local (`.claude/settings.local.json`, personal)
-- **`/permissions` command**: Manage tool permissions interactively (v1.0.7+)
+- **`/permissions` command**: Manage tool permissions interactively
 - **Rule format**: Array of permission rules per mode (e.g., `Bash(git push:*)`, `Read(./.env)`)
 - **Use cases**: Prevent dangerous operations, require confirmation for sensitive actions, enable autonomous work within boundaries
 - **MCP integration**: Works with MCP tools using pattern `mcp__<server>__<tool>`
-- **Wildcard MCP permissions** (v2.0.70): Use `mcp__server__*` syntax to allow/deny all tools from a server
+- **Wildcard MCP permissions**: Use `mcp__server__*` syntax to allow/deny all tools from a server
+- **Wildcard bash patterns**: Use patterns like `Bash(npm *)` to match commands with any arguments
+- **Unreachable rule warnings**: Claude Code warns when permission rules are unreachable due to precedence
+- **Task tool permissions**: Use `Task(AgentName)` syntax in deny rules to prevent specific agents from being invoked (cross-reference: core-features.md Agents section for agent configuration)
 
 ---
 
@@ -142,19 +145,138 @@ Settings, permissions, memory, and customization options for Claude Code.
 
 **What it is**: Configuration to customize commit and PR bylines for Claude-generated content
 
-**Introduced**: v2.0.62 (2025-12)
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
 
-**What we know**:
+**Key concepts**:
 - New `attribution` setting replaces deprecated `includeCoAuthoredBy`
 - More flexible control over how Claude's contributions are credited
 - Allows customizing or disabling the Co-Authored-By line
+- Separate configuration for commits (using git trailers) and pull requests (plain text)
 
 **Configuration**:
 ```json
 {
   "attribution": {
-    "enabled": true,
-    "format": "co-author"
+    "commit": "🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+    "pr": "🤖 Generated with Claude Code"
   }
 }
 ```
+
+---
+
+## Language Setting
+
+**Introduced**: v2.1.0 (2026-01)
+
+**What it is**: Configure Claude's preferred response language
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
+
+**Key concepts**:
+- Set `language` in settings.json to specify preferred response language
+- Examples: `"japanese"`, `"spanish"`, `"french"`
+- Claude will respond in this language by default
+- Useful for international teams or non-English workflows
+
+**Configuration**:
+```json
+{
+  "language": "japanese"
+}
+```
+
+---
+
+## respectGitignore Setting
+
+**Introduced**: v2.1.0 (2026-01)
+
+**What it is**: Control whether @ file picker respects .gitignore patterns
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
+
+**Key concepts**:
+- When `true` (default), files matching `.gitignore` patterns are excluded from `@` file suggestions
+- Set to `false` to include all files regardless of gitignore status
+- Per-project configuration available
+
+**Configuration**:
+```json
+{
+  "respectGitignore": false
+}
+```
+
+---
+
+## File Read Token Limit
+
+**Introduced**: v2.1.0 (2026-01)
+
+**What it is**: Override default token limit for file reads
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
+
+**Key concepts**:
+- `CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS` environment variable
+- Overrides the default token limit for file reads
+- Useful when you need to read larger files in full
+- Set before starting Claude Code session
+
+**Configuration**:
+```bash
+export CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS=50000
+claude
+```
+
+---
+
+## Tools Interactive Mode Flag
+
+**Introduced**: v2.1.0 (2026-01)
+
+**What it is**: CLI flag to control tool availability in interactive mode
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/cli-reference
+
+**Key concepts**:
+- `--tools` flag controls which tools are available in interactive mode
+- Useful for restricting capabilities in specific contexts
+- Can be combined with permission settings for fine-grained control
+
+**Configuration**:
+```bash
+claude --tools Read,Grep,Glob
+```
+
+---
+
+## Release Channel Toggle
+
+**What it is**: Configuration option to select update channel (stable vs beta)
+
+**Documentation**: Available via `/config` menu
+
+**Key concepts**:
+- Toggle between stable and beta release channels
+- Beta channel receives early access to new features
+- Stable channel receives tested, production-ready releases
+- Accessible via `/config` command in Claude Code
+
+---
+
+## Thinking Mode
+
+**What it is**: Enable extended thinking for complex reasoning tasks
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/common-workflows
+
+**Key concepts**:
+- Enable via Alt+T keyboard shortcut (after running `/terminal-setup`)
+- Toggle is sticky across sessions
+- Enabled by default for Opus 4.5 model
+- Improves performance on complex reasoning and coding tasks
+- Impacts prompt caching efficiency
+- Can be configured via `alwaysThinkingEnabled` setting
+- Token budget controlled by `MAX_THINKING_TOKENS` environment variable

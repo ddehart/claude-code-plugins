@@ -132,6 +132,47 @@ tools: Bash, Read
 - Security automation runs → Subagent loads skill for smart decisions
 - Single source of truth, dual contexts
 
+### Context: Fork Pattern
+
+**What it is**: Skills can run in isolated execution contexts using `context: fork` frontmatter field, creating a hybrid between traditional skills and subagents.
+
+| Aspect | Traditional Skills | `context: fork` Skills |
+|--------|-------------------|------------------------|
+| **Execution** | Runs in main conversation | Runs in isolated subagent context |
+| **Context** | Shares conversation history | Fresh context window per invocation |
+| **Tool access** | Restricted via `allowed-tools` | Restricted via `allowed-tools` |
+| **Agent type** | N/A | Specify with `agent` field |
+| **Best for** | Continuous guidance in main flow | Isolated, repeatable tasks |
+
+**When to use `context: fork`:**
+- Skill performs self-contained task that shouldn't pollute main context
+- Need repeatability without accumulated conversation history
+- Want skill behavior but with subagent-style isolation
+- Task requires clean slate each invocation
+
+**Agent field with fork:**
+When using `context: fork`, specify which agent type to use:
+```yaml
+context: fork
+agent: Explore  # Options: Explore, Plan, general-purpose, or custom agent name
+```
+
+**Comparison of execution contexts:**
+- **Traditional skill**: Loads instructions into current conversation, sees all prior context, accumulates in conversation history
+- **Skill with `context: fork`**: Creates temporary subagent for execution, no access to main conversation history, context discarded after completion
+- **Traditional subagent (via Task tool)**: Persistent agent definition that can be invoked multiple times, maintains its own ongoing context window
+
+**Example: diagnostic-check skill**
+```yaml
+name: diagnostic-check
+description: Run system diagnostics when user reports issues
+context: fork
+agent: Explore
+allowed-tools: ["Bash", "Read", "Grep"]
+```
+
+**Result:** Each diagnostic run starts fresh, previous diagnostic history doesn't interfere.
+
 ### Skills vs Prompts
 
 | Aspect | Skills | Prompts |
@@ -195,7 +236,7 @@ Need expertise across multiple conversations?
     └─ Yes → Continue...
 
         Need isolated context or tool restrictions?
-        ├─ Yes → Use subagent
+        ├─ Yes → Use subagent (or skill with context: fork)
         └─ No → Continue...
 
             Need to access external data?
@@ -227,9 +268,15 @@ Need expertise across multiple conversations?
 - You want to integrate third-party tools
 - Combine with Skills to teach Claude how to use the data
 
+**Use `context: fork` when:**
+- Need skill behavior with isolated execution
+- Task should start fresh each time without conversation history
+- Want repeatability without context accumulation
+- Self-contained task that shouldn't impact main flow
+
 ---
 
-**Last updated:** 2025-01-09
+**Last updated:** 2026-01-09
 
 **Sources:**
 - [Skills Explained Blog Post](https://www.claude.com/blog/skills-explained)

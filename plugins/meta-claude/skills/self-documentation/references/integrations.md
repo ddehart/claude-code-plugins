@@ -2,7 +2,7 @@
 
 IDE extensions, platform integrations, and deployment options for Claude Code.
 
-**Last updated**: 2025-01-09
+**Last updated**: 2026-01-09
 
 ---
 
@@ -20,6 +20,7 @@ IDE extensions, platform integrations, and deployment options for Claude Code.
 - **Unavailable features**: MCP server configuration (must use CLI), subagents setup, checkpoints, advanced shortcuts (#, !, tab completion)
 - **Security considerations**: Auto-edit permissions may modify IDE configs with auto-execution risks; use Restricted Mode and manual approval for untrusted workspaces
 - **Legacy CLI integration**: Terminal-based integration offers selection context sharing, IDE diff viewing, automatic diagnostic sharing
+- **Recent updates**: Streaming message support, secondary sidebar support (VS Code 1.97+), initial permission mode setting, chat font customization, tab icon badges for pending permissions/unread completions, copy-to-clipboard on code blocks
 
 ---
 

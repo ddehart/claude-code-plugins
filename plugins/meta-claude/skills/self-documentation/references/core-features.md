@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2025-01-09
+**Last updated**: 2026-01-09
 
 ---
 
@@ -36,13 +36,20 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Progressive disclosure** - Three-level loading: metadata (always in context ~100 words), SKILL.md body (when triggered <5k words), bundled resources (as needed)
 - **Multi-file structure** - SKILL.md + optional supporting files (references/, scripts/, templates/); manages context efficiently by deferring non-essential information
 - **Three scopes**: Personal (`~/.claude/skills/`), Project (`.claude/skills/`, git-shared), Plugin (bundled with Claude Code plugins)
-- **Tool restrictions** - `allowed-tools` frontmatter field limits available tools within skill for security/safety
+- **Tool restrictions** - `allowed-tools` frontmatter field limits available tools within skill for security/safety; supports comma-separated or YAML-style lists
 - **Description field is critical** - Must be specific with trigger terms for discoverability (max 1024 characters); tells Claude when to activate
 - **Supporting files**: `scripts/` (executable code, may run without loading to context), `references/` (docs loaded into context as needed), `assets/` (files used in output, not loaded to context)
 - **Best practices**: One capability per skill, write specific descriptions with user trigger terms, test activation timing with team, document versions
 - **Sharing**: Via plugins (recommended, marketplace distribution) or project repository (`.claude/skills/`, team auto-gets on pull)
 - **vs Slash Commands**: Skills are "complex workflows Claude discovers automatically" with multi-file support; slash commands are "simple, reusable prompts" requiring explicit invocation
-- **Subagent integration** (v2.0.43+): Subagents can auto-load specific skills via `skills` frontmatter field; skills become available only within subagent's context for specialized expertise
+- **Subagent integration**: Subagents can auto-load specific skills via `skills` frontmatter field; skills become available only within subagent's context for specialized expertise
+- **Hot-reload**: Skills are automatically reloaded when created or modified, no restart required
+- **Forked execution**: `context: fork` runs skill in isolated sub-agent context with its own conversation history
+- **Agent field**: Specify which agent type to use when `context: fork` is set (e.g., `Explore`, `Plan`, `general-purpose`, or custom agent)
+- **Skill hooks**: Skills can define hooks scoped to their lifecycle using `hooks` frontmatter field; supports `PreToolUse`, `PostToolUse`, and `Stop` events
+- **Once hooks**: Hooks with `once: true` run only once per session, then are removed
+- **Visibility control**: `user-invocable` field controls whether skill appears in slash command menu (defaults to `true`); does not affect `Skill` tool or automatic discovery
+- **Skills/slash commands merged**: Skills visible in slash command menu by default for unified invocation model
 
 ---
 
@@ -62,6 +69,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Authentication**: OAuth 2.0 automatic for HTTP servers, tokens stored securely and auto-refreshed
 - **Enterprise**: System-wide `managed-mcp.json` for standardization, allowlists/denylists for control
 - **Tool naming**: MCP tools use pattern `mcp__<server-name>__<tool-name>`
+- **Dynamic updates**: MCP `list_changed` notifications allow servers to dynamically update available tools, prompts, and resources without reconnecting
 
 ---
 
@@ -96,10 +104,12 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **File locations** (priority order): Project (`.claude/agents/`, highest), CLI flag (`--agents`, add subagents dynamically), User (`~/.claude/agents/`, lower), Plugin (`agents/` directory)
 - **Usage**: Automatic delegation (Claude proactively identifies based on descriptions; use "PROACTIVELY" or "MUST BE USED" in description), Explicit invocation (direct requests to use specific subagent), @-mention support with typeahead
 - **Tool access**: Inherits all tools if not specified; can restrict to specific tools via `tools` field; can explicitly block tools via `disallowedTools` field; includes MCP server tools
-- **Skill auto-loading** (v2.0.43+): `skills` frontmatter field loads specific skills when subagent activates; enables specialized knowledge per subagent; skills unload when subagent completes
+- **Skill auto-loading**: `skills` frontmatter field loads specific skills when subagent activates; enables specialized knowledge per subagent; skills unload when subagent completes
 - **Built-in subagents**: Plan subagent (automatic codebase research during plan mode using Read/Glob/Grep/Bash tools with Sonnet model, prevents infinite nesting)
 - **Best practices**: Start with Claude-generated then customize, design focused subagents with single responsibilities, write detailed prompts with constraints, limit tool access to necessary only, version control project subagents
 - **Advanced**: Chaining (multiple sequential subagents), dynamic selection (Claude intelligently chooses), model selection ('inherit' for consistency), subagent resumption (Claude can resume previous subagents), dynamic model choice (Claude selects model for subagent tasks)
+- **Agent hooks**: Agents can define hooks in frontmatter using `hooks` field; supports `PreToolUse`, `PostToolUse`, and `Stop` events
+- **Disable via Task tool**: Use `Task(AgentName)` syntax in permission deny rules to prevent specific agents from being invoked
 
 ---
 
@@ -111,15 +121,18 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **Key concepts**:
 - **Invocation patterns**: Direct (`/command`), plugin-prefixed (`/plugin:command` for disambiguation), with arguments (`/command arg1 arg2`)
-- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list)
+- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list), `/plan` (enter plan mode), `/teleport` (resume remote session), `/remote-env` (configure remote environment), `/rename` (name session), `/stats` (usage statistics)
 - **Custom commands**: Single Markdown files in `.claude/commands/` (project, git-shared) or `~/.claude/commands/` (personal, cross-project)
 - **Structure**: Single file with frontmatter, simpler than Skills' multi-file structure
 - **Features**: Namespacing via subdirectories, arguments (`$ARGUMENTS` for all, `$1`/`$2` for specific), bash execution (prefix `!`), file references (`@` notation), frontmatter metadata
-- **Frontmatter options**: Description, allowed-tools, model selection, disable-model-invocation
-- **Execution**: SlashCommand tool allows Claude to invoke programmatically; disable via `/permissions` or `disable-model-invocation: true`
+- **Frontmatter options**: Description, allowed-tools (comma-separated or YAML-style), model selection, disable-model-invocation, hooks, argument-hint
+- **Execution**: Skill tool allows Claude to invoke programmatically; disable via `/permissions` or `disable-model-invocation: true`
 - **MCP commands**: Format `mcp__<server-name>__<prompt-name>` from MCP server prompts
 - **Plugin commands**: Auto-discovered when plugins installed
 - **vs Skills**: Commands are "simple, reusable prompts" requiring explicit invocation; Skills are "complex workflows Claude discovers automatically" with multi-file support
+- **Autocomplete anywhere**: Slash command autocomplete works at any position in input, not just at the beginning
+- **Command hooks**: Slash commands can define hooks in frontmatter; supports `PreToolUse`, `PostToolUse`, and `Stop` events with `once: true` option
+- **Skills/commands merged**: Skills and slash commands now use unified `Skill` tool (previously separate `SlashCommand` tool)
 
 ---
 
@@ -131,14 +144,38 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **Key concepts**:
 - **Execution model**: All matching hooks run in parallel with 60-second default timeout; receive JSON via stdin, return structured output to control Claude
-- **Configuration locations**: `~/.claude/settings.json` (user), `.claude/settings.json` (project), `.claude/settings.local.json` (local project), enterprise managed policy
+- **Configuration locations**: `~/.claude/settings.json` (user), `.claude/settings.json` (project), `.claude/settings.local.json` (local project), enterprise managed policy, skill/agent/command frontmatter
 - **10 event types**: PreToolUse (before tool execution, can modify tool inputs), PostToolUse (after completion), UserPromptSubmit (prompt submission), Notification (permission requests with matcher values for event filtering), PermissionRequest (automatically approve/deny tool permissions), Stop (main agent finish, prompt-based matching), SubagentStop (subagent finish), SessionStart (session begins), SessionEnd (session terminates), PreCompact (before context compacting)
 - **Matcher patterns**: Exact (`Write`), regex (`Edit|Write`), wildcard (`*`), prompt-based (Stop hooks can match against user prompts), Notification and PermissionRequest matcher values for event-specific filtering; case-sensitive
 - **Exit codes**: 0 (success, stdout to transcript), 2 (blocking error, stderr to Claude), other (non-blocking error, stderr to user)
 - **JSON output**: Advanced control with `continue`, `decision`, `reason`, and hook-specific parameters
+- **PreToolUse advanced features**:
+  - **updatedInput parameter**: Allows modifying tool input parameters before execution; returned in JSON output to override original tool inputs
+  - **ask parameter**: Triggers user confirmation dialog during hook execution; use in JSON output to prompt for approval before tool proceeds
 - **Hook input fields**: `tool_use_id` field in PreToolUse and PostToolUse hooks enables correlation between pre/post events for same tool call
 - **PermissionRequest hook**: Runs when user shown permission dialog; use decision control to allow/deny automatically; recognizes same matcher values as PreToolUse
 - **Environment variables**: `CLAUDE_PROJECT_DIR` (project root path), `CLAUDE_ENV_FILE` (SessionStart persistence), `CLAUDE_CODE_REMOTE` (remote/local indicator)
 - **Security warning**: Execute arbitrary shell commands automatically—validate/sanitize input, quote variables, use absolute paths, avoid sensitive files, test in safe environments
 - **MCP integration**: Works with MCP tools using pattern `mcp__<server>__<tool>`
 - **Debugging**: Use `claude --debug` for execution details, matched commands, exit codes, output
+- **Component hooks**: Skills, agents, and slash commands can define hooks in frontmatter; scoped to component lifecycle
+- **Once hooks**: `once: true` option runs hook only once per session for skills and commands
+- **Prompt-based hooks**: `type: "prompt"` uses LLM to evaluate context; supported for Stop, SubagentStop, and other events
+
+---
+
+## Task Tool
+
+**What it is**: Core tool allowing Claude to delegate work to specialized subagents with isolated contexts
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/sub-agents
+
+**Key concepts**:
+- **Purpose**: Invoke subagents for specialized tasks while preserving main conversation context
+- **Context isolation**: Each subagent operates with separate context window, preventing pollution of main conversation
+- **Automatic selection**: Claude proactively identifies appropriate subagent based on task and descriptions
+- **Explicit invocation**: Users can request specific subagent directly
+- **Tool inheritance**: Subagents inherit or restrict tool access based on configuration
+- **Result integration**: Subagent work summarized and returned to main conversation
+- **Chaining support**: Multiple subagents can work sequentially on complex tasks
+- **Permission control**: Can be disabled via `/permissions` or blocked with `Task(AgentName)` syntax for specific agents

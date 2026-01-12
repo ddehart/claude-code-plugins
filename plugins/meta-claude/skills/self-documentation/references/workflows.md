@@ -2,7 +2,7 @@
 
 Productivity features, keyboard shortcuts, and workflow automation in Claude Code.
 
-**Last updated**: 2025-01-09
+**Last updated**: 2026-01-09
 
 ---
 
@@ -16,12 +16,13 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 - **General controls**: Ctrl+C (interrupt), Ctrl+D (exit), Ctrl+L (clear screen), Ctrl+O (toggle verbose/transcript), Ctrl+R (history search), Ctrl+V/Alt+V (paste images), Tab (thinking toggle), Shift+Tab/Alt+M (permission modes)
 - **Multiline entry**: `\` + Enter, Option+Enter (macOS), Shift+Enter (after /terminal-setup)
 - **Quick commands**: `#` (add to memory), `/` (slash commands), `!` (direct bash), `@` (file autocomplete)
-- **Vim mode**: Standard navigation (h/j/k/l, w, b) and editing (dd, cc, x) with Esc mode switching
+- **Vim mode**: Standard navigation (h/j/k/l, w, b, f, t) and editing (dd, cc, x) with Esc mode switching; expanded motions for improved navigation
 - **Command history**: Per-directory storage with Ctrl+R interactive search and highlighting
-- **Background tasks**: Ctrl+B to run long processes asynchronously with output buffering via BashOutput tool
+- **Background tasks**: Ctrl+B to run long processes asynchronously with output buffering via BashOutput tool; unified backgrounding for bash commands and agents
 - **Bash mode**: `!` prefix bypasses Claude's interpretation while maintaining conversation context
-- **Kill ring** (v2.0.49+): Ctrl-Y yanks most recent deletion, Alt-Y cycles through older deletions
-- **Model switching** (v2.0.65+): Alt+P (Linux/Windows) or Option+P (macOS) to switch models mid-prompt
+- **Kill ring**: Ctrl-Y yanks most recent deletion, Alt-Y cycles through older deletions
+- **Model switching**: Alt+P (Linux/Windows) or Option+P (macOS) to switch models mid-prompt
+- **Thinking toggle**: Alt+T to enable/disable extended thinking mode (requires /terminal-setup); sticky across sessions
 
 ---
 
@@ -101,12 +102,13 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 
 **What it is**: Ability for agents to run in the background while you continue working, with asynchronous message passing
 
-**Introduced**: v2.0.60 (2025-12)
+**Documentation**: Ctrl+B unified backgrounding
 
-**What we know**:
+**Key concepts**:
 - Agents can now run in background while user continues working
 - Agents and bash commands can run asynchronously and send messages to wake up the main agent
 - Enables true parallel workflows with human and agent working simultaneously
+- Ctrl+B works for both bash commands and agents
 
 **Expected behavior**:
 - Start an agent task that runs in background
@@ -126,9 +128,9 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 
 **What it is**: Ability to name conversation sessions for easier resumption and organization
 
-**Introduced**: v2.0.64 (2025-12)
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
 
-**What we know**:
+**Key concepts**:
 - Use `/rename` to name current session
 - Use `/resume <name>` in REPL to resume named session
 - Use `claude --resume <name>` from terminal to resume
@@ -158,9 +160,9 @@ claude --resume feature-auth-refactor
 
 **What it is**: Command to view interesting Claude Code usage statistics including graphs and streaks
 
-**Introduced**: v2.0.64 (2025-12)
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
 
-**What we know**:
+**Key concepts**:
 - New `/stats` command provides usage statistics
 - Shows personal usage patterns and metrics
 - May include visual graphs and streak tracking
@@ -170,3 +172,48 @@ claude --resume feature-auth-refactor
 - Usage over time (graph)
 - Usage streak (consecutive days)
 - Possibly token counts, session counts, etc.
+
+---
+
+## /plan Command
+
+**What it is**: Direct entry into plan mode from the prompt
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+
+**Key concepts**:
+- Use `/plan` to enter plan mode directly
+- Alternative to typing "let's plan" or similar prompts
+- Triggers plan mode with all its features (research, questions, structured planning)
+- Shortcut for common workflow transition
+
+**Usage**:
+```
+> /plan
+# Claude enters plan mode and begins gathering requirements
+```
+
+---
+
+## Remote Session Management
+
+**What it is**: Commands to manage remote sessions from claude.ai
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+
+**Key concepts**:
+- `/teleport` - Resume a remote session by ID or open picker (claude.ai subscribers)
+- `/remote-env` - Configure remote session environment (claude.ai subscribers)
+- Enables seamless transition between web and CLI workflows
+- Sessions sync between platforms
+
+**Workflow**:
+1. Start work on claude.ai web interface
+2. Use `/teleport` in CLI to resume that session
+3. Continue work with full CLI capabilities
+4. Changes sync back to web session
+
+**Benefits**:
+- Work continuity across platforms
+- Use web for planning, CLI for execution
+- Access sessions from anywhere
