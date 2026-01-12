@@ -30,7 +30,6 @@ The skill uses thematic reference files for token-efficient progressive disclosu
 | `integrations.md` | VS Code, IDE extensions, plugin marketplace |
 | `workflows.md` | Keyboard shortcuts, checkpointing, git automation |
 | `undocumented.md` | Features from release notes without official docs |
-| `observations.md` | User-discovered behaviors |
 | `sdk-behavioral-bridges.md` | Behavioral constraints from Agent SDK docs |
 
 ## Workflow: Answering Questions
@@ -99,15 +98,18 @@ Verify this is a new observation worth recording:
 
 Before creating an issue, check if this observation already exists:
 
-1. **Check local cache**: Read `~/.claude/plugin-observations/meta-claude.json` if it exists
-2. **Check repo observations**: Read `references/observations.md` in this skill
+1. List existing observations:
+   ```bash
+   python3 "${CLAUDE_PLUGIN_ROOT}/skills/self-documentation/scripts/observations.py" list
+   ```
+
+2. Search the output for similar observations by description keywords or feature_area
+
+**If empty output:** This is the first observation - proceed to Step 3.
 
 **If a similar observation exists:**
 - Inform the user: "This observation appears similar to an existing one: [description]"
-- Ask if they want to:
-  - Update the existing observation with new context
-  - Create a new issue anyway (if sufficiently different)
-  - Skip recording
+- Ask if they want to add anyway or skip
 
 **If no duplicate found:** Proceed to Step 3.
 
@@ -152,36 +154,64 @@ If `gh` is unavailable or authentication fails:
    > "I couldn't create the issue automatically. Here's the formatted content you can paste into a new issue at: https://github.com/ddehart/claude-code-plugins/issues/new"
 3. Continue to Step 6
 
-### Step 6: Offer Additional Actions
+### Step 6: Save Observation
 
-Ask the user:
-> "Would you also like me to:
-> - Cache this observation locally (at ~/.claude/plugin-observations/meta-claude.json)?
-> - Create a PR to add it to the skill's observations.md?"
+After issue creation (or if user declined), save the observation locally using the helper script:
 
-Based on user choice:
-- **Cache locally**: Write to `~/.claude/plugin-observations/meta-claude.json`
-- **Create PR**: Branch from main, update `observations.md`, create PR via `gh pr create`
-- **Neither**: Done
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/self-documentation/scripts/observations.py" add \
+  --description "The observed behavior" \
+  --feature-area "tools" \
+  --context "How it was discovered" \
+  --issue-url "https://github.com/..." # if issue was created
+```
 
-### Local Cache Schema
+The script handles:
+- Creating the storage directory if needed (`~/.local/share/claude-plugins/self-documentation/`)
+- Generating a unique observation ID
+- Setting the discovered date
+- Atomic file write
+
+### Storage Schema
+
+Observations are stored in `$XDG_DATA_HOME/claude-plugins/self-documentation/observations.json` (defaults to `~/.local/share/...`):
 
 ```json
 {
+  "version": 1,
   "observations": [
     {
-      "id": "obs-001",
+      "id": "obs-20260111-001",
       "description": "...",
       "context": "...",
       "discovered": "YYYY-MM-DD",
-      "feature_area": "...",
+      "feature_area": "tools|skills|agents|mcp|config|other",
       "issue_url": "https://github.com/...",
-      "status": "submitted"
+      "status": "new|submitted"
     }
   ],
   "last_updated": "YYYY-MM-DD"
 }
 ```
+
+## Workflow: Observation Lifecycle
+
+When referencing stored observations (e.g., to help answer a question):
+
+1. List observations:
+   ```bash
+   python3 "${CLAUDE_PLUGIN_ROOT}/skills/self-documentation/scripts/observations.py" list
+   ```
+
+2. For each relevant observation, check if it's now documented:
+   - Search reference files for the described behavior
+   - Check if it appears in official docs
+
+3. If now documented → remove it:
+   ```bash
+   python3 "${CLAUDE_PLUGIN_ROOT}/skills/self-documentation/scripts/observations.py" remove <obs-id>
+   ```
+   Inform user: "Observation [id] is now documented. Removing from local cache."
 
 ## Error Handling
 
@@ -191,7 +221,7 @@ Based on user choice:
 | WebFetch fails | Use cached key concepts from reference file |
 | gh CLI unavailable | Provide formatted issue for manual creation |
 | Cross-theme question unclear | Load topic-index, ask user to clarify if needed |
-| Observation already exists | Check local cache, inform user, offer to update |
+| Similar observation exists | Use `observations.py list` to check, inform user, ask if they want to add anyway |
 
 ## Plugin Repo
 
