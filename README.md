@@ -48,13 +48,14 @@ Claude Code productivity skills for session management, self-documentation, and 
 
 ### pm-workflow
 
-Product management workflow skills for writing PRDs and product one-pagers.
+Product management workflow skills for writing and evaluating PRDs and product one-pagers.
 
 **Skills included:**
 
 | Skill | Description |
 |-------|-------------|
 | `prd-writing` | Interview users to transform rough product ideas into comprehensive one-pagers for product kick-offs |
+| `prd-evaluation` | Evaluate PRDs from a product leader's perspective, surfacing gaps in reasoning and unstated assumptions |
 
 ## Usage
 
@@ -79,6 +80,7 @@ Once installed, the agents and skills are automatically available. Claude will p
 - Ask to write a PRD or product brief
 - Ask to create a one-pager or kick-off doc
 - Ask to define product requirements
+- Ask to evaluate, review, or critique a PRD
 
 ## Updating
 
