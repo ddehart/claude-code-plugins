@@ -49,7 +49,7 @@ Falls back to `~/.local/share/claude-plugins/self-documentation/observations.jso
 | `context` | string | no | How/when it was discovered |
 | `feature_area` | string | yes | Category: `tools`, `skills`, `agents`, `mcp`, `config`, `other` |
 | `discovered` | string | yes | ISO date when discovered |
-| `status` | enum | yes | `new`, `submitted`, `documented` |
+| `status` | enum | yes | `new`, `submitted` |
 | `issue_url` | string | no | GitHub issue URL if submitted |
 
 ## Workflows

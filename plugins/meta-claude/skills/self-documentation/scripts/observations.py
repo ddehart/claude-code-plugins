@@ -32,16 +32,18 @@ def load_observations():
 
 def save_observations(data):
     """Atomic save via temp file + rename."""
-    STORAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    STORAGE_PATH.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     data["last_updated"] = date.today().isoformat()
 
     # Write to temp file, then rename (atomic on POSIX)
     fd, temp_path = tempfile.mkstemp(dir=STORAGE_PATH.parent, suffix=".json")
     try:
+        os.fchmod(fd, 0o600)  # Restrict file permissions
         os.write(fd, json.dumps(data, indent=2).encode())
         os.close(fd)
         os.rename(temp_path, STORAGE_PATH)
-    except:
+    except Exception:
+        os.close(fd)  # Close fd before unlink to prevent leak
         os.unlink(temp_path)
         raise
 
