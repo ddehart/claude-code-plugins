@@ -7,7 +7,6 @@ import os
 import sys
 from datetime import date
 from pathlib import Path
-import tempfile
 
 
 def get_storage_path():
@@ -35,16 +34,15 @@ def save_observations(data):
     STORAGE_PATH.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     data["last_updated"] = date.today().isoformat()
 
-    # Write to temp file, then rename (atomic on POSIX)
-    fd, temp_path = tempfile.mkstemp(dir=STORAGE_PATH.parent, suffix=".json")
+    # Create temp file with restricted permissions from the start (no race condition)
+    temp_path = STORAGE_PATH.parent / f".tmp_{os.getpid()}.json"
+    fd = os.open(temp_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     try:
-        os.fchmod(fd, 0o600)  # Restrict file permissions
-        os.write(fd, json.dumps(data, indent=2).encode())
-        os.close(fd)
+        with os.fdopen(fd, 'w') as f:  # fdopen takes ownership of fd, handles close
+            json.dump(data, f, indent=2)
         os.rename(temp_path, STORAGE_PATH)
     except Exception:
-        os.close(fd)  # Close fd before unlink to prevent leak
-        os.unlink(temp_path)
+        temp_path.unlink(missing_ok=True)
         raise
 
 
