@@ -46,6 +46,16 @@ Claude Code productivity skills for session management, self-documentation, and 
 | `session-export` | Export Claude Code session transcripts from JSONL logs to readable text format |
 | `self-documentation` | Explain Claude Code features, capabilities, and tools; record observations about undocumented behaviors |
 
+### pm-workflow
+
+Product management workflow skills for writing PRDs and product one-pagers.
+
+**Skills included:**
+
+| Skill | Description |
+|-------|-------------|
+| `prd-writing` | Interview users to transform rough product ideas into comprehensive one-pagers for product kick-offs |
+
 ## Usage
 
 Once installed, the agents and skills are automatically available. Claude will proactively use them when you:
@@ -65,11 +75,17 @@ Once installed, the agents and skills are automatically available. Claude will p
 - Ask to export a session transcript
 - Report discovering undocumented behavior
 
+**pm-workflow:**
+- Ask to write a PRD or product brief
+- Ask to create a one-pager or kick-off doc
+- Ask to define product requirements
+
 ## Updating
 
 ```bash
 /plugin update dev-workflow@ddehart-plugins
 /plugin update meta-claude@ddehart-plugins
+/plugin update pm-workflow@ddehart-plugins
 ```
 
 ## Naming Conventions
