@@ -2,25 +2,17 @@
 
 User-discovered behaviors and findings not documented in official Claude Code documentation. These observations come from hands-on testing and community contributions.
 
+**Note**: Some observations may later be confirmed by SDK documentation. When this happens, the observation is migrated to `sdk-behavioral-bridges.md` with proper attribution.
+
 **How to contribute**: When you discover undocumented behavior, use this skill to record it. The skill will create a GitHub issue and optionally cache locally.
 
 ---
 
-## AskUserQuestion Cannot Be Delegated to Subagents
+## Migrated Observations
 
-**Observation**: The AskUserQuestion tool cannot be used when running in a forked/subagent context via the Task tool.
+The following observations have been confirmed by SDK documentation and moved to `sdk-behavioral-bridges.md`:
 
-**Discovered**: 2025-01-09
-
-**Context**: Attempted to create an interactive skill that runs in forked context (`context: fork`) to ask users questions during execution.
-
-**Behavior**: When a subagent attempts to use AskUserQuestion, the tool is not available or fails. Interactive questioning only works in the main conversation context.
-
-**Implication**: Skills that need to ask users questions must run in the main context, not as forked subagents. Use `context: fork` only for non-interactive workflows.
-
-**Feature area**: Tools, Subagents
-
-**Status**: Confirmed through testing
+- **AskUserQuestion Cannot Be Delegated to Subagents** (discovered 2026-01-09) → See `sdk-behavioral-bridges.md` for authoritative documentation
 
 ---
 

@@ -31,6 +31,7 @@ The skill uses thematic reference files for token-efficient progressive disclosu
 | `workflows.md` | Keyboard shortcuts, checkpointing, git automation |
 | `undocumented.md` | Features from release notes without official docs |
 | `observations.md` | User-discovered behaviors |
+| `sdk-behavioral-bridges.md` | Behavioral constraints from Agent SDK docs |
 
 ## Workflow: Answering Questions
 
@@ -51,6 +52,8 @@ Read the identified reference file(s). Only load what's needed - avoid loading a
 If the reference file includes a documentation URL and more detail is needed:
 1. Use WebFetch to retrieve the official documentation
 2. Synthesize with reference file content
+
+**For behavioral constraints:** Check `sdk-behavioral-bridges.md` for authoritative information from the Agent SDK docs (e.g., tool limitations, permission flow, subagent constraints).
 
 ### Step 5: Respond
 
