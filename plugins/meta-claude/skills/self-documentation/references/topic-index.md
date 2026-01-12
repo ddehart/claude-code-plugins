@@ -41,6 +41,15 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | release notes, undocumented, new feature, recent | undocumented.md | Undocumented features |
 | explore subagent, LSP, desktop, chrome extension, IS_DEMO | undocumented.md | Specific undocumented features |
 | observation, discovered, tested, behavior, found that | observations.md | User observations |
+| sdk, agent-sdk, behavioral, limitations | sdk-behavioral-bridges.md | SDK documentation that explains CLI behavior |
+| timeout, 60 seconds, canUseTool | sdk-behavioral-bridges.md | Tool and callback timeouts |
+| permission flow, evaluation order, deny first | sdk-behavioral-bridges.md | How permissions are evaluated |
+| fork session, forkSession, session branch | sdk-behavioral-bridges.md | Session forking behavior |
+| checkpoint scope, rewind scope, tracked changes | sdk-behavioral-bridges.md | File checkpointing limitations |
+| mcp naming, tool naming, mcp__ | sdk-behavioral-bridges.md | MCP tool naming convention |
+| subagent depth, nested subagent, Task in subagent | sdk-behavioral-bridges.md | Subagent spawning constraints |
+| streaming mode, single message, image upload | sdk-behavioral-bridges.md | Input mode requirements |
+| TypeScript-only, Python SDK limitations | sdk-behavioral-bridges.md | SDK platform differences |
 
 ## Cross-Theme Questions
 
@@ -64,3 +73,4 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 | `decision-guide.md` | "Should I use X or Y?" comparisons |
 | `undocumented.md` | Features not yet in official docs |
 | `observations.md` | User-discovered behaviors |
+| `sdk-behavioral-bridges.md` | Behavioral constraints from SDK docs |

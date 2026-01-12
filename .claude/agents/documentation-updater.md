@@ -26,8 +26,12 @@ You maintain the reference files in `plugins/meta-claude/skills/self-documentati
 | `references/integrations.md` | VS Code, IDE extensions |
 | `references/workflows.md` | Shortcuts, git automation |
 | `references/topic-index.md` | Keyword-to-file mapping |
+| `references/sdk-behavioral-bridges.md` | Behavioral info from Agent SDK |
+| `references/observations.md` | User-discovered behaviors |
 
-## Official Documentation
+## Data Sources
+
+### Claude Code Documentation
 
 **Index:** `https://code.claude.com/docs/llms.txt`
 
@@ -46,6 +50,27 @@ Examples:
 2. Search for the feature name in the index
 3. If found, fetch that page to get details
 4. If not found, the feature is undocumented
+
+### Agent SDK Documentation
+
+**Base URL:** `https://platform.claude.com/docs/en/agent-sdk/`
+
+The Agent SDK docs contain behavioral information that explains Claude Code CLI behavior but isn't in the Claude Code docs. Use this source for behavioral constraints.
+
+**Key pages for behavioral info:**
+- `/user-input` - AskUserQuestion constraints (timeouts, limits, subagent restrictions)
+- `/permissions` - Permission evaluation flow
+- `/subagents` - Subagent limitations
+- `/hooks` - Hook availability (TypeScript vs Python)
+- `/sessions` - Fork behavior
+- `/file-checkpointing` - What file changes are tracked
+- `/skills` - SDK vs CLI differences
+- `/mcp` - Tool naming conventions
+
+**When to check SDK docs:**
+- New features involving subagents, permissions, or tools
+- Features with "unanswered questions" in undocumented.md
+- User observations that might have SDK documentation
 
 ## Release Notes Format
 
@@ -112,6 +137,22 @@ For each new feature from release notes:
 3. **If undocumented:**
    - Add to `undocumented.md` using the entry format below
 
+### Step 4b: Check Agent SDK for Behavioral Updates
+
+For features that might have SDK-documented behavior:
+
+1. Identify features involving subagents, permissions, tools, or sessions
+2. Fetch relevant SDK page via WebFetch (e.g., `/user-input` for AskUserQuestion)
+3. Extract behavioral constraints and limitations
+4. If new behavioral info found:
+   - Update `sdk-behavioral-bridges.md` with the information
+   - Add cross-reference in `undocumented.md` if feature is there
+   - Add keywords to `topic-index.md`
+
+**Also check:** If `observations.md` has entries that are now documented in SDK docs:
+- Migrate the observation to `sdk-behavioral-bridges.md`
+- Update `observations.md` to note the migration
+
 ### Step 5: Write Changes
 
 Update files directly:
@@ -169,8 +210,11 @@ When a feature has official docs, read the content and match:
 | Settings, permissions, CLAUDE.md, sandboxing, model config | configuration.md |
 | VS Code, IDE, extensions, Azure, Foundry | integrations.md |
 | Keyboard, shortcuts, git, sessions, checkpoints, cost | workflows.md |
+| SDK behavioral constraints, limitations, timeouts, tool availability | sdk-behavioral-bridges.md |
 
 **Default:** If unclear, use `core-features.md` and note "categorization may need review"
+
+**SDK content:** Information from Agent SDK docs goes to `sdk-behavioral-bridges.md`, not thematic files
 
 ## Entry Formats
 
@@ -210,6 +254,20 @@ Brief description with key concepts.
 Add keyword mappings:
 ```markdown
 | feature-keyword, related-term | target-file.md | Brief description |
+```
+
+### For sdk-behavioral-bridges.md
+
+```markdown
+## Feature/Constraint Name
+
+**Source**: /docs/en/agent-sdk/<page>
+
+**Behavioral Constraints**:
+- Constraint or limitation
+- With practical implications
+
+**Implication**: How this affects CLI usage
 ```
 
 ## Efficiency Guidelines
@@ -256,6 +314,7 @@ Before finishing:
 - [ ] All new features from release notes are accounted for
 - [ ] "Latest Release" header updated to newest version
 - [ ] Documented features **removed** from `undocumented.md` (not just updated)
+- [ ] SDK-documented observations migrated to `sdk-behavioral-bridges.md`
 - [ ] New keywords added to `topic-index.md`
 - [ ] Entry formats are consistent with existing entries
 - [ ] Plugin version bumped (patch for doc updates)

@@ -46,16 +46,18 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 - Each option has label and description explaining implications
 - "Other" option automatically provided for custom input
 
+**Behavioral constraints** (from SDK docs): See `sdk-behavioral-bridges.md` for:
+- 60-second timeout for responses
+- 1-4 questions per call, 2-4 options per question
+- Not available in subagents spawned via Task tool
+
 **Typical use cases**:
 - Plan mode: "Which approach do you prefer for authentication?"
 - Implementation choices: "Which library should we use?"
 - User preference gathering: "What features should I prioritize?"
 - Clarifying ambiguous requirements before implementation
 
-**Unanswered questions**:
-- Full parameter schema and capabilities
-- How Claude decides when to ask vs. make assumptions
-- Whether users can configure question frequency
+**Official Documentation**: Not in Claude Code docs; behavioral details in Agent SDK (/docs/en/agent-sdk/user-input)
 
 ---
 
