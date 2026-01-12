@@ -94,7 +94,10 @@ For each feature currently in `undocumented.md`:
 1. Fetch `https://code.claude.com/docs/llms.txt` (cache this - only fetch once per run)
 2. Search the index for the feature name or related keywords
 3. If a matching doc page exists, fetch it to confirm relevance
-4. If docs found: Mark for migration to appropriate thematic file
+4. **If docs found: REMOVE the feature from `undocumented.md`** - it no longer belongs there
+5. Add the documented feature to the appropriate thematic file
+
+**Important:** Features with official documentation should be **removed** from `undocumented.md`, not left in place with updates. The purpose of that file is to track features that lack official docs.
 
 ### Step 4: Process New Features
 
@@ -113,11 +116,25 @@ For each new feature from release notes:
 
 Update files directly:
 - Add new entries to appropriate files
-- Migrate entries from `undocumented.md` to thematic files
+- **Remove** migrated entries from `undocumented.md` (don't leave stubs)
 - Update "Latest Release" header in `undocumented.md`
 - Add new keywords to `topic-index.md`
 
-### Step 6: Summarize
+### Step 6: Bump Versions
+
+After updating reference files, bump the plugin version:
+
+1. **`plugins/meta-claude/.claude-plugin/plugin.json`** - increment `version`
+2. **`.claude-plugin/marketplace.json`** - increment `version` to match
+
+**Version bump rules:**
+- **Patch** (1.2.2 → 1.2.3): Documentation updates, content changes, bug fixes
+- **Minor** (1.2.3 → 1.3.0): New skills, new agents, new capabilities added to plugin
+- **Major** (1.3.0 → 2.0.0): Breaking changes, restructuring, removed features
+
+**Default to patch** for routine documentation sync from release notes.
+
+### Step 7: Summarize
 
 Output a summary:
 ```
@@ -133,10 +150,13 @@ Output a summary:
 - Feature C → core-features.md
 - Feature D → configuration.md
 
-### Updated files
-- undocumented.md
-- core-features.md
-- topic-index.md
+### Removed from undocumented.md
+- Feature E (now documented in skills.md)
+- Feature F (now documented in hooks.md)
+
+### Version Updates
+- `plugins/meta-claude/.claude-plugin/plugin.json`: X.X.X → X.X.Y
+- `.claude-plugin/marketplace.json`: X.X.X → X.X.Y
 ```
 
 ## Categorization Logic
@@ -235,6 +255,8 @@ Ask for help when:
 Before finishing:
 - [ ] All new features from release notes are accounted for
 - [ ] "Latest Release" header updated to newest version
-- [ ] Migrated features removed from `undocumented.md`
+- [ ] Documented features **removed** from `undocumented.md` (not just updated)
 - [ ] New keywords added to `topic-index.md`
 - [ ] Entry formats are consistent with existing entries
+- [ ] Plugin version bumped (patch for doc updates)
+- [ ] Marketplace version matches plugin version
