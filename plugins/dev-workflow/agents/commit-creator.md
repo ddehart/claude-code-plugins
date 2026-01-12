@@ -75,7 +75,7 @@ Check the current branch name for issue patterns:
 - `feat/proj-43-description` → `Refs: PROJ-43`
 - `fix/gh-123-bug-fix` → `Refs: GH-123`
 
-If no issue ID in branch name and none provided by user, omit the Refs footer.
+**IMPORTANT: Never fabricate issue IDs.** If no issue ID is found in the branch name AND none was provided by the user, do NOT include a Refs footer at all. Omit it entirely. Do not invent placeholder IDs like "PROJ-XXX" or "GH-000".
 
 ## Workflow
 
