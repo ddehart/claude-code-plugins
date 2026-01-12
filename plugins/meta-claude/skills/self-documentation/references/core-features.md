@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-01-09
+**Last updated**: 2026-01-11
 
 ---
 
@@ -121,11 +121,11 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **Key concepts**:
 - **Invocation patterns**: Direct (`/command`), plugin-prefixed (`/plugin:command` for disambiguation), with arguments (`/command arg1 arg2`)
-- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list), `/plan` (enter plan mode), `/teleport` (resume remote session), `/remote-env` (configure remote environment), `/rename` (name session), `/stats` (usage statistics)
+- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list), `/plan` (enter plan mode), `/teleport` (resume remote session), `/remote-env` (configure remote environment), `/rename` (name session), `/stats` (usage statistics), `/resume` (resume by name or ID)
 - **Custom commands**: Single Markdown files in `.claude/commands/` (project, git-shared) or `~/.claude/commands/` (personal, cross-project)
 - **Structure**: Single file with frontmatter, simpler than Skills' multi-file structure
 - **Features**: Namespacing via subdirectories, arguments (`$ARGUMENTS` for all, `$1`/`$2` for specific), bash execution (prefix `!`), file references (`@` notation), frontmatter metadata
-- **Frontmatter options**: Description, allowed-tools (comma-separated or YAML-style), model selection, disable-model-invocation, hooks, argument-hint
+- **Frontmatter options**: Description, allowed-tools (comma-separated or YAML-style), model selection, disable-model-invocation, hooks, argument-hint, context (fork), agent (for forked context)
 - **Execution**: Skill tool allows Claude to invoke programmatically; disable via `/permissions` or `disable-model-invocation: true`
 - **MCP commands**: Format `mcp__<server-name>__<prompt-name>` from MCP server prompts
 - **Plugin commands**: Auto-discovered when plugins installed
@@ -145,7 +145,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 **Key concepts**:
 - **Execution model**: All matching hooks run in parallel with 60-second default timeout; receive JSON via stdin, return structured output to control Claude
 - **Configuration locations**: `~/.claude/settings.json` (user), `.claude/settings.json` (project), `.claude/settings.local.json` (local project), enterprise managed policy, skill/agent/command frontmatter
-- **10 event types**: PreToolUse (before tool execution, can modify tool inputs), PostToolUse (after completion), UserPromptSubmit (prompt submission), Notification (permission requests with matcher values for event filtering), PermissionRequest (automatically approve/deny tool permissions), Stop (main agent finish, prompt-based matching), SubagentStop (subagent finish), SessionStart (session begins), SessionEnd (session terminates), PreCompact (before context compacting)
+- **11 event types**: PreToolUse (before tool execution, can modify tool inputs), PostToolUse (after completion), UserPromptSubmit (prompt submission), Notification (permission requests with matcher values for event filtering), PermissionRequest (automatically approve/deny tool permissions), Stop (main agent finish, prompt-based matching), SubagentStart (subagent begins), SubagentStop (subagent finish), SessionStart (session begins), SessionEnd (session terminates), PreCompact (before context compacting)
 - **Matcher patterns**: Exact (`Write`), regex (`Edit|Write`), wildcard (`*`), prompt-based (Stop hooks can match against user prompts), Notification and PermissionRequest matcher values for event-specific filtering; case-sensitive
 - **Exit codes**: 0 (success, stdout to transcript), 2 (blocking error, stderr to Claude), other (non-blocking error, stderr to user)
 - **JSON output**: Advanced control with `continue`, `decision`, `reason`, and hook-specific parameters

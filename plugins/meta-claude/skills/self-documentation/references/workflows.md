@@ -2,7 +2,7 @@
 
 Productivity features, keyboard shortcuts, and workflow automation in Claude Code.
 
-**Last updated**: 2026-01-09
+**Last updated**: 2026-01-11
 
 ---
 
@@ -13,7 +13,7 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 **Documentation**: https://docs.anthropic.com/en/docs/claude-code/interactive-mode
 
 **Key concepts**:
-- **General controls**: Ctrl+C (interrupt), Ctrl+D (exit), Ctrl+L (clear screen), Ctrl+O (toggle verbose/transcript), Ctrl+R (history search), Ctrl+V/Alt+V (paste images), Tab (thinking toggle), Shift+Tab/Alt+M (permission modes)
+- **General controls**: Ctrl+C (interrupt), Ctrl+D (exit), Ctrl+L (clear screen), Ctrl+O (toggle verbose/transcript), Ctrl+R (history search), Ctrl+V/Alt+V (paste images), Shift+Tab/Alt+M (permission modes)
 - **Multiline entry**: `\` + Enter, Option+Enter (macOS), Shift+Enter (after /terminal-setup)
 - **Quick commands**: `#` (add to memory), `/` (slash commands), `!` (direct bash), `@` (file autocomplete)
 - **Vim mode**: Standard navigation (h/j/k/l, w, b, f, t) and editing (dd, cc, x) with Esc mode switching; expanded motions for improved navigation
@@ -23,6 +23,7 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 - **Kill ring**: Ctrl-Y yanks most recent deletion, Alt-Y cycles through older deletions
 - **Model switching**: Alt+P (Linux/Windows) or Option+P (macOS) to switch models mid-prompt
 - **Thinking toggle**: Alt+T to enable/disable extended thinking mode (requires /terminal-setup); sticky across sessions
+- **Slash command autocomplete**: Works anywhere in input, not just at the beginning
 
 ---
 
@@ -109,6 +110,7 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 - Agents and bash commands can run asynchronously and send messages to wake up the main agent
 - Enables true parallel workflows with human and agent working simultaneously
 - Ctrl+B works for both bash commands and agents
+- Disable all background task functionality with `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`
 
 **Expected behavior**:
 - Start an agent task that runs in background

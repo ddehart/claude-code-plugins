@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2026-01-09
+**Last updated**: 2026-01-11
 
 ---
 
@@ -167,8 +167,6 @@ Settings, permissions, memory, and customization options for Claude Code.
 
 ## Language Setting
 
-**Introduced**: v2.1.0 (2026-01)
-
 **What it is**: Configure Claude's preferred response language
 
 **Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
@@ -190,8 +188,6 @@ Settings, permissions, memory, and customization options for Claude Code.
 
 ## respectGitignore Setting
 
-**Introduced**: v2.1.0 (2026-01)
-
 **What it is**: Control whether @ file picker respects .gitignore patterns
 
 **Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
@@ -212,8 +208,6 @@ Settings, permissions, memory, and customization options for Claude Code.
 
 ## File Read Token Limit
 
-**Introduced**: v2.1.0 (2026-01)
-
 **What it is**: Override default token limit for file reads
 
 **Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
@@ -233,8 +227,6 @@ claude
 ---
 
 ## Tools Interactive Mode Flag
-
-**Introduced**: v2.1.0 (2026-01)
 
 **What it is**: CLI flag to control tool availability in interactive mode
 

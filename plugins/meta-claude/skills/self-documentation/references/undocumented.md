@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and behavioral understanding. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.3 (as of 2026-01-09)
+**Latest Release**: v2.1.4 (as of 2026-01-11)
 
 ---
 
@@ -215,24 +215,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## SubagentStart Hook Event
-
-**What it is**: Hook event that fires when a subagent begins execution
-
-**Introduced**: v2.0.43 (2025-11)
-
-**What we know**:
-- New hook event type added to the existing hook events
-- Complements existing `SubagentStop` hook for complete subagent lifecycle monitoring
-- Enables custom automation at subagent initialization
-
-**Expected use cases**:
-- Logging/monitoring when specific subagents activate
-- Pre-execution validation or setup for subagent tasks
-- Custom initialization logic before subagent begins work
-
----
-
 ## Custom Agent permissionMode Field
 
 **What it is**: Configuration field controlling permission behavior for specific custom agents
@@ -256,28 +238,6 @@ tools: Bash
 
 ---
 
-## Subagent Skills Frontmatter Field
-
-**What it is**: Configuration to auto-load specific skills when a subagent activates
-
-**Introduced**: v2.0.43 (2025-11)
-
-**What we know**:
-- New frontmatter field: `skills: skill-name-1, skill-name-2`
-- Skills load when subagent activates, unload when it completes
-- Enables specialized expertise per subagent without global loading
-
-**Example**:
-```yaml
----
-name: code-reviewer
-description: Review code changes
-skills: code-quality-standards, security-patterns
----
-```
-
----
-
 ## Web Background Tasks with & Syntax
 
 **What it is**: Send long-running tasks to Claude Code web by prefixing messages with `&`
@@ -288,26 +248,6 @@ skills: code-quality-standards, security-patterns
 - Start message with `&` in CLI to transfer task to web interface
 - Enables continuing CLI work while task runs on web
 - Similar to Ctrl-B (background bash) but cross-platform
-
----
-
-## Opus 4.5 Model
-
-**What it is**: Claude's newest frontier model with enhanced capabilities
-
-**Introduced**: v2.0.51 (2025-11), Pro access added v2.0.58 (2025-12)
-
-**What we know**:
-- Model ID: `claude-opus-4-5-20251101`
-- Accessible via `/model` selector or `--model opus`
-- Thinking mode enabled by default for Opus 4.5 (v2.0.67)
-- Pro users have full access included in subscription
-
-**Model selection context**:
-- Fits into existing model hierarchy: haiku (fast), sonnet (balanced), opus (complex reasoning)
-- `opus` alias now defaults to Opus 4.5
-- Works with opusplan mode (opus for planning, sonnet for execution)
-- Thinking mode can be toggled with Alt+T (sticky across sessions)
 
 ---
 
@@ -327,46 +267,6 @@ skills: code-quality-standards, security-patterns
 
 ---
 
-## fileSuggestion Setting
-
-**What it is**: Configuration to customize the `@` file search behavior with custom commands
-
-**Introduced**: v2.0.65 (2025-12)
-
-**What we know**:
-- New `fileSuggestion` setting in settings.json
-- Enables customizing how `@` file suggestions work
-- Can use external tools like `fzf`, `fd`, or custom scripts
-
-**Expected configuration**:
-```json
-{
-  "fileSuggestion": {
-    "command": "fd --type f"
-  }
-}
-```
-
----
-
-## CLAUDE_CODE_SHELL Environment Variable
-
-**What it is**: Environment variable to override automatic shell detection
-
-**Introduced**: v2.0.65 (2025-12)
-
-**What we know**:
-- Set `CLAUDE_CODE_SHELL` to specify shell executable
-- Useful when login shell differs from preferred working shell
-- Helps with environments where shell detection fails
-
-**Configuration example**:
-```bash
-export CLAUDE_CODE_SHELL=/bin/zsh
-```
-
----
-
 ## IS_DEMO Environment Variable
 
 **What it is**: Environment variable to indicate demo/streaming mode
@@ -382,51 +282,6 @@ export CLAUDE_CODE_SHELL=/bin/zsh
 ```bash
 export IS_DEMO=1
 claude
-```
-
----
-
-## Teleport and Remote-Env Commands
-
-**What it is**: Resume remote sessions from claude.ai in the CLI
-
-**Introduced**: v2.1.0 (2026-01)
-
-**What we know**:
-- `/teleport` - Resume a remote session by ID or open picker
-- `/remote-env` - Configure remote session environment
-- Claude.ai subscribers can sync sessions between web and CLI
-- Enables starting work on web, continuing in CLI seamlessly
-
-**Expected workflow**:
-1. Start session on claude.ai
-2. Use `/teleport` in CLI to resume that session
-3. Work continues with full CLI capabilities
-4. Changes sync back to web session
-
----
-
-## Unreachable Permission Rule Warnings
-
-**What it is**: Warnings for permission rules that can never match due to precedence
-
-**Introduced**: v2.1.3 (2026-01)
-
-**What we know**:
-- Claude Code warns when permission rules are unreachable
-- Helps debug complex permission configurations
-- Indicates when a more specific rule shadows a broader one
-
-**Example warning scenario**:
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(git:*)",
-      "Bash(git status:*)"  // Unreachable - already covered by git:*
-    ]
-  }
-}
 ```
 
 ---
@@ -482,29 +337,3 @@ claude
 - Improved session management
 - Enhanced diff viewing
 - More responsive UI updates
-
----
-
-## Integration Pattern: Skills + Subagents
-
-**Problem**: You want specialized knowledge available for both user questions AND automation workflows, without duplicating logic.
-
-**Solution**: Create a skill with the expertise, configure subagent to auto-load it.
-
-**Example: npm-update-advisor + package-updater**
-
-```yaml
-# Skill: Contains npm diagnostic logic
-name: npm-update-advisor
-description: Analyzes npm update strategies based on semver, lock files...
-
-# Subagent: Orchestrates package updates, loads skill
-name: package-updater
-skills: npm-update-advisor
-tools: Bash, Read
-```
-
-**Result:**
-- User asks npm questions → Skill triggers in main conversation
-- Security automation runs → Subagent loads skill for smart decisions
-- Single source of truth, dual contexts
