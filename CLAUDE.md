@@ -123,3 +123,14 @@ Users install via Claude Code slash commands:
 /plugin marketplace add ddehart/claude-code-plugins
 /plugin install dev-workflow@ddehart-plugins
 ```
+
+## Using the Documentation-Updater Agent
+
+When delegating to `documentation-updater` to sync release notes:
+
+1. **Check the last documented version first** by reading `plugins/meta-claude/skills/self-documentation/references/undocumented.md` and finding the "Latest Release" header
+2. **Keep the prompt minimal** - let the agent determine what needs updating using its own version delta logic
+3. **Don't pre-specify features** - the agent will parse the release notes itself
+
+Bad: "Focus on versions v2.1.0 through v2.1.4..."
+Good: "Update the self-documentation skill with the latest release notes."
