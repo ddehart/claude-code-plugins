@@ -15,6 +15,12 @@
       "source": "./plugins/meta-claude",
       "description": "Claude Code productivity skills: session export, self-documentation for explaining features and capabilities, and self-reflection tools",
       "version": "1.4.0"
+    },
+    {
+      "name": "pm-workflow",
+      "source": "./plugins/pm-workflow",
+      "description": "Product management workflow skills: PRD writing and product one-pagers",
+      "version": "1.0.0"
     }
   ]
 }
