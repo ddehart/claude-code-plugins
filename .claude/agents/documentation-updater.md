@@ -46,10 +46,30 @@ Examples:
 - `https://code.claude.com/docs/en/sub-agents.md`
 
 **To check if a feature has docs:**
-1. Fetch `llms.txt` to get the full index
-2. Search for the feature name in the index
-3. If found, fetch that page to get details
-4. If not found, the feature is undocumented
+
+The llms.txt index contains page titles, NOT feature keywords. You cannot rely on string matching against the index. Instead, use the feature-to-page mapping below to identify candidate pages, then fetch and search within those pages.
+
+**Feature-to-Page Mapping:**
+
+| Feature keywords | Candidate doc pages |
+|------------------|---------------------|
+| subagent, agent, Task tool, Explore, Plan, delegation | sub-agents.md |
+| keyboard, shortcut, Ctrl, background, bash mode, vim | interactive-mode.md |
+| environment variable, setting, config, permission | settings.md |
+| MCP, server, tool, protocol | mcp.md |
+| skill, slash command, /command | skills.md, slash-commands.md |
+| hook, lifecycle, PreToolUse, PostToolUse | hooks.md |
+| plugin, marketplace | plugins.md, plugins-reference.md |
+| VS Code, IDE, extension | vs-code.md, jetbrains.md |
+| checkpoint, rewind, restore | checkpointing.md |
+| memory, CLAUDE.md, context | memory.md |
+
+**Verification process:**
+1. For each undocumented feature, identify candidate pages using the mapping above
+2. Fetch the candidate page(s) using the `.md` URL pattern
+3. Search within the page content for the feature name or related terms
+4. If found with sufficient detail → feature is now documented
+5. If not found in any candidate page → feature remains undocumented
 
 ### Agent SDK Documentation
 
@@ -72,37 +92,43 @@ The Agent SDK docs contain behavioral information that explains Claude Code CLI 
 - Features with "unanswered questions" in undocumented.md
 - User observations that might have SDK documentation
 
-## Release Notes Format
+## Changelog Format
 
-The `/release-notes` command returns output like:
+The CHANGELOG.md uses this format:
 
 ```
-Version 2.1.3:
-• Merged slash commands and skills, simplifying the mental model
-• Added release channel toggle to /config
-• Fixed plan files persisting across /clear commands
+## 2.1.7
 
-Version 2.1.2:
-• Added source path metadata to images dragged onto the terminal
-• Fixed a command injection vulnerability in bash command processing
+- Added `showTurnDuration` setting to hide turn duration messages
+- Added ability to provide feedback when accepting permission prompts
+- Improved context management for long conversations
+- Fixed security vulnerability where wildcard permission rules could match compound commands
+- [VSCode] Fixed extension issue with workspace detection
+
+## 2.1.6
+
+- Added search functionality to `/config` command
+- [SDK] Updated subagent timeout handling
 ```
 
 **Parsing rules:**
-- Each version block starts with `Version X.X.X:`
-- Features are bullet points starting with `•`
-- Some bullets have prefixes: `Fixed`, `Added`, `SDK:`, `VSCode:`, `Windows:`, `Bedrock:`
-- Bug fixes (`Fixed ...`) are usually not documentation-worthy
-- Focus on new capabilities, new commands, new configuration options
+- Each version block starts with `## X.X.X` (h2 header, no date)
+- Changes are bullet points starting with `-`
+- Platform-specific items use bracket notation: `[VSCode]`, `[Windows]`, `[SDK]`, `[Bedrock]`
+- Minor bug fixes are usually not documentation-worthy
+- Focus on new capabilities, improvements, and configuration options
 
 ## Workflow
 
 ### Step 1: Fetch Release Notes
 
-Invoke the `/release-notes` skill:
+Fetch the changelog from GitHub:
 
 ```
-Use the Skill tool with skill: "release-notes"
+Use WebFetch with url: "https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md"
 ```
+
+This returns the full changelog. Parse the version blocks to identify recent releases.
 
 ### Step 2: Determine Version Delta
 
@@ -116,11 +142,21 @@ Compare against release notes to identify:
 
 For each feature currently in `undocumented.md`:
 
-1. Fetch `https://code.claude.com/docs/llms.txt` (cache this - only fetch once per run)
-2. Search the index for the feature name or related keywords
-3. If a matching doc page exists, fetch it to confirm relevance
-4. **If docs found: REMOVE the feature from `undocumented.md`** - it no longer belongs there
-5. Add the documented feature to the appropriate thematic file
+1. **Identify candidate doc pages** using the Feature-to-Page Mapping table (see Data Sources section)
+2. **Fetch each candidate page** using WebFetch with the `.md` URL pattern (e.g., `https://code.claude.com/docs/en/sub-agents.md`)
+3. **Search within the page content** for the feature name, related terms, or the capability being described
+4. **If feature is documented**:
+   - REMOVE the feature from `undocumented.md`
+   - Add summary to appropriate thematic file with link to official docs
+5. **If not found in any candidate page**: Feature remains undocumented
+
+**Critical:** Do NOT rely on searching the llms.txt index for feature names. The index contains page titles like "Create custom subagents", not feature names like "Explore Subagent" or "permissionMode". You must fetch and search within the actual doc pages.
+
+**Example verification:**
+- Feature: "Explore Subagent"
+- Keywords: "subagent", "Explore"
+- Candidate page: sub-agents.md
+- Action: Fetch sub-agents.md, search for "Explore" → Found detailed docs → Migrate
 
 **Important:** Features with official documentation should be **removed** from `undocumented.md`, not left in place with updates. The purpose of that file is to track features that lack official docs.
 
@@ -273,9 +309,9 @@ Add keyword mappings:
 ## Efficiency Guidelines
 
 **Batch WebFetch calls:**
-- Fetch `llms.txt` once at the start and cache in memory
-- Search the cached index for all features before fetching individual pages
-- Only fetch individual doc pages when confirming content for categorization
+- Group undocumented features by their candidate doc pages
+- Fetch each candidate page once, then check all relevant features against that page's content
+- Example: If 3 features map to sub-agents.md, fetch it once and check all 3
 
 **Skip trivial entries:**
 - Bug fixes (`Fixed ...`) don't need documentation entries
@@ -313,6 +349,7 @@ Ask for help when:
 Before finishing:
 - [ ] All new features from release notes are accounted for
 - [ ] "Latest Release" header updated to newest version
+- [ ] **Doc migration verification**: For each undocumented feature, confirmed you fetched and searched the relevant doc page(s) - not just the llms.txt index
 - [ ] Documented features **removed** from `undocumented.md` (not just updated)
 - [ ] SDK-documented observations migrated to `sdk-behavioral-bridges.md`
 - [ ] New keywords added to `topic-index.md`
