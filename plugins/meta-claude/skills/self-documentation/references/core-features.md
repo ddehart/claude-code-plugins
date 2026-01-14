@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-01-11
+**Last updated**: 2026-01-13
 
 ---
 
@@ -70,6 +70,8 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Enterprise**: System-wide `managed-mcp.json` for standardization, allowlists/denylists for control
 - **Tool naming**: MCP tools use pattern `mcp__<server-name>__<tool-name>`
 - **Dynamic updates**: MCP `list_changed` notifications allow servers to dynamically update available tools, prompts, and resources without reconnecting
+- **structuredContent support**: MCP servers can return `structuredContent` field in tool responses for richer outputs beyond plain text (formatting, hierarchy, structured data)
+- **headersHelper**: Dynamic header generation via helper script in MCP config; script outputs JSON with header key-value pairs; enables OAuth token refresh and short-lived API keys
 
 ---
 
@@ -100,16 +102,18 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 **Key concepts**:
 - **Benefits**: Context preservation (separate windows prevent main conversation pollution), specialized expertise (fine-tuned instructions), reusability (work across projects), flexible permissions (different tool access levels)
 - **Creation**: `/agents` → Create New Agent → Choose scope → Define/customize → Select tools → Save; or manually create Markdown files with YAML frontmatter
-- **File structure**: YAML frontmatter with `name` (required, lowercase-hyphenated), `description` (required, natural language purpose), `tools` (optional, comma-separated), `model` (optional, sonnet/opus/haiku/inherit), `disallowedTools` (optional, explicit tool blocking)
+- **File structure**: YAML frontmatter with `name` (required, lowercase-hyphenated), `description` (required, natural language purpose), `tools` (optional, comma-separated), `model` (optional, sonnet/opus/haiku/inherit), `disallowedTools` (optional, explicit tool blocking), `permissionMode` (optional, permission behavior for specific agent)
 - **File locations** (priority order): Project (`.claude/agents/`, highest), CLI flag (`--agents`, add subagents dynamically), User (`~/.claude/agents/`, lower), Plugin (`agents/` directory)
 - **Usage**: Automatic delegation (Claude proactively identifies based on descriptions; use "PROACTIVELY" or "MUST BE USED" in description), Explicit invocation (direct requests to use specific subagent), @-mention support with typeahead
 - **Tool access**: Inherits all tools if not specified; can restrict to specific tools via `tools` field; can explicitly block tools via `disallowedTools` field; includes MCP server tools
 - **Skill auto-loading**: `skills` frontmatter field loads specific skills when subagent activates; enables specialized knowledge per subagent; skills unload when subagent completes
-- **Built-in subagents**: Plan subagent (automatic codebase research during plan mode using Read/Glob/Grep/Bash tools with Sonnet model, prevents infinite nesting)
+- **Built-in subagents**: Explore (Haiku-powered read-only codebase exploration with thoroughness levels: quick/medium/very thorough), Plan (automatic codebase research during plan mode using Read/Glob/Grep/Bash tools with Sonnet model, prevents infinite nesting), General-purpose (complex multi-step tasks with all tools), Helper agents (Bash, statusline-setup, Claude Code Guide)
 - **Best practices**: Start with Claude-generated then customize, design focused subagents with single responsibilities, write detailed prompts with constraints, limit tool access to necessary only, version control project subagents
 - **Advanced**: Chaining (multiple sequential subagents), dynamic selection (Claude intelligently chooses), model selection ('inherit' for consistency), subagent resumption (Claude can resume previous subagents), dynamic model choice (Claude selects model for subagent tasks)
 - **Agent hooks**: Agents can define hooks in frontmatter using `hooks` field; supports `PreToolUse`, `PostToolUse`, and `Stop` events
 - **Disable via Task tool**: Use `Task(AgentName)` syntax in permission deny rules to prevent specific agents from being invoked
+- **Permission modes**: `permissionMode` field controls permission behavior per agent (`default`, `acceptEdits`, `dontAsk`, `bypassPermissions`, `plan`)
+- **Background execution**: Agents can run in foreground (blocking with permission passthrough) or background (concurrent with auto-deny for missing permissions); MCP tools not available in background
 
 ---
 
@@ -179,3 +183,35 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Result integration**: Subagent work summarized and returned to main conversation
 - **Chaining support**: Multiple subagents can work sequentially on complex tasks
 - **Permission control**: Can be disabled via `/permissions` or blocked with `Task(AgentName)` syntax for specific agents
+
+---
+
+## AskUserQuestion Tool
+
+**What it is**: Interactive tool for asking structured multiple-choice questions during conversations
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings (Tools Available to Claude table)
+
+**Key concepts**:
+- **Purpose**: Enables Claude to ask structured questions with multiple-choice options
+- **Features**: Single-select or multi-select modes, automatic "Other" option for custom input
+- **Use cases**: Gathering preferences, clarifying ambiguous requirements, plan mode decisions
+- **Question structure**: Header (short label), question text, 2-4 options with label and description
+- **Behavioral constraints**: 60-second timeout, 1-4 questions per call, not available in subagents spawned via Task tool
+- **Permission**: No permission required for this tool
+
+---
+
+## LSP Tool
+
+**What it is**: Language Server Protocol integration for semantic code intelligence
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings (Tools Available to Claude table)
+
+**Key concepts**:
+- **Introduced**: v2.0.74 (2025-12)
+- **Purpose**: Semantic code understanding beyond grep - go-to-definition, find references, hover documentation/types
+- **Benefits**: More accurate than grep, understands code structure and types
+- **Capabilities**: Navigate code definitions, find all references to symbols, get type information and documentation
+- **Use cases**: Codebase exploration, refactoring support, understanding code relationships
+- **Likely supported languages**: TypeScript/JavaScript, Python, other LSP-compatible languages

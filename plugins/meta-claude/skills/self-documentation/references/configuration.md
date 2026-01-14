@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2026-01-11
+**Last updated**: 2026-01-13
 
 ---
 
@@ -246,15 +246,22 @@ claude --tools Read,Grep,Glob
 
 ## Release Channel Toggle
 
-**What it is**: Configuration option to select update channel (stable vs beta)
+**What it is**: Configuration option to select update channel (stable vs latest)
 
-**Documentation**: Available via `/config` menu
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
 
 **Key concepts**:
-- Toggle between stable and beta release channels
-- Beta channel receives early access to new features
-- Stable channel receives tested, production-ready releases
-- Accessible via `/config` command in Claude Code
+- `autoUpdatesChannel` setting in settings.json
+- `stable` channel (about one week old, skips major regressions) vs `latest` (default, most recent release)
+- Toggle via `/config` command or settings.json
+- Helps balance new features vs stability
+
+**Configuration**:
+```json
+{
+  "autoUpdatesChannel": "stable"
+}
+```
 
 ---
 
@@ -272,3 +279,83 @@ claude --tools Read,Grep,Glob
 - Impacts prompt caching efficiency
 - Can be configured via `alwaysThinkingEnabled` setting
 - Token budget controlled by `MAX_THINKING_TOKENS` environment variable
+
+---
+
+## CLAUDE_BASH_NO_LOGIN Environment Variable
+
+**What it is**: Skip login shell initialization for faster bash command execution
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings (Environment variables table)
+
+**Key concepts**:
+- Set `CLAUDE_BASH_NO_LOGIN=1` to skip loading .bash_profile, .profile, etc.
+- Trade-off: faster execution but may miss custom aliases, functions, PATH entries
+- Useful for simple commands, containers, or performance-critical workflows
+
+**Configuration**:
+```bash
+export CLAUDE_BASH_NO_LOGIN=1
+claude
+```
+
+---
+
+## CLAUDE_CODE_TMPDIR Environment Variable
+
+**What it is**: Override default temporary directory location
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings (Environment variables table)
+
+**Key concepts**:
+- Introduced in v2.1.5
+- Set `CLAUDE_CODE_TMPDIR` to customize where Claude Code stores temporary files
+- Useful for systems with limited /tmp space or custom temp directory requirements
+- Helps manage disk space in constrained environments
+
+**Configuration**:
+```bash
+export CLAUDE_CODE_TMPDIR=/custom/tmp/path
+claude
+```
+
+---
+
+## CLAUDE_CODE_DISABLE_BACKGROUND_TASKS Environment Variable
+
+**What it is**: Disable all background task functionality
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings (Environment variables table)
+
+**Key concepts**:
+- Set `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1` to disable background tasks
+- Disables `run_in_background` parameter on Bash and subagent tools
+- Disables auto-backgrounding of long-running commands
+- Disables Ctrl+B backgrounding shortcut
+- Useful for environments where background execution is problematic
+
+**Configuration**:
+```bash
+export CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1
+claude
+```
+
+---
+
+## CLAUDE_CODE_HIDE_ACCOUNT_INFO Environment Variable
+
+**What it is**: Hide personal account information from Claude Code UI
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings (Environment variables table)
+
+**Key concepts**:
+- Set `CLAUDE_CODE_HIDE_ACCOUNT_INFO=1` to hide email address and organization name
+- Replaces IS_DEMO environment variable for broader use cases
+- Useful when streaming, recording, or presenting Claude Code sessions
+- Helps protect privacy in public demonstrations
+
+**Configuration**:
+```bash
+export CLAUDE_CODE_HIDE_ACCOUNT_INFO=1
+claude
+```

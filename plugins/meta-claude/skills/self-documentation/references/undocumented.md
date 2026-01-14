@@ -2,62 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and behavioral understanding. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.4 (as of 2026-01-11)
-
----
-
-## Explore Subagent
-
-**What it is**: Built-in Haiku-powered subagent for efficient codebase exploration and searching
-
-**Introduced**: v2.0.17 (2025-02)
-
-**What we know**:
-- Automatically invoked when main Claude needs to search through codebase
-- Uses Haiku model for speed and context efficiency
-- Designed to answer questions like "Where are errors handled?" or "How does authentication work?"
-- Has access to Glob, Grep, and Read tools for codebase navigation
-- Operates in separate context window to preserve main conversation tokens
-
-**Likely trigger patterns**:
-- Questions about code location ("Where is X defined?")
-- Architectural questions ("How does Y work?")
-- Pattern discovery ("Find all instances of Z")
-- Codebase exploration without specific file paths
-
-**Unanswered questions**:
-- Exact description/trigger conditions used for automatic invocation
-- Full list of available tools
-- Whether it can be explicitly invoked or customized
-
----
-
-## AskUserQuestion Tool
-
-**What it is**: Tool enabling Claude to ask structured multiple-choice questions during conversations
-
-**Introduced**: v2.0.21 (2025-03)
-
-**What we know**:
-- Allows Claude to present questions with structured options
-- Supports multi-select (choose multiple answers) and single-select modes
-- Particularly active in plan mode
-- Questions include header (short label), main question text, and 2-4 options
-- Each option has label and description explaining implications
-- "Other" option automatically provided for custom input
-
-**Behavioral constraints** (from SDK docs): See `sdk-behavioral-bridges.md` for:
-- 60-second timeout for responses
-- 1-4 questions per call, 2-4 options per question
-- Not available in subagents spawned via Task tool
-
-**Typical use cases**:
-- Plan mode: "Which approach do you prefer for authentication?"
-- Implementation choices: "Which library should we use?"
-- User preference gathering: "What features should I prioritize?"
-- Clarifying ambiguous requirements before implementation
-
-**Official Documentation**: Not in Claude Code docs; behavioral details in Agent SDK (/docs/en/agent-sdk/user-input)
+**Latest Release**: v2.1.7 (as of 2026-01-13)
 
 ---
 
@@ -96,195 +41,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 - Quickly disable expensive MCP servers when not needed
 - Enable specialized servers only for specific tasks
 - Manage token usage by controlling active tools
-
----
-
-## Auto-background Long-running Bash Commands
-
-**What it is**: Automatic backgrounding of bash commands that exceed timeout instead of killing them
-
-**Introduced**: v2.0.19 (2025-03)
-
-**What we know**:
-- Long-running commands automatically move to background instead of timing out
-- Controlled by BASH_DEFAULT_TIMEOUT_MS environment variable
-- Complements manual Ctrl-B backgrounding feature
-
-**Behavior change**:
-- **Before v2.0.19**: Commands hitting timeout were terminated
-- **After v2.0.19**: Commands hitting timeout automatically background
-- Claude can continue working while command runs
-- Output can be checked later via BashOutput tool
-
-**Configuration**:
-- Set `BASH_DEFAULT_TIMEOUT_MS` to control timeout threshold
-- Default appears to be 120000ms (2 minutes)
-- `BASH_MAX_TIMEOUT_MS` sets maximum allowed timeout
-
----
-
-## MCP structuredContent Field Support
-
-**What it is**: Support for structured content in MCP tool responses beyond plain text
-
-**Introduced**: v2.0.21 (2025-03)
-
-**What we know**:
-- MCP servers can now return `structuredContent` field in tool responses
-- Enables richer tool outputs with formatting, hierarchy, or specialized data structures
-- Part of Model Context Protocol specification
-
-**Likely capabilities**:
-- Structured data formats (JSON, tables, lists)
-- Rich formatting (bold, italic, code blocks)
-- Hierarchical content organization
-
----
-
-## MCP headersHelper Configuration
-
-**What it is**: Dynamic header generation for MCP servers via helper script
-
-**Introduced**: v1.0.119 (2025-01)
-
-**What we know**:
-- Configure `headersHelper` in MCP server config to run a script that outputs HTTP headers
-- Script outputs JSON with header key-value pairs
-- Enables OAuth token refresh, short-lived API keys, and dynamic authentication
-
-**Configuration**:
-```json
-{
-  "mcpServers": {
-    "my-server": {
-      "command": "...",
-      "headersHelper": "/path/to/script.sh"
-    }
-  }
-}
-```
-
----
-
-## CLAUDE_BASH_NO_LOGIN Environment Variable
-
-**What it is**: Skip login shell initialization for faster bash command execution
-
-**Introduced**: v1.0.124 (2025-02)
-
-**What we know**:
-- Set `CLAUDE_BASH_NO_LOGIN=1` to skip loading .bash_profile, .profile, etc.
-- Trade-off: faster execution but may miss custom aliases, functions, PATH entries
-- Useful for simple commands, containers, or performance-critical workflows
-
----
-
-## Auto-Allowed Tools
-
-**What it is**: Pre-approved tools that bypass permission prompts for common, safe operations
-
-**Introduced**: Permission system (v1.0.7+)
-
-**What we know**:
-- Certain tool patterns auto-approve in "Ask" permission mode
-- Configured in settings.json `permissions.allow` arrays
-- Common patterns: WebSearch, safe bash commands (git log, npm test), WebFetch for documentation domains, MCP read operations
-- Users can override with explicit Deny rules
-- Project settings can add project-specific allowed patterns
-
----
-
-## Bash Permission Rule Matching
-
-**What it is**: Advanced pattern matching rules for Bash tool permissions including output redirection handling
-
-**Introduced**: Core permission system, enhanced in v1.0.123 (output redirection)
-
-**What we know**:
-- Permission rules support sophisticated pattern matching
-- System prompt indicates: "Bash permission rules now support output redirections when matching"
-- Example: `Bash(python:*)` matches `python script.py > output.txt`
-
-**Pattern matching details**:
-- Wildcard support: `Bash(git:*)` matches all git commands
-- Output redirection awareness: Rules match command before redirect operators
-- Environment variable handling: Inline env vars in commands
-
-**Rule format examples**:
-- `Bash(git push:*)` - Allow all git push variations
-- `Bash(npm run test:*)` - Allow all test scripts
-- `Bash(python:*)` - Allow python commands (including output redirection)
-
----
-
-## Custom Agent permissionMode Field
-
-**What it is**: Configuration field controlling permission behavior for specific custom agents
-
-**Introduced**: v2.0.43 (2025-11)
-
-**What we know**:
-- New frontmatter field for custom agent definitions
-- Allows per-agent permission policies independent of global settings
-- Likely controls auto-approve, ask, or deny behavior for agent's tool usage
-
-**Example configuration**:
-```yaml
----
-name: trusted-test-runner
-description: Run test suites without permission prompts
-permissionMode: allow
-tools: Bash
----
-```
-
----
-
-## Web Background Tasks with & Syntax
-
-**What it is**: Send long-running tasks to Claude Code web by prefixing messages with `&`
-
-**Introduced**: v2.0.45 (2025-11)
-
-**What we know**:
-- Start message with `&` in CLI to transfer task to web interface
-- Enables continuing CLI work while task runs on web
-- Similar to Ctrl-B (background bash) but cross-platform
-
----
-
-## LSP Tool (Language Server Protocol)
-
-**What it is**: Code intelligence tool for go-to-definition, find references, and hover documentation
-
-**Introduced**: v2.0.74 (2025-12)
-
-**What we know**:
-- Leverages language servers for semantic code understanding
-- Capabilities: go-to-definition, find references, hover documentation/types
-- More accurate than grep - understands code structure and types
-- Complements Glob and Grep with semantic search
-
-**Likely supported languages**: TypeScript/JavaScript, Python, other LSP-compatible languages
-
----
-
-## IS_DEMO Environment Variable
-
-**What it is**: Environment variable to indicate demo/streaming mode
-
-**Introduced**: v2.1.0 (2026-01)
-
-**What we know**:
-- Set `IS_DEMO=1` when streaming or recording sessions
-- Likely affects UI presentation (hide personal info, clean up output)
-- Helps with presentation modes for demos and content creation
-
-**Expected configuration**:
-```bash
-export IS_DEMO=1
-claude
-```
 
 ---
 
@@ -339,3 +95,105 @@ claude
 - Improved session management
 - Enhanced diff viewing
 - More responsive UI updates
+
+---
+
+## showTurnDuration Setting
+
+**What it is**: Configuration option to hide turn duration messages
+
+**Introduced**: v2.1.7 (2026-01)
+
+**What we know**:
+- Setting to control display of turn duration messages
+- Likely configured in settings.json
+- Helps reduce visual clutter for users who don't need timing info
+
+**Expected configuration**:
+```json
+{
+  "showTurnDuration": false
+}
+```
+
+---
+
+## Permission Prompt Feedback
+
+**What it is**: Ability to provide feedback when accepting permission prompts
+
+**Introduced**: v2.1.7 (2026-01)
+
+**What we know**:
+- Users can now provide feedback when accepting permission prompts
+- Helps improve permission system based on user experience
+- Likely integrated into permission dialog UI
+
+**Use cases**:
+- Report overly restrictive permissions
+- Suggest better permission defaults
+- Help Anthropic improve permission UX
+
+---
+
+## /config Search Functionality
+
+**What it is**: Search capability within the /config command interface
+
+**Introduced**: v2.1.6 (2026-01)
+
+**What we know**:
+- Added search to `/config` command
+- Makes finding specific settings easier
+- Likely keyword-based filtering of config options
+
+**Expected behavior**:
+- Type to search setting names or descriptions
+- Filter visible config options dynamically
+- Quick navigation to specific settings
+
+---
+
+## Nested .claude/skills Auto-discovery
+
+**What it is**: Automatic skill discovery from nested subdirectories within .claude/skills
+
+**Introduced**: v2.1.6 (2026-01)
+
+**What we know**:
+- Skills can now be organized in nested subdirectories
+- Automatic discovery without requiring flat structure
+- Enables better organization for projects with many skills
+
+**Expected structure**:
+```
+.claude/
+  skills/
+    frontend/
+      skill-a/
+        SKILL.md
+    backend/
+      skill-b/
+        SKILL.md
+    testing/
+      skill-c/
+        SKILL.md
+```
+
+---
+
+## Date Range Filtering in /stats
+
+**What it is**: Ability to filter statistics by date range
+
+**Introduced**: v2.1.6 (2026-01)
+
+**What we know**:
+- `/stats` command now supports date range filtering
+- View usage statistics for specific time periods
+- Helps track usage patterns over time
+
+**Expected usage**:
+```
+/stats --from 2026-01-01 --to 2026-01-31
+```
