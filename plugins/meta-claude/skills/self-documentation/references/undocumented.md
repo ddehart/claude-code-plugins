@@ -1,6 +1,6 @@
 # Undocumented Features
 
-Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release notes descriptions and behavioral understanding. Details may be incomplete or subject to change.
+Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
 **Latest Release**: v2.1.12 (as of 2026-01-19)
 
