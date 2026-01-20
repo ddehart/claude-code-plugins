@@ -261,29 +261,42 @@ When a feature has official docs, read the content and match:
 
 **What it is**: Brief description
 
-**Introduced**: vX.X.X (YYYY-MM)
+**Introduced**: vX.X.X
 
 **What we know**:
 - Bullet points of known behavior
 - Based on release notes
+```
 
+Optional section (only include if there are genuine unknowns):
+```markdown
 **Unanswered questions**:
 - What remains unclear
 ```
+
+**Important:**
+- Do NOT include dates in version annotations (use `v2.1.9` not `v2.1.9 (2026-01)`)
+- Do NOT document removed features - if a feature was removed, skip it entirely
+- Ensure blank line between `**Introduced**:` and `**What we know**:`
 
 ### For thematic files
 
 ```markdown
 ## Feature Name
 
-Brief description with key concepts.
+**What it is**: Brief description
 
-**Documentation**: [Official Docs](url)
+**Documentation**: https://code.claude.com/docs/en/<page>
 
 **Key concepts**:
 - Important points from official docs
-- Last updated: YYYY-MM-DD
+- Use bullet points with **bold labels** for sub-concepts
 ```
+
+**Important:**
+- Do NOT add version annotations like "(new in vX.X.X)" - thematic files document officially-supported features without temporal markers
+- Use raw URLs, not markdown links
+- Match the existing entry style in each file
 
 ### For topic-index.md
 
@@ -313,10 +326,10 @@ Add keyword mappings:
 - Fetch each candidate page once, then check all relevant features against that page's content
 - Example: If 3 features map to sub-agents.md, fetch it once and check all 3
 
-**Skip trivial entries:**
-- Bug fixes (`Fixed ...`) don't need documentation entries
-- Platform-specific fixes (`Windows:`, `VSCode:`) are usually minor
-- SDK changes (`SDK:`) may warrant entries if they affect user-facing behavior
+**Skip these entries entirely:**
+- **Bug fixes**: NEVER document bug fixes, crash fixes, or stability improvements - these are not features. Release note items starting with "Fixed..." or ending with "...Fix" should be skipped.
+- **Platform-specific fixes**: `[Windows]`, `[VSCode]`, `[macOS]` fixes are usually minor
+- **SDK changes**: `[SDK]` items only warrant entries if they affect user-facing CLI behavior
 
 ## Edge Cases
 
@@ -331,6 +344,12 @@ Add keyword mappings:
 ### Feature already exists
 - Skip if feature name matches existing entry
 - Update if release notes contain significant new info
+
+### Semantic duplicates
+Release notes sometimes describe the same feature multiple ways across different versions (e.g., "Agent Final Response in Task Notifications" and "Inline Display of Agent Final Response"). Before adding a new entry:
+1. Scan existing entries for semantically similar features
+2. If the same capability exists under a different name, skip the duplicate
+3. When in doubt, use the more descriptive name and consolidate
 
 ### Category unclear
 - Default to `core-features.md`
@@ -351,6 +370,7 @@ Before finishing:
 - [ ] "Latest Release" header updated to newest version
 - [ ] **Doc migration verification**: For each undocumented feature, confirmed you fetched and searched the relevant doc page(s) - not just the llms.txt index
 - [ ] Documented features **removed** from `undocumented.md` (not just updated)
+- [ ] **No duplicate entries**: Checked that new entries don't duplicate existing features under different names
 - [ ] SDK-documented observations migrated to `sdk-behavioral-bridges.md`
 - [ ] New keywords added to `topic-index.md`
 - [ ] Entry formats are consistent with existing entries
