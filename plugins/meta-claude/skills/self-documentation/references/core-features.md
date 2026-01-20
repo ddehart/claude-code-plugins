@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-01-13
+**Last updated**: 2026-01-19
 
 ---
 
@@ -36,13 +36,14 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Progressive disclosure** - Three-level loading: metadata (always in context ~100 words), SKILL.md body (when triggered <5k words), bundled resources (as needed)
 - **Multi-file structure** - SKILL.md + optional supporting files (references/, scripts/, templates/); manages context efficiently by deferring non-essential information
 - **Three scopes**: Personal (`~/.claude/skills/`), Project (`.claude/skills/`, git-shared), Plugin (bundled with Claude Code plugins)
+- **Nested directory discovery** - Skills auto-discovered from nested `.claude/skills/` directories; supports monorepo setups where packages have their own Skills
 - **Tool restrictions** - `allowed-tools` frontmatter field limits available tools within skill for security/safety; supports comma-separated or YAML-style lists
 - **Description field is critical** - Must be specific with trigger terms for discoverability (max 1024 characters); tells Claude when to activate
 - **Supporting files**: `scripts/` (executable code, may run without loading to context), `references/` (docs loaded into context as needed), `assets/` (files used in output, not loaded to context)
 - **Best practices**: One capability per skill, write specific descriptions with user trigger terms, test activation timing with team, document versions
 - **Sharing**: Via plugins (recommended, marketplace distribution) or project repository (`.claude/skills/`, team auto-gets on pull)
 - **vs Slash Commands**: Skills are "complex workflows Claude discovers automatically" with multi-file support; slash commands are "simple, reusable prompts" requiring explicit invocation
-- **Subagent integration**: Subagents can auto-load specific skills via `skills` frontmatter field; skills become available only within subagent's context for specialized expertise
+- **Subagent integration**: Subagents can auto-load specific skills via `skills` frontmatter field; enables specialized knowledge per subagent; skills unload when subagent completes
 - **Hot-reload**: Skills are automatically reloaded when created or modified, no restart required
 - **Forked execution**: `context: fork` runs skill in isolated sub-agent context with its own conversation history
 - **Agent field**: Specify which agent type to use when `context: fork` is set (e.g., `Explore`, `Plan`, `general-purpose`, or custom agent)
@@ -125,7 +126,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **Key concepts**:
 - **Invocation patterns**: Direct (`/command`), plugin-prefixed (`/plugin:command` for disambiguation), with arguments (`/command arg1 arg2`)
-- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list), `/plan` (enter plan mode), `/teleport` (resume remote session), `/remote-env` (configure remote environment), `/rename` (name session), `/stats` (usage statistics), `/resume` (resume by name or ID)
+- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list), `/plan` (enter plan mode), `/teleport` (resume remote session), `/remote-env` (configure remote environment), `/rename` (name session), `/stats` (usage statistics), `/resume` (resume by name or ID), `/config` (settings with search)
 - **Custom commands**: Single Markdown files in `.claude/commands/` (project, git-shared) or `~/.claude/commands/` (personal, cross-project)
 - **Structure**: Single file with frontmatter, simpler than Skills' multi-file structure
 - **Features**: Namespacing via subdirectories, arguments (`$ARGUMENTS` for all, `$1`/`$2` for specific), bash execution (prefix `!`), file references (`@` notation), frontmatter metadata
@@ -149,13 +150,15 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 **Key concepts**:
 - **Execution model**: All matching hooks run in parallel with 60-second default timeout; receive JSON via stdin, return structured output to control Claude
 - **Configuration locations**: `~/.claude/settings.json` (user), `.claude/settings.json` (project), `.claude/settings.local.json` (local project), enterprise managed policy, skill/agent/command frontmatter
-- **11 event types**: PreToolUse (before tool execution, can modify tool inputs), PostToolUse (after completion), UserPromptSubmit (prompt submission), Notification (permission requests with matcher values for event filtering), PermissionRequest (automatically approve/deny tool permissions), Stop (main agent finish, prompt-based matching), SubagentStart (subagent begins), SubagentStop (subagent finish), SessionStart (session begins), SessionEnd (session terminates), PreCompact (before context compacting)
+- **11 event types**: PreToolUse (before tool execution, can modify tool inputs), PostToolUse (after completion), UserPromptSubmit (prompt submission), Notification (permission requests with matcher values for event filtering), PermissionRequest (automatically approve/deny tool permissions), Stop (main agent finish, prompt-based matching), SubagentStart (subagent begins), SubagentStop (subagent finish), SessionStart (session begins), SessionEnd (session terminates), PreCompact (before context compacting), Setup (triggered via CLI flags)
+- **Setup hook**: Triggered via `--init`, `--init-only`, or `--maintenance` CLI flags; runs setup scripts for repository initialization, dependency installation, or maintenance tasks before the interactive session starts
 - **Matcher patterns**: Exact (`Write`), regex (`Edit|Write`), wildcard (`*`), prompt-based (Stop hooks can match against user prompts), Notification and PermissionRequest matcher values for event-specific filtering; case-sensitive
 - **Exit codes**: 0 (success, stdout to transcript), 2 (blocking error, stderr to Claude), other (non-blocking error, stderr to user)
 - **JSON output**: Advanced control with `continue`, `decision`, `reason`, and hook-specific parameters
 - **PreToolUse advanced features**:
   - **updatedInput parameter**: Allows modifying tool input parameters before execution; returned in JSON output to override original tool inputs
   - **ask parameter**: Triggers user confirmation dialog during hook execution; use in JSON output to prompt for approval before tool proceeds
+  - **additionalContext parameter**: Adds context string to Claude before tool executes
 - **Hook input fields**: `tool_use_id` field in PreToolUse and PostToolUse hooks enables correlation between pre/post events for same tool call
 - **PermissionRequest hook**: Runs when user shown permission dialog; use decision control to allow/deny automatically; recognizes same matcher values as PreToolUse
 - **Environment variables**: `CLAUDE_PROJECT_DIR` (project root path), `CLAUDE_ENV_FILE` (SessionStart persistence), `CLAUDE_CODE_REMOTE` (remote/local indicator)
