@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2026-01-13
+**Last updated**: 2026-01-19
 
 ---
 
@@ -203,6 +203,67 @@ Settings, permissions, memory, and customization options for Claude Code.
   "respectGitignore": false
 }
 ```
+
+---
+
+## showTurnDuration Setting
+
+**What it is**: Configuration option to hide turn duration messages
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
+
+**Key concepts**:
+- Setting to control display of turn duration messages (e.g., "Cooked for 1m 6s")
+- Set to `false` to hide these messages
+- Helps reduce visual clutter for users who don't need timing info
+- Defaults to `true`
+
+**Configuration**:
+```json
+{
+  "showTurnDuration": false
+}
+```
+
+---
+
+## plansDirectory Setting
+
+**What it is**: Customize where plan files are stored
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings
+
+**Key concepts**:
+- Customize the directory where plan files are saved
+- Path is relative to project root
+- Default: `~/.claude/plans`
+
+**Configuration**:
+```json
+{
+  "plansDirectory": "./plans"
+}
+```
+
+---
+
+## Ctrl-G External Editor
+
+**What it is**: Keyboard shortcut to edit prompts in system's configured text editor
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/interactive-mode
+
+**Key concepts**:
+- Press Ctrl-G to open current prompt in external editor
+- Useful for composing long or complex prompts
+- Uses $EDITOR or $VISUAL environment variables
+
+**Expected workflow**:
+1. Start typing prompt in Claude Code
+2. Press Ctrl-G to open in editor
+3. Compose/edit in full editor (Vim, VS Code, nano, etc.)
+4. Save and close editor
+5. Content returns to Claude Code prompt
 
 ---
 

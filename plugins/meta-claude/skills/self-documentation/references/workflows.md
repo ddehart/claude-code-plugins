@@ -2,7 +2,7 @@
 
 Productivity features, keyboard shortcuts, and workflow automation in Claude Code.
 
-**Last updated**: 2026-01-11
+**Last updated**: 2026-01-19
 
 ---
 
@@ -13,7 +13,7 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 **Documentation**: https://docs.anthropic.com/en/docs/claude-code/interactive-mode
 
 **Key concepts**:
-- **General controls**: Ctrl+C (interrupt), Ctrl+D (exit), Ctrl+L (clear screen), Ctrl+O (toggle verbose/transcript), Ctrl+R (history search), Ctrl+V/Alt+V (paste images), Shift+Tab/Alt+M (permission modes)
+- **General controls**: Ctrl+C (interrupt), Ctrl+D (exit), Ctrl+G (external editor), Ctrl+L (clear screen), Ctrl+O (toggle verbose/transcript), Ctrl+R (history search), Ctrl+V/Alt+V (paste images), Shift+Tab/Alt+M (permission modes)
 - **Multiline entry**: `\` + Enter, Option+Enter (macOS), Shift+Enter (after /terminal-setup)
 - **Quick commands**: `#` (add to memory), `/` (slash commands), `!` (direct bash), `@` (file autocomplete)
 - **Vim mode**: Standard navigation (h/j/k/l, w, b, f, t) and editing (dd, cc, x) with Esc mode switching; expanded motions for improved navigation
@@ -160,20 +160,53 @@ claude --resume feature-auth-refactor
 
 ## /stats Command
 
-**What it is**: Command to view interesting Claude Code usage statistics including graphs and streaks
+**What it is**: Visualize daily usage, session history, streaks, and model preferences
 
 **Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
 
 **Key concepts**:
-- New `/stats` command provides usage statistics
+- `/stats` command provides detailed usage statistics
 - Shows personal usage patterns and metrics
-- May include visual graphs and streak tracking
+- Press 'r' to cycle through date ranges (Last 7 days, Last 30 days, All time)
+- Includes visual graphs and tracking features
 
 **Expected metrics**:
 - Favorite/most-used model
 - Usage over time (graph)
 - Usage streak (consecutive days)
+- Session history
 - Possibly token counts, session counts, etc.
+
+**Usage**:
+```
+> /stats
+# View statistics, press 'r' to cycle date ranges
+```
+
+---
+
+## /config Command with Search
+
+**What it is**: Settings interface with search functionality for finding specific settings
+
+**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+
+**Key concepts**:
+- `/config` opens Settings interface (Config tab)
+- Type to search and filter settings
+- Makes finding specific settings easier
+- Keyword-based filtering of config options
+
+**Usage**:
+```
+> /config
+# Type to search for settings by name or description
+```
+
+**Expected behavior**:
+- Type search terms to filter settings
+- Filter visible config options dynamically
+- Quick navigation to specific settings
 
 ---
 
