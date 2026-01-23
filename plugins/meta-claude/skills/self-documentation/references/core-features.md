@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-01-19
+**Last updated**: 2026-01-22
 
 ---
 
@@ -28,7 +28,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Modular capabilities that extend Claude's functionality with specialized knowledge and workflows. Skills consist of a SKILL.md file with YAML frontmatter (name, description) plus optional supporting files (scripts, references, assets).
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/skills
+**Documentation**: https://code.claude.com/docs/en/skills
 
 **Key concepts**:
 - **Model-invoked** (not user-invoked) - Claude autonomously decides when to use based on context and description field
@@ -51,6 +51,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Once hooks**: Hooks with `once: true` run only once per session, then are removed
 - **Visibility control**: `user-invocable` field controls whether skill appears in slash command menu (defaults to `true`); does not affect `Skill` tool or automatic discovery
 - **Skills/slash commands merged**: Skills visible in slash command menu by default for unified invocation model
+- **String substitutions**: `$ARGUMENTS` for all passed arguments, `${CLAUDE_SESSION_ID}` for current session ID (useful for logging or session-specific files)
 
 ---
 
@@ -145,7 +146,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Automated bash scripts that execute in response to specific events during Claude Code sessions, enabling custom automation, validation, and integration workflows
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/hooks
+**Documentation**: https://code.claude.com/docs/en/hooks
 
 **Key concepts**:
 - **Execution model**: All matching hooks run in parallel with 60-second default timeout; receive JSON via stdin, return structured output to control Claude
@@ -158,7 +159,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **PreToolUse advanced features**:
   - **updatedInput parameter**: Allows modifying tool input parameters before execution; returned in JSON output to override original tool inputs
   - **ask parameter**: Triggers user confirmation dialog during hook execution; use in JSON output to prompt for approval before tool proceeds
-  - **additionalContext parameter**: Adds context string to Claude before tool executes
+  - **additionalContext parameter**: Adds context string to Claude before tool executes; returned in `hookSpecificOutput.additionalContext` field
 - **Hook input fields**: `tool_use_id` field in PreToolUse and PostToolUse hooks enables correlation between pre/post events for same tool call
 - **PermissionRequest hook**: Runs when user shown permission dialog; use decision control to allow/deny automatically; recognizes same matcher values as PreToolUse
 - **Environment variables**: `CLAUDE_PROJECT_DIR` (project root path), `CLAUDE_ENV_FILE` (SessionStart persistence), `CLAUDE_CODE_REMOTE` (remote/local indicator)
@@ -202,6 +203,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Question structure**: Header (short label), question text, 2-4 options with label and description
 - **Behavioral constraints**: 60-second timeout, 1-4 questions per call, not available in subagents spawned via Task tool
 - **Permission**: No permission required for this tool
+- **Ctrl+G support**: External editor (Ctrl+G) now works in AskUserQuestion input field for composing longer responses
 
 ---
 

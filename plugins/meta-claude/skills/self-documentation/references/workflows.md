@@ -2,7 +2,7 @@
 
 Productivity features, keyboard shortcuts, and workflow automation in Claude Code.
 
-**Last updated**: 2026-01-19
+**Last updated**: 2026-01-22
 
 ---
 
@@ -10,20 +10,48 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 
 **What it is**: Terminal interface controls for navigation, editing, and workflow management with extensive keyboard shortcuts
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/interactive-mode
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
 
 **Key concepts**:
-- **General controls**: Ctrl+C (interrupt), Ctrl+D (exit), Ctrl+G (external editor), Ctrl+L (clear screen), Ctrl+O (toggle verbose/transcript), Ctrl+R (history search), Ctrl+V/Alt+V (paste images), Shift+Tab/Alt+M (permission modes)
+- **General controls**: Ctrl+C (interrupt), Ctrl+D (exit), Ctrl+G (external editor), Ctrl+L (clear screen), Ctrl+O (toggle verbose/transcript), Ctrl+R (history search), Ctrl+V/Alt+V (paste images), Shift+Tab/Alt+M (permission modes), Ctrl+T (toggle task list)
 - **Multiline entry**: `\` + Enter, Option+Enter (macOS), Shift+Enter (after /terminal-setup)
 - **Quick commands**: `#` (add to memory), `/` (slash commands), `!` (direct bash), `@` (file autocomplete)
 - **Vim mode**: Standard navigation (h/j/k/l, w, b, f, t) and editing (dd, cc, x) with Esc mode switching; expanded motions for improved navigation
 - **Command history**: Per-directory storage with Ctrl+R interactive search and highlighting
-- **Background tasks**: Ctrl+B to run long processes asynchronously with output buffering via BashOutput tool; unified backgrounding for bash commands and agents
-- **Bash mode**: `!` prefix bypasses Claude's interpretation while maintaining conversation context
+- **Background tasks**: Ctrl+B to run long processes asynchronously with output buffering via TaskOutput tool; unified backgrounding for bash commands and agents
+- **Bash mode**: `!` prefix bypasses Claude's interpretation while maintaining conversation context; supports history-based autocomplete (type partial command and press Tab to complete from previous `!` commands in current project)
 - **Kill ring**: Ctrl-Y yanks most recent deletion, Alt-Y cycles through older deletions
 - **Model switching**: Alt+P (Linux/Windows) or Option+P (macOS) to switch models mid-prompt
 - **Thinking toggle**: Alt+T to enable/disable extended thinking mode (requires /terminal-setup); sticky across sessions
 - **Slash command autocomplete**: Works anywhere in input, not just at the beginning
+
+---
+
+## Task Management System
+
+**What it is**: Enhanced task system with dependency tracking and tools for creating, updating, and querying tasks
+
+**Documentation**: https://code.claude.com/docs/en/settings (Environment variables), https://code.claude.com/docs/en/interactive-mode (Task list section)
+
+**Key concepts**:
+- **Core tools**: TaskCreate (create tasks with dependencies), TaskUpdate (update status/dependencies/details), TaskGet (retrieve full task details), TaskList (list all tasks with status)
+- **Task dependencies**: Tasks can specify dependencies on other tasks; helps Claude organize complex multi-step work
+- **Persistence**: Tasks persist across context compactions and sessions
+- **Task list view**: Press Ctrl+T to toggle task list display; shows up to 10 tasks at a time with status indicators (pending, in progress, complete)
+- **Shared task lists**: Set `CLAUDE_CODE_TASK_LIST_ID` environment variable to share a task list across sessions using named directory in `~/.claude/tasks/`
+- **Management**: Ask Claude directly to "show me all tasks" or "clear all tasks" for full list or cleanup
+
+**Expected workflow**:
+1. Claude creates tasks with dependencies using TaskCreate
+2. Updates task status as work progresses with TaskUpdate
+3. Queries task details when needed with TaskGet
+4. Lists all tasks and their relationships with TaskList
+5. View task status in terminal with Ctrl+T toggle
+
+**Configuration for shared tasks**:
+```bash
+CLAUDE_CODE_TASK_LIST_ID=my-project claude
+```
 
 ---
 

@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.12 (as of 2026-01-19)
+**Latest Release**: v2.1.17
 
 ---
 
@@ -60,25 +60,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Auto MCP Tool Search
-
-**What it is**: Automatic threshold-based tool search that activates when MCP tool definitions exceed context budget
-
-**Introduced**: v2.1.9
-
-**What we know**:
-- `auto:N` syntax for configuring threshold (e.g., `auto:5` for 5%)
-- Default is `auto` which activates at 10% of context window
-- Can be configured via `ENABLE_TOOL_SEARCH` environment variable
-- Values: `auto` (default 10%), `auto:N` (custom %), `true` (always on), `false` (disabled)
-
-**Expected configuration**:
-```bash
-ENABLE_TOOL_SEARCH=auto:5 claude  # Custom 5% threshold
-```
-
----
-
 ## Permission Prompt Feedback
 
 **What it is**: Ability to provide feedback when accepting permission prompts
@@ -132,25 +113,6 @@ ENABLE_TOOL_SEARCH=auto:5 claude  # Custom 5% threshold
 
 ---
 
-## External Editor in AskUserQuestion
-
-**What it is**: Ctrl+G external editor support when responding to AskUserQuestion input prompts
-
-**Introduced**: v2.1.9
-
-**What we know**:
-- External editor (Ctrl+G) now works in AskUserQuestion input field
-- Enables composing longer responses in your preferred editor
-- Consistent with main prompt external editor support
-
-**Expected workflow**:
-1. Claude asks question via AskUserQuestion
-2. Press Ctrl+G to open response in external editor
-3. Compose answer in editor, save and close
-4. Response returns to Claude Code
-
----
-
 ## Session URL Attribution in Git
 
 **What it is**: Automatic attribution of session URLs to commits and PRs from web sessions
@@ -165,48 +127,6 @@ ENABLE_TOOL_SEARCH=auto:5 claude  # Custom 5% threshold
 **Expected format**:
 - Commit/PR includes URL to originating claude.ai session
 - Enables jumping from git history to conversation context
-
----
-
-## PreToolUse Hooks with additionalContext
-
-**What it is**: PreToolUse hooks can now return `additionalContext` field to inject context before tool execution
-
-**Introduced**: v2.1.9
-
-**What we know**:
-- `hookSpecificOutput.additionalContext` adds string to Claude's context before tool runs
-- Enables hooks to provide dynamic context based on tool inputs
-- Useful for environment info, warnings, or situational guidance
-
-**Example use case**:
-- Hook detects production database command
-- Returns `additionalContext: "CAUTION: You are targeting PRODUCTION database"`
-- Claude sees this context before executing the tool
-
----
-
-## ${CLAUDE_SESSION_ID} Substitution in Skills
-
-**What it is**: String substitution variable for current session ID in Skill files
-
-**Introduced**: v2.1.9
-
-**What we know**:
-- Skills can use `${CLAUDE_SESSION_ID}` for session-specific operations
-- Useful for logging, session-specific files, or correlation
-- Substituted at runtime with actual session ID
-
-**Example**:
-```markdown
----
-name: session-logger
-description: Log activity for this session
----
-
-Log the following to logs/${CLAUDE_SESSION_ID}.log:
-$ARGUMENTS
-```
 
 ---
 
@@ -288,3 +208,82 @@ $ARGUMENTS
 - Suggest files with @-mention
 - Files appear as attachment chips
 - Click to remove unwanted suggestions before submit
+
+---
+
+## Plugin Pinning to Git Commit SHAs
+
+**What it is**: Support for pinning plugins to specific git commit SHAs for exact version control
+
+**Introduced**: v2.1.14
+
+**What we know**:
+- Marketplace entries can specify exact commit SHAs
+- Enables reproducible builds and dependency locking
+- Useful for enterprise environments requiring audit trails
+- Allows teams to control exact plugin versions across installs
+
+**Expected configuration**:
+- Marketplace entry includes commit SHA in source specification
+- Plugin installation uses exact commit rather than branch head
+- Updates require explicit SHA changes in marketplace definition
+
+---
+
+## Search in Installed Plugins List
+
+**What it is**: Filter installed plugins by name or description
+
+**Introduced**: v2.1.14
+
+**What we know**:
+- Type to filter plugins in the installed plugins interface
+- Searches both plugin names and descriptions
+- Improves navigation in environments with many installed plugins
+- Accessible from `/plugins` command in the installed tab
+
+**Expected behavior**:
+1. Open `/plugins` command
+2. Navigate to installed tab
+3. Type search query
+4. List filters to matching plugins in real-time
+
+---
+
+## Native VSCode Plugin Management
+
+**What it is**: Built-in plugin management interface in VSCode extension
+
+**Introduced**: v2.1.16
+
+**What we know**:
+- Browse, install, and manage plugins directly from VSCode UI
+- No need to use CLI commands for plugin operations
+- Integrates with VSCode extension marketplace patterns
+- Provides same functionality as CLI `/plugin` command
+
+**Expected features**:
+- Browse available plugins from marketplaces
+- Install/uninstall plugins with UI confirmation
+- Enable/disable installed plugins
+- View plugin details and documentation
+
+---
+
+## OAuth Session Browsing and Resume in VSCode
+
+**What it is**: Browse and resume remote Claude sessions from VSCode extension
+
+**Introduced**: v2.1.16
+
+**What we know**:
+- OAuth users can view their remote sessions from Sessions dialog
+- Resume web sessions directly from VSCode
+- Provides continuity between web and desktop workflows
+- Requires OAuth authentication (not API key auth)
+
+**Expected workflow**:
+1. Open Sessions dialog in VSCode extension
+2. Browse remote sessions from claude.ai
+3. Select session to resume
+4. Session loads in VSCode with full conversation history

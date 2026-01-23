@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2026-01-19
+**Last updated**: 2026-01-22
 
 ---
 
@@ -243,6 +243,27 @@ Settings, permissions, memory, and customization options for Claude Code.
 {
   "plansDirectory": "./plans"
 }
+```
+
+---
+
+## Auto MCP Tool Search
+
+**What it is**: Automatic threshold-based tool search that activates when MCP tool definitions exceed context budget
+
+**Documentation**: https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search
+
+**Key concepts**:
+- Automatically enables when MCP tool descriptions exceed 10% of context window (default)
+- Controlled via `ENABLE_TOOL_SEARCH` environment variable
+- Values: `auto` (default 10%), `auto:N` (custom threshold %), `true` (always on), `false` (disabled)
+- MCP tools are deferred and loaded on-demand instead of preloaded
+- Only works with models supporting `tool_reference` blocks (Sonnet 4+, Opus 4+)
+- Can also be disabled via `disallowedTools` setting by denying the MCPSearch tool
+
+**Configuration**:
+```bash
+ENABLE_TOOL_SEARCH=auto:5 claude  # Custom 5% threshold
 ```
 
 ---

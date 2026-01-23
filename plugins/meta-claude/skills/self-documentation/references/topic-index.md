@@ -6,12 +6,13 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 
 | Keywords | Reference File | Description |
 |----------|----------------|-------------|
-| skill, skills, SKILL.md, allowed-tools, user-invocable, skill hooks, hot-reload, context fork, agent field, once hooks | core-features.md | Skills system |
+| skill, skills, SKILL.md, allowed-tools, user-invocable, skill hooks, hot-reload, context fork, agent field, once hooks, ${CLAUDE_SESSION_ID}, session id substitution | core-features.md | Skills system |
 | agent, subagent, Task tool, delegate, fork, context, agent hooks, SubagentStart | core-features.md | Agents and subagents |
-| mcp, server, protocol, tool, mcp server, model context protocol, list_changed | core-features.md | MCP servers |
+| mcp, server, protocol, tool, mcp server, model context protocol, list_changed, ENABLE_TOOL_SEARCH, tool search, auto MCP | core-features.md, configuration.md | MCP servers and Auto MCP Tool Search |
 | plugin, marketplace, install plugin, plugin update | core-features.md | Plugins |
 | slash command, /command, user-defined command, autocomplete, /plan, /teleport, /remote-env, /rename, /stats, /resume, /todos | core-features.md | Slash commands |
-| hook, hooks, PreToolUse, PostToolUse, Stop, SubagentStart, SubagentStop, Notification, once, prompt-based hooks, updatedInput, ask confirmation | core-features.md | Hooks system |
+| hook, hooks, PreToolUse, PostToolUse, Stop, SubagentStart, SubagentStop, Notification, once, prompt-based hooks, updatedInput, ask confirmation, additionalContext | core-features.md | Hooks system |
+| AskUserQuestion, Ctrl+G, external editor in AskUserQuestion | core-features.md | AskUserQuestion tool |
 | CLAUDE.md, memory, context, project instructions | configuration.md | Memory management |
 | rules, .claude/rules, modular rules, path-specific rules | configuration.md | Modular rules |
 | permission, permissions, allow, deny, tool access, wildcard patterns, unreachable warnings, Task(AgentName), disable agents | configuration.md | Permission management |
@@ -28,7 +29,7 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | --tools flag, interactive mode, tool restrictions | configuration.md | Tools interactive mode flag |
 | vscode, vs code, ide, extension | integrations.md | VS Code extension |
 | azure, foundry, enterprise | integrations.md | Azure AI Foundry |
-| keyboard, shortcut, interactive, ctrl, alt, readline, Vim motions | workflows.md | Interactive mode |
+| keyboard, shortcut, interactive, ctrl, alt, readline, Vim motions, Ctrl+T, task list toggle | workflows.md | Interactive mode |
 | checkpoint, rewind, undo, restore | workflows.md | Checkpointing |
 | cost, usage, tokens, spending | workflows.md | Cost tracking |
 | git, branch, commit, pr, pull request | workflows.md | Git automation |
@@ -36,6 +37,8 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | session, named session, resume, /rename, /teleport, /remote-env | workflows.md | Named sessions and remote management |
 | /stats, statistics, usage patterns, streaks | workflows.md | Stats command |
 | /plan, plan mode, planning | workflows.md | Plan command |
+| task management, TaskCreate, TaskUpdate, TaskGet, TaskList, task dependencies, Ctrl+T, CLAUDE_CODE_TASK_LIST_ID | workflows.md | Task management system |
+| history autocomplete, bash mode, tab completion, ! prefix | workflows.md | History-based autocomplete in bash mode |
 | should I use, when to use, vs, versus, difference, compare, choose | decision-guide.md | Feature decisions |
 | skill vs, agent vs, mcp vs, slash command vs | decision-guide.md | Feature comparisons |
 | release notes, undocumented, new feature, recent | undocumented.md | Undocumented features |
@@ -61,6 +64,8 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 - "How do I configure thinking mode?" → configuration.md + workflows.md
 - "What keyboard shortcuts are available?" → workflows.md
 - "How do skill hooks work?" → core-features.md (skills and hooks sections)
+- "How does Auto MCP Tool Search work?" → configuration.md + core-features.md (MCP section)
+- "How do I manage tasks?" → workflows.md (task management system)
 
 ## File Purposes
 
