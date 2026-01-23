@@ -120,6 +120,8 @@ The CHANGELOG.md uses this format:
 
 ## Workflow
 
+**CRITICAL**: Steps 1-3 are ALL mandatory. Do NOT skip Step 3 (migration check) even when there are new releases to process. The migration check must verify EVERY existing feature in undocumented.md against official docs.
+
 ### Step 1: Fetch Release Notes
 
 Fetch the changelog from GitHub:
@@ -138,9 +140,15 @@ Compare against release notes to identify:
 - New releases since that version
 - Features introduced in those releases
 
-### Step 3: Check for Doc Migrations
+### Step 3: Check for Doc Migrations (MANDATORY)
 
-For each feature currently in `undocumented.md`:
+**This step is NOT optional.** You must verify EVERY existing feature in `undocumented.md` against official documentation, even when processing new releases.
+
+**Pre-flight: Count existing features**
+1. Read `undocumented.md` and count the number of feature sections (h2 headers starting with `##`)
+2. Record this count - you must verify this many features
+
+**For each feature currently in `undocumented.md`:**
 
 1. **Identify candidate doc pages** using the Feature-to-Page Mapping table (see Data Sources section)
 2. **Fetch each candidate page** using WebFetch with the `.md` URL pattern (e.g., `https://code.claude.com/docs/en/sub-agents.md`)
@@ -149,6 +157,8 @@ For each feature currently in `undocumented.md`:
    - REMOVE the feature from `undocumented.md`
    - Add summary to appropriate thematic file with link to official docs
 5. **If not found in any candidate page**: Feature remains undocumented
+
+**Efficiency tip:** Batch by doc page - fetch each candidate page once, then check all relevant features against it.
 
 **Critical:** Do NOT rely on searching the llms.txt index for feature names. The index contains page titles like "Create custom subagents", not feature names like "Explore Subagent" or "permissionMode". You must fetch and search within the actual doc pages.
 
@@ -213,28 +223,33 @@ After updating reference files, bump the plugin version:
 
 ### Step 7: Summarize
 
-Output a summary:
+Output a summary with ALL sections (include sections even if empty to confirm the step was performed):
+
 ```
 ## Documentation Update Summary
 
 **Version range:** vX.X.X → vY.Y.Y
 
+### Migration Check (Step 3)
+**Existing features verified:** N features checked against official docs
+**Doc pages fetched:** [list pages fetched for verification]
+
+### Migrated to thematic files (removed from undocumented.md)
+- Feature C → core-features.md (now in <doc-page>.md)
+- Feature D → configuration.md (now in <doc-page>.md)
+(or "None - all existing features remain undocumented")
+
 ### Added to undocumented.md
 - Feature A (vX.X.X)
 - Feature B (vX.X.Y)
-
-### Migrated to thematic files
-- Feature C → core-features.md
-- Feature D → configuration.md
-
-### Removed from undocumented.md
-- Feature E (now documented in skills.md)
-- Feature F (now documented in hooks.md)
+(or "None - no new undocumented features")
 
 ### Version Updates
 - `plugins/meta-claude/.claude-plugin/plugin.json`: X.X.X → X.X.Y
 - `.claude-plugin/marketplace.json`: X.X.X → X.X.Y
 ```
+
+**The "Migration Check" section is REQUIRED** - it proves Step 3 was executed. If this section is missing, the update is incomplete.
 
 ## Categorization Logic
 
@@ -334,8 +349,9 @@ Add keyword mappings:
 ## Edge Cases
 
 ### No new releases
-- Still run migration check on existing undocumented features
+- **Step 3 is STILL required** - run migration check on all existing undocumented features
 - Output: "No new releases since vX.X.X. Checked N features for doc availability."
+- This is the primary value of running the agent when there are no new releases
 
 ### WebFetch fails
 - Treat feature as undocumented
@@ -365,14 +381,24 @@ Ask for help when:
 
 ## Quality Checks
 
-Before finishing:
+**STOP and verify before finishing:**
+
+### Migration Verification (BLOCKING)
+- [ ] **Counted existing features** in undocumented.md before starting
+- [ ] **Fetched actual doc pages** (not just llms.txt) for verification
+- [ ] **Checked EVERY existing feature** against official docs
+- [ ] **Removed** all now-documented features from undocumented.md
+- [ ] **Summary includes "Migration Check" section** with feature count and pages fetched
+
+### Content Quality
 - [ ] All new features from release notes are accounted for
 - [ ] "Latest Release" header updated to newest version
-- [ ] **Doc migration verification**: For each undocumented feature, confirmed you fetched and searched the relevant doc page(s) - not just the llms.txt index
-- [ ] Documented features **removed** from `undocumented.md` (not just updated)
-- [ ] **No duplicate entries**: Checked that new entries don't duplicate existing features under different names
-- [ ] SDK-documented observations migrated to `sdk-behavioral-bridges.md`
-- [ ] New keywords added to `topic-index.md`
+- [ ] No duplicate entries (checked for semantic duplicates)
 - [ ] Entry formats are consistent with existing entries
+- [ ] New keywords added to `topic-index.md`
+
+### Versioning
 - [ ] Plugin version bumped (patch for doc updates)
 - [ ] Marketplace version matches plugin version
+
+**If the Migration Verification section is incomplete, DO NOT proceed to Step 7. Go back and complete Step 3.**
