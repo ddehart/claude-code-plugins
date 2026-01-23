@@ -45,6 +45,7 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | explore subagent, LSP, desktop, chrome extension, IS_DEMO | undocumented.md | Specific undocumented features |
 | observation, discovered, tested, behavior, found that | observations.md | User observations |
 | sdk, agent-sdk, behavioral, limitations | sdk-behavioral-bridges.md | SDK documentation that explains CLI behavior |
+| best practices, effective, failure pattern, verification, validate, verify, explore plan code, prompt crafting, session management, context management, kitchen sink, correction loop, intuition, when to clear | best-practices.md | Effective usage patterns |
 | timeout, 60 seconds, canUseTool | sdk-behavioral-bridges.md | Tool and callback timeouts |
 | permission flow, evaluation order, deny first | sdk-behavioral-bridges.md | How permissions are evaluated |
 | fork session, forkSession, session branch | sdk-behavioral-bridges.md | Session forking behavior |
@@ -66,6 +67,8 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 - "How do skill hooks work?" → core-features.md (skills and hooks sections)
 - "How does Auto MCP Tool Search work?" → configuration.md + core-features.md (MCP section)
 - "How do I manage tasks?" → workflows.md (task management system)
+- "How do I write effective prompts?" → best-practices.md
+- "When should I use /clear?" → best-practices.md + workflows.md
 
 ## File Purposes
 
@@ -79,3 +82,4 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 | `undocumented.md` | Features not yet in official docs |
 | `observations.md` | User-discovered behaviors |
 | `sdk-behavioral-bridges.md` | Behavioral constraints from SDK docs |
+| `best-practices.md` | Meta-guidance: when/why to use features, failure patterns |

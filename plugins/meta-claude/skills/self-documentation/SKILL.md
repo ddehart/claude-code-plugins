@@ -31,6 +31,7 @@ The skill uses thematic reference files for token-efficient progressive disclosu
 | `workflows.md` | Keyboard shortcuts, checkpointing, git automation |
 | `undocumented.md` | Features from release notes without official docs |
 | `sdk-behavioral-bridges.md` | Behavioral constraints from Agent SDK docs |
+| `best-practices.md` | Meta-guidance: effective usage, failure patterns, prompt crafting |
 
 ## Workflow: Answering Questions
 
