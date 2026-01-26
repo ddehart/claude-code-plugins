@@ -2,7 +2,7 @@
 name: documentation-updater
 description: PROACTIVELY run after Claude Code releases to sync self-documentation reference files. Use when the user asks to update documentation, sync release notes, or migrate undocumented features to thematic files.
 tools: Skill, WebFetch, Read, Write, Glob, Grep
-model: sonnet
+model: opus
 ---
 
 # Documentation Updater Agent
