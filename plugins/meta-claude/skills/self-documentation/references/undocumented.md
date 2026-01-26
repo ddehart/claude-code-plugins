@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.17
+**Latest Release**: v2.1.19
 
 ---
 
@@ -17,46 +17,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 - Previously thinking blocks only appeared after completion
 - Enables watching Claude's reasoning process in real-time
 - Useful for understanding complex decision-making
-
----
-
-## Claude in Chrome Improvements
-
-**What it is**: Enhanced Chrome extension capabilities for browser control
-
-**Introduced**: Multiple versions (v2.0.72+, ongoing improvements)
-
-**What we know**:
-- Chrome extension at https://claude.ai/chrome
-- Enables browser automation: navigate, read content, interact with elements, take screenshots
-- More powerful than WebFetch - active browser control vs. passive fetching
-- Continuous improvements to capabilities and reliability
-
-**Use cases**:
-- Web application testing
-- Form automation
-- Content extraction
-- UI verification
-
----
-
-## VSCode Extension Updates
-
-**What it is**: Ongoing improvements to the VS Code extension
-
-**Introduced**: Various versions (v2.0.74+, ongoing)
-
-**What we know**:
-- Regular feature parity improvements with CLI
-- Performance enhancements
-- UI/UX refinements
-- Bug fixes and stability improvements
-
-**Recent improvements** (general pattern):
-- Better integration with VS Code features
-- Improved session management
-- Enhanced diff viewing
-- More responsive UI updates
 
 ---
 
@@ -230,60 +190,36 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Search in Installed Plugins List
+## CLAUDE_CODE_ENABLE_TASKS Environment Variable
 
-**What it is**: Filter installed plugins by name or description
+**What it is**: Environment variable to disable the new task management system
 
-**Introduced**: v2.1.14
+**Introduced**: v2.1.19
 
 **What we know**:
-- Type to filter plugins in the installed plugins interface
-- Searches both plugin names and descriptions
-- Improves navigation in environments with many installed plugins
-- Accessible from `/plugins` command in the installed tab
+- Set `CLAUDE_CODE_ENABLE_TASKS=false` to revert to the old task system temporarily
+- Provides fallback for users experiencing issues with the new task system
+- Temporary migration aid as the new system stabilizes
 
-**Expected behavior**:
-1. Open `/plugins` command
-2. Navigate to installed tab
-3. Type search query
-4. List filters to matching plugins in real-time
+**Configuration**:
+```bash
+CLAUDE_CODE_ENABLE_TASKS=false claude
+```
 
 ---
 
-## Native VSCode Plugin Management
+## Skills Without Permission Approval
 
-**What it is**: Built-in plugin management interface in VSCode extension
+**What it is**: Skills that don't require additional permissions or hooks now load without approval prompt
 
-**Introduced**: v2.1.16
-
-**What we know**:
-- Browse, install, and manage plugins directly from VSCode UI
-- No need to use CLI commands for plugin operations
-- Integrates with VSCode extension marketplace patterns
-- Provides same functionality as CLI `/plugin` command
-
-**Expected features**:
-- Browse available plugins from marketplaces
-- Install/uninstall plugins with UI confirmation
-- Enable/disable installed plugins
-- View plugin details and documentation
-
----
-
-## OAuth Session Browsing and Resume in VSCode
-
-**What it is**: Browse and resume remote Claude sessions from VSCode extension
-
-**Introduced**: v2.1.16
+**Introduced**: v2.1.19
 
 **What we know**:
-- OAuth users can view their remote sessions from Sessions dialog
-- Resume web sessions directly from VSCode
-- Provides continuity between web and desktop workflows
-- Requires OAuth authentication (not API key auth)
+- Skills without additional permissions or hooks are now allowed without requiring approval
+- Reduces friction for simple skills that don't need special access
+- Approval still required for skills with hooks or elevated permissions
 
-**Expected workflow**:
-1. Open Sessions dialog in VSCode extension
-2. Browse remote sessions from claude.ai
-3. Select session to resume
-4. Session loads in VSCode with full conversation history
+**Impact**:
+- Faster skill loading for safe skills
+- Better user experience for common skill patterns
+- Permission prompts reserved for skills that actually need elevated access

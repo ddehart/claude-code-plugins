@@ -1,7 +1,7 @@
 {
   "name": "meta-claude",
   "description": "Claude Code productivity skills: session export, self-documentation for explaining features and capabilities, and self-reflection tools",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "author": {
     "name": "Derek DeHart"
   },

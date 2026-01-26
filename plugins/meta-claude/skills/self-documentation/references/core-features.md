@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-01-22
+**Last updated**: 2026-01-25
 
 ---
 
@@ -10,10 +10,10 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: High-level overview of Claude Code's core capabilities, characteristics, and setup requirements
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/overview
+**Documentation**: https://code.claude.com/docs/en/overview
 
 **Key concepts**:
-- **Core capabilities**: Build features (natural language → code), debug & fix issues, codebase navigation, automation (lint fixes, merge conflicts, release notes)
+- **Core capabilities**: Build features (natural language to code), debug and fix issues, codebase navigation, automation (lint fixes, merge conflicts, release notes)
 - **Terminal-native**: Integrates into existing developer workflows, not a separate IDE
 - **Direct action**: Can edit files, execute commands, create commits directly
 - **MCP integration**: Access external resources (Google Drive, Figma, Slack) through Model Context Protocol
@@ -52,6 +52,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Visibility control**: `user-invocable` field controls whether skill appears in slash command menu (defaults to `true`); does not affect `Skill` tool or automatic discovery
 - **Skills/slash commands merged**: Skills visible in slash command menu by default for unified invocation model
 - **String substitutions**: `$ARGUMENTS` for all passed arguments, `${CLAUDE_SESSION_ID}` for current session ID (useful for logging or session-specific files)
+- **Permission-free skills**: Skills without additional permissions or hooks are now allowed without requiring user approval (v2.1.19)
 
 ---
 
@@ -59,7 +60,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Open-source standard for AI-tool integrations enabling Claude Code to access external tools, databases, and APIs (hundreds of third-party services)
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/mcp
+**Documentation**: https://code.claude.com/docs/en/mcp
 
 **Key concepts**:
 - **Core capabilities**: Retrieve features from issue trackers, analyze monitoring data, query databases, access design files, automate workflows
@@ -81,7 +82,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Extensions that add custom functionality (commands, agents, skills, hooks, MCP servers) that can be shared across projects and teams
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/plugins
+**Documentation**: https://code.claude.com/docs/en/plugins
 
 **Key concepts**:
 - **Components**: Commands (slash commands), Agents (specialized AI assistants), Skills (model-invoked capabilities), Hooks (event handlers), MCP Servers (external integrations)
@@ -92,6 +93,8 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Development**: Create plugin.json, add components, test locally, distribute through catalogs
 - **Best practices**: Semantic versioning, comprehensive README, local testing, organize by functionality
 - **User roles**: Plugin users (discover/install), Developers (create/distribute), Team leaders (governance/catalogs)
+- **Search in installed list**: Type to filter plugins by name or description in the Installed tab
+- **Auto-updates**: Toggle per marketplace; official marketplaces auto-update by default
 
 ---
 
@@ -99,11 +102,11 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Specialized AI assistants that Claude Code can delegate tasks to. Each operates with its own separate context window and can be configured with specific system prompts, tools, and models for task-specific problem-solving.
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/sub-agents
+**Documentation**: https://code.claude.com/docs/en/sub-agents
 
 **Key concepts**:
 - **Benefits**: Context preservation (separate windows prevent main conversation pollution), specialized expertise (fine-tuned instructions), reusability (work across projects), flexible permissions (different tool access levels)
-- **Creation**: `/agents` → Create New Agent → Choose scope → Define/customize → Select tools → Save; or manually create Markdown files with YAML frontmatter
+- **Creation**: `/agents` then Create New Agent then Choose scope then Define/customize then Select tools then Save; or manually create Markdown files with YAML frontmatter
 - **File structure**: YAML frontmatter with `name` (required, lowercase-hyphenated), `description` (required, natural language purpose), `tools` (optional, comma-separated), `model` (optional, sonnet/opus/haiku/inherit), `disallowedTools` (optional, explicit tool blocking), `permissionMode` (optional, permission behavior for specific agent)
 - **File locations** (priority order): Project (`.claude/agents/`, highest), CLI flag (`--agents`, add subagents dynamically), User (`~/.claude/agents/`, lower), Plugin (`agents/` directory)
 - **Usage**: Automatic delegation (Claude proactively identifies based on descriptions; use "PROACTIVELY" or "MUST BE USED" in description), Explicit invocation (direct requests to use specific subagent), @-mention support with typeahead
@@ -123,14 +126,15 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Tools that control Claude's behavior via frequently-used prompts, invoked by user explicitly or by Claude programmatically. Can be built-in or custom Markdown files.
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+**Documentation**: https://code.claude.com/docs/en/skills
 
 **Key concepts**:
 - **Invocation patterns**: Direct (`/command`), plugin-prefixed (`/plugin:command` for disambiguation), with arguments (`/command arg1 arg2`)
-- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list), `/plan` (enter plan mode), `/teleport` (resume remote session), `/remote-env` (configure remote environment), `/rename` (name session), `/stats` (usage statistics), `/resume` (resume by name or ID), `/config` (settings with search)
+- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list), `/plan` (enter plan mode), `/teleport` (resume remote session), `/remote-env` (configure remote environment), `/rename` (name session), `/stats` (usage statistics), `/resume` (resume by name or ID), `/config` (settings with search), `/keybindings` (customize keyboard shortcuts)
 - **Custom commands**: Single Markdown files in `.claude/commands/` (project, git-shared) or `~/.claude/commands/` (personal, cross-project)
 - **Structure**: Single file with frontmatter, simpler than Skills' multi-file structure
-- **Features**: Namespacing via subdirectories, arguments (`$ARGUMENTS` for all, `$1`/`$2` for specific), bash execution (prefix `!`), file references (`@` notation), frontmatter metadata
+- **Argument syntax**: `$ARGUMENTS` for all args, `$0`/`$1`/`$2` shorthand for individual args, `$ARGUMENTS[0]` bracket syntax for indexed access (v2.1.19)
+- **Features**: Namespacing via subdirectories, bash execution (prefix `!`), file references (`@` notation), frontmatter metadata
 - **Frontmatter options**: Description, allowed-tools (comma-separated or YAML-style), model selection, disable-model-invocation, hooks, argument-hint, context (fork), agent (for forked context)
 - **Execution**: Skill tool allows Claude to invoke programmatically; disable via `/permissions` or `disable-model-invocation: true`
 - **MCP commands**: Format `mcp__<server-name>__<prompt-name>` from MCP server prompts
@@ -163,7 +167,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Hook input fields**: `tool_use_id` field in PreToolUse and PostToolUse hooks enables correlation between pre/post events for same tool call
 - **PermissionRequest hook**: Runs when user shown permission dialog; use decision control to allow/deny automatically; recognizes same matcher values as PreToolUse
 - **Environment variables**: `CLAUDE_PROJECT_DIR` (project root path), `CLAUDE_ENV_FILE` (SessionStart persistence), `CLAUDE_CODE_REMOTE` (remote/local indicator)
-- **Security warning**: Execute arbitrary shell commands automatically—validate/sanitize input, quote variables, use absolute paths, avoid sensitive files, test in safe environments
+- **Security warning**: Execute arbitrary shell commands automatically - validate/sanitize input, quote variables, use absolute paths, avoid sensitive files, test in safe environments
 - **MCP integration**: Works with MCP tools using pattern `mcp__<server>__<tool>`
 - **Debugging**: Use `claude --debug` for execution details, matched commands, exit codes, output
 - **Component hooks**: Skills, agents, and slash commands can define hooks in frontmatter; scoped to component lifecycle
@@ -176,7 +180,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Core tool allowing Claude to delegate work to specialized subagents with isolated contexts
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/sub-agents
+**Documentation**: https://code.claude.com/docs/en/sub-agents
 
 **Key concepts**:
 - **Purpose**: Invoke subagents for specialized tasks while preserving main conversation context
@@ -194,7 +198,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Interactive tool for asking structured multiple-choice questions during conversations
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings (Tools Available to Claude table)
+**Documentation**: https://code.claude.com/docs/en/settings (Tools Available to Claude table)
 
 **Key concepts**:
 - **Purpose**: Enables Claude to ask structured questions with multiple-choice options
@@ -211,7 +215,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 **What it is**: Language Server Protocol integration for semantic code intelligence
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/settings (Tools Available to Claude table)
+**Documentation**: https://code.claude.com/docs/en/settings (Tools Available to Claude table)
 
 **Key concepts**:
 - **Introduced**: v2.0.74 (2025-12)

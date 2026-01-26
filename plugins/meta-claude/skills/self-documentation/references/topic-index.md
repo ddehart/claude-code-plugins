@@ -6,13 +6,14 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 
 | Keywords | Reference File | Description |
 |----------|----------------|-------------|
-| skill, skills, SKILL.md, allowed-tools, user-invocable, skill hooks, hot-reload, context fork, agent field, once hooks, ${CLAUDE_SESSION_ID}, session id substitution | core-features.md | Skills system |
+| skill, skills, SKILL.md, allowed-tools, user-invocable, skill hooks, hot-reload, context fork, agent field, once hooks, ${CLAUDE_SESSION_ID}, session id substitution, permission-free skills | core-features.md | Skills system |
 | agent, subagent, Task tool, delegate, fork, context, agent hooks, SubagentStart | core-features.md | Agents and subagents |
 | mcp, server, protocol, tool, mcp server, model context protocol, list_changed, ENABLE_TOOL_SEARCH, tool search, auto MCP | core-features.md, configuration.md | MCP servers and Auto MCP Tool Search |
-| plugin, marketplace, install plugin, plugin update | core-features.md | Plugins |
-| slash command, /command, user-defined command, autocomplete, /plan, /teleport, /remote-env, /rename, /stats, /resume, /todos | core-features.md | Slash commands |
+| plugin, marketplace, install plugin, plugin update, search plugins, filter plugins | core-features.md | Plugins |
+| slash command, /command, user-defined command, autocomplete, /plan, /teleport, /remote-env, /rename, /stats, /resume, /todos, /keybindings | core-features.md | Slash commands |
 | hook, hooks, PreToolUse, PostToolUse, Stop, SubagentStart, SubagentStop, Notification, once, prompt-based hooks, updatedInput, ask confirmation, additionalContext | core-features.md | Hooks system |
 | AskUserQuestion, Ctrl+G, external editor in AskUserQuestion | core-features.md | AskUserQuestion tool |
+| $ARGUMENTS, $0, $1, $2, argument syntax, bracket syntax, indexed arguments | core-features.md | Command argument substitution |
 | CLAUDE.md, memory, context, project instructions | configuration.md | Memory management |
 | rules, .claude/rules, modular rules, path-specific rules | configuration.md | Modular rules |
 | permission, permissions, allow, deny, tool access, wildcard patterns, unreachable warnings, Task(AgentName), disable agents | configuration.md | Permission management |
@@ -27,9 +28,14 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | thinking, extended thinking, Alt+T, MAX_THINKING_TOKENS, alwaysThinkingEnabled, opus 4.5 | configuration.md | Thinking mode |
 | release channel, beta, stable, /config | configuration.md | Release channel toggle |
 | --tools flag, interactive mode, tool restrictions | configuration.md | Tools interactive mode flag |
-| vscode, vs code, ide, extension | integrations.md | VS Code extension |
+| CLAUDE_CODE_ENABLE_TASKS, task system, disable tasks | configuration.md, undocumented.md | Task system toggle |
+| vscode, vs code, ide, extension, plugin management, remote sessions | integrations.md | VS Code extension |
+| chrome, browser, automation, --chrome, /chrome | integrations.md | Claude in Chrome |
 | azure, foundry, enterprise | integrations.md | Azure AI Foundry |
+| jetbrains, intellij, pycharm, webstorm | integrations.md | JetBrains IDEs |
+| desktop, native app, download | integrations.md | Desktop application |
 | keyboard, shortcut, interactive, ctrl, alt, readline, Vim motions, Ctrl+T, task list toggle | workflows.md | Interactive mode |
+| keybindings, customize shortcuts, /keybindings, chord, keystroke, rebind | workflows.md | Customizable keyboard shortcuts |
 | checkpoint, rewind, undo, restore | workflows.md | Checkpointing |
 | cost, usage, tokens, spending | workflows.md | Cost tracking |
 | git, branch, commit, pr, pull request | workflows.md | Git automation |
@@ -59,16 +65,19 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 
 Some questions span multiple themes. Load multiple files when keywords match different categories:
 
-- "How do skills work with MCP servers?" → core-features.md (both topics)
-- "Should I use a skill or subagent for this?" → decision-guide.md + core-features.md
-- "What permissions does my MCP server need?" → core-features.md + configuration.md
-- "How do I configure thinking mode?" → configuration.md + workflows.md
-- "What keyboard shortcuts are available?" → workflows.md
-- "How do skill hooks work?" → core-features.md (skills and hooks sections)
-- "How does Auto MCP Tool Search work?" → configuration.md + core-features.md (MCP section)
-- "How do I manage tasks?" → workflows.md (task management system)
-- "How do I write effective prompts?" → best-practices.md
-- "When should I use /clear?" → best-practices.md + workflows.md
+- "How do skills work with MCP servers?" -> core-features.md (both topics)
+- "Should I use a skill or subagent for this?" -> decision-guide.md + core-features.md
+- "What permissions does my MCP server need?" -> core-features.md + configuration.md
+- "How do I configure thinking mode?" -> configuration.md + workflows.md
+- "What keyboard shortcuts are available?" -> workflows.md
+- "How do I customize keyboard shortcuts?" -> workflows.md (Customizable Keyboard Shortcuts section)
+- "How do skill hooks work?" -> core-features.md (skills and hooks sections)
+- "How does Auto MCP Tool Search work?" -> configuration.md + core-features.md (MCP section)
+- "How do I manage tasks?" -> workflows.md (task management system)
+- "How do I write effective prompts?" -> best-practices.md
+- "When should I use /clear?" -> best-practices.md + workflows.md
+- "How do I use Claude in Chrome?" -> integrations.md
+- "How do I resume remote sessions?" -> integrations.md (VS Code) + workflows.md
 
 ## File Purposes
 

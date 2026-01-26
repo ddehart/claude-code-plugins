@@ -2,7 +2,7 @@
 
 Productivity features, keyboard shortcuts, and workflow automation in Claude Code.
 
-**Last updated**: 2026-01-22
+**Last updated**: 2026-01-25
 
 ---
 
@@ -24,6 +24,39 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 - **Model switching**: Alt+P (Linux/Windows) or Option+P (macOS) to switch models mid-prompt
 - **Thinking toggle**: Alt+T to enable/disable extended thinking mode (requires /terminal-setup); sticky across sessions
 - **Slash command autocomplete**: Works anywhere in input, not just at the beginning
+
+---
+
+## Customizable Keyboard Shortcuts
+
+**What it is**: Configure keybindings per context, create chord sequences, and personalize Claude Code workflow
+
+**Documentation**: https://code.claude.com/docs/en/keybindings
+
+**Key concepts**:
+- **Configuration**: Run `/keybindings` to create or open `~/.claude/keybindings.json`; changes auto-detected without restart
+- **Contexts**: Bindings apply to specific contexts (Global, Chat, Autocomplete, Confirmation, Transcript, HistorySearch, Task, etc.)
+- **Actions**: Follow `namespace:action` format (e.g., `chat:submit`, `app:toggleTodos`)
+- **Keystroke syntax**: Modifiers use `+` separator (ctrl+k, shift+tab, meta+p); chords are space-separated (ctrl+k ctrl+s)
+- **Special keys**: escape/esc, enter/return, tab, space, up/down/left/right, backspace/delete
+- **Uppercase letters**: Standalone uppercase implies Shift (K = shift+k); with modifiers treated as stylistic (ctrl+K = ctrl+k)
+- **Unbinding**: Set action to `null` to unbind default shortcut
+- **Reserved shortcuts**: Ctrl+C (interrupt) and Ctrl+D (exit) cannot be rebound
+- **Terminal conflicts**: Ctrl+B (tmux prefix - press twice), Ctrl+A (screen prefix), Ctrl+Z (Unix suspend)
+- **Vim mode interaction**: Keybindings handle component-level actions; vim mode handles text input level; Escape in vim switches modes instead of triggering chat:cancel
+- **Validation**: Run `/doctor` to see keybinding warnings
+
+**Available contexts**:
+- Global, Chat, Autocomplete, Settings, Confirmation, Tabs, Help, Transcript
+- HistorySearch, Task, ThemePicker, Attachments, Footer, MessageSelector
+- DiffDialog, ModelPicker, Select, Plugin
+
+**Common actions by context**:
+- **Global**: app:interrupt, app:exit, app:toggleTodos, app:toggleTranscript
+- **Chat**: chat:submit, chat:cancel, chat:cycleMode, chat:modelPicker, chat:thinkingToggle, chat:externalEditor, chat:stash, chat:imagePaste
+- **Autocomplete**: autocomplete:accept, autocomplete:dismiss, autocomplete:previous, autocomplete:next
+- **Confirmation**: confirm:yes, confirm:no, confirm:cycleMode, confirm:toggleExplanation
+- **History**: history:search, history:previous, history:next
 
 ---
 
@@ -59,7 +92,7 @@ CLAUDE_CODE_TASK_LIST_ID=my-project claude
 
 **What it is**: Automatic file state tracking with ability to rewind conversation and/or code changes to previous points
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/checkpointing
+**Documentation**: https://code.claude.com/docs/en/checkpointing
 
 **Key concepts**:
 - **Automatic tracking**: Every user prompt creates a checkpoint; persists across sessions
@@ -158,7 +191,7 @@ CLAUDE_CODE_TASK_LIST_ID=my-project claude
 
 **What it is**: Ability to name conversation sessions for easier resumption and organization
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
 
 **Key concepts**:
 - Use `/rename` to name current session
@@ -190,7 +223,7 @@ claude --resume feature-auth-refactor
 
 **What it is**: Visualize daily usage, session history, streaks, and model preferences
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
 
 **Key concepts**:
 - `/stats` command provides detailed usage statistics
@@ -217,7 +250,7 @@ claude --resume feature-auth-refactor
 
 **What it is**: Settings interface with search functionality for finding specific settings
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
 
 **Key concepts**:
 - `/config` opens Settings interface (Config tab)
@@ -242,7 +275,7 @@ claude --resume feature-auth-refactor
 
 **What it is**: Direct entry into plan mode from the prompt
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
 
 **Key concepts**:
 - Use `/plan` to enter plan mode directly
@@ -262,7 +295,7 @@ claude --resume feature-auth-refactor
 
 **What it is**: Commands to manage remote sessions from claude.ai
 
-**Documentation**: https://docs.anthropic.com/en/docs/claude-code/slash-commands
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
 
 **Key concepts**:
 - `/teleport` - Resume a remote session by ID or open picker (claude.ai subscribers)
