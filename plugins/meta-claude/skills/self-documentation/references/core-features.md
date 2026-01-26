@@ -24,35 +24,37 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 ---
 
-## Skills System
+## Skills (Unified with Slash Commands)
 
-**What it is**: Modular capabilities that extend Claude's functionality with specialized knowledge and workflows. Skills consist of a SKILL.md file with YAML frontmatter (name, description) plus optional supporting files (scripts, references, assets).
+**What it is**: The extensibility system for Claude Code. Skills are SKILL.md files with YAML frontmatter that extend Claude's capabilities. Custom slash commands have been merged into skills - both `.claude/commands/review.md` and `.claude/skills/review/SKILL.md` create `/review` and work the same way.
 
 **Documentation**: https://code.claude.com/docs/en/skills
 
 **Key concepts**:
-- **Model-invoked** (not user-invoked) - Claude autonomously decides when to use based on context and description field
-- **Auto-discovery** - Skills activate automatically when relevant to request, unlike slash commands which require explicit invocation
-- **Progressive disclosure** - Three-level loading: metadata (always in context ~100 words), SKILL.md body (when triggered <5k words), bundled resources (as needed)
-- **Multi-file structure** - SKILL.md + optional supporting files (references/, scripts/, templates/); manages context efficiently by deferring non-essential information
+- **Dual invocation model**: Skills can be invoked by users (`/skill-name`) OR by Claude automatically when relevant. Both modes enabled by default.
+- **User invocation**: Type `/skill-name` to invoke directly; skills appear in slash command autocomplete menu
+- **Model invocation**: Claude loads skills automatically when conversation matches the description field
+- **Invocation control**: `disable-model-invocation: true` prevents Claude from auto-loading (user-only); `user-invocable: false` hides from menu (Claude-only)
+- **Backwards compatibility**: Files in `.claude/commands/` still work with same frontmatter support; if skill and command share a name, skill takes precedence
+- **Multi-file structure**: SKILL.md (required) + optional supporting files (references/, scripts/, templates/); manages context efficiently
 - **Three scopes**: Personal (`~/.claude/skills/`), Project (`.claude/skills/`, git-shared), Plugin (bundled with Claude Code plugins)
-- **Nested directory discovery** - Skills auto-discovered from nested `.claude/skills/` directories; supports monorepo setups where packages have their own Skills
-- **Tool restrictions** - `allowed-tools` frontmatter field limits available tools within skill for security/safety; supports comma-separated or YAML-style lists
-- **Description field is critical** - Must be specific with trigger terms for discoverability (max 1024 characters); tells Claude when to activate
-- **Supporting files**: `scripts/` (executable code, may run without loading to context), `references/` (docs loaded into context as needed), `assets/` (files used in output, not loaded to context)
-- **Best practices**: One capability per skill, write specific descriptions with user trigger terms, test activation timing with team, document versions
+- **Enterprise scope**: Organization-wide skills via managed settings
+- **Nested directory discovery**: Skills auto-discovered from nested `.claude/skills/` directories; supports monorepo setups
+- **Tool restrictions**: `allowed-tools` frontmatter field limits available tools within skill for security/safety
+- **Description field is critical**: Must be specific with trigger terms for discoverability (max 1024 characters); tells Claude when to auto-load
+- **Supporting files**: `scripts/` (executable code), `references/` (docs loaded as needed), `assets/` (files used in output)
+- **Argument passing**: `$ARGUMENTS` for all args, `$0`/`$1`/`$2` shorthand, `${CLAUDE_SESSION_ID}` for session ID; if `$ARGUMENTS` not in content, args appended automatically
+- **Dynamic context**: `!`command`` syntax runs shell commands before skill content is sent to Claude; output replaces placeholder
 - **Sharing**: Via plugins (recommended, marketplace distribution) or project repository (`.claude/skills/`, team auto-gets on pull)
-- **vs Slash Commands**: Skills are "complex workflows Claude discovers automatically" with multi-file support; slash commands are "simple, reusable prompts" requiring explicit invocation
-- **Subagent integration**: Subagents can auto-load specific skills via `skills` frontmatter field; enables specialized knowledge per subagent; skills unload when subagent completes
-- **Hot-reload**: Skills are automatically reloaded when created or modified, no restart required
-- **Forked execution**: `context: fork` runs skill in isolated sub-agent context with its own conversation history
-- **Agent field**: Specify which agent type to use when `context: fork` is set (e.g., `Explore`, `Plan`, `general-purpose`, or custom agent)
+- **Subagent pairing**: Skills naturally pair with subagents for context protection. Two patterns:
+  - `agent: <agent-name>` spawns subagent with skill loaded into fresh context (ideal for search/research skills using Explore agent)
+  - `context: fork` spawns subagent with current conversation context carried over (ideal for parallel operations like memory/summarization that shouldn't pollute main context)
+- **Subagent skill loading**: Subagents can auto-load specific skills via `skills` frontmatter field; skills unload when subagent completes
+- **Hot-reload**: Skills automatically reloaded when created or modified, no restart required
 - **Skill hooks**: Skills can define hooks scoped to their lifecycle using `hooks` frontmatter field; supports `PreToolUse`, `PostToolUse`, and `Stop` events
 - **Once hooks**: Hooks with `once: true` run only once per session, then are removed
-- **Visibility control**: `user-invocable` field controls whether skill appears in slash command menu (defaults to `true`); does not affect `Skill` tool or automatic discovery
-- **Skills/slash commands merged**: Skills visible in slash command menu by default for unified invocation model
-- **String substitutions**: `$ARGUMENTS` for all passed arguments, `${CLAUDE_SESSION_ID}` for current session ID (useful for logging or session-specific files)
-- **Permission-free skills**: Skills without additional permissions or hooks are now allowed without requiring user approval (v2.1.19)
+- **Permission-free skills**: Skills without additional permissions or hooks load without requiring user approval
+- **Unified Skill tool**: Claude invokes skills programmatically via `Skill` tool; control access via `/permissions` rules like `Skill(name)` or `Skill(name:*)`
 
 ---
 
@@ -85,8 +87,8 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 **Documentation**: https://code.claude.com/docs/en/plugins
 
 **Key concepts**:
-- **Components**: Commands (slash commands), Agents (specialized AI assistants), Skills (model-invoked capabilities), Hooks (event handlers), MCP Servers (external integrations)
-- **Structure**: `.claude-plugin/plugin.json` (metadata), `commands/`, `agents/`, `skills/`, `hooks/` directories
+- **Components**: Skills (extensibility, includes legacy commands), Agents (specialized AI assistants), Hooks (event handlers), MCP Servers (external integrations)
+- **Structure**: `.claude-plugin/plugin.json` (metadata), `skills/`, `agents/`, `hooks/` directories (legacy `commands/` still supported)
 - **Installation**: `/plugin` interactive menu (browse/discover), direct commands (`install/enable/disable`)
 - **Marketplaces**: Catalogs of plugins, add via `/plugin marketplace add your-org/claude-plugins`
 - **Team configuration**: Automatic installation via `.claude/settings.json` in repository
@@ -122,27 +124,22 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 
 ---
 
-## Slash Commands
+## Built-in Commands
 
-**What it is**: Tools that control Claude's behavior via frequently-used prompts, invoked by user explicitly or by Claude programmatically. Can be built-in or custom Markdown files.
+**What it is**: Claude Code's built-in slash commands for session management, configuration, and common operations. For custom commands, see Skills section above.
 
-**Documentation**: https://code.claude.com/docs/en/skills
+**Documentation**: https://code.claude.com/docs/en/interactive-mode#built-in-commands
 
 **Key concepts**:
-- **Invocation patterns**: Direct (`/command`), plugin-prefixed (`/plugin:command` for disambiguation), with arguments (`/command arg1 arg2`)
-- **Built-in commands**: `/help` (usage), `/clear` (history), `/model` (selection), `/cost` (tokens), `/memory` (CLAUDE.md editing), `/sandbox` (sandboxed bash), `/mcp` (server management), `/todos` (view current todo list), `/plan` (enter plan mode), `/teleport` (resume remote session), `/remote-env` (configure remote environment), `/rename` (name session), `/stats` (usage statistics), `/resume` (resume by name or ID), `/config` (settings with search), `/keybindings` (customize keyboard shortcuts)
-- **Custom commands**: Single Markdown files in `.claude/commands/` (project, git-shared) or `~/.claude/commands/` (personal, cross-project)
-- **Structure**: Single file with frontmatter, simpler than Skills' multi-file structure
-- **Argument syntax**: `$ARGUMENTS` for all args, `$0`/`$1`/`$2` shorthand for individual args, `$ARGUMENTS[0]` bracket syntax for indexed access (v2.1.19)
-- **Features**: Namespacing via subdirectories, bash execution (prefix `!`), file references (`@` notation), frontmatter metadata
-- **Frontmatter options**: Description, allowed-tools (comma-separated or YAML-style), model selection, disable-model-invocation, hooks, argument-hint, context (fork), agent (for forked context)
-- **Execution**: Skill tool allows Claude to invoke programmatically; disable via `/permissions` or `disable-model-invocation: true`
-- **MCP commands**: Format `mcp__<server-name>__<prompt-name>` from MCP server prompts
-- **Plugin commands**: Auto-discovered when plugins installed
-- **vs Skills**: Commands are "simple, reusable prompts" requiring explicit invocation; Skills are "complex workflows Claude discovers automatically" with multi-file support
-- **Autocomplete anywhere**: Slash command autocomplete works at any position in input, not just at the beginning
-- **Command hooks**: Slash commands can define hooks in frontmatter; supports `PreToolUse`, `PostToolUse`, and `Stop` events with `once: true` option
-- **Skills/commands merged**: Skills and slash commands now use unified `Skill` tool (previously separate `SlashCommand` tool)
+- **Session commands**: `/clear` (history), `/resume` (resume by name or ID), `/rename` (name session), `/teleport` (resume remote session)
+- **Configuration**: `/config` (settings with search), `/model` (selection), `/permissions` (tool access), `/keybindings` (customize shortcuts)
+- **Context management**: `/memory` (CLAUDE.md editing), `/compact` (reduce context), `/cost` (token usage), `/stats` (usage statistics)
+- **Tools**: `/mcp` (server management), `/sandbox` (sandboxed bash), `/todos` (view task list), `/plan` (enter plan mode)
+- **Help**: `/help` (usage), `/context` (view loaded context)
+- **Remote**: `/remote-env` (configure remote environment)
+- **MCP prompts**: Format `mcp__<server-name>__<prompt-name>` from MCP server prompts
+- **Autocomplete**: Works at any position in input, not just at the beginning
+- **Note**: Custom slash commands (`.claude/commands/`) have been merged into the Skills system; existing command files continue to work
 
 ---
 
