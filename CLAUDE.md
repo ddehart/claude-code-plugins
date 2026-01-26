@@ -65,9 +65,10 @@ allowed-tools: ["Read", "Write", "Bash", "Glob"]
 ```
 
 Skills differ from agents:
-- Skills are model-invoked (Claude decides when to activate based on description)
-- Agents are explicitly delegated via the Task tool
-- Skills can include supporting scripts in a `scripts/` subdirectory
+- Skills have dual invocation: users (`/skill-name`) OR Claude auto-loads based on description
+- Agents are delegated via Task tool for isolated context work
+- Skills support multi-file structure; agents are single Markdown files
+- Both can use subagent execution (`context: fork` or `agent:` field)
 
 ## No Build System
 
