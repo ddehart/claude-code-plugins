@@ -16,7 +16,7 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | $ARGUMENTS, $0, $1, $2, argument syntax, bracket syntax, indexed arguments | core-features.md | Command argument substitution |
 | CLAUDE.md, memory, context, project instructions | configuration.md | Memory management |
 | rules, .claude/rules, modular rules, path-specific rules | configuration.md | Modular rules |
-| permission, permissions, allow, deny, tool access, wildcard patterns, unreachable warnings, Task(AgentName), disable agents | configuration.md | Permission management |
+| permission, permissions, allow, deny, tool access, wildcard patterns, unreachable warnings, Task(AgentName), disable agents, Bash(*) | configuration.md | Permission management |
 | sandbox, sandboxing, docker, isolation | configuration.md | Sandboxing |
 | model, claude-sonnet, claude-opus, haiku, model selection | configuration.md | Model configuration |
 | output, style, streaming, markdown | configuration.md | Output styles |
@@ -28,7 +28,9 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | thinking, extended thinking, Alt+T, MAX_THINKING_TOKENS, alwaysThinkingEnabled, opus 4.5 | configuration.md | Thinking mode |
 | release channel, beta, stable, /config | configuration.md | Release channel toggle |
 | --tools flag, interactive mode, tool restrictions | configuration.md | Tools interactive mode flag |
-| CLAUDE_CODE_ENABLE_TASKS, task system, disable tasks | configuration.md, undocumented.md | Task system toggle |
+| CLAUDE_CODE_ENABLE_TASKS, task system, disable tasks, TODO list | configuration.md | Task system toggle |
+| --add-dir, add directory, additional directories, monorepo | configuration.md | Additional working directories |
+| config backup, backup rotation, timestamped backup | undocumented.md | Config backup rotation |
 | vscode, vs code, ide, extension, plugin management, remote sessions | integrations.md | VS Code extension |
 | chrome, browser, automation, --chrome, /chrome | integrations.md | Claude in Chrome |
 | azure, foundry, enterprise | integrations.md | Azure AI Foundry |
@@ -49,6 +51,9 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | skill vs, agent vs, mcp vs, slash command vs | decision-guide.md | Feature comparisons |
 | release notes, undocumented, new feature, recent | undocumented.md | Undocumented features |
 | explore subagent, LSP, desktop, chrome extension, IS_DEMO | undocumented.md | Specific undocumented features |
+| PR review status, prompt footer, review indicator | undocumented.md | PR review status indicator |
+| background agent, pre-launch permission, agent permission | undocumented.md | Background agent permissions |
+| agent messages, process messages, mid-task messages | undocumented.md | Agents process user messages |
 | observation, discovered, tested, behavior, found that | observations.md | User observations |
 | sdk, agent-sdk, behavioral, limitations | sdk-behavioral-bridges.md | SDK documentation that explains CLI behavior |
 | best practices, effective, failure pattern, verification, validate, verify, explore plan code, prompt crafting, session management, context management, kitchen sink, correction loop, intuition, when to clear | best-practices.md | Effective usage patterns |
@@ -78,6 +83,7 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 - "When should I use /clear?" -> best-practices.md + workflows.md
 - "How do I use Claude in Chrome?" -> integrations.md
 - "How do I resume remote sessions?" -> integrations.md (VS Code) + workflows.md
+- "How do I add multiple directories?" -> configuration.md (--add-dir flag)
 
 ## File Purposes
 
@@ -92,3 +98,4 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 | `observations.md` | User-discovered behaviors |
 | `sdk-behavioral-bridges.md` | Behavioral constraints from SDK docs |
 | `best-practices.md` | Meta-guidance: when/why to use features, failure patterns |
+

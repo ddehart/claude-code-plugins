@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2026-01-22
+**Last updated**: 2026-01-26
 
 ---
 
@@ -441,3 +441,42 @@ claude
 export CLAUDE_CODE_HIDE_ACCOUNT_INFO=1
 claude
 ```
+
+---
+
+## CLAUDE_CODE_ENABLE_TASKS Environment Variable
+
+**What it is**: Toggle between the new task management system and the previous TODO list
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- Set `CLAUDE_CODE_ENABLE_TASKS=false` to revert to previous TODO list instead of task tracking system
+- Default is `true` (new task management system enabled)
+- Provides fallback for users experiencing issues with the new task system
+- Task system provides dependency tracking, TaskCreate/TaskUpdate/TaskGet/TaskList tools
+
+**Configuration**:
+```bash
+CLAUDE_CODE_ENABLE_TASKS=false claude
+```
+
+---
+
+## --add-dir CLI Flag
+
+**What it is**: Add additional working directories for Claude to access
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- Add additional working directories beyond the current working directory
+- Validates each path exists as a directory before accepting
+- Supports loading CLAUDE.md files from additional directories
+- Useful for monorepos or projects with multiple related directories
+
+**Configuration**:
+```bash
+claude --add-dir ../apps ../lib
+```
+

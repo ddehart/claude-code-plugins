@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-01-25
+**Last updated**: 2026-01-26
 
 ---
 
@@ -53,7 +53,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Hot-reload**: Skills automatically reloaded when created or modified, no restart required
 - **Skill hooks**: Skills can define hooks scoped to their lifecycle using `hooks` frontmatter field; supports `PreToolUse`, `PostToolUse`, and `Stop` events
 - **Once hooks**: Hooks with `once: true` run only once per session, then are removed
-- **Permission-free skills**: Skills without additional permissions or hooks load without requiring user approval
+- **Permission-free skills**: Skills without additional permissions or hooks load without requiring user approval; reduces friction for simple skills
 - **Unified Skill tool**: Claude invokes skills programmatically via `Skill` tool; control access via `/permissions` rules like `Skill(name)` or `Skill(name:*)`
 
 ---
@@ -221,3 +221,4 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Capabilities**: Navigate code definitions, find all references to symbols, get type information and documentation
 - **Use cases**: Codebase exploration, refactoring support, understanding code relationships
 - **Likely supported languages**: TypeScript/JavaScript, Python, other LSP-compatible languages
+

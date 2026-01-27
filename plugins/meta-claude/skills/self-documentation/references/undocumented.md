@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.19
+**Latest Release**: v2.1.20
 
 ---
 
@@ -190,36 +190,86 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## CLAUDE_CODE_ENABLE_TASKS Environment Variable
+## PR Review Status Indicator
 
-**What it is**: Environment variable to disable the new task management system
+**What it is**: Display of pull request review status in the prompt footer showing branch PR state
 
-**Introduced**: v2.1.19
+**Introduced**: v2.1.20
 
 **What we know**:
-- Set `CLAUDE_CODE_ENABLE_TASKS=false` to revert to the old task system temporarily
-- Provides fallback for users experiencing issues with the new task system
-- Temporary migration aid as the new system stabilizes
+- Prompt footer now shows PR review status indicator
+- Shows the state of any PR associated with current branch
+- Provides quick visibility into review progress without leaving CLI
 
-**Configuration**:
-```bash
-CLAUDE_CODE_ENABLE_TASKS=false claude
-```
+**Expected behavior**:
+- Footer displays when working on a branch with an open PR
+- Shows review state (pending, approved, changes requested, etc.)
+- Updates as PR status changes
 
 ---
 
-## Skills Without Permission Approval
+## Agents Process User Messages While Working
 
-**What it is**: Skills that don't require additional permissions or hooks now load without approval prompt
+**What it is**: Background agents can now receive and process user messages while actively working
 
-**Introduced**: v2.1.19
+**Introduced**: v2.1.20
 
 **What we know**:
-- Skills without additional permissions or hooks are now allowed without requiring approval
-- Reduces friction for simple skills that don't need special access
-- Approval still required for skills with hooks or elevated permissions
+- Agents can now process user messages while actively working on tasks
+- Enables more interactive workflows with background agents
+- Users can provide additional context or corrections mid-task
 
-**Impact**:
-- Faster skill loading for safe skills
-- Better user experience for common skill patterns
-- Permission prompts reserved for skills that actually need elevated access
+**Use cases**:
+- Provide clarifications without waiting for agent to finish
+- Redirect agent's approach during execution
+- Add additional requirements discovered during processing
+
+---
+
+## Background Agent Pre-launch Permission Prompts
+
+**What it is**: Background agents now prompt for tool permissions before launching
+
+**Introduced**: v2.1.20
+
+**What we know**:
+- Background agents prompt for tool permissions before launching rather than during execution
+- Improves UX by handling permissions upfront
+- Reduces mid-execution permission failures
+
+**Benefits**:
+- Fewer interrupted background tasks
+- Better visibility into what tools background agent will use
+- More predictable background agent behavior
+
+---
+
+## Wildcard Permission Rule Simplification
+
+**What it is**: Permission rules like `Bash(*)` are now treated equivalently to `Bash`
+
+**Introduced**: v2.1.20
+
+**What we know**:
+- Permission rules with `(*)` wildcard are simplified
+- `Bash(*)` is treated the same as just `Bash`
+- Reduces confusion around wildcard patterns
+
+---
+
+## Config Backup Rotation
+
+**What it is**: Configuration backups are now timestamped and rotated, keeping the 5 most recent
+
+**Introduced**: v2.1.20
+
+**What we know**:
+- Config changes now create timestamped backup files
+- Only the 5 most recent backups are retained
+- Automatic rotation prevents backup file accumulation
+
+**Benefits**:
+- Recovery from recent config mistakes
+- No manual cleanup required
+- Predictable disk usage for config backups
+
