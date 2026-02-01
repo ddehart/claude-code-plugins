@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.20
+**Latest Release**: v2.1.29
 
 ---
 
@@ -171,43 +171,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Plugin Pinning to Git Commit SHAs
-
-**What it is**: Support for pinning plugins to specific git commit SHAs for exact version control
-
-**Introduced**: v2.1.14
-
-**What we know**:
-- Marketplace entries can specify exact commit SHAs
-- Enables reproducible builds and dependency locking
-- Useful for enterprise environments requiring audit trails
-- Allows teams to control exact plugin versions across installs
-
-**Expected configuration**:
-- Marketplace entry includes commit SHA in source specification
-- Plugin installation uses exact commit rather than branch head
-- Updates require explicit SHA changes in marketplace definition
-
----
-
-## PR Review Status Indicator
-
-**What it is**: Display of pull request review status in the prompt footer showing branch PR state
-
-**Introduced**: v2.1.20
-
-**What we know**:
-- Prompt footer now shows PR review status indicator
-- Shows the state of any PR associated with current branch
-- Provides quick visibility into review progress without leaving CLI
-
-**Expected behavior**:
-- Footer displays when working on a branch with an open PR
-- Shows review state (pending, approved, changes requested, etc.)
-- Updates as PR status changes
-
----
-
 ## Agents Process User Messages While Working
 
 **What it is**: Background agents can now receive and process user messages while actively working
@@ -226,50 +189,53 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Background Agent Pre-launch Permission Prompts
+## Per-User Temp Directory Isolation
 
-**What it is**: Background agents now prompt for tool permissions before launching
+**What it is**: Isolated temporary directories for each user to prevent permission conflicts
 
-**Introduced**: v2.1.20
+**Introduced**: v2.1.23
 
 **What we know**:
-- Background agents prompt for tool permissions before launching rather than during execution
-- Improves UX by handling permissions upfront
-- Reduces mid-execution permission failures
-
-**Benefits**:
-- Fewer interrupted background tasks
-- Better visibility into what tools background agent will use
-- More predictable background agent behavior
+- Fixed per-user temp directory isolation preventing permission conflicts on shared systems
+- Each user gets their own isolated temp directory
+- Prevents conflicts when multiple users run Claude Code on same system
 
 ---
 
-## Wildcard Permission Rule Simplification
+## Bash Timeout Duration Display
 
-**What it is**: Permission rules like `Bash(*)` are now treated equivalently to `Bash`
+**What it is**: Display of timeout duration alongside elapsed time for Bash commands
 
-**Introduced**: v2.1.20
+**Introduced**: v2.1.23
 
 **What we know**:
-- Permission rules with `(*)` wildcard are simplified
-- `Bash(*)` is treated the same as just `Bash`
-- Reduces confusion around wildcard patterns
+- Bash commands now display timeout duration alongside elapsed time
+- Provides visibility into how long until a command times out
+- Helps users understand command execution constraints
 
 ---
 
-## Config Backup Rotation
+## Full-width Number Input for Japanese IME
 
-**What it is**: Configuration backups are now timestamped and rotated, keeping the 5 most recent
+**What it is**: Support for full-width (zenkaku) number input from Japanese IME in option selection prompts
 
-**Introduced**: v2.1.20
+**Introduced**: v2.1.21
 
 **What we know**:
-- Config changes now create timestamped backup files
-- Only the 5 most recent backups are retained
-- Automatic rotation prevents backup file accumulation
+- Japanese IME users can now input full-width numbers in option selection prompts
+- Improves usability for Japanese language users
+- No need to switch to half-width input mode for selections
 
-**Benefits**:
-- Recovery from recent config mistakes
-- No manual cleanup required
-- Predictable disk usage for config backups
+---
+
+## Automatic Python Virtual Environment Activation
+
+**What it is**: VS Code extension setting to automatically activate Python virtual environments
+
+**Introduced**: v2.1.21
+
+**What we know**:
+- New `claudeCode.usePythonEnvironment` setting in VS Code extension
+- Automatically activates Python virtual environment when detected
+- Reduces manual environment management for Python projects
 

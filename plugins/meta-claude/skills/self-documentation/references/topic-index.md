@@ -30,7 +30,7 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | --tools flag, interactive mode, tool restrictions | configuration.md | Tools interactive mode flag |
 | CLAUDE_CODE_ENABLE_TASKS, task system, disable tasks, TODO list | configuration.md | Task system toggle |
 | --add-dir, add directory, additional directories, monorepo | configuration.md | Additional working directories |
-| config backup, backup rotation, timestamped backup | undocumented.md | Config backup rotation |
+| config backup, backup rotation, timestamped backup | configuration.md | Config backup rotation |
 | vscode, vs code, ide, extension, plugin management, remote sessions | integrations.md | VS Code extension |
 | chrome, browser, automation, --chrome, /chrome | integrations.md | Claude in Chrome |
 | azure, foundry, enterprise | integrations.md | Azure AI Foundry |
@@ -42,18 +42,19 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | cost, usage, tokens, spending | workflows.md | Cost tracking |
 | git, branch, commit, pr, pull request | workflows.md | Git automation |
 | parallel, concurrent, background, Ctrl+B, CLAUDE_CODE_DISABLE_BACKGROUND_TASKS | workflows.md | Parallel execution and background agents |
-| session, named session, resume, /rename, /teleport, /remote-env | workflows.md | Named sessions and remote management |
+| session, named session, resume, /rename, /teleport, /remote-env, --from-pr | workflows.md | Named sessions and remote management |
 | /stats, statistics, usage patterns, streaks | workflows.md | Stats command |
 | /plan, plan mode, planning | workflows.md | Plan command |
 | task management, TaskCreate, TaskUpdate, TaskGet, TaskList, task dependencies, Ctrl+T, CLAUDE_CODE_TASK_LIST_ID | workflows.md | Task management system |
 | history autocomplete, bash mode, tab completion, ! prefix | workflows.md | History-based autocomplete in bash mode |
+| PR review status, prompt footer, review indicator, green, yellow, red, gray, purple, merged | workflows.md | PR review status indicator |
 | should I use, when to use, vs, versus, difference, compare, choose | decision-guide.md | Feature decisions |
 | skill vs, agent vs, mcp vs, slash command vs | decision-guide.md | Feature comparisons |
 | release notes, undocumented, new feature, recent | undocumented.md | Undocumented features |
 | explore subagent, LSP, desktop, chrome extension, IS_DEMO | undocumented.md | Specific undocumented features |
-| PR review status, prompt footer, review indicator | undocumented.md | PR review status indicator |
-| background agent, pre-launch permission, agent permission | undocumented.md | Background agent permissions |
-| agent messages, process messages, mid-task messages | undocumented.md | Agents process user messages |
+| spinnerVerbs, spinner verbs, customize spinner | configuration.md | Customizable spinner verbs |
+| python environment, usePythonEnvironment, virtual environment, venv | undocumented.md | Python environment activation |
+| full-width, zenkaku, Japanese IME | undocumented.md | Japanese IME support |
 | observation, discovered, tested, behavior, found that | observations.md | User observations |
 | sdk, agent-sdk, behavioral, limitations | sdk-behavioral-bridges.md | SDK documentation that explains CLI behavior |
 | best practices, effective, failure pattern, verification, validate, verify, explore plan code, prompt crafting, session management, context management, kitchen sink, correction loop, intuition, when to clear | best-practices.md | Effective usage patterns |
@@ -84,6 +85,7 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 - "How do I use Claude in Chrome?" -> integrations.md
 - "How do I resume remote sessions?" -> integrations.md (VS Code) + workflows.md
 - "How do I add multiple directories?" -> configuration.md (--add-dir flag)
+- "How do I resume a session by PR?" -> workflows.md (Named Sessions)
 
 ## File Purposes
 
@@ -98,4 +100,3 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 | `observations.md` | User-discovered behaviors |
 | `sdk-behavioral-bridges.md` | Behavioral constraints from SDK docs |
 | `best-practices.md` | Meta-guidance: when/why to use features, failure patterns |
-

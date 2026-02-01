@@ -2,7 +2,7 @@
 
 Productivity features, keyboard shortcuts, and workflow automation in Claude Code.
 
-**Last updated**: 2026-01-25
+**Last updated**: 2026-02-01
 
 ---
 
@@ -16,7 +16,7 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 - **General controls**: Ctrl+C (interrupt), Ctrl+D (exit), Ctrl+G (external editor), Ctrl+L (clear screen), Ctrl+O (toggle verbose/transcript), Ctrl+R (history search), Ctrl+V/Alt+V (paste images), Shift+Tab/Alt+M (permission modes), Ctrl+T (toggle task list)
 - **Multiline entry**: `\` + Enter, Option+Enter (macOS), Shift+Enter (after /terminal-setup)
 - **Quick commands**: `#` (add to memory), `/` (slash commands), `!` (direct bash), `@` (file autocomplete)
-- **Vim mode**: Standard navigation (h/j/k/l, w, b, f, t) and editing (dd, cc, x) with Esc mode switching; expanded motions for improved navigation
+- **Vim mode**: Standard navigation (h/j/k/l, w, b, f, t) and editing (dd, cc, x) with Esc mode switching; expanded motions for improved navigation; arrow key history navigation when cursor at input boundaries
 - **Command history**: Per-directory storage with Ctrl+R interactive search and highlighting
 - **Background tasks**: Ctrl+B to run long processes asynchronously with output buffering via TaskOutput tool; unified backgrounding for bash commands and agents
 - **Bash mode**: `!` prefix bypasses Claude's interpretation while maintaining conversation context; supports history-based autocomplete (type partial command and press Tab to complete from previous `!` commands in current project)
@@ -70,9 +70,10 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 - **Core tools**: TaskCreate (create tasks with dependencies), TaskUpdate (update status/dependencies/details), TaskGet (retrieve full task details), TaskList (list all tasks with status)
 - **Task dependencies**: Tasks can specify dependencies on other tasks; helps Claude organize complex multi-step work
 - **Persistence**: Tasks persist across context compactions and sessions
-- **Task list view**: Press Ctrl+T to toggle task list display; shows up to 10 tasks at a time with status indicators (pending, in progress, complete)
+- **Task list view**: Press Ctrl+T to toggle task list display; shows up to 10 tasks at a time with status indicators (pending, in progress, complete); dynamically adjusts visible items based on terminal height
 - **Shared task lists**: Set `CLAUDE_CODE_TASK_LIST_ID` environment variable to share a task list across sessions using named directory in `~/.claude/tasks/`
 - **Management**: Ask Claude directly to "show me all tasks" or "clear all tasks" for full list or cleanup
+- **Task deletion**: Tasks can be deleted via the `TaskUpdate` tool
 
 **Expected workflow**:
 1. Claude creates tasks with dependencies using TaskCreate
@@ -126,6 +127,7 @@ CLAUDE_CODE_TASK_LIST_ID=my-project claude
 2. Run `git log` and `git diff [base-branch]...HEAD` to understand full branch history
 3. Analyze **all commits** in branch (not just latest)
 4. Create PR with format: Summary (1-3 bullets), Test plan (checklist), Claude attribution
+5. Session automatically links to PR when created via `gh pr create`
 
 **Safety protocols**:
 - Never update git config
@@ -134,6 +136,21 @@ CLAUDE_CODE_TASK_LIST_ID=my-project claude
 - Only amend commits if: (1) user explicitly requested OR (2) adding pre-commit edits
 - Always check authorship before amending: `git log -1 --format='%an %ae'`
 - Never commit unless explicitly asked
+
+---
+
+## PR Review Status Indicator
+
+**What it is**: Display of pull request review status in the prompt footer showing current branch's PR state
+
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
+
+**Key concepts**:
+- **Display location**: Clickable PR link in footer (e.g., "PR #446") with colored underline
+- **Color meanings**: Green (approved), Yellow (pending review), Red (changes requested), Gray (draft), Purple (merged)
+- **Interaction**: Cmd+click (Mac) or Ctrl+click (Windows/Linux) to open PR in browser
+- **Auto-update**: Status updates automatically every 60 seconds
+- **Requirements**: Requires `gh` CLI installed and authenticated (`gh auth login`)
 
 ---
 
@@ -164,7 +181,7 @@ CLAUDE_CODE_TASK_LIST_ID=my-project claude
 
 **What it is**: Ability for agents to run in the background while you continue working, with asynchronous message passing
 
-**Documentation**: Ctrl+B unified backgrounding
+**Documentation**: https://code.claude.com/docs/en/sub-agents
 
 **Key concepts**:
 - Agents can now run in background while user continues working
@@ -172,6 +189,8 @@ CLAUDE_CODE_TASK_LIST_ID=my-project claude
 - Enables true parallel workflows with human and agent working simultaneously
 - Ctrl+B works for both bash commands and agents
 - Disable all background task functionality with `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`
+- **Pre-launch permissions**: Background agents prompt for tool permissions before launching, reducing mid-execution permission failures
+- **MCP tools not available**: Background subagents cannot use MCP tools
 
 **Expected behavior**:
 - Start an agent task that runs in background
@@ -191,12 +210,13 @@ CLAUDE_CODE_TASK_LIST_ID=my-project claude
 
 **What it is**: Ability to name conversation sessions for easier resumption and organization
 
-**Documentation**: https://code.claude.com/docs/en/interactive-mode
+**Documentation**: https://code.claude.com/docs/en/common-workflows
 
 **Key concepts**:
 - Use `/rename` to name current session
 - Use `/resume <name>` in REPL to resume named session
 - Use `claude --resume <name>` from terminal to resume
+- Use `claude --from-pr <number>` to resume sessions linked to a specific PR
 - Makes session management more intuitive than using session IDs
 
 **Workflow examples**:
@@ -209,6 +229,9 @@ claude --resume feature-auth-refactor
 
 # Or resume from within Claude Code:
 /resume feature-auth-refactor
+
+# Resume session linked to a PR:
+claude --from-pr 123
 ```
 
 **Benefits**:

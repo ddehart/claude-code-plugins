@@ -2,7 +2,7 @@
 
 IDE extensions, platform integrations, and deployment options for Claude Code.
 
-**Last updated**: 2026-01-25
+**Last updated**: 2026-02-01
 
 ---
 
@@ -18,6 +18,7 @@ IDE extensions, platform integrations, and deployment options for Claude Code.
 - **Requirements**: VS Code 1.98.0+; install from Visual Studio Code Extension Marketplace
 - **Prompt box features**: Permission mode indicator, command menu (`/`), context usage indicator, extended thinking toggle, multi-line input (Shift+Enter)
 - **@-mentions**: Fuzzy matching for files/folders, automatic selection visibility, `Option+K`/`Alt+K` to insert file reference with line numbers
+- **Removable attachments**: File suggestions display as attachment chips; click X to remove unwanted files before sending prompt
 - **Session management**: Resume past conversations via dropdown, search by keyword or browse by time
 - **Remote sessions**: OAuth users can resume sessions from claude.ai via Remote tab in Past Conversations dialog
 - **Plugin management**: Type `/plugins` to browse, install, and manage plugins with graphical interface; supports user, project, and local scopes

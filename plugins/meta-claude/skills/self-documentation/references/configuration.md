@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2026-01-26
+**Last updated**: 2026-02-01
 
 ---
 
@@ -66,12 +66,27 @@ Settings, permissions, memory, and customization options for Claude Code.
 - **Configuration**: settings.json at user (`~/.claude/`), project (`.claude/`, shared), or local (`.claude/settings.local.json`, personal)
 - **`/permissions` command**: Manage tool permissions interactively
 - **Rule format**: Array of permission rules per mode (e.g., `Bash(git push:*)`, `Read(./.env)`)
+- **Wildcard equivalence**: `Bash(*)` is treated as equivalent to `Bash` (matches all commands)
 - **Use cases**: Prevent dangerous operations, require confirmation for sensitive actions, enable autonomous work within boundaries
 - **MCP integration**: Works with MCP tools using pattern `mcp__<server>__<tool>`
 - **Wildcard MCP permissions**: Use `mcp__server__*` syntax to allow/deny all tools from a server
 - **Wildcard bash patterns**: Use patterns like `Bash(npm *)` to match commands with any arguments
 - **Unreachable rule warnings**: Claude Code warns when permission rules are unreachable due to precedence
 - **Task tool permissions**: Use `Task(AgentName)` syntax in deny rules to prevent specific agents from being invoked (cross-reference: core-features.md Agents section for agent configuration)
+
+---
+
+## Configuration Backup
+
+**What it is**: Automatic timestamped backups of configuration files with rotation
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- **Automatic backups**: Claude Code automatically creates timestamped backups of configuration files
+- **Retention**: Keeps the five most recent backups to prevent data loss
+- **Covered files**: settings.json, .claude.json, managed-settings.json
+- **Recovery**: Enables recovery from recent config mistakes without manual backup management
 
 ---
 
@@ -157,8 +172,8 @@ Settings, permissions, memory, and customization options for Claude Code.
 ```json
 {
   "attribution": {
-    "commit": "🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
-    "pr": "🤖 Generated with Claude Code"
+    "commit": "Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+    "pr": "Generated with Claude Code"
   }
 }
 ```
@@ -347,6 +362,30 @@ claude --tools Read,Grep,Glob
 
 ---
 
+## Customizable Spinner Verbs
+
+**What it is**: Setting to customize the spinner verb text shown during operations
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- **Setting name**: `spinnerVerbs` in settings.json
+- **Modes**: `append` (add to default verbs) or `replace` (completely replace defaults)
+- **Default verbs**: "Thinking", "Cooking", etc.
+- **Customization**: Add personalized verbs for UI feedback during operations
+
+**Configuration**:
+```json
+{
+  "spinnerVerbs": {
+    "mode": "append",
+    "verbs": ["Pondering", "Contemplating"]
+  }
+}
+```
+
+---
+
 ## Thinking Mode
 
 **What it is**: Enable extended thinking for complex reasoning tasks
@@ -479,4 +518,3 @@ CLAUDE_CODE_ENABLE_TASKS=false claude
 ```bash
 claude --add-dir ../apps ../lib
 ```
-

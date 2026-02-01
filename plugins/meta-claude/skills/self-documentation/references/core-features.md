@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-01-26
+**Last updated**: 2026-02-01
 
 ---
 
@@ -97,6 +97,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **User roles**: Plugin users (discover/install), Developers (create/distribute), Team leaders (governance/catalogs)
 - **Search in installed list**: Type to filter plugins by name or description in the Installed tab
 - **Auto-updates**: Toggle per marketplace; official marketplaces auto-update by default
+- **SHA pinning**: Pin plugins to specific git commit SHAs for exact version control; use `sha` field in marketplace entry for reproducible builds; useful for enterprise audit trails
 
 ---
 
