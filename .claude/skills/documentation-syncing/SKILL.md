@@ -1,0 +1,183 @@
+---
+name: documentation-syncing
+description: Sync self-documentation reference files with latest Claude Code releases. Use when maintaining the meta-claude plugin to update feature documentation, run doc sync, or update documentation.
+allowed-tools: [Task, Read, Write, Glob]
+---
+
+# Documentation Syncing Skill
+
+Orchestrates atomic agents to keep self-documentation reference files current with Claude Code releases.
+
+## EXECUTION INSTRUCTIONS
+
+You MUST follow these steps in order. Each step has specific actions you take directly or agents you invoke.
+
+## Workflow Overview
+
+1. **Initialize** - Create fresh state file (YOU do this directly)
+2. **Parse releases** - Identify new features (invoke doc-release-parser agent)
+3. **Check migrations** - Find features with docs (invoke doc-migration-checker agent)
+4. **Write content** - Update files (invoke doc-content-writer agent)
+5. **Audit and iterate** - Verify consistency (invoke doc-consistency-auditor agent)
+6. **Finalize** - Bump versions (YOU do this directly)
+
+## State File
+
+Location: `.claude/cache/doc-sync-state.json`
+
+The state file enables:
+- Debugging (see all decisions with evidence)
+- Iteration (auditor can request fixes)
+- Resumption (if workflow fails partway)
+
+## Step 1: Initialize (YOU DO THIS)
+
+Create fresh state file using the Write tool:
+
+**Action**: Write `.claude/cache/doc-sync-state.json` with:
+
+```json
+{
+  "workflow_id": "sync-YYYYMMDD-HHMMSS",
+  "started_at": "ISO timestamp",
+  "current_step": "parsing",
+  "iteration_count": 0
+}
+```
+
+Generate workflow_id using current date/time (e.g., "sync-20260201-143052").
+
+## Step 2: Parse Releases (INVOKE AGENT)
+
+**Action**: Use the Task tool with `subagent_type: "doc-release-parser"`.
+
+**Prompt**: `Parse Claude Code releases and update the state file.`
+
+**After agent completes:**
+1. Read `.claude/cache/doc-sync-state.json`
+2. Check if `parser_output.new_features` is empty AND `versions.tracked == versions.latest`
+3. If both true: Report "Already up to date - no new releases since vX.X.X" and STOP
+4. Otherwise: Proceed to Step 3
+
+## Step 3: Check Migrations (INVOKE AGENT)
+
+**Action**: Use the Task tool with `subagent_type: "doc-migration-checker"`.
+
+**Prompt**: `Check existing undocumented features for official documentation and update the state file.`
+
+## Step 4: Write Content (INVOKE AGENT)
+
+**Action**: Use the Task tool with `subagent_type: "doc-content-writer"`.
+
+**Prompt**: `Write feature entries to reference files based on state file inputs.`
+
+## Step 5: Audit and Iterate (INVOKE AGENT + LOOP)
+
+**Action**: Use the Task tool with `subagent_type: "doc-consistency-auditor"`.
+
+**Prompt**: `Verify reference file consistency and write audit results to state file.`
+
+**After agent completes:**
+1. Read `.claude/cache/doc-sync-state.json`
+2. Check latest entry in `audit_history`
+3. Branch based on status:
+
+**If PASS:**
+- Proceed to Step 6 (Finalize)
+
+**If FAIL with fixable errors:**
+1. Increment `iteration_count` in state file
+2. Check: if `iteration_count > 5`, STOP with error "Max iterations reached"
+3. Extract fix instructions from audit errors
+4. Re-invoke doc-content-writer with `subagent_type: "doc-content-writer"`:
+   **Prompt**: `Fix audit errors: {list errors}. Make targeted fixes only.`
+5. After writer completes, re-invoke auditor (loop back to Step 5)
+
+**If FAIL with unfixable errors:**
+- STOP workflow
+- Report error to user with details
+- Do NOT proceed to version bump
+- Preserve state file for debugging
+
+## Step 6: Finalize (YOU DO THIS)
+
+**Only execute if audit passed.**
+
+**Action 1: Bump versions**
+
+Read and update `plugins/meta-claude/.claude-plugin/plugin.json`:
+- Find current `"version": "X.X.X"`
+- Increment patch: `"X.X.X"` → `"X.X.Y"` (e.g., "1.4.8" → "1.4.9")
+- Write updated JSON
+
+Update `.claude-plugin/marketplace.json`:
+- Find the meta-claude plugin entry in the `plugins` array
+- Update its `"version"` to match
+
+**Action 2: Update state file**
+
+Update `.claude/cache/doc-sync-state.json`:
+- Set `"current_step": "complete"`
+- Add `"completed_at": "ISO timestamp"`
+
+Do NOT delete the state file (enables debugging).
+
+**Action 3: Report summary**
+
+Generate and output:
+```
+## Documentation Sync Complete
+
+**Version range:** vX.X.X → vY.Y.Y
+
+### New Features Added
+- Feature A → undocumented.md
+- Feature B → core-features.md
+
+### Migrations
+- Feature C: undocumented.md → workflows.md
+
+### Audit
+- Iterations: N
+- Final status: PASS
+
+### Version Updates
+- meta-claude plugin: X.X.X → X.X.Y
+- marketplace: X.X.X → X.X.Y
+```
+
+## Error Handling
+
+| Error | Handling |
+|-------|----------|
+| WebFetch fails for release notes | Abort workflow, report error |
+| WebFetch fails for doc check | Treat feature as undocumented, continue |
+| Auditor returns fixable errors | Iterate: fix → re-audit |
+| Auditor returns unfixable errors | Stop, report to user, preserve state file |
+| Max iterations reached | Stop, report partial progress, preserve state file |
+
+## Reference Files
+
+| File | Purpose |
+|------|---------|
+| `references/undocumented.md` | Features without official docs |
+| `references/core-features.md` | Skills, agents, MCP, plugins, hooks |
+| `references/configuration.md` | Settings, permissions, sandboxing |
+| `references/integrations.md` | VS Code, IDE extensions |
+| `references/workflows.md` | Shortcuts, git automation |
+| `references/topic-index.md` | Keyword-to-file mapping |
+| `references/sdk-behavioral-bridges.md` | Behavioral info from Agent SDK |
+
+All reference files are in: `plugins/meta-claude/skills/self-documentation/references/`
+
+## Data Sources
+
+### Claude Code Documentation
+- **Index:** `https://code.claude.com/docs/llms.txt`
+- **URL pattern:** `https://code.claude.com/docs/en/<page>.md`
+
+### Release Notes
+- **URL:** `https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md`
+
+### Agent SDK Documentation
+- **Base URL:** `https://platform.claude.com/docs/en/agent-sdk/`
