@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.29
+**Latest Release**: v2.1.31
 
 ---
 
@@ -109,19 +109,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Install Count Display in VSCode Plugin Listings
-
-**What it is**: Display of installation counts for plugins in VS Code extension
-
-**Introduced**: v2.1.10
-
-**What we know**:
-- Plugin listings in VSCode extension now show install counts
-- Helps users assess plugin popularity and community adoption
-- Provides social proof for plugin discovery
-
----
-
 ## Trust Warning for Plugin Installation in VSCode
 
 **What it is**: Warning dialog when installing plugins via VSCode extension
@@ -171,24 +158,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Agents Process User Messages While Working
-
-**What it is**: Background agents can now receive and process user messages while actively working
-
-**Introduced**: v2.1.20
-
-**What we know**:
-- Agents can now process user messages while actively working on tasks
-- Enables more interactive workflows with background agents
-- Users can provide additional context or corrections mid-task
-
-**Use cases**:
-- Provide clarifications without waiting for agent to finish
-- Redirect agent's approach during execution
-- Add additional requirements discovered during processing
-
----
-
 ## Per-User Temp Directory Isolation
 
 **What it is**: Isolated temporary directories for each user to prevent permission conflicts
@@ -215,27 +184,60 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Full-width Number Input for Japanese IME
+## /debug command
 
-**What it is**: Support for full-width (zenkaku) number input from Japanese IME in option selection prompts
+**What it is**: Added /debug for Claude to help troubleshoot the current session
 
-**Introduced**: v2.1.21
+**Introduced**: v2.1.30
 
 **What we know**:
-- Japanese IME users can now input full-width numbers in option selection prompts
-- Improves usability for Japanese language users
-- No need to switch to half-width input mode for selections
+- Available in interactive mode for session troubleshooting
+- Helps Claude analyze current session state
+- Useful for debugging complex issues or session state problems
 
 ---
 
-## Automatic Python Virtual Environment Activation
+## Token count, tool uses, and duration metrics to Task tool results
 
-**What it is**: VS Code extension setting to automatically activate Python virtual environments
+**What it is**: Added token count, tool uses, and duration metrics to Task tool results
 
-**Introduced**: v2.1.21
+**Introduced**: v2.1.30
 
 **What we know**:
-- New `claudeCode.usePythonEnvironment` setting in VS Code extension
-- Automatically activates Python virtual environment when detected
-- Reduces manual environment management for Python projects
+- Task tool results now include token usage statistics
+- Shows number of tool invocations during task execution
+- Displays duration of task execution
+- Enables cost and performance analysis of background tasks
+
+**Use cases**:
+- Monitor subagent efficiency and resource usage
+- Understand performance characteristics of tasks
+- Track token consumption for cost management
+
+---
+
+## Reduced motion mode
+
+**What it is**: Added reduced motion mode to the config
+
+**Introduced**: v2.1.30
+
+**What we know**:
+- New configuration setting to reduce animations and visual motion
+- Improves accessibility for users sensitive to motion
+- Follows system accessibility preferences
+- Reduces visual strain during extended sessions
+
+---
+
+## TaskStop tool result improvement
+
+**What it is**: Improved TaskStop tool to display the stopped command/task description in the result line instead of a generic 'Task stopped' message
+
+**Introduced**: v2.1.30
+
+**What we know**:
+- TaskStop results now show the specific task that was stopped
+- Provides better feedback about which background task was terminated
+- Clearer output when managing multiple background tasks
 

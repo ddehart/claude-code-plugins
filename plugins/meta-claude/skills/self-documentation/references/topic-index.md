@@ -14,6 +14,7 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | hook, hooks, PreToolUse, PostToolUse, Stop, SubagentStart, SubagentStop, Notification, once, prompt-based hooks, updatedInput, ask confirmation, additionalContext | core-features.md | Hooks system |
 | AskUserQuestion, Ctrl+G, external editor in AskUserQuestion | core-features.md | AskUserQuestion tool |
 | $ARGUMENTS, $0, $1, $2, argument syntax, bracket syntax, indexed arguments | core-features.md | Command argument substitution |
+| agents process user messages, background agents, foreground agents, subagent execution modes | core-features.md | Agents process user messages while working |
 | CLAUDE.md, memory, context, project instructions | configuration.md | Memory management |
 | rules, .claude/rules, modular rules, path-specific rules | configuration.md | Modular rules |
 | permission, permissions, allow, deny, tool access, wildcard patterns, unreachable warnings, Task(AgentName), disable agents, Bash(*) | configuration.md | Permission management |
@@ -31,11 +32,14 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | CLAUDE_CODE_ENABLE_TASKS, task system, disable tasks, TODO list | configuration.md | Task system toggle |
 | --add-dir, add directory, additional directories, monorepo | configuration.md | Additional working directories |
 | config backup, backup rotation, timestamped backup | configuration.md | Config backup rotation |
+| reduced motion, accessibility, motion sensitivity, animation | undocumented.md | Reduced motion mode |
 | vscode, vs code, ide, extension, plugin management, remote sessions | integrations.md | VS Code extension |
 | chrome, browser, automation, --chrome, /chrome | integrations.md | Claude in Chrome |
 | azure, foundry, enterprise | integrations.md | Azure AI Foundry |
 | jetbrains, intellij, pycharm, webstorm | integrations.md | JetBrains IDEs |
 | desktop, native app, download | integrations.md | Desktop application |
+| python environment, usePythonEnvironment, virtual environment, venv | integrations.md | Python environment activation |
+| install count, plugin listings, installation counts, VSCode plugins | integrations.md | Install count display in VSCode |
 | keyboard, shortcut, interactive, ctrl, alt, readline, Vim motions, Ctrl+T, task list toggle | workflows.md | Interactive mode |
 | keybindings, customize shortcuts, /keybindings, chord, keystroke, rebind | workflows.md | Customizable keyboard shortcuts |
 | checkpoint, rewind, undo, restore | workflows.md | Checkpointing |
@@ -48,13 +52,14 @@ Lightweight keyword-to-file mapping for efficient reference lookups. Load this f
 | task management, TaskCreate, TaskUpdate, TaskGet, TaskList, task dependencies, Ctrl+T, CLAUDE_CODE_TASK_LIST_ID | workflows.md | Task management system |
 | history autocomplete, bash mode, tab completion, ! prefix | workflows.md | History-based autocomplete in bash mode |
 | PR review status, prompt footer, review indicator, green, yellow, red, gray, purple, merged | workflows.md | PR review status indicator |
+| full-width, zenkaku, Japanese IME | workflows.md | Japanese IME support |
 | should I use, when to use, vs, versus, difference, compare, choose | decision-guide.md | Feature decisions |
 | skill vs, agent vs, mcp vs, slash command vs | decision-guide.md | Feature comparisons |
 | release notes, undocumented, new feature, recent | undocumented.md | Undocumented features |
 | explore subagent, LSP, desktop, chrome extension, IS_DEMO | undocumented.md | Specific undocumented features |
-| spinnerVerbs, spinner verbs, customize spinner | configuration.md | Customizable spinner verbs |
-| python environment, usePythonEnvironment, virtual environment, venv | undocumented.md | Python environment activation |
-| full-width, zenkaku, Japanese IME | undocumented.md | Japanese IME support |
+| /debug, debug command, troubleshoot, session debugging | undocumented.md | Debug command |
+| token count, metrics, tool uses, duration, Task tool results | undocumented.md | Task tool metrics |
+| TaskStop, task stopping, background task termination | undocumented.md | TaskStop improvement |
 | observation, discovered, tested, behavior, found that | observations.md | User observations |
 | sdk, agent-sdk, behavioral, limitations | sdk-behavioral-bridges.md | SDK documentation that explains CLI behavior |
 | best practices, effective, failure pattern, verification, validate, verify, explore plan code, prompt crafting, session management, context management, kitchen sink, correction loop, intuition, when to clear | best-practices.md | Effective usage patterns |
@@ -100,3 +105,4 @@ Some questions span multiple themes. Load multiple files when keywords match dif
 | `observations.md` | User-discovered behaviors |
 | `sdk-behavioral-bridges.md` | Behavioral constraints from SDK docs |
 | `best-practices.md` | Meta-guidance: when/why to use features, failure patterns |
+
