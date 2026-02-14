@@ -2,21 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.31
-
----
-
-## Real-time Thinking in Transcript Mode
-
-**What it is**: Show thinking blocks in real-time when verbose output is enabled
-
-**Introduced**: v2.1.0
-
-**What we know**:
-- Ctrl+O verbose/transcript mode now shows thinking blocks as they stream
-- Previously thinking blocks only appeared after completion
-- Enables watching Claude's reasoning process in real-time
-- Useful for understanding complex decision-making
+**Latest Release**: v2.1.42
 
 ---
 
@@ -171,65 +157,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Bash Timeout Duration Display
-
-**What it is**: Display of timeout duration alongside elapsed time for Bash commands
-
-**Introduced**: v2.1.23
-
-**What we know**:
-- Bash commands now display timeout duration alongside elapsed time
-- Provides visibility into how long until a command times out
-- Helps users understand command execution constraints
-
----
-
-## /debug command
-
-**What it is**: Added /debug for Claude to help troubleshoot the current session
-
-**Introduced**: v2.1.30
-
-**What we know**:
-- Available in interactive mode for session troubleshooting
-- Helps Claude analyze current session state
-- Useful for debugging complex issues or session state problems
-
----
-
-## Token count, tool uses, and duration metrics to Task tool results
-
-**What it is**: Added token count, tool uses, and duration metrics to Task tool results
-
-**Introduced**: v2.1.30
-
-**What we know**:
-- Task tool results now include token usage statistics
-- Shows number of tool invocations during task execution
-- Displays duration of task execution
-- Enables cost and performance analysis of background tasks
-
-**Use cases**:
-- Monitor subagent efficiency and resource usage
-- Understand performance characteristics of tasks
-- Track token consumption for cost management
-
----
-
-## Reduced motion mode
-
-**What it is**: Added reduced motion mode to the config
-
-**Introduced**: v2.1.30
-
-**What we know**:
-- New configuration setting to reduce animations and visual motion
-- Improves accessibility for users sensitive to motion
-- Follows system accessibility preferences
-- Reduces visual strain during extended sessions
-
----
-
 ## TaskStop tool result improvement
 
 **What it is**: Improved TaskStop tool to display the stopped command/task description in the result line instead of a generic 'Task stopped' message
@@ -241,3 +168,151 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 - Provides better feedback about which background task was terminated
 - Clearer output when managing multiple background tasks
 
+---
+
+## Summarize from Here Feature
+
+**What it is**: Added 'Summarize from here' option to the message selector for creating summaries from selected points
+
+**Introduced**: v2.1.32
+
+**What we know**:
+- Available in interactive mode message selector
+- Allows creating summaries from specific conversation points
+- Useful for extracting relevant context from long conversations
+
+---
+
+## Extended Thinking Interruption Handling
+
+**What it is**: Improved handling for extended thinking interruption
+
+**Introduced**: v2.1.33
+
+**What we know**:
+- Improved robustness when extended thinking is interrupted
+- Better error handling during thinking phase
+- More graceful fallback to standard reasoning
+
+---
+
+## Heredoc Delimiter Parsing Security Improvement
+
+**What it is**: Improved heredoc delimiter parsing to prevent command smuggling
+
+**Introduced**: v2.1.38
+
+**What we know**:
+- Enhanced security in bash command parsing
+- Prevents potential command injection via heredoc delimiters
+- Protects against sophisticated shell command attacks
+
+---
+
+## Blocked Writes to .claude/skills in Sandbox Mode
+
+**What it is**: Blocked writes to .claude/skills directory in sandbox mode for security
+
+**Introduced**: v2.1.38
+
+**What we know**:
+- Sandbox mode now prevents writing to .claude/skills directory
+- Prevents potential skill injection attacks from sandboxed code
+- Improves security isolation in sandboxed environments
+
+---
+
+## Claude Auth Login/Status/Logout CLI Subcommands
+
+**What it is**: New CLI subcommands for authentication: claude auth login, claude auth status, and claude auth logout
+
+**Introduced**: v2.1.41
+
+**What we know**:
+- Three new authentication-related commands added to CLI
+- Allows authentication management from terminal directly
+- Provides status checking and explicit logout capability
+
+**Available commands**:
+- `claude auth login` - Authenticate with Claude Code
+- `claude auth status` - Check current authentication status
+- `claude auth logout` - Logout from current session
+
+---
+
+## File Resolution for @-mentions with Anchor Fragments
+
+**What it is**: Improvements to file resolution for @-mentions with anchor fragments
+
+**Introduced**: v2.1.41
+
+**What we know**:
+- Enhanced resolution of @-mentions when using anchor fragments
+- Allows more precise file and location references
+- Improves file suggestion accuracy
+
+---
+
+## Windows ARM64 Native Binary Support
+
+**What it is**: Added Windows ARM64 (win32-arm64) native binary support
+
+**Introduced**: v2.1.41
+
+**What we know**:
+- Native binary support for Windows running on ARM64 processors
+- Previously required emulation on ARM-based Windows systems
+- Improves performance on modern ARM-based Windows devices
+
+---
+
+## Startup Performance Improvements
+
+**What it is**: Improved startup performance by deferring Zod schema construction
+
+**Introduced**: v2.1.42
+
+**What we know**:
+- Startup process optimized with deferred schema validation
+- Reduces initialization time for sessions
+- Particularly beneficial for frequently-started sessions
+
+---
+
+## Prompt Cache Hit Rate Optimization
+
+**What it is**: Improved prompt cache hit rates by moving date out of system prompt
+
+**Introduced**: v2.1.42
+
+**What we know**:
+- System prompt refactored to improve cache efficiency
+- Date moved to user context instead of system prompt
+- Increases cache hit rates and reduces API costs
+- Results in better token usage for sessions
+
+---
+
+## One-time Opus 4.6 Callout for Eligible Users
+
+**What it is**: One-time Opus 4.6 callout for eligible users
+
+**Introduced**: v2.1.42
+
+**What we know**:
+- One-time notification for users eligible to use Opus 4.6
+- Appears in Claude Code when user qualifies
+- Informs users about new model availability
+
+---
+
+## Guard Against Launching Claude Code Inside Another Session
+
+**What it is**: Added guard against launching Claude Code inside another Claude Code session
+
+**Introduced**: v2.1.41
+
+**What we know**:
+- Detects when Claude Code is launched from within another Claude Code session
+- Prevents accidental nested session launch
+- Shows warning or error to prevent user confusion

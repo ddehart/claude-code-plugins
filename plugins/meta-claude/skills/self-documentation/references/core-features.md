@@ -49,12 +49,13 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Subagent pairing**: Skills naturally pair with subagents for context protection. Two patterns:
   - `agent: <agent-name>` spawns subagent with skill loaded into fresh context (ideal for search/research skills using Explore agent)
   - `context: fork` spawns subagent with current conversation context carried over (ideal for parallel operations like memory/summarization that shouldn't pollute main context)
-- **Subagent skill loading**: Subagents can auto-load specific skills via `skills` frontmatter field; skills unload when subagent completes
+- **Subagent skill loading**: Subagents can auto-load specific skills via `skills` frontmatter field; enables specialized knowledge per subagent; skills unload when subagent completes
 - **Hot-reload**: Skills automatically reloaded when created or modified, no restart required
 - **Skill hooks**: Skills can define hooks scoped to their lifecycle using `hooks` frontmatter field; supports `PreToolUse`, `PostToolUse`, and `Stop` events
 - **Once hooks**: Hooks with `once: true` run only once per session, then are removed
 - **Permission-free skills**: Skills without additional permissions or hooks load without requiring user approval; reduces friction for simple skills
 - **Unified Skill tool**: Claude invokes skills programmatically via `Skill` tool; control access via `/permissions` rules like `Skill(name)` or `Skill(name:*)`
+- **Skills auto-load from additional directories**: Skills now auto-load from additional directories beyond the standard skill locations
 
 ---
 
@@ -189,6 +190,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Result integration**: Subagent work summarized and returned to main conversation
 - **Chaining support**: Multiple subagents can work sequentially on complex tasks
 - **Permission control**: Can be disabled via `/permissions` or blocked with `Task(AgentName)` syntax for specific agents
+- **Token count, tool uses, and duration metrics**: Task tool results now include token count, tool uses, and duration metrics for monitoring subagent efficiency
 
 ---
 
@@ -223,3 +225,146 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Use cases**: Codebase exploration, refactoring support, understanding code relationships
 - **Likely supported languages**: TypeScript/JavaScript, Python, other LSP-compatible languages
 
+---
+
+## Research Preview Agent Teams
+
+**What it is**: Multi-agent collaboration feature allowing teams of Claude Code sessions to work together with shared tasks and inter-agent messaging
+
+**Documentation**: https://code.claude.com/docs/en/agent-teams
+
+**Key concepts**:
+- **Coordination model**: One session acts as team lead, coordinating work, assigning tasks, and synthesizing results
+- **Multiple instances**: Coordinate multiple Claude Code instances working together
+- **Shared task management**: Tasks can be shared and coordinated across team members
+- **Inter-agent messaging**: Agents can send messages to communicate progress and collaborate
+- **Research preview**: Feature is still in active development and refinement
+- **Use cases**: Large codebase refactoring, coordinated testing, parallel feature development
+
+---
+
+## Automatic Memory Recording and Recall
+
+**What it is**: Claude automatically records and recalls memories as it works across sessions
+
+**Documentation**: https://code.claude.com/docs/en/memory
+
+**Key concepts**:
+- **Auto memory directory**: Persistent directory where Claude records learnings, patterns, and insights
+- **Distinction from CLAUDE.md**: CLAUDE.md contains instructions you write for Claude; auto memory contains notes Claude writes for itself
+- **Session continuity**: Claude automatically recalls relevant memories from previous sessions
+- **Pattern learning**: Claude learns and refines patterns from repeated tasks and workflows
+- **Automatic updates**: No manual management required; Claude updates memories as it works
+
+---
+
+## Agent Teammate Sessions in Tmux
+
+**What it is**: Agent teammate sessions in tmux now send and receive messages properly
+
+**Documentation**: https://code.claude.com/docs/en/agent-teams
+
+**Key concepts**:
+- **Split-pane mode**: Requires either tmux or iTerm2 with it2 CLI
+- **Message passing**: Teammates can now properly send and receive messages within split panes
+- **Async collaboration**: Enables true asynchronous collaboration between teammates
+- **Terminal integration**: Works seamlessly within terminal split-pane workflows
+
+---
+
+## TeammateIdle Hook Event
+
+**What it is**: New TeammateIdle hook event fires when an agent team teammate is about to go idle
+
+**Documentation**: https://code.claude.com/docs/en/hooks
+
+**Key concepts**:
+- **Trigger**: Fires when agent team teammate is about to go idle after finishing its turn
+- **Use cases**: Enforce quality gates before teammate stops working
+- **Team coordination**: Enables custom validation or handoff logic between team members
+- **Integration**: Works with standard hook execution model
+
+---
+
+## TaskCompleted Hook Event
+
+**What it is**: New TaskCompleted hook event fires when a task is being marked as completed
+
+**Documentation**: https://code.claude.com/docs/en/hooks
+
+**Key concepts**:
+- **Trigger contexts**: Fires in two situations:
+  - When any agent explicitly marks a task as completed through TaskUpdate tool
+  - When agent team teammate finishes its turn with in-progress tasks
+- **Use cases**: Validation, notifications, cleanup, quality assurance
+- **Integration**: Works with standard hook execution model and team workflows
+
+---
+
+## Sub-agent Spawning Restrictions with Task(agent_type)
+
+**What it is**: Support for restricting which sub-agents can be spawned via Task(agent_type) syntax in tools field
+
+**Documentation**: https://code.claude.com/docs/en/sub-agents
+
+**Key concepts**:
+- **Syntax**: Use `Task(agent_type)` in `tools` field to restrict spawnable subagent types
+- **Security**: Limits which specialized agents can be invoked by default
+- **Tool field controls**: Agents can specify exactly which subagent types they're allowed to spawn
+- **Flexibility**: Enables fine-grained control over agent composition and delegation
+
+---
+
+## Persistent Memory with Configurable Scope
+
+**What it is**: Persistent memory support for agents with configurable scope (user, project, or local)
+
+**Documentation**: https://code.claude.com/docs/en/memory
+
+**Key concepts**:
+- **Memory field**: `memory` field in agent frontmatter gives subagent persistent directory surviving across conversations
+- **Three scopes**: User (cross-project), Project (team-shared), Local (agent-specific)
+- **Scope hierarchy**: Determines how broadly the memory applies and persists
+- **Use cases**: Learning patterns, maintaining context across related tasks, team knowledge sharing
+
+---
+
+## Claude Opus 4.6 Availability
+
+**What it is**: Claude Opus 4.6 is now available as a model option in Claude Code
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- **Model option**: Opus 4.6 now selectable via `/model opus` or model selection
+- **Thinking depth**: For Opus 4.6, thinking depth is controlled by Adjust effort level instead of traditional controls
+- **Fast mode**: Fast mode now available for Opus 4.6
+- **Configuration**: Can be set as default via settings or environment variables
+
+---
+
+## Skills Auto-load from Additional Directories
+
+**What it is**: Skills now auto-load from additional directories beyond the standard skill locations
+
+**Documentation**: https://code.claude.com/docs/en/skills
+
+**Key concepts**:
+- **Automatic discovery**: Claude Code discovers skills from nested `.claude/skills/` directories
+- **Monorepo support**: When working with files in subdirectories, Claude Code looks for skills in `packages/frontend/.claude/skills/` etc.
+- **Flexible organization**: Enables organizing skills by project structure rather than centralized location
+- **Nested directories**: Skills auto-discovered recursively from nested structures
+
+---
+
+## Fast Mode for Opus 4.6
+
+**What it is**: Fast mode is now available for Opus 4.6 model
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- **Model support**: Currently supported with Opus 4.6 only
+- **Activation**: See Adjust effort level setting
+- **Performance**: Faster responses with Opus 4.6 capabilities
+- **Use cases**: Quick iterations, rapid prototyping, performance-sensitive workflows

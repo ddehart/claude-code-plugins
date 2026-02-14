@@ -24,6 +24,7 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 - **Model switching**: Alt+P (Linux/Windows) or Option+P (macOS) to switch models mid-prompt
 - **Thinking toggle**: Alt+T to enable/disable extended thinking mode (requires /terminal-setup); sticky across sessions
 - **Slash command autocomplete**: Works anywhere in input, not just at the beginning
+- **Real-time thinking**: Ctrl+O verbose/transcript mode now shows thinking blocks as they stream in real-time
 
 ---
 
@@ -218,6 +219,7 @@ CLAUDE_CODE_TASK_LIST_ID=my-project claude
 - Use `claude --resume <name>` from terminal to resume
 - Use `claude --from-pr <number>` to resume sessions linked to a specific PR
 - Makes session management more intuitive than using session IDs
+- `/rename` now auto-generates session name from conversation context
 
 **Workflow examples**:
 ```bash
@@ -336,3 +338,37 @@ claude --from-pr 123
 - Work continuity across platforms
 - Use web for planning, CLI for execution
 - Access sessions from anywhere
+
+---
+
+## /debug Command
+
+**What it is**: Command for Claude to help troubleshoot the current session
+
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
+
+**Key concepts**:
+- Available in interactive mode for session troubleshooting
+- Helps Claude analyze current session state and debug issues
+- Useful for understanding complex issues or session state problems
+- Can include optional description of the issue: `/debug [description]`
+
+**Expected workflow**:
+1. Encounter issue or unusual behavior in session
+2. Run `/debug` with optional description
+3. Claude reads session debug log and analyzes it
+4. Claude suggests fixes or explains the behavior
+
+---
+
+## Summarize from Here Feature
+
+**What it is**: Message selector option to create summaries from selected conversation points
+
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
+
+**Key concepts**:
+- Available in interactive mode message selector
+- Allows creating summaries from specific conversation points
+- Useful for extracting relevant context from long conversations
+- Can focus on particular message ranges rather than full history

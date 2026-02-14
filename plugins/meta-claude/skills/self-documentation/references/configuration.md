@@ -518,3 +518,58 @@ CLAUDE_CODE_ENABLE_TASKS=false claude
 ```bash
 claude --add-dir ../apps ../lib
 ```
+
+---
+
+## Skill Character Budget Scaling
+
+**What it is**: Skill character budget now scales with context window size
+
+**Documentation**: https://code.claude.com/docs/en/skills
+
+**Key concepts**:
+- Budget scales dynamically at 2% of the context window with a fallback of 16,000 characters
+- Automatically adjusts skill context allocation based on model capability
+- Run `/context` to check for warnings about excluded skills
+- Helps optimize context usage with larger context windows
+
+---
+
+## Reduced Motion Mode
+
+**What it is**: Configuration to reduce or disable UI animations for accessibility
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- **Setting name**: `prefersReducedMotion`
+- **Purpose**: Reduce or disable UI animations (spinners, shimmer, flash effects)
+- **Use cases**: Accessibility for motion sensitivity, performance-constrained environments
+- **Configuration**: Can be set in settings.json
+
+**Configuration**:
+```json
+{
+  "prefersReducedMotion": true
+}
+```
+
+---
+
+## Bash Timeout Duration Display
+
+**What it is**: Display of timeout duration alongside elapsed time for Bash commands
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- **Environment variable**: `BASH_DEFAULT_TIMEOUT_MS`
+- **Purpose**: Configures default timeout for long-running bash commands
+- **Display**: Timeout duration shown alongside elapsed time during execution
+- **Visibility**: Helps users understand command execution constraints
+
+**Configuration**:
+```bash
+export BASH_DEFAULT_TIMEOUT_MS=30000
+claude
+```
