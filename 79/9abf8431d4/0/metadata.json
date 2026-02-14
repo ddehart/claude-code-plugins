@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "799abf8431d4",
+  "session_id": "06bf4bba-e82a-406a-bfe2-106a12f22994",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-14T02:59:11.002783Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude-plugin/marketplace.json",
+    ".claude/cache/doc-sync-state.json",
+    "plugins/meta-claude/.claude-plugin/plugin.json"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "662ee6b3-f798-49c6-a5a9-d74d3d869d58",
+  "token_usage": {
+    "input_tokens": 28,
+    "cache_creation_tokens": 36226,
+    "cache_read_tokens": 597397,
+    "output_tokens": 2082,
+    "api_call_count": 15
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-14T02:59:10.488013Z",
+    "agent_lines": 2,
+    "human_added": 392,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 394,
+    "agent_percentage": 0.5076142131979695
+  },
+  "transcript_path": ".claude/projects/-Users-derek-Developer-claude-code-plugins/06bf4bba-e82a-406a-bfe2-106a12f22994.jsonl"
+}
