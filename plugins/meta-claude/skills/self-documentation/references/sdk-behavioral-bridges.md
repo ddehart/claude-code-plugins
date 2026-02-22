@@ -1,6 +1,6 @@
 # SDK Behavioral Bridges
 
-Last updated: 2026-01-11
+Last updated: 2026-02-22
 Source: Agent SDK Documentation (platform.claude.com/docs/en/agent-sdk/)
 
 Information from the Agent SDK documentation that explains Claude Code CLI behavior. This file bridges SDK documentation with CLI usage, extracting behavioral constraints that affect how Claude Code works.
@@ -175,6 +175,20 @@ The server name comes from the key used in MCP server configuration.
 
 ---
 
+## Model Capability Fields: Effort Support
+
+**Source**: v2.1.49 changelog and agent-sdk model configuration
+
+**Behavioral Constraints**:
+- **supportsEffort**: Boolean field indicating if model supports effort level configuration
+- **supportedEffortLevels**: Array of effort levels supported by the model (e.g., ["low", "medium", "high"])
+- **supportsAdaptiveThinking**: Boolean indicating if model supports adaptive thinking/extended thinking modes
+- **Use in SDK**: Check these fields before configuring effort levels or thinking mode for a model
+
+**Implication**: When using models in SDK applications or CLI, query these fields to determine whether effort/thinking configurations are available. Prevents errors from requesting unsupported model capabilities.
+
+---
+
 ## How to Use This File
 
 This reference is for understanding behavioral constraints that come from SDK documentation but affect CLI usage. When you encounter unexpected behavior related to:
@@ -183,5 +197,6 @@ This reference is for understanding behavioral constraints that come from SDK do
 - Permission handling
 - File tracking and rewind
 - Session management
+- Model capabilities and effort levels
 
 Check this file for authoritative documentation from the Agent SDK.

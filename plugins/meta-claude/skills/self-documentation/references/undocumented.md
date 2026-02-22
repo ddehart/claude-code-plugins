@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.42
+**Latest Release**: v2.1.50
 
 ---
 
@@ -170,19 +170,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Summarize from Here Feature
-
-**What it is**: Added 'Summarize from here' option to the message selector for creating summaries from selected points
-
-**Introduced**: v2.1.32
-
-**What we know**:
-- Available in interactive mode message selector
-- Allows creating summaries from specific conversation points
-- Useful for extracting relevant context from long conversations
-
----
-
 ## Extended Thinking Interruption Handling
 
 **What it is**: Improved handling for extended thinking interruption
@@ -316,3 +303,94 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 - Detects when Claude Code is launched from within another Claude Code session
 - Prevents accidental nested session launch
 - Shows warning or error to prevent user confusion
+
+---
+
+## SDKRateLimitInfo and SDKRateLimitEvent types
+
+**What it is**: Added SDKRateLimitInfo and SDKRateLimitEvent types to SDK
+
+**Introduced**: v2.1.45
+
+**What we know**:
+- New SDK types for handling rate limit information and events
+- Based on release notes, specific documentation not yet available
+- Provides structured way to handle rate limiting in SDK applications
+
+---
+
+## VS Code plan preview auto-updates
+
+**What it is**: Improved VS Code plan preview with auto-updates and persistence
+
+**Introduced**: v2.1.47
+
+**What we know**:
+- Plan preview feature in VS Code now auto-updates while working
+- Maintains persistence across interactions
+- Provides real-time feedback during planning phase
+
+---
+
+## added_dirs in statusline JSON workspace section
+
+**What it is**: Added added_dirs to statusline JSON workspace section
+
+**Introduced**: v2.1.47
+
+**What we know**:
+- New field added_dirs appears in statusline JSON workspace section
+- Indicates additional directories added via --add-dir flag
+- Enables status line customization to display working directories
+
+---
+
+## Plugin settings.json support
+
+**What it is**: Plugins can now ship settings.json for default configuration
+
+**Introduced**: v2.1.49
+
+**What we know**:
+- Plugins can now include settings.json file for default configuration
+- Allows plugins to provide sensible defaults to users
+- Improves plugin setup experience
+
+---
+
+## supportsEffort, supportedEffortLevels, supportsAdaptiveThinking SDK fields
+
+**What it is**: SDK now includes supportsEffort, supportedEffortLevels, and supportsAdaptiveThinking fields
+
+**Introduced**: v2.1.49
+
+**What we know**:
+- New SDK fields for detecting model adaptive effort capabilities
+- Based on release notes, specific documentation not yet available
+- Enables SDK applications to check model thinking mode support
+
+---
+
+## startupTimeout LSP server configuration
+
+**What it is**: Introduced startupTimeout configuration for LSP servers
+
+**Introduced**: v2.1.50
+
+**What we know**:
+- New configuration option for LSP server startup timeout
+- Allows customization of how long to wait for LSP servers to initialize
+- Useful for slow network connections or complex projects
+
+---
+
+## /extra-usage command for VS Code
+
+**What it is**: Added /extra-usage command support in VS Code
+
+**Introduced**: v2.1.50
+
+**What we know**:
+- New slash command /extra-usage available in VS Code interface
+- Provides additional usage information or statistics
+- Extends usage tracking capabilities in VS Code extension

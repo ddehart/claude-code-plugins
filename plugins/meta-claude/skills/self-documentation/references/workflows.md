@@ -2,7 +2,7 @@
 
 Productivity features, keyboard shortcuts, and workflow automation in Claude Code.
 
-**Last updated**: 2026-02-01
+**Last updated**: 2026-02-22
 
 ---
 
@@ -25,6 +25,8 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 - **Thinking toggle**: Alt+T to enable/disable extended thinking mode (requires /terminal-setup); sticky across sessions
 - **Slash command autocomplete**: Works anywhere in input, not just at the beginning
 - **Real-time thinking**: Ctrl+O verbose/transcript mode now shows thinking blocks as they stream in real-time
+- **Ctrl+F keybinding**: Kill all background agents; press twice within 3 seconds to confirm
+- **chat:newline action**: Configurable keybinding action for multiline input (Shift+Enter out of the box in iTerm2, WezTerm, Ghostty, and Kitty)
 
 ---
 
@@ -37,7 +39,7 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 **Key concepts**:
 - **Configuration**: Run `/keybindings` to create or open `~/.claude/keybindings.json`; changes auto-detected without restart
 - **Contexts**: Bindings apply to specific contexts (Global, Chat, Autocomplete, Confirmation, Transcript, HistorySearch, Task, etc.)
-- **Actions**: Follow `namespace:action` format (e.g., `chat:submit`, `app:toggleTodos`)
+- **Actions**: Follow `namespace:action` format (e.g., `chat:submit`, `app:toggleTodos`); includes `chat:newline` for multiline input
 - **Keystroke syntax**: Modifiers use `+` separator (ctrl+k, shift+tab, meta+p); chords are space-separated (ctrl+k ctrl+s)
 - **Special keys**: escape/esc, enter/return, tab, space, up/down/left/right, backspace/delete
 - **Uppercase letters**: Standalone uppercase implies Shift (K = shift+k); with modifiers treated as stylistic (ctrl+K = ctrl+k)
@@ -54,7 +56,7 @@ Productivity features, keyboard shortcuts, and workflow automation in Claude Cod
 
 **Common actions by context**:
 - **Global**: app:interrupt, app:exit, app:toggleTodos, app:toggleTranscript
-- **Chat**: chat:submit, chat:cancel, chat:cycleMode, chat:modelPicker, chat:thinkingToggle, chat:externalEditor, chat:stash, chat:imagePaste
+- **Chat**: chat:submit, chat:cancel, chat:cycleMode, chat:modelPicker, chat:thinkingToggle, chat:externalEditor, chat:stash, chat:imagePaste, chat:newline
 - **Autocomplete**: autocomplete:accept, autocomplete:dismiss, autocomplete:previous, autocomplete:next
 - **Confirmation**: confirm:yes, confirm:no, confirm:cycleMode, confirm:toggleExplanation
 - **History**: history:search, history:previous, history:next
@@ -365,10 +367,86 @@ claude --from-pr 123
 
 **What it is**: Message selector option to create summaries from selected conversation points
 
-**Documentation**: https://code.claude.com/docs/en/interactive-mode
+**Documentation**: https://code.claude.com/docs/en/checkpointing
 
 **Key concepts**:
 - Available in interactive mode message selector
 - Allows creating summaries from specific conversation points
 - Useful for extracting relevant context from long conversations
 - Can focus on particular message ranges rather than full history
+- Compress conversation from selected point forward into summary
+- Messages before selected point stay intact; selected message and subsequent messages replaced with compact AI-generated summary
+
+---
+
+## --add-dir CLI Flag
+
+**What it is**: Add additional working directories for Claude to access with enabled plugins and known marketplaces support
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- Add additional working directories for Claude to access (validates each path exists as a directory)
+- Enables reading enabledPlugins and extraKnownMarketplaces from additional directories
+- Useful for monorepo setups where multiple projects need separate plugin configurations
+- Each directory path is validated to ensure it exists
+
+**Usage**:
+```bash
+claude --add-dir /path/to/directory
+```
+
+---
+
+## @-mention File Suggestions Performance Improvements
+
+**What it is**: Enhanced @-mention file suggestions with session caching for faster performance
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- File path mention - Trigger file path autocomplete
+- Session caching for faster suggestion loading
+- Improved performance when suggesting files for @-mentions
+- Cached suggestions persist across the session
+- Reduces response time when working with many files
+
+---
+
+## --worktree Flag for Isolated Git Worktree Sessions
+
+**What it is**: Added --worktree (-w) flag for isolated git worktree sessions
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- Start Claude in an isolated git worktree at `<repo>/.claude/worktrees/<name>`
+- If no name is given, one is auto-generated
+- Provides isolated working directory for experiments without affecting main branch
+- Useful for parallel feature development or testing
+
+**Usage**:
+```bash
+claude --worktree
+claude --worktree my-feature
+claude -w experiment-1
+```
+
+---
+
+## claude agents CLI Command
+
+**What it is**: Added claude agents CLI command to list configured agents
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- List all configured subagents, grouped by source
+- Shows available agents in current environment
+- Displays agent names, descriptions, and source locations
+- Useful for discovering available agents and understanding agent configuration
+
+**Usage**:
+```bash
+claude agents
+```

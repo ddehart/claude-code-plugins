@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-02-01
+**Last updated**: 2026-02-22
 
 ---
 
@@ -78,6 +78,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Dynamic updates**: MCP `list_changed` notifications allow servers to dynamically update available tools, prompts, and resources without reconnecting
 - **structuredContent support**: MCP servers can return `structuredContent` field in tool responses for richer outputs beyond plain text (formatting, hierarchy, structured data)
 - **headersHelper**: Dynamic header generation via helper script in MCP config; script outputs JSON with header key-value pairs; enables OAuth token refresh and short-lived API keys
+- **claude.ai MCP connectors**: If logged into Claude Code with a Claude.ai account, MCP servers configured in Claude.ai are automatically available in Claude Code
 
 ---
 
@@ -123,6 +124,9 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Disable via Task tool**: Use `Task(AgentName)` syntax in permission deny rules to prevent specific agents from being invoked
 - **Permission modes**: `permissionMode` field controls permission behavior per agent (`default`, `acceptEdits`, `dontAsk`, `bypassPermissions`, `plan`)
 - **Background execution**: Agents can run in foreground (blocking with permission passthrough) or background (concurrent with auto-deny for missing permissions); MCP tools not available in background
+- **Background: true support**: Agent definitions can include `background: true` to configure agent to always run as a background task
+- **Worktree isolation**: Subagents support `isolation: worktree` configuration to run the subagent in a temporary git worktree, giving it an isolated copy of the repository
+- **Agent definition isolation**: Agent definitions support `isolation: worktree` in frontmatter to enable isolated working directories
 
 ---
 
@@ -133,7 +137,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 **Documentation**: https://code.claude.com/docs/en/interactive-mode#built-in-commands
 
 **Key concepts**:
-- **Session commands**: `/clear` (history), `/resume` (resume by name or ID), `/rename` (name session), `/teleport` (resume remote session)
+- **Session commands**: `/clear` (history), `/resume` (resume by name or ID), `/rename` (name session), `/teleport` (resume remote session), `/agents` (list configured agents)
 - **Configuration**: `/config` (settings with search), `/model` (selection), `/permissions` (tool access), `/keybindings` (customize shortcuts)
 - **Context management**: `/memory` (CLAUDE.md editing), `/compact` (reduce context), `/cost` (token usage), `/stats` (usage statistics)
 - **Tools**: `/mcp` (server management), `/sandbox` (sandboxed bash), `/todos` (view task list), `/plan` (enter plan mode)
@@ -154,7 +158,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 **Key concepts**:
 - **Execution model**: All matching hooks run in parallel with 60-second default timeout; receive JSON via stdin, return structured output to control Claude
 - **Configuration locations**: `~/.claude/settings.json` (user), `.claude/settings.json` (project), `.claude/settings.local.json` (local project), enterprise managed policy, skill/agent/command frontmatter
-- **11 event types**: PreToolUse (before tool execution, can modify tool inputs), PostToolUse (after completion), UserPromptSubmit (prompt submission), Notification (permission requests with matcher values for event filtering), PermissionRequest (automatically approve/deny tool permissions), Stop (main agent finish, prompt-based matching), SubagentStart (subagent begins), SubagentStop (subagent finish), SessionStart (session begins), SessionEnd (session terminates), PreCompact (before context compacting), Setup (triggered via CLI flags)
+- **11+ event types**: PreToolUse (before tool execution, can modify tool inputs), PostToolUse (after completion), UserPromptSubmit (prompt submission), Notification (permission requests with matcher values for event filtering), PermissionRequest (automatically approve/deny tool permissions), Stop (main agent finish, prompt-based matching), SubagentStart (subagent begins), SubagentStop (subagent finish), SessionStart (session begins), SessionEnd (session terminates), PreCompact (before context compacting), Setup (triggered via CLI flags), ConfigChange (configuration file changes), WorktreeCreate (when worktree is created), WorktreeRemove (when worktree is removed)
 - **Setup hook**: Triggered via `--init`, `--init-only`, or `--maintenance` CLI flags; runs setup scripts for repository initialization, dependency installation, or maintenance tasks before the interactive session starts
 - **Matcher patterns**: Exact (`Write`), regex (`Edit|Write`), wildcard (`*`), prompt-based (Stop hooks can match against user prompts), Notification and PermissionRequest matcher values for event-specific filtering; case-sensitive
 - **Exit codes**: 0 (success, stdout to transcript), 2 (blocking error, stderr to Claude), other (non-blocking error, stderr to user)
@@ -172,6 +176,9 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Component hooks**: Skills, agents, and slash commands can define hooks in frontmatter; scoped to component lifecycle
 - **Once hooks**: `once: true` option runs hook only once per session for skills and commands
 - **Prompt-based hooks**: `type: "prompt"` uses LLM to evaluate context; supported for Stop, SubagentStop, and other events
+- **Stop hook last_assistant_message field**: Stop and SubagentStop hook events now include `last_assistant_message` field containing text content of the agent's final response, allowing hooks to access it without parsing transcript
+- **WorktreeCreate hook**: Fires when a worktree is being created via --worktree or isolation: worktree; allows replacing default git behavior
+- **WorktreeRemove hook**: Fires when a worktree is being removed; allows custom cleanup logic
 
 ---
 
@@ -340,6 +347,8 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Thinking depth**: For Opus 4.6, thinking depth is controlled by Adjust effort level instead of traditional controls
 - **Fast mode**: Fast mode now available for Opus 4.6
 - **Configuration**: Can be set as default via settings or environment variables
+- **Extended context**: Opus 4.6 supports full 1 million token context window for both plan and execution modes
+- **1M context window**: Full million-token context window available for extended context sessions
 
 ---
 
@@ -368,3 +377,59 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Activation**: See Adjust effort level setting
 - **Performance**: Faster responses with Opus 4.6 capabilities
 - **Use cases**: Quick iterations, rapid prototyping, performance-sensitive workflows
+
+---
+
+## Claude Sonnet 4.6 Support
+
+**What it is**: Introduced Claude Sonnet 4.6 support with full 1M context window
+
+**Documentation**: https://code.claude.com/docs/en/model-config
+
+**Key concepts**:
+- **Latest model**: Sonnet 4.6 is now the daily coding model with full 1 million token context window
+- **Extended context**: Uses latest Sonnet model (currently Sonnet 4.6) for daily coding tasks
+- **1M context support**: Full million-token extended context window for comprehensive code analysis
+- **Default choice**: Sonnet 4.6 is the default model for routine development work
+
+---
+
+## MCP OAuth Authentication Step-up Support
+
+**What it is**: Enhanced MCP OAuth authentication with step-up auth and discovery caching
+
+**Documentation**: https://code.claude.com/docs/en/mcp
+
+**Key concepts**:
+- **Authentication tokens**: Stored securely and refreshed automatically
+- **Step-up authentication**: Support for additional authentication challenges when needed
+- **Discovery caching**: MCP server discovery results cached for improved performance
+- **Improved UX**: Seamless token refresh without user intervention
+
+---
+
+## ConfigChange Hook Event
+
+**What it is**: Added ConfigChange hook event for security auditing of configuration file changes
+
+**Documentation**: https://code.claude.com/docs/en/hooks
+
+**Key concepts**:
+- **Trigger**: Runs when a configuration file changes during a session
+- **Use cases**: Audit settings changes, enforce security policies, block unauthorized modifications
+- **Security**: Enables monitoring and control of configuration modifications
+- **Integration**: Works with standard hook execution model
+
+---
+
+## last_assistant_message Field in Stop and SubagentStop Hooks
+
+**What it is**: Added last_assistant_message field to Stop and SubagentStop hook events
+
+**Documentation**: https://code.claude.com/docs/en/hooks
+
+**Key concepts**:
+- **Field content**: Contains text content of the subagent's final response
+- **Access without parsing**: Hooks can access final response without parsing transcript file
+- **Use cases**: Creating summaries, extracting final results, validation of agent outputs
+- **Integration**: Available in both Stop and SubagentStop hook events

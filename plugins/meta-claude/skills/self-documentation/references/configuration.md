@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2026-02-01
+**Last updated**: 2026-02-22
 
 ---
 
@@ -571,5 +571,75 @@ claude --add-dir ../apps ../lib
 **Configuration**:
 ```bash
 export BASH_DEFAULT_TIMEOUT_MS=30000
+claude
+```
+
+---
+
+## spinnerTipsOverride Setting
+
+**What it is**: Customize the spinner tips that appear while Claude is working
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- Set `spinnerTipsOverride` in settings.json to customize spinner tips
+- Can either replace all built-in tips or merge custom tips with them
+- Customize the spinner feedback text shown during operations
+- Two modes: replace (complete replacement) or merge (add to defaults)
+
+**Configuration**:
+```json
+{
+  "spinnerTipsOverride": {
+    "mode": "merge",
+    "tips": ["Hacking the mainframe", "Making magic happen"]
+  }
+}
+```
+
+---
+
+## CLAUDE_CODE_SIMPLE Mode Enhancements
+
+**What it is**: Minimal, stripped-down configuration for simple Claude Code workflows
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- Run Claude Code with `CLAUDE_CODE_SIMPLE=1` for minimal configuration
+- **What it disables**:
+  - Minimal system prompt
+  - Only Bash, file read, and file edit tools available
+  - MCP tools disabled
+  - Attachments disabled
+  - Hooks disabled
+  - CLAUDE.md files disabled
+- **Use cases**: Simple scripts, testing, minimal intervention workflows
+- **Trade-off**: Reduced functionality for simplified experience
+
+**Configuration**:
+```bash
+export CLAUDE_CODE_SIMPLE=1
+claude
+```
+
+---
+
+## CLAUDE_CODE_DISABLE_1M_CONTEXT Environment Variable
+
+**What it is**: Disable support for models with extended 1M context windows
+
+**Documentation**: https://code.claude.com/docs/en/settings
+
+**Key concepts**:
+- Set `CLAUDE_CODE_DISABLE_1M_CONTEXT=1` to disable 1M context window support
+- Prevents using extended context models even if available
+- Useful for testing compatibility or limiting token usage
+- Restricts models to their standard context windows
+
+**Configuration**:
+```bash
+export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
 claude
 ```
