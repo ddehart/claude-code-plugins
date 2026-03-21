@@ -70,6 +70,10 @@ Skills differ from agents:
 - Skills support multi-file structure; agents are single Markdown files
 - Both can use subagent execution (`context: fork` or `agent:` field)
 
+## Project Tracking
+
+Ideas and enhancements are tracked in [GitHub Issues](https://github.com/ddehart/claude-code-plugins/issues) with tiered priority labels (tier-1 through tier-4).
+
 ## No Build System
 
 This is a documentation-only repository. There are:
