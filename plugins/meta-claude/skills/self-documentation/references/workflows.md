@@ -2,7 +2,7 @@
 
 Productivity features, keyboard shortcuts, and workflow automation in Claude Code.
 
-**Last updated**: 2026-02-22
+**Last updated**: 2026-03-21
 
 ---
 
@@ -450,3 +450,270 @@ claude -w experiment-1
 ```bash
 claude agents
 ```
+
+---
+
+## Copy OAuth URL Keyboard Shortcut
+
+**What it is**: Keyboard shortcut to copy OAuth login URL to clipboard when browser doesn't open automatically
+
+**Documentation**: https://code.claude.com/docs/en/authentication
+
+**Key concepts**:
+- Press 'c' during login to copy OAuth URL to clipboard
+- Useful when browser auto-open fails in restricted environments
+- Allows manual pasting of login URL into browser
+- Improves login experience for headless systems
+
+**Expected workflow**:
+1. Start login process with `claude auth login`
+2. If browser doesn't open automatically
+3. Press 'c' to copy URL to clipboard
+4. Paste URL manually in your browser to complete login
+
+---
+
+## Claude Auth CLI Subcommands
+
+**What it is**: CLI subcommands for authentication management: login, status, and logout
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- **claude auth login** - Authenticate with Claude Code
+- **claude auth status** - Check current authentication status as JSON
+- **claude auth logout** - Sign out from current session
+- Allows direct authentication management from terminal
+- Status command returns JSON format for scripting
+
+**Usage**:
+```bash
+claude auth login        # Start authentication flow
+claude auth status       # Check if authenticated (returns JSON)
+claude auth logout       # Sign out
+```
+
+---
+
+## /context Command
+
+**What it is**: Visualize current context usage as a colored grid with optimization suggestions
+
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
+
+**Key concepts**:
+- Display current context usage visually
+- Shows optimization suggestions for context-heavy tools
+- Identifies memory bloat and capacity warnings
+- Helps understand what's consuming your context
+
+---
+
+## /copy Command with Write Mode
+
+**What it is**: Interactive picker to copy code blocks with optional write mode using 'w' key
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- `/copy` copies the latest response to clipboard
+- `/copy N` copies the Nth-latest response
+- Press 'w' key to write selections directly to files
+- Bypasses clipboard for large code blocks
+- Interactive selection interface for choosing which blocks to copy/write
+
+---
+
+## /effort Slash Command
+
+**What it is**: Command to set model effort level (low, medium, high, max)
+
+**Documentation**: https://code.claude.com/docs/en/model-config
+
+**Key concepts**:
+- **low** - Fast, basic responses (Sonnet default)
+- **medium** - Balanced approach (Opus default)
+- **high** - Deep reasoning (requires Opus 4.6)
+- **max** - Maximum reasoning (Opus 4.6 only, session-only)
+- **auto** - Reset to model default
+- Low/medium/high persist across sessions
+- Max applies to current session only
+
+**Usage**:
+```bash
+/effort low        # Fast mode
+/effort medium     # Balanced
+/effort high       # Deep reasoning
+/effort max        # Maximum (Opus 4.6)
+/effort auto       # Reset to default
+```
+
+---
+
+## /color Command
+
+**What it is**: Command for all users to set prompt bar color
+
+**Documentation**: https://code.claude.com/docs/en/commands
+
+**Key concepts**:
+- Set the prompt bar color for the current session
+- Available colors: red, blue, green, yellow, purple, orange, pink, cyan
+- Use `default` to reset to default color
+- Color preference persists during session
+
+**Usage**:
+```bash
+/color blue        # Set prompt bar to blue
+/color red         # Set to red
+/color default     # Reset to default
+```
+
+---
+
+## Session Name Display on Prompt Bar
+
+**What it is**: Session name displays on prompt bar when using /rename command
+
+**Documentation**: https://code.claude.com/docs/en/commands
+
+**Key concepts**:
+- `/rename` to set a custom session name
+- Name displays prominently on the prompt bar
+- Without a name, auto-generates one from conversation history
+- Makes current session context immediately visible
+- Helpful when managing multiple parallel sessions
+
+**Usage**:
+```bash
+/rename my-feature    # Set session name
+/rename              # Auto-generate from conversation
+```
+
+---
+
+## -n / --name CLI Flag
+
+**What it is**: Flag to set display name for session at startup
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- Set session display name when starting Claude Code
+- Name shown in `/resume` and terminal title
+- Alternative to renaming within session
+- Useful for scripts and automation
+
+**Usage**:
+```bash
+claude -n my-project
+claude --name feature-review
+```
+
+---
+
+## --channels Research Preview Flag
+
+**What it is**: Research preview flag enabling MCP servers to push messages into sessions
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- (Research preview) MCP servers whose channel notifications Claude should listen for
+- Specify servers to receive async messages from during session
+- Enables proactive MCP tool notifications
+- Advanced feature for MCP server integration
+
+---
+
+## --console Flag for Anthropic Console Authentication
+
+**What it is**: Flag for claude auth login targeting Anthropic Console API billing authentication
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- `--console` flag for Anthropic Console authentication
+- Sign in with Anthropic Console for API billing access
+- `--email` to pre-fill email address
+- `--sso` to force SSO authentication
+- Separate from web claude.ai authentication
+
+**Usage**:
+```bash
+claude auth login --console              # Sign in to Anthropic Console
+claude auth login --console --email user@example.com
+claude auth login --sso                  # Force SSO
+```
+
+---
+
+## /extra-usage Command for VS Code
+
+**What it is**: Command to configure extra usage in VS Code extension
+
+**Documentation**: https://code.claude.com/docs/en/commands
+
+**Key concepts**:
+- Configure extra usage to keep working when rate limits are hit
+- Available in VS Code extension
+- Helps manage usage quota and continuity
+- Provides context-aware usage configuration
+
+---
+
+## /reload-plugins Command
+
+**What it is**: Command to reload all active plugins without restarting
+
+**Documentation**: https://code.claude.com/docs/en/commands
+
+**Key concepts**:
+- Reload all active plugins to apply pending changes
+- No restart required
+- Reports counts for each reloaded component
+- Flags any load errors
+- Useful after plugin installation or updates
+
+**Usage**:
+```bash
+/reload-plugins    # Reloads agents, skills, hooks, etc.
+```
+
+---
+
+## Remote Control CLI Subcommand
+
+**What it is**: Start a Remote Control server to control Claude Code from Claude.ai or the Claude app
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- Starts server mode (no local interactive session)
+- Allows remote control from Claude.ai web interface
+- Use optional name argument to set server name
+- Enables headless Claude Code control
+- Supports server mode flags for configuration
+
+**Usage**:
+```bash
+claude remote-control              # Start server
+claude remote-control my-server    # Named server
+/remote-control my-session         # In-session command
+/remote-control                    # Unnamed session
+```
+
+---
+
+## Optional Name Argument to /remote-control
+
+**What it is**: /remote-control command now accepts optional name for the session
+
+**Documentation**: https://code.claude.com/docs/en/cli-reference
+
+**Key concepts**:
+- Pass name argument to /remote-control
+- Sets session name shown in Claude.ai
+- Optional - unnamed sessions supported
+- Name appears in session management UI
+- Consistent with other session naming features

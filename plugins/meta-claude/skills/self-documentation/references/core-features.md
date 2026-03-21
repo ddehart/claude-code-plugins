@@ -2,7 +2,7 @@
 
 Foundational Claude Code capabilities that enable extensibility and customization.
 
-**Last updated**: 2026-02-22
+**Last updated**: 2026-03-21
 
 ---
 
@@ -56,6 +56,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Permission-free skills**: Skills without additional permissions or hooks load without requiring user approval; reduces friction for simple skills
 - **Unified Skill tool**: Claude invokes skills programmatically via `Skill` tool; control access via `/permissions` rules like `Skill(name)` or `Skill(name:*)`
 - **Skills auto-load from additional directories**: Skills now auto-load from additional directories beyond the standard skill locations
+- **Effort frontmatter support**: Skills and slash commands now support `effort` frontmatter field to override session effort level
 
 ---
 
@@ -100,6 +101,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Search in installed list**: Type to filter plugins by name or description in the Installed tab
 - **Auto-updates**: Toggle per marketplace; official marketplaces auto-update by default
 - **SHA pinning**: Pin plugins to specific git commit SHAs for exact version control; use `sha` field in marketplace entry for reproducible builds; useful for enterprise audit trails
+- **Plugin settings.json support**: Plugins can ship settings.json for default configuration applied when plugin is enabled
 
 ---
 
@@ -127,6 +129,7 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Background: true support**: Agent definitions can include `background: true` to configure agent to always run as a background task
 - **Worktree isolation**: Subagents support `isolation: worktree` configuration to run the subagent in a temporary git worktree, giving it an isolated copy of the repository
 - **Agent definition isolation**: Agent definitions support `isolation: worktree` in frontmatter to enable isolated working directories
+- **Effort, maxTurns, disallowedTools frontmatter**: Plugin agents now support `effort`, `maxTurns`, and `disallowedTools` frontmatter fields for fine-grained control
 
 ---
 
@@ -179,6 +182,11 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Stop hook last_assistant_message field**: Stop and SubagentStop hook events now include `last_assistant_message` field containing text content of the agent's final response, allowing hooks to access it without parsing transcript
 - **WorktreeCreate hook**: Fires when a worktree is being created via --worktree or isolation: worktree; allows replacing default git behavior
 - **WorktreeRemove hook**: Fires when a worktree is being removed; allows custom cleanup logic
+- **InstructionsLoaded hook event**: Fires when CLAUDE.md or .claude/rules/*.md file is loaded into context
+- **Elicitation hook event**: Fires when MCP server requests user input mid-task; hooks can intercept and respond programmatically
+- **ElicitationResult hook event**: Fires after user responds to MCP elicitation, before response sent to server
+- **PostCompact hook event**: Fires after Claude Code completes a compact operation
+- **StopFailure hook event**: Fires when turn ends due to API error instead of normal Stop event
 
 ---
 
@@ -433,3 +441,211 @@ Foundational Claude Code capabilities that enable extensibility and customizatio
 - **Access without parsing**: Hooks can access final response without parsing transcript file
 - **Use cases**: Creating summaries, extracting final results, validation of agent outputs
 - **Integration**: Available in both Stop and SubagentStop hook events
+
+---
+
+## /simplify Skill
+
+**What it is**: Skill to review recently changed files for code reuse, quality, and efficiency issues
+
+**Documentation**: https://code.claude.com/docs/en/skills
+
+**Key concepts**:
+- Review your recently changed files for code reuse, quality, and efficiency issues
+- Spawns three review agents in parallel
+- Analyzes modifications for potential improvements and consolidation
+- Helps maintain code quality in active development
+
+---
+
+## /batch Skill
+
+**What it is**: Skill to orchestrate large-scale changes across codebase in parallel with background agents
+
+**Documentation**: https://code.claude.com/docs/en/skills
+
+**Key concepts**:
+- Orchestrate large-scale changes across a codebase
+- Researches the codebase and decomposes work into 5-30 independent units
+- Uses parallel background agents for efficient bulk modifications
+- Ideal for refactoring, dependency updates, and cross-cutting changes
+
+---
+
+## /loop Command
+
+**What it is**: Command for recurring prompt or slash command execution on an interval
+
+**Documentation**: https://code.claude.com/docs/en/skills
+
+**Key concepts**:
+- Run a prompt repeatedly on an interval while session stays open
+- Useful for monitoring tasks, periodic checks, and continuous workflows
+- Runs within session context with automatic repetition
+
+---
+
+## /claude-api Skill
+
+**What it is**: Skill for building Claude API applications with reference material
+
+**Documentation**: https://code.claude.com/docs/en/skills
+
+**Key concepts**:
+- Load Claude API reference material for your project's language
+- Supported languages: Python, TypeScript, Java, Go, Ruby, C#, PHP, cURL
+- Includes Agent SDK reference material
+- Enables API-based Claude integration development
+
+---
+
+## Voice STT Support for 10 New Languages
+
+**What it is**: Speech-to-text support now available for 20 languages total
+
+**Documentation**: https://code.claude.com/docs/en/voice-dictation
+
+**Key concepts**:
+- Supported dictation languages: Czech, Danish, Dutch, English, French, German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Norwegian, Polish, Portuguese, Russian, Spanish, Swedish, Turkish, Ukrainian
+- 20 languages total supported
+- Enables voice input in multiple languages
+- Expands accessibility for international users
+
+---
+
+## voice:pushToTalk Keybinding
+
+**What it is**: Customizable voice activation keybinding
+
+**Documentation**: https://code.claude.com/docs/en/voice-dictation
+
+**Key concepts**:
+- Push-to-talk key bound to voice:pushToTalk in Chat context
+- Defaults to Space key
+- Rebindable in ~/.claude/keybindings.json
+- Enables flexible voice input activation
+
+---
+
+## Effort Level Display on Logo and Spinner
+
+**What it is**: Current effort level now displays on logo and spinner
+
+**Documentation**: https://code.claude.com/docs/en/model-config
+
+**Key concepts**:
+- Displays effort level next to logo and spinner (e.g., "with low effort")
+- Visual indicator of current thinking/reasoning level
+- Improves awareness of model behavior settings
+
+---
+
+## WorktreeCreate Hook Event
+
+**What it is**: Hook event when creating isolated working copy via --worktree or subagent isolation
+
+**Documentation**: https://code.claude.com/docs/en/hooks
+
+**Key concepts**:
+- Fires when creating isolated working copy
+- Can be triggered by --worktree flag or subagent isolation
+- Allows custom handling of worktree creation
+- Enables pre-configuration of isolated environments
+
+---
+
+## WorktreeRemove Hook Event
+
+**What it is**: Hook event when a worktree is being removed
+
+**Documentation**: https://code.claude.com/docs/en/hooks
+
+**Key concepts**:
+- Fires when worktree is being removed
+- Triggered on session exit or subagent completion
+- Allows custom cleanup logic
+- Enables post-cleanup operations
+
+---
+
+## isolation: worktree Support in Agent Definitions
+
+**What it is**: Agents now support isolation: worktree to run in isolated git worktree
+
+**Documentation**: https://code.claude.com/docs/en/sub-agents
+
+**Key concepts**:
+- Set `isolation: worktree` in agent frontmatter
+- Runs subagent in temporary git worktree
+- Provides isolated copy of repository
+- Enables safe experimentation with separate working directory
+
+---
+
+## LSP Server startupTimeout Configuration
+
+**What it is**: Configuration option for LSP server startup timeout
+
+**Documentation**: https://code.claude.com/docs/en/plugins-reference
+
+**Key concepts**:
+- Max time to wait for server startup (milliseconds)
+- Configurable per LSP server
+- Helps with slow network connections or complex projects
+- Improves startup behavior on resource-constrained systems
+
+---
+
+## ${CLAUDE_PLUGIN_DATA} Variable
+
+**What it is**: Variable for plugin persistent state surviving updates
+
+**Documentation**: https://code.claude.com/docs/en/plugins-reference
+
+**Key concepts**:
+- Persistent directory for plugin state surviving updates
+- Use for installed dependencies (node_modules, virtual environments)
+- Storage for generated code, caches, and other persistent files
+- Enables plugin state preservation across version updates
+
+---
+
+## ${CLAUDE_SKILL_DIR} Variable for Skills
+
+**What it is**: Variable for skills to reference their own directory
+
+**Documentation**: https://code.claude.com/docs/en/skills
+
+**Key concepts**:
+- Directory containing the skill's SKILL.md file
+- Use in bash injection commands to reference scripts/files
+- Enables bundled resources access
+- Supports skill portability across installations
+
+---
+
+## Response Text Streaming Line-by-Line
+
+**What it is**: Response text now streams line-by-line as generated
+
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
+
+**Key concepts**:
+- Text streams line-by-line instead of character-by-character
+- Improves readability of streamed content
+- Enables better parsing of structured outputs
+- Better user experience for long-form responses
+
+---
+
+## Terminal Notifications from Tmux
+
+**What it is**: Terminal notifications now reach outer terminal when running inside tmux
+
+**Documentation**: https://code.claude.com/docs/en/interactive-mode
+
+**Key concepts**:
+- Notifications properly escape tmux panes
+- Reach the outer terminal even in nested tmux sessions
+- Improves notification delivery reliability
+- Better integration with tmux workflows

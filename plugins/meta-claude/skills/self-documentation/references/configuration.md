@@ -2,7 +2,7 @@
 
 Settings, permissions, memory, and customization options for Claude Code.
 
-**Last updated**: 2026-02-22
+**Last updated**: 2026-03-21
 
 ---
 
@@ -52,6 +52,10 @@ Settings, permissions, memory, and customization options for Claude Code.
 - **Environment variables**: ANTHROPIC_DEFAULT_OPUS_MODEL, ANTHROPIC_DEFAULT_SONNET_MODEL, ANTHROPIC_DEFAULT_HAIKU_MODEL, CLAUDE_CODE_SUBAGENT_MODEL
 - **Prompt caching**: DISABLE_PROMPT_CACHING variables (global overrides model-specific)
 - **Haiku 4.5**: Auto-uses Sonnet in plan mode (SonnetPlan behavior by default) for Pro users
+- **modelOverrides setting**: Maps individual Anthropic model IDs to provider-specific strings that Claude Code sends to your provider's API
+- **ANTHROPIC_CUSTOM_MODEL_OPTION environment variable**: Add single custom entry to /model picker without replacing built-in aliases
+- **Opus 4.6 defaults**: Medium effort for Max and Team subscribers
+- **Increased Opus 4.6 output tokens**: Default maximum output tokens increased to 64k, upper bound to 128k
 
 ---
 
@@ -105,6 +109,7 @@ Settings, permissions, memory, and customization options for Claude Code.
 - **Policy control**: `allowUnsandboxedCommands` setting disables dangerouslyDisableSandbox escape hatch at policy level for enterprise environments
 - **Limitations**: Minimal performance impact; Linux and macOS only; some tools (watchman, docker) require special configuration
 - **Autonomous work**: Reduces permission prompts within defined boundaries
+- **allowRead sandbox filesystem setting**: Re-allow reading specific paths within denied region; takes precedence over denyRead
 
 ---
 
@@ -643,3 +648,52 @@ claude
 export CLAUDE_CODE_DISABLE_1M_CONTEXT=1
 claude
 ```
+
+---
+
+## Auto Memory Feature
+
+**What it is**: Claude automatically saves useful context and learnings to memory files across sessions
+
+**Documentation**: https://code.claude.com/docs/en/memory
+
+**Key concepts**:
+- Auto memory lets Claude accumulate knowledge across sessions without you writing anything
+- Claude saves notes for itself as it works
+- Automatic recording of patterns, learnings, and insights
+- Distinguished from CLAUDE.md which contains user-provided instructions
+
+---
+
+## autoMemoryDirectory Setting
+
+**What it is**: Setting for custom auto-memory storage location
+
+**Documentation**: https://code.claude.com/docs/en/memory
+
+**Key concepts**:
+- Store auto memory in a different location via `autoMemoryDirectory` setting
+- Configurable per-user or project
+- Allows organizing memory files in custom locations
+- Useful for centralized memory management across projects
+
+**Configuration**:
+```json
+{
+  "autoMemoryDirectory": "~/.claude/shared-memory"
+}
+```
+
+---
+
+## Project Configs and Auto Memory Across Worktrees
+
+**What it is**: Project configs and auto memory are now shared across git worktrees
+
+**Documentation**: https://code.claude.com/docs/en/memory
+
+**Key concepts**:
+- Each project gets its own memory directory at ~/.claude/projects/<project>/memory/
+- <project> path derived from git repository
+- All worktrees and subdirectories within same repo share one auto memory directory
+- Enables consistent learning across worktree variants of same project

@@ -2,7 +2,7 @@
 
 Features mentioned in Claude Code release notes but not yet covered in official documentation. Information is based on release note descriptions and observed behavior. Details may be incomplete or subject to change.
 
-**Latest Release**: v2.1.50
+**Latest Release**: v2.1.81
 
 ---
 
@@ -73,25 +73,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 **Expected format**:
 - Commit/PR includes URL to originating claude.ai session
 - Enables jumping from git history to conversation context
-
----
-
-## Copy OAuth URL Keyboard Shortcut
-
-**What it is**: Keyboard shortcut 'c' to copy OAuth URL when browser doesn't open during login
-
-**Introduced**: v2.1.10
-
-**What we know**:
-- Press 'c' to copy OAuth URL to clipboard during login
-- Useful when browser auto-open fails
-- Improves login experience in restricted environments
-
-**Expected workflow**:
-1. Start login process
-2. Browser fails to open automatically
-3. Press 'c' to copy URL to clipboard
-4. Paste URL manually in browser
 
 ---
 
@@ -206,24 +187,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 - Sandbox mode now prevents writing to .claude/skills directory
 - Prevents potential skill injection attacks from sandboxed code
 - Improves security isolation in sandboxed environments
-
----
-
-## Claude Auth Login/Status/Logout CLI Subcommands
-
-**What it is**: New CLI subcommands for authentication: claude auth login, claude auth status, and claude auth logout
-
-**Introduced**: v2.1.41
-
-**What we know**:
-- Three new authentication-related commands added to CLI
-- Allows authentication management from terminal directly
-- Provides status checking and explicit logout capability
-
-**Available commands**:
-- `claude auth login` - Authenticate with Claude Code
-- `claude auth status` - Check current authentication status
-- `claude auth logout` - Logout from current session
 
 ---
 
@@ -345,19 +308,6 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## Plugin settings.json support
-
-**What it is**: Plugins can now ship settings.json for default configuration
-
-**Introduced**: v2.1.49
-
-**What we know**:
-- Plugins can now include settings.json file for default configuration
-- Allows plugins to provide sensible defaults to users
-- Improves plugin setup experience
-
----
-
 ## supportsEffort, supportedEffortLevels, supportsAdaptiveThinking SDK fields
 
 **What it is**: SDK now includes supportsEffort, supportedEffortLevels, and supportsAdaptiveThinking fields
@@ -371,26 +321,300 @@ Features mentioned in Claude Code release notes but not yet covered in official 
 
 ---
 
-## startupTimeout LSP server configuration
+## HTTP Hooks
 
-**What it is**: Introduced startupTimeout configuration for LSP servers
+**What it is**: Hooks that POST JSON to URLs and receive JSON responses
 
-**Introduced**: v2.1.50
+**Introduced**: v2.1.63
 
 **What we know**:
-- New configuration option for LSP server startup timeout
-- Allows customization of how long to wait for LSP servers to initialize
-- Useful for slow network connections or complex projects
+- Hooks can now send HTTP POST requests to external URLs
+- Supports JSON request/response format
+- Enables integration with external webhook services
+- Use cases: notifications, CI/CD integrations, monitoring
 
 ---
 
-## /extra-usage command for VS Code
+## Local Slash Command Output as System Messages
 
-**What it is**: Added /extra-usage command support in VS Code
+**What it is**: Local slash command output now appears as system messages rather than user-sent messages
 
-**Introduced**: v2.1.50
+**Introduced**: v2.1.63
 
 **What we know**:
-- New slash command /extra-usage available in VS Code interface
-- Provides additional usage information or statistics
-- Extends usage tracking capabilities in VS Code extension
+- Output from local slash commands displayed as system messages
+- Better visual distinction from user inputs
+- Improves clarity of command execution flow
+
+---
+
+## ENABLE_CLAUDEAI_MCP_SERVERS Environment Variable
+
+**What it is**: Environment variable to opt out of Claude.ai MCP servers
+
+**Introduced**: v2.1.63
+
+**What we know**:
+- Set to control whether MCP servers from Claude.ai are available
+- Allows disabling Claude.ai-configured MCP servers
+- Useful for restricted environments
+
+---
+
+## Worktree Field in Status Line Hook Commands
+
+**What it is**: Status line hook commands now include worktree field with metadata
+
+**Introduced**: v2.1.69
+
+**What we know**:
+- New worktree field added to status line hook command data
+- Provides metadata about current worktree
+- Enables worktree-aware status line customization
+
+---
+
+## /plan Optional Description Argument
+
+**What it is**: Optional description argument added to /plan command
+
+**Introduced**: v2.1.72
+
+**What we know**:
+- /plan now accepts optional description argument
+- Allows providing context for planning phase
+- Improves planning focus and direction
+
+---
+
+## CLAUDE_CODE_DISABLE_CRON Environment Variable
+
+**What it is**: Environment variable to stop scheduled cron jobs
+
+**Introduced**: v2.1.72
+
+**What we know**:
+- Set `CLAUDE_CODE_DISABLE_CRON=1` to stop cron job execution
+- Disables scheduled/recurring tasks
+- Useful for controlled execution environments
+
+---
+
+## Additional Bash Auto-approval Allowlist Items
+
+**What it is**: Added lsof, pgrep, tput, ss, fd, fdfind to bash auto-approval list
+
+**Introduced**: v2.1.72
+
+**What we know**:
+- More system tools automatically approved for bash execution
+- Includes: lsof (open files), pgrep (process grep), tput (terminal control), ss (socket stats), fd/fdfind (file finder)
+- Reduces permission prompts for common commands
+
+---
+
+## Cron Scheduling Tools
+
+**What it is**: Tools for recurring prompts within sessions
+
+**Introduced**: v2.1.71
+
+**What we know**:
+- New tools for scheduling recurring prompts or slash commands
+- Supports interval-based execution
+- Enables time-based automation within sessions
+
+---
+
+## Last-modified Timestamps on Memory Files
+
+**What it is**: Memory files now include last-modified timestamps
+
+**Introduced**: v2.1.75
+
+**What we know**:
+- Timestamps added to memory files for tracking purposes
+- Helps identify recently updated memories
+- Improves memory management and organization
+
+---
+
+## Hook Source Display in Permission Prompts
+
+**What it is**: Permission prompts now show hook source (settings/plugin/skill)
+
+**Introduced**: v2.1.75
+
+**What we know**:
+- Displays where a hook came from when requesting permissions
+- Shows if hook is from settings, plugin, or skill
+- Improves transparency of hook sources
+
+---
+
+## ExitWorktree Tool
+
+**What it is**: Tool to leave EnterWorktree sessions
+
+**Introduced**: v2.1.72
+
+**What we know**:
+- New tool for exiting worktree isolation
+- Complements EnterWorktree functionality
+- Enables clean exit from isolated sessions
+
+---
+
+## MCP Elicitation Support
+
+**What it is**: Support for structured input via interactive dialogs in MCP
+
+**Introduced**: v2.1.76
+
+**What we know**:
+- MCP servers can request structured input via interactive dialogs
+- Enables more sophisticated MCP tool interactions
+- Supports multi-field forms and complex inputs
+
+---
+
+## worktree.sparsePaths Setting
+
+**What it is**: Setting for large monorepos using git sparse-checkout
+
+**Introduced**: v2.1.76
+
+**What we know**:
+- Configuration for sparse-checkout paths in worktrees
+- Useful for monorepos with selective file loading
+- Improves performance with large repositories
+
+---
+
+## Show Turn Duration Toggle
+
+**What it is**: Toggle to show turn duration in /config menu
+
+**Introduced**: v2.1.79
+
+**What we know**:
+- Setting to control display of turn duration metrics
+- Can be toggled via /config
+- Helps users track session timing
+
+---
+
+## rate_limits Field in Statusline
+
+**What it is**: Statusline scripts can now display Claude.ai rate limit usage data
+
+**Introduced**: v2.1.80
+
+**What we know**:
+- New rate_limits field available in statusline JSON
+- Shows rate limit information
+- Enables rate-limit-aware status displays
+
+---
+
+## source: 'settings' Plugin Marketplace Source
+
+**What it is**: Plugin marketplace source for inline plugin declarations via settings
+
+**Introduced**: v2.1.80
+
+**What we know**:
+- Plugins can be declared directly in settings.json
+- New source type for settings-based plugin configuration
+- Enables configuration-driven plugin installation
+
+---
+
+## CLI Tool Usage Detection for Plugin Tips
+
+**What it is**: Plugin tips now use CLI tool usage detection alongside file pattern matching
+
+**Introduced**: v2.1.80
+
+**What we know**:
+- Plugin tips triggered by CLI tool usage
+- Complements file pattern-based detection
+- More sophisticated plugin recommendation system
+
+---
+
+## Parallel Tool Results Restoration on Resume
+
+**What it is**: Resume now fully restores parallel tool results
+
+**Introduced**: v2.1.80
+
+**What we know**:
+- Parallel tool execution results properly restored on session resume
+- Maintains tool execution state across resume
+- Improves state preservation for complex operations
+
+---
+
+## MCP OAuth Client ID Metadata Document (CIMD) Support
+
+**What it is**: MCP OAuth now supports Client ID Metadata Document for servers without Dynamic Client Registration
+
+**Introduced**: v2.1.81
+
+**What we know**:
+- Alternative OAuth approach for MCP servers
+- Supports servers without Dynamic Client Registration capability
+- Improves MCP OAuth compatibility
+
+---
+
+## --bare Flag for Scripted Calls
+
+**What it is**: Flag to skip hooks, LSP, plugin sync, and skill directory walks for scripted calls
+
+**Introduced**: v2.1.81
+
+**What we know**:
+- `--bare` flag for minimal initialization
+- Disables hooks, LSP, plugin sync, and skill discovery
+- Useful for lightweight scripted execution
+
+---
+
+## Plugin Freshness with Ref-tracked Plugins
+
+**What it is**: Ref-tracked plugins re-clone on every load for improved plugin freshness
+
+**Introduced**: v2.1.81
+
+**What we know**:
+- Plugins tracked by git ref are re-cloned on each load
+- Ensures latest version from ref is always used
+- Improves plugin update freshness for development
+
+---
+
+## MCP Read/Search Tools Collapse
+
+**What it is**: MCP read/search tools collapse into single lines (expandable with Ctrl+O)
+
+**Introduced**: v2.1.81
+
+**What we know**:
+- MCP read and search tool output collapsed by default
+- Expandable with Ctrl+O for verbose mode
+- Reduces visual clutter of tool output
+
+---
+
+## Resumed Sessions Switch to Original Worktree
+
+**What it is**: Resumed sessions automatically switch back to their original worktree
+
+**Introduced**: v2.1.81
+
+**What we know**:
+- Sessions resume in the worktree they were created in
+- Automatic worktree switching on resume
+- Better state preservation for worktree-specific sessions
