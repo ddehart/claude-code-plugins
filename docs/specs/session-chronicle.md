@@ -402,9 +402,9 @@ Read the most recent 2-3 entries before writing to maintain continuity and voice
 
 ## Implementation Checklist
 
-1. [ ] Create `plugins/meta-claude/skills/session-chronicle/SKILL.md` (<500 lines)
-2. [ ] Create `plugins/meta-claude/skills/session-chronicle/assets/reflective-practice-seed.md`
-3. [ ] Create `plugins/meta-claude/skills/session-chronicle/references/guidelines.md` (memory promotion format, edge cases, voice examples)
-4. [ ] Update `plugins/meta-claude/.claude-plugin/plugin.json` — bump version, add keywords
-5. [ ] Update `.claude-plugin/marketplace.json` — bump version
-6. [ ] Update `README.md` — add session-chronicle to skill tables
+1. [x] Create `plugins/meta-claude/skills/session-chronicle/SKILL.md` (<500 lines)
+2. [x] Create `plugins/meta-claude/skills/session-chronicle/assets/reflective-practice-seed.md`
+3. [x] Create `plugins/meta-claude/skills/session-chronicle/references/guidelines.md` (memory promotion format, edge cases, voice examples)
+4. [x] Update `plugins/meta-claude/.claude-plugin/plugin.json` — bump version, add keywords
+5. [x] Update `.claude-plugin/marketplace.json` — bump version
+6. [x] Update `README.md` — add session-chronicle to skill tables
