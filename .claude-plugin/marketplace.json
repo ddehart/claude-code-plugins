@@ -13,8 +13,8 @@
     {
       "name": "meta-claude",
       "source": "./plugins/meta-claude",
-      "description": "Claude Code productivity skills: session export, self-documentation for explaining features and capabilities, and self-reflection tools",
-      "version": "1.4.12"
+      "description": "Claude Code productivity skills: session chronicle (two-layered journal with functional chronicle and open-ended reflection), session export, and self-documentation for explaining features and capabilities",
+      "version": "1.5.0"
     },
     {
       "name": "pm-workflow",

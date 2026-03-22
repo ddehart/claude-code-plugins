@@ -43,6 +43,7 @@ Claude Code productivity skills for session management, self-documentation, and 
 
 | Skill | Description |
 |-------|-------------|
+| `session-chronicle` | Two-layered session journal: functional chronicle (decisions, learnings, failed approaches) and open-ended reflection on functional states |
 | `session-export` | Export Claude Code session transcripts from JSONL logs to readable text format |
 | `self-documentation` | Explain Claude Code features, capabilities, and tools; record observations about undocumented behaviors |
 
@@ -73,6 +74,7 @@ Once installed, the agents and skills are automatically available. Claude will p
 **meta-claude:**
 - Ask about Claude Code features ("How do skills work?", "What can you do?")
 - Ask decision questions ("Should I use a skill or slash command?")
+- Ask to chronicle a session, write a journal entry, or reflect on what was accomplished
 - Ask to export a session transcript
 - Report discovering undocumented behavior
 
