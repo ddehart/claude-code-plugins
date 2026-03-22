@@ -8,7 +8,7 @@ description: >
   learnings, and Claude's own reflective observations. Also handles reading past entries
   (/session-chronicle read) and evolving the reflective practice (/session-chronicle reflect).
 argument-hint: "[read [date] | reflect]"
-allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep"]
 ---
 
 # Session Chronicle
@@ -86,10 +86,8 @@ On first invocation in a new project:
    → If gitignored: add `docs/chronicle/` to `.gitignore`
    → If committed: no action needed
 
-3. Copy the seed template into `docs/chronicle/reflective-practice.md`:
-   ```bash
-   cp "${CLAUDE_SKILL_DIR}/assets/reflective-practice-seed.md" docs/chronicle/reflective-practice.md
-   ```
+3. Read the seed template from `${CLAUDE_SKILL_DIR}/assets/reflective-practice-seed.md`
+   and Write its contents to `docs/chronicle/reflective-practice.md`
 
 4. Offer: "Want me to add a note about the chronicle to CLAUDE.md?"
    → If yes, append:

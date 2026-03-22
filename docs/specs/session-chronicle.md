@@ -62,7 +62,7 @@ description: >
   learnings, and Claude's own reflective observations. Also handles reading past entries
   (/session-chronicle read) and evolving the reflective practice (/session-chronicle reflect).
 argument-hint: "[read [date] | reflect]"
-allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep"]
 ---
 ```
 
