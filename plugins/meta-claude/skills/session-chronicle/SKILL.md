@@ -76,19 +76,6 @@ A session is substantive if **two or more** of these occurred:
 
 7. Report: entry location, word count, any memories promoted
 
-## Getting the Timestamp
-
-When writing session headers, get the actual time using Bash:
-
-1. Run `date +%H:%M` to get the current time in 24-hour format
-2. Format the header as: `## HH:MM — One-line summary`
-
-Example: if `date +%H:%M` returns `14:30`, write:
-
-```
-## 14:30 — Refactored authentication middleware
-```
-
 ## Workflow: First-Use Initialization
 
 On first invocation in a new project:
@@ -116,7 +103,7 @@ If any are found, use `AskUserQuestion` to ask:
 > - **Coexist** — Keep the existing system and set up `docs/chronicle/` alongside it
 > - **Replace** — Set up `docs/chronicle/` and ignore the old system
 
-If "Migrate" is selected: copy entries from the found location into `docs/chronicle/`, renaming to `YYYY-MM-DD.md` format where possible. Inform the user of what was migrated.
+If "Migrate" is selected: copy entries from the found location into `docs/chronicle/`. Rename files to `YYYY-MM-DD.md` format if the original filenames contain recognizable dates; otherwise, preserve the original filenames. Inform the user of what was migrated.
 
 ### Step 1: Create Chronicle Directory
 
@@ -134,7 +121,7 @@ First check if the project is a git repo by running `git rev-parse --is-inside-w
 > - **Commit to git** — Chronicle entries will be versioned with the project
 > - **Gitignore** — Keep entries local and out of version control
 
-If "Gitignore" is selected: append `docs/chronicle/` to `.gitignore` using Bash.
+If "Gitignore" is selected: append `docs/chronicle/` to `.gitignore` using Bash (create `.gitignore` first if it doesn't exist).
 
 **If not a git repo:** skip this step entirely.
 
@@ -205,8 +192,15 @@ Five principles for the reflection section:
 
 One file per day. Multiple sessions append with `---` separators.
 
-**Session header:** `## HH:MM — One-line summary` using 24-hour time from `date +%H:%M` (see Getting the Timestamp). Below the header: branch and model name.
+**Session header:** `## HH:MM — One-line summary` in 24-hour format. Below the header: branch and model name.
 **Tags:** not required. Include only when naturally relevant.
+
+### Getting the Timestamp
+
+When writing session headers, get the actual time using Bash:
+
+1. Run `date +%H:%M` to get the current time in 24-hour format
+2. Format the header as: `## HH:MM — One-line summary`
 
 ### Complete Example
 
