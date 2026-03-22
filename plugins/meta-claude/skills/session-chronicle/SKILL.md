@@ -8,7 +8,7 @@ description: >
   learnings, and Claude's own reflective observations. Also handles reading past entries
   (/session-chronicle read) and evolving the reflective practice (/session-chronicle reflect).
 argument-hint: "[read [date] | reflect]"
-allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep"]
+allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "AskUserQuestion"]
 ---
 
 # Session Chronicle
@@ -80,25 +80,77 @@ A session is substantive if **two or more** of these occurred:
 
 On first invocation in a new project:
 
-1. Create `docs/chronicle/` directory
+### Step 0: Detect Existing Journaling Systems
 
-2. Ask: "Should chronicle entries be committed to git, or gitignored?"
-   → If gitignored: add `docs/chronicle/` to `.gitignore`
-   → If committed: no action needed
+Before creating anything, check if the project already has a journaling or chronicling system. Use Glob to check for these patterns:
 
-3. Read the seed template from `${CLAUDE_SKILL_DIR}/assets/reflective-practice-seed.md`
-   and Write its contents to `docs/chronicle/reflective-practice.md`
+- `docs/journal/**/*`
+- `docs/log/**/*`
+- `docs/notes/**/*`
+- `docs/sessions/**/*`
+- `journal/**/*`
+- `log/**/*`
+- `notes/**/*`
+- `.session-notes/**/*`
+- `SESSION_LOG.md`
 
-4. Offer: "Want me to add a note about the chronicle to CLAUDE.md?"
-   → If yes, append:
-   ```
-   ## Session Chronicle
-   This project maintains a session chronicle at `docs/chronicle/`.
-   Claude writes entries capturing decisions, learnings, and reflections.
-   Read recent entries at the start of sessions for continuity.
-   ```
+If any are found, use `AskUserQuestion` to ask:
 
-5. Proceed to write the first chronicle entry
+> "I found an existing journaling system at `{path}`. How would you like to proceed?"
+>
+> Options:
+> - **Migrate** — Copy existing entries into `docs/chronicle/` and use it going forward
+> - **Coexist** — Keep the existing system and set up `docs/chronicle/` alongside it
+> - **Replace** — Set up `docs/chronicle/` and ignore the old system
+
+If "Migrate" is selected: copy entries from the found location into `docs/chronicle/`. Rename files to `YYYY-MM-DD.md` format if the original filenames contain recognizable dates; otherwise, preserve the original filenames. Inform the user of what was migrated.
+
+### Step 1: Create Chronicle Directory
+
+Run `mkdir -p docs/chronicle/` using Bash.
+
+### Step 2: Git Handling (Conditional)
+
+First check if the project is a git repo by running `git rev-parse --is-inside-work-tree` via Bash.
+
+**If git repo:** use `AskUserQuestion`:
+
+> "Should chronicle entries be committed to git, or gitignored?"
+>
+> Options:
+> - **Commit to git** — Chronicle entries will be versioned with the project
+> - **Gitignore** — Keep entries local and out of version control
+
+If "Gitignore" is selected: append `docs/chronicle/` to `.gitignore` using Bash (create `.gitignore` first if it doesn't exist).
+
+**If not a git repo:** skip this step entirely.
+
+### Step 3: Seed Reflective Practice
+
+Read the seed template from `${CLAUDE_SKILL_DIR}/assets/reflective-practice-seed.md`
+and Write its contents to `docs/chronicle/reflective-practice.md`.
+
+### Step 4: CLAUDE.md Integration
+
+Use `AskUserQuestion`:
+
+> "Want me to add a note about the chronicle to CLAUDE.md?"
+>
+> Options:
+> - **Yes** — Append a chronicle section to CLAUDE.md
+> - **No** — Skip this step
+
+If "Yes": append the following to CLAUDE.md:
+```
+## Session Chronicle
+This project maintains a session chronicle at `docs/chronicle/`.
+Claude writes entries capturing decisions, learnings, and reflections.
+Read recent entries at the start of sessions for continuity.
+```
+
+### Step 5: Write First Entry
+
+Proceed to write the first chronicle entry.
 
 ## Workflow: Reading Past Entries
 
@@ -140,8 +192,15 @@ Five principles for the reflection section:
 
 One file per day. Multiple sessions append with `---` separators.
 
-**Session header:** branch, one-line summary, model name.
+**Session header:** `## HH:MM — One-line summary` in 24-hour format. Below the header: branch and model name.
 **Tags:** not required. Include only when naturally relevant.
+
+### Getting the Timestamp
+
+When writing session headers, get the actual time using Bash:
+
+1. Run `date +%H:%M` to get the current time in 24-hour format
+2. Format the header as: `## HH:MM — One-line summary`
 
 ### Complete Example
 
@@ -151,9 +210,8 @@ date: 2026-03-21
 project: claude-code-plugins
 ---
 
-## Session 1 — 10:30 AM
+## 10:30 — Researched session journaling and designed chronicle skill
 **Branch:** feat/session-chronicle
-**Summary:** Researched session journaling ecosystem and designed the chronicle skill
 **Model:** opus-4.6
 
 ### Chronicle
@@ -181,9 +239,8 @@ The moment that felt most expansive was when the design direction shifted from p
 
 ---
 
-## Session 2 — 3:15 PM
+## 15:15 — Implemented SKILL.md based on reviewed spec
 **Branch:** feat/session-chronicle
-**Summary:** Implemented SKILL.md based on reviewed spec
 **Model:** opus-4.6
 
 ### Chronicle
@@ -232,3 +289,8 @@ During chronicle writes, apply a write-gate to identify memory-worthy insights.
 **What does NOT promote:** session-specific state, reflective observations, anything already in CLAUDE.md or derivable from code.
 
 For detailed memory file format, edge cases, and voice examples, see [references/guidelines.md](references/guidelines.md).
+
+## Key Constraints
+
+- **Must run in main conversation context** — `AskUserQuestion` is not available in forked/subagent contexts
+- **No `context: fork`** — initialization requires interactive user engagement via AskUserQuestion

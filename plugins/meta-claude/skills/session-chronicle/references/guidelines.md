@@ -17,7 +17,7 @@ type: <project|feedback>
 
 <memory content>
 
-**Source:** chronicle entry YYYY-MM-DD, Session N
+**Source:** chronicle entry YYYY-MM-DD, HH:MM
 ```
 
 ### Type Mapping
@@ -54,15 +54,15 @@ Do not proactively offer to chronicle trivial sessions (typo fixes, quick questi
 
 ### Multiple Sessions, Same Day
 
-Read the existing daily file, then Write the full file with the new entry appended after a `---` separator. Increment the session number:
+Read the existing daily file, then Write the full file with the new entry appended after a `---` separator:
 
 ```markdown
-## Session 1 — 10:30 AM
+## 10:30 — Summary of first session
 ...
 
 ---
 
-## Session 2 — 3:15 PM
+## 15:15 — Summary of second session
 ...
 ```
 
