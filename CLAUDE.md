@@ -129,6 +129,12 @@ Users install via Claude Code slash commands:
 /plugin install dev-workflow@ddehart-plugins
 ```
 
+## Session Chronicle
+
+This project maintains a session chronicle at `docs/chronicle/`.
+Claude writes entries capturing decisions, learnings, and reflections.
+Read recent entries at the start of sessions for continuity.
+
 ## Using the Documentation-Syncing Skill
 
 Run `/documentation-syncing` to sync self-documentation reference files with latest Claude Code releases. The skill orchestrates 4 atomic agents with file-based state handoff for reliable execution.
