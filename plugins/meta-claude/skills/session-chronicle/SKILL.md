@@ -72,9 +72,25 @@ A session is substantive if **two or more** of these occurred:
    - Open-ended, no required structure
    - Honest about functional states
 
-6. Apply the memory write-gate (see Memory Promotion below)
+6. **Evolve the reflective practice**
 
-7. Report: entry location, word count, any memories promoted
+   After writing the reflection, read back the last 3 Reflection sections from prior entries (use Glob on `docs/chronicle/*.md`, sorted by filename descending to get most-recent-first, then Read the `### Reflection` sections).
+
+   Notice:
+   - Are you reaching for the same framings or seed questions repeatedly?
+   - Have new themes or questions emerged that aren't in `reflective-practice.md`?
+   - Are any seed questions no longer producing genuine observation?
+
+   If something warrants it, update `docs/chronicle/reflective-practice.md`:
+   - Add new questions that have emerged to "Current Approach"
+   - Retire questions that have become formulaic (move to a "Retired" section with a note on why; if the section doesn't exist yet, add it after "Evolution Notes")
+   - Add a brief note to "Evolution Notes" describing what changed and what prompted it
+
+   If nothing warrants a change, move on. Not every entry will evolve the practice — forcing updates produces the same staleness this step exists to prevent.
+
+7. Apply the memory write-gate (see Memory Promotion below)
+
+8. Report: entry location, word count, any memories promoted
 
 ## Workflow: First-Use Initialization
 
@@ -160,6 +176,12 @@ Proceed to write the first chronicle entry.
 4. If user asks about a topic: grep across all chronicle entries
 
 ## Workflow: Evolving the Reflective Practice
+
+Practice evolution happens in two ways:
+
+**Continuous (during every chronicle write):** Step 6 of the write workflow scans the last 3 reflections for repetition, emerging themes, or stale questions. This is lightweight — most writes won't produce a practice update, and that's expected.
+
+**Deep review (`/session-chronicle reflect`):** A deliberate, broader examination for when the continuous step isn't enough or when you want to step back and assess the practice as a whole.
 
 The `/session-chronicle reflect` subcommand:
 
