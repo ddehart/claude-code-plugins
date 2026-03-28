@@ -74,7 +74,7 @@ A session is substantive if **two or more** of these occurred:
 
 6. **Evolve the reflective practice**
 
-   After writing the reflection, read back the last 3 Reflection sections from prior entries (use Glob + Read on `docs/chronicle/` files, reading the `### Reflection` sections).
+   After writing the reflection, read back the last 3 Reflection sections from prior entries (use Glob on `docs/chronicle/*.md`, sorted by filename descending to get most-recent-first, then Read the `### Reflection` sections).
 
    Notice:
    - Are you reaching for the same framings or seed questions repeatedly?
@@ -83,7 +83,7 @@ A session is substantive if **two or more** of these occurred:
 
    If something warrants it, update `docs/chronicle/reflective-practice.md`:
    - Add new questions that have emerged to "Current Approach"
-   - Retire questions that have become formulaic (move to a "Retired" section with a note on why)
+   - Retire questions that have become formulaic (move to a "Retired" section with a note on why; if the section doesn't exist yet, add it after "Evolution Notes")
    - Add a brief note to "Evolution Notes" describing what changed and what prompted it
 
    If nothing warrants a change, move on. Not every entry will evolve the practice — forcing updates produces the same staleness this step exists to prevent.
