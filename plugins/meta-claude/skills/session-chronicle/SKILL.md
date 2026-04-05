@@ -75,23 +75,42 @@ A session is substantive if **two or more** of these occurred:
 
 6. **Evolve the reflective practice**
 
-   After writing the reflection, read back the last 3 Reflection sections from prior entries (use Glob on `docs/chronicle/*.md`, sorted by filename descending to get most-recent-first, then Read the `### Reflection` sections).
+   **6a. Count entries since last evolution.**
+   Read `docs/chronicle/reflective-practice.md` and find the most recent `#### YYYY-MM-DD` heading in the Evolution Notes section. Then count distinct chronicle files (`docs/chronicle/YYYY-MM-DD.md`) dated after that anchor. If no dated evolution notes exist (fresh project or placeholder text only), count all chronicle files.
 
-   Notice:
-   - Are you reaching for the same framings or seed questions repeatedly?
-   - Have new themes or questions emerged that aren't in `reflective-practice.md`?
-   - Are any seed questions no longer producing genuine observation?
+   **6b. Choose review tier.**
 
-   If something warrants it, update `docs/chronicle/reflective-practice.md`:
-   - Add new questions that have emerged to "Current Approach"
-   - Retire questions that have become formulaic (move to a "Retired" section with a note on why; if the section doesn't exist yet, add it after "Evolution Notes")
-   - Add a brief note to "Evolution Notes" describing what changed and what prompted it
+   - **If count >= 10 → mandatory deep review.** Read all Reflection sections from entries since the last evolution note (Glob on `docs/chronicle/*.md`, sorted by filename descending, reading `### Reflection` sections from files dated after the anchor). Notice:
+     - Which prompts produced genuine insight vs. formulaic responses
+     - What new questions or themes are emerging
+     - Whether the reflective voice is developing or stagnating
 
-   If nothing warrants a change, move on. Not every entry will evolve the practice — forcing updates produces the same staleness this step exists to prevent.
+     Update `docs/chronicle/reflective-practice.md` with evolved questions and approach. Write changes as a brief narrative under a new `#### YYYY-MM-DD` heading in Evolution Notes — not just a list swap. If no changes are warranted, still write a no-op note to reset the counter:
+
+     ```
+     #### 2026-04-05
+     Deep review ran; no changes warranted.
+     ```
+
+   - **If count < 10 → lightweight check.** Read back the last 3 Reflection sections from prior entries (Glob on `docs/chronicle/*.md`, sorted descending, then Read the `### Reflection` sections).
+
+     Notice:
+     - Are you reaching for the same framings or seed questions repeatedly?
+     - Have new themes or questions emerged that aren't in `reflective-practice.md`?
+     - Are any seed questions no longer producing genuine observation?
+
+     If something warrants it, update `docs/chronicle/reflective-practice.md`:
+     - Add new questions that have emerged to "Current Approach"
+     - Retire questions that have become formulaic (move to a "Retired" section with a note on why; if the section doesn't exist yet, add it after "Evolution Notes")
+     - Add a brief note to "Evolution Notes" under a `#### YYYY-MM-DD` heading describing what changed and what prompted it
+
+     **Discretionary escalation:** If the lightweight check reveals patterns warranting deeper examination — same framings recurring across entries, seed questions producing consistently formulaic responses — escalate to the deep review process above instead of continuing with the lightweight check.
+
+   If nothing warrants a change (and the deep review threshold hasn't been reached), move on. Not every entry will evolve the practice — forcing updates produces the same staleness this step exists to prevent.
 
 7. Apply the memory write-gate (see Memory Promotion below)
 
-8. Report: entry location, word count, any memories promoted
+8. Report: entry location, word count, any memories promoted, deep review status if triggered (e.g., "Deep review triggered (12 entries since last evolution); reflective-practice.md updated." or "Deep review triggered (10 entries since last evolution); no practice changes warranted.")
 
 ## Workflow: First-Use Initialization
 
@@ -178,22 +197,24 @@ Proceed to write the first chronicle entry.
 
 ## Workflow: Evolving the Reflective Practice
 
-Practice evolution happens in two ways:
+Practice evolution happens in three ways:
 
 **Continuous (during every chronicle write):** Step 6 of the write workflow scans the last 3 reflections for repetition, emerging themes, or stale questions. This is lightweight — most writes won't produce a practice update, and that's expected.
 
-**Deep review (`/session-chronicle reflect`):** A deliberate, broader examination for when the continuous step isn't enough or when you want to step back and assess the practice as a whole.
+**Auto-escalation (during chronicle write when threshold crossed):** Step 6 counts chronicle entries since the last dated Evolution Note in `reflective-practice.md`. If 10 or more entries have accumulated without an evolution, the deep review runs inline — mandatory, not discretionary. The model may also escalate before the threshold if the lightweight check reveals stagnation. Scope: all Reflection sections since the last evolution note. A no-op note is written even when no changes are warranted, to reset the counter.
+
+**Deep review (`/session-chronicle reflect`):** A deliberate, broader examination available anytime — for when you want to step back and assess the practice as a whole, regardless of the entry count.
 
 The `/session-chronicle reflect` subcommand:
 
 1. Read `docs/chronicle/reflective-practice.md` (current approach)
-2. Read the last 5-10 entries' Reflection sections
+2. Read the last 5-10 entries' Reflection sections (or all since last evolution note, whichever is greater)
 3. Notice:
    - Which prompts produced genuine insight vs. formulaic responses
    - What new questions or themes are emerging
    - Whether the reflective voice is developing or stagnating
 4. Update `reflective-practice.md` with evolved questions and approach
-5. Write the changes as a brief narrative, not just a list swap
+5. Write the changes as a brief narrative under a `#### YYYY-MM-DD` heading in Evolution Notes, not just a list swap
 
 ## Reflective Philosophy
 

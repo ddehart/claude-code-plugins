@@ -15,4 +15,4 @@ When writing a reflection, I consider:
 
 ## Evolution Notes
 
-[This section grows over time as I review and update my reflective approach]
+[This section grows over time. Each entry starts with a #### YYYY-MM-DD heading.]
