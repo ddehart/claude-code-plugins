@@ -64,7 +64,7 @@ This convention must be:
 When the deep review fires inline (whether auto-triggered or discretionary), it:
 
 1. Read `docs/chronicle/reflective-practice.md` (current approach)
-2. Read all Reflection sections from entries since the last evolution note (not capped at 5-10 — the point is to examine the full accumulated window)
+2. Read all Reflection sections from entries since the last evolution note. If more than 20 entries have accumulated (e.g., a sporadically-used project over several months), prioritize the most recent 20 to bound context cost.
 3. Notice:
    - Which prompts produced genuine insight vs. formulaic responses
    - What new questions or themes are emerging
@@ -72,7 +72,7 @@ When the deep review fires inline (whether auto-triggered or discretionary), it:
 4. Update `reflective-practice.md` with evolved questions and approach
 5. Write the changes as a brief narrative in Evolution Notes (with `#### YYYY-MM-DD` heading), not just a list swap
 
-This is the same process as the manual `/session-chronicle reflect`, except the read scope is "all since last evolution" rather than "last 5-10."
+This is the same process as the manual `/session-chronicle reflect`. Both now use "all since last evolution (cap 20)" rather than the original "last 5-10."
 
 ### No-Op Logging
 
@@ -134,6 +134,6 @@ Version bump per plugin update rule.
 
 ## Risks & Open Questions
 
-- **Context cost:** Reading all entries since last evolution could be substantial if 10+ multi-session days have accumulated. In practice, reflections are ~200 words each, so 10 entries ≈ 2K words — manageable.
+- **Context cost:** Reading all entries since last evolution could be substantial if many days have accumulated. In practice, reflections are ~200 words each, so 10 entries ≈ 2K words — manageable. A soft cap of 20 entries bounds the worst case (sporadically-used projects accumulating entries over months).
 - **Evolution Notes as counter state:** This is a soft convention, not enforced mechanically. A model that writes an undated evolution note breaks the counting. The spec mitigates this by being explicit about the date heading requirement in the instructions.
 - **Discretionary escalation quality:** Giving the model permission to escalate before 10 relies on its judgment about stagnation. The anti-patterns guide helps calibrate this, but it's inherently subjective.

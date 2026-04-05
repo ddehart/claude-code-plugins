@@ -15,4 +15,11 @@ When writing a reflection, I consider:
 
 ## Evolution Notes
 
-[This section grows over time. Each entry starts with a #### YYYY-MM-DD heading.]
+<!-- Each entry uses a #### YYYY-MM-DD heading. Example:
+
+#### 2026-04-01
+Retired "satisfaction-adjacent" question — became formulaic. Added question about friction points.
+
+#### 2026-04-10
+Deep review ran; no changes warranted.
+-->
