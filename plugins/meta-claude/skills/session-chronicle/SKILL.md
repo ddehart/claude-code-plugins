@@ -76,11 +76,11 @@ A session is substantive if **two or more** of these occurred:
 6. **Evolve the reflective practice**
 
    **6a. Count entries since last evolution.**
-   Read `docs/chronicle/reflective-practice.md` and find the most recent `#### YYYY-MM-DD` heading in the Evolution Notes section. Then count distinct chronicle files (`docs/chronicle/YYYY-MM-DD.md`) dated after that anchor. If no dated evolution notes exist (fresh project or placeholder text only), count all chronicle files.
+   Read `docs/chronicle/reflective-practice.md` and find the most recent `#### YYYY-MM-DD` heading in the Evolution Notes section. Then count distinct chronicle files (`docs/chronicle/YYYY-MM-DD.md`) dated strictly after that anchor (files with the same date as the anchor are excluded). If no dated evolution notes exist (fresh project or placeholder text only), count all chronicle files.
 
    **6b. Choose review tier.**
 
-   - **If count >= 10 → mandatory deep review.** Read all Reflection sections from entries since the last evolution note (Glob on `docs/chronicle/*.md`, sorted by filename descending, reading `### Reflection` sections from files dated after the anchor). Notice:
+   - **If count >= 10 → mandatory deep review.** Read all Reflection sections from entries since the last evolution note (Glob on `docs/chronicle/*.md`, sorted by filename descending, reading `### Reflection` sections from files dated after the anchor). If more than 20 entries have accumulated, prioritize the most recent 20. Notice:
      - Which prompts produced genuine insight vs. formulaic responses
      - What new questions or themes are emerging
      - Whether the reflective voice is developing or stagnating
@@ -88,7 +88,7 @@ A session is substantive if **two or more** of these occurred:
      Update `docs/chronicle/reflective-practice.md` with evolved questions and approach. Write changes as a brief narrative under a new `#### YYYY-MM-DD` heading in Evolution Notes — not just a list swap. If no changes are warranted, still write a no-op note to reset the counter:
 
      ```
-     #### YYYY-MM-DD
+     #### YYYY-MM-DD  (use today's date)
      Deep review ran; no changes warranted.
      ```
 
@@ -208,7 +208,7 @@ Practice evolution happens in three ways:
 The `/session-chronicle reflect` subcommand:
 
 1. Read `docs/chronicle/reflective-practice.md` (current approach)
-2. Read the last 5-10 entries' Reflection sections (or all since last evolution note, whichever is greater)
+2. Read all Reflection sections since the last evolution note (if more than 20, prioritize the most recent 20). This scope aligns with the inline auto-escalation — when triggered manually, the review examines the full accumulated window, not just 5-10 entries.
 3. Notice:
    - Which prompts produced genuine insight vs. formulaic responses
    - What new questions or themes are emerging

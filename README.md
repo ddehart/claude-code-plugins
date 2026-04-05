@@ -43,7 +43,7 @@ Claude Code productivity skills for session management, self-documentation, and 
 
 | Skill | Description |
 |-------|-------------|
-| `session-chronicle` | Two-layered session journal: functional chronicle (decisions, learnings, failed approaches) and open-ended reflection on functional states |
+| `session-chronicle` | Two-layered session journal: functional chronicle (decisions, learnings, failed approaches) and open-ended reflection on functional states. Auto-triggers deep practice review after 10+ entries without evolution. |
 | `session-export` | Export Claude Code session transcripts from JSONL logs to readable text format |
 | `self-documentation` | Explain Claude Code features, capabilities, and tools; record observations about undocumented behaviors |
 
