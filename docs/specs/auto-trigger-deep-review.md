@@ -17,7 +17,7 @@ The lightweight check's 3-entry window is too narrow to catch gradual convergenc
 
 ## Non-Goals
 
-- Changing the manual `/session-chronicle reflect` subcommand (it stays as-is, available anytime).
+- Changing when the manual `/session-chronicle reflect` subcommand is available (it stays invocable anytime, though its read scope now aligns with the inline deep review).
 - Changing what the deep review *does* — only when it fires.
 - Adding configuration or user-facing threshold settings.
 

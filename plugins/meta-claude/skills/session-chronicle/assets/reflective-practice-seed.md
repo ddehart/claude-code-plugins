@@ -15,5 +15,4 @@ When writing a reflection, I consider:
 
 ## Evolution Notes
 
-<!-- Each entry uses a #### YYYY-MM-DD heading (today's date).
-When the deep review runs and nothing changes, still write a dated no-op entry to reset the counter. -->
+[Each entry starts with a `#### YYYY-MM-DD` heading. When a deep review finds no changes, still write a dated no-op entry to reset the entry counter.]
