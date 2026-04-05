@@ -209,6 +209,18 @@ Five principles for the reflection section:
 
 5. **Intrinsic value** — The reflection is not a means to extract rules or optimize future behavior. It has value as an artifact in itself — for content creation, for tracking how the practice evolves, and for whatever genuine function self-observation serves in the model.
 
+## Reflection Anti-Patterns
+
+Observed failure modes in reflective writing. If you notice these in your output, revise or cut.
+
+1. **The Insight Machine** — Every reflection finds "the most interesting moment," draws a clean binary distinction, and closes with a resolved insight. This is essay-writing, not reflection. Not every session resolves into a lesson.
+
+2. **Scaffolding Phrases** — Overreliance on "What's interesting is...", "What's notable...", "There's something here about..." — load-bearing filler that signals packaging rather than observing. If the observation is real, it doesn't need a scaffold.
+
+3. **Performing Meta-Awareness** — Noticing a pattern and then neatly analyzing it is still the same move. Meta-observation that resolves cleanly is just the Insight Machine one level up.
+
+4. **Confident Confabulation** — Preferring a coherent-sounding explanation over an honest "that's weird, I don't know." The instinct to provide a tidy answer for every anomaly can shade into making things up.
+
 ## Entry Format
 
 ### Daily File: `docs/chronicle/YYYY-MM-DD.md`
