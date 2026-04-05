@@ -56,7 +56,8 @@ A session is substantive if **two or more** of these occurred:
 
 4. Determine the daily file: `docs/chronicle/YYYY-MM-DD.md`
    → If file exists: read current content, then use Write to output the full file
-     with the new entry appended after a `---` separator
+     with the new entry appended after a `---` separator.
+     **Do not modify, rewrite, or reformat existing entries** — reproduce them exactly as read.
    → If new day: create file with date frontmatter
 
 5. Write the entry with two sections:
@@ -314,5 +315,6 @@ For detailed memory file format, edge cases, and voice examples, see [references
 
 ## Key Constraints
 
+- **Append-only for existing entries** — When writing to a daily file that already has content, reproduce all existing entries verbatim. Never edit, reword, reformat, or remove previous sessions' content.
 - **Must run in main conversation context** — `AskUserQuestion` is not available in forked/subagent contexts
 - **No `context: fork`** — initialization requires interactive user engagement via AskUserQuestion
