@@ -88,7 +88,7 @@ A session is substantive if **two or more** of these occurred:
      Update `docs/chronicle/reflective-practice.md` with evolved questions and approach. Write changes as a brief narrative under a new `#### YYYY-MM-DD` heading in Evolution Notes — not just a list swap. If no changes are warranted, still write a no-op note to reset the counter:
 
      ```
-     #### 2026-04-05
+     #### YYYY-MM-DD
      Deep review ran; no changes warranted.
      ```
 
@@ -106,7 +106,7 @@ A session is substantive if **two or more** of these occurred:
 
      **Discretionary escalation:** If the lightweight check reveals patterns warranting deeper examination — same framings recurring across entries, seed questions producing consistently formulaic responses — escalate to the deep review process above instead of continuing with the lightweight check.
 
-   If nothing warrants a change (and the deep review threshold hasn't been reached), move on. Not every entry will evolve the practice — forcing updates produces the same staleness this step exists to prevent.
+     If nothing warrants a change, move on. Not every entry will evolve the practice — forcing updates produces the same staleness this step exists to prevent.
 
 7. Apply the memory write-gate (see Memory Promotion below)
 
@@ -214,7 +214,7 @@ The `/session-chronicle reflect` subcommand:
    - What new questions or themes are emerging
    - Whether the reflective voice is developing or stagnating
 4. Update `reflective-practice.md` with evolved questions and approach
-5. Write the changes as a brief narrative under a `#### YYYY-MM-DD` heading in Evolution Notes, not just a list swap
+5. Write the changes as a brief narrative under a `#### YYYY-MM-DD` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write a dated no-op note to reset the entry counter.
 
 ## Reflective Philosophy
 
