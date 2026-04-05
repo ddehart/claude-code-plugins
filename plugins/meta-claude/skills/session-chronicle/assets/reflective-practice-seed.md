@@ -15,4 +15,4 @@ When writing a reflection, I consider:
 
 ## Evolution Notes
 
-[This section grows over time as I review and update my reflective approach]
+[Each entry starts with a `#### YYYY-MM-DD` heading. When a deep review finds no changes, still write a dated no-op entry to reset the entry counter.]
