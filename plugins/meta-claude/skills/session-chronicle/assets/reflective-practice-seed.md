@@ -15,11 +15,5 @@ When writing a reflection, I consider:
 
 ## Evolution Notes
 
-<!-- Each entry uses a #### YYYY-MM-DD heading. Example:
-
-#### 2026-04-01
-Retired "satisfaction-adjacent" question — became formulaic. Added question about friction points.
-
-#### 2026-04-10
-Deep review ran; no changes warranted.
--->
+<!-- Each entry uses a #### YYYY-MM-DD heading (today's date).
+When the deep review runs and nothing changes, still write a dated no-op entry to reset the counter. -->

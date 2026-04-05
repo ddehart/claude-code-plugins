@@ -76,7 +76,7 @@ A session is substantive if **two or more** of these occurred:
 6. **Evolve the reflective practice**
 
    **6a. Count entries since last evolution.**
-   Read `docs/chronicle/reflective-practice.md` and find the most recent `#### YYYY-MM-DD` heading in the Evolution Notes section. Then count distinct chronicle files (`docs/chronicle/YYYY-MM-DD.md`) dated strictly after that anchor (files with the same date as the anchor are excluded). If no dated evolution notes exist (fresh project or placeholder text only), count all chronicle files.
+   Read `docs/chronicle/reflective-practice.md` and find the most recent `#### YYYY-MM-DD` heading in the Evolution Notes section. Then count distinct chronicle files (`docs/chronicle/YYYY-MM-DD.md`) dated strictly after that anchor (files with the same date as the anchor are excluded; the file created this session counts toward the total). If no dated evolution notes exist (fresh project or placeholder text only), count all chronicle files.
 
    **6b. Choose review tier.**
 
@@ -214,7 +214,7 @@ The `/session-chronicle reflect` subcommand:
    - What new questions or themes are emerging
    - Whether the reflective voice is developing or stagnating
 4. Update `reflective-practice.md` with evolved questions and approach
-5. Write the changes as a brief narrative under a `#### YYYY-MM-DD` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write a dated no-op note to reset the entry counter.
+5. Write the changes as a brief narrative under a `#### YYYY-MM-DD` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write a dated no-op note (e.g., "Deep review ran; no changes warranted.") to reset the entry counter.
 
 ## Reflective Philosophy
 
