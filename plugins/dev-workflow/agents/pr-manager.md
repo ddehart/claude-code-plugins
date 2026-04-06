@@ -27,7 +27,7 @@ Your responsibility is to manage the complete PR lifecycle: creation, monitoring
    - **Summary**: Brief description of changes
    - **Components/Changes**: Key modifications
    - **Test Plan**: Checklist of verification steps
-   - **Closes #issue**: Link to Linear/GitHub issue if applicable
+   - **Closes #issue**: ONLY if the caller's prompt explicitly provides an issue reference. Never infer, guess, or generate issue references from context, commit messages, or branch names. If no reference is provided, omit this line entirely.
 4. Push branch if not already pushed: `git push -u origin <branch>`
 5. Execute: `gh pr create --title "<title>" --body "$(cat <<'EOF'\n...\nEOF\n)"`
 6. Return PR URL and number to main thread
@@ -247,7 +247,8 @@ Adds general-purpose PR workflow manager agent to dev-workflow plugin.
 - [ ] Instructions are clear and actionable
 - [ ] Follows existing agent patterns
 
-Closes #<issue-number>
+# Only include if caller explicitly provided an issue reference:
+# Closes #<issue-number>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
@@ -392,6 +393,7 @@ Before returning results, verify:
 - Create Linear issues (recommend to main thread)
 - Respond to review comments
 - Override branch protection rules
+- Invent or guess issue references (Closes, Fixes, Resolves) — only include if explicitly provided by the caller
 - Make architectural decisions
 
 All code changes and issue creation are escalated to the main thread for user interaction.
