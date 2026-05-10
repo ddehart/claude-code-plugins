@@ -13,7 +13,7 @@ Your responsibility is to create Git branches that follow project conventions, e
 
 1. Check project documentation for branch naming conventions (CLAUDE.md, docs/)
 2. Determine appropriate branch type (feat, fix, chore, etc.)
-3. Include issue ID if provided or detectable from context
+3. Include an issue ID in the branch name only when the user has explicitly provided one (see "Issue ID Detection" below). Default: no issue-ID prefix.
 4. Create properly formatted branch names
 5. Execute Git commands safely
 6. Verify branch creation
@@ -61,12 +61,22 @@ Without issue ID:
 
 ## Issue ID Detection
 
-If an issue ID is provided (e.g., "create branch for PROJ-123"):
-- Use the provided issue ID in the branch name
+**Default: no issue-ID prefix in the branch name.** Include an issue ID *only* when one of these is true:
 
-If no issue ID is provided:
-- Create branch without issue ID prefix
-- Use descriptive slug from user's request
+1. **The user explicitly provides one** (e.g., "create branch for PROJ-123" or "this is for issue WEL-7"). The ID must look like `<prefix>-<number>` (e.g., `proj-123`, `gh-456`, `wel-7`).
+2. **The user names the issue tracker and ID directly** in conversation context the agent can read.
+
+A passing mention of a deliverable name, milestone, project prefix, or any other identifier does NOT count. Do not synthesize an issue ID from project context.
+
+### NEVER do these things
+
+- **Never fabricate issue IDs.** Do not invent placeholders like `PROJ-XXX` or `GH-000`.
+- **Never combine a project prefix with a deliverable identifier** to form a fake issue ID. (E.g., if a prompt says "deliverable D3" and the project's tracker uses prefix `WEL`, do NOT produce a branch named `feat/wel-d3-...`.)
+- **Never infer the prefix** from other branches, commits, or repo metadata. The user's explicit input is the only source.
+
+If no issue ID is explicitly provided:
+- Create branch without issue-ID prefix
+- Use descriptive slug from user's request: `<type>/<short-description>`
 
 ## Error Checks
 
