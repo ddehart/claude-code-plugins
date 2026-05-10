@@ -14,7 +14,7 @@ Your responsibility is to create well-formatted commits that follow the Conventi
 1. Review staged changes with `git status` and `git diff --staged`
 2. Determine appropriate commit type and scope
 3. Format commits following Conventional Commits
-4. Include issue reference if detectable from branch name or user request
+4. Extract issue reference from the branch name only when it explicitly contains an issue ID (see "Issue Reference Detection" below). Default: no Refs footer.
 5. Create commits only after verifying changes are ready
 6. Verify commit success
 
@@ -41,9 +41,37 @@ Your responsibility is to create well-formatted commits that follow the Conventi
 <footer - optional>
 ```
 
+## Issue Reference Detection
+
+**Default: no Refs footer.** A Refs footer is included only when an issue ID is *mechanically extractable* from one of two sources:
+
+1. **The current branch name**, when it matches the pattern `<type>/<id>-<description>` AND `<id>` is a recognizable issue identifier of the form `<prefix>-<number>` (e.g., `proj-43`, `gh-123`, `wel-7`, `eng-12`). Run `git rev-parse --abbrev-ref HEAD`, then check whether the segment between the first `/` and the next `-` (or end) matches `[a-z]+-[0-9]+` case-insensitive. If it does, that's the issue ID. Uppercase it for the footer (`Refs: PROJ-43`).
+2. **The user's explicit instruction**, when it states an issue ID directly: e.g., "this is for PROJ-43" or "include Refs: GH-123." A passing mention of a deliverable name, project term, or any other identifier in the prompt does NOT count.
+
+If neither source produces an issue ID under those rules, omit the Refs footer entirely. Do not write `Refs: TBD`, `Refs: PROJ-XXX`, or any other placeholder.
+
+### NEVER do these things
+
+- **Never fabricate issue IDs.** Do not invent placeholders like `PROJ-XXX`, `GH-000`, `TBD`.
+- **Never synthesize an issue ID from project context.** If a prompt mentions a deliverable like "D3" or a project prefix like "WEL", do NOT combine them into `WEL-D3` or similar. Deliverable IDs, milestone IDs, and project prefixes are not issue IDs.
+- **Never infer the prefix from the project's other branches or commits.** The branch name is the only source.
+- **Never include a Refs footer "to be safe."** Empty / no-Refs is the correct default. A wrong Refs footer is worse than no Refs footer.
+
+### Anti-pattern (caught in the wild, do not repeat)
+
+Branch: `chore/lifecycle-conventions` (no `<id>-<number>` segment).
+Prompt mentions: "the D3 deliverable in the wellstead project."
+Project's Linear team prefix: `WEL`.
+
+❌ Wrong: `Refs: WEL-D3` — this synthesized `WEL-` from project context, treated `D3` as an issue ID even though it's a deliverable identifier, and added a footer the branch name didn't authorize. Three rules violated at once.
+
+✅ Right: no Refs footer. The branch is unambiguously not Linear-tracked.
+
 ## Examples
 
-### Feature (with issue reference)
+### Feature (with branch-derived issue reference)
+
+Branch: `feat/proj-43-add-password-reset` (matches `<type>/<prefix>-<number>-...`).
 
 ```
 feat(auth): add password reset flow
@@ -53,7 +81,9 @@ Implement password reset with email verification and token expiry.
 Refs: PROJ-43
 ```
 
-### Bug Fix (without issue reference)
+### Bug Fix (no issue ID in branch — no Refs footer)
+
+Branch: `fix/navbar-overflow` (no `<prefix>-<number>` segment).
 
 ```
 fix(navbar): prevent overflow on mobile viewports
@@ -69,14 +99,6 @@ fix(deps): update vite to 6.3.6 to fix CVE-2025-58751
 Severity: Low
 ```
 
-## Issue Reference Detection
-
-Check the current branch name for issue patterns:
-- `feat/proj-43-description` → `Refs: PROJ-43`
-- `fix/gh-123-bug-fix` → `Refs: GH-123`
-
-**IMPORTANT: Never fabricate issue IDs.** If no issue ID is found in the branch name AND none was provided by the user, do NOT include a Refs footer at all. Omit it entirely. Do not invent placeholder IDs like "PROJ-XXX" or "GH-000".
-
 ## Workflow
 
 1. Review staged changes: `git status` and `git diff --staged`
@@ -88,8 +110,8 @@ Check the current branch name for issue patterns:
 
 - Verify files are staged before committing
 - Confirm commit message follows conventions
-- Use `Refs:` for feature branch commits
-- Use `Closes:` only for PR merges to main
+- Use `Refs:` only when an issue ID was mechanically extracted per "Issue Reference Detection." Default is no footer.
+- Use `Closes:` only for PR merges to main, and only with an explicitly-provided issue ID (same anti-fabrication rules apply)
 
 ## When to Escalate
 
