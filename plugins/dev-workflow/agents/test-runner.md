@@ -20,14 +20,15 @@ Your responsibility is to execute the appropriate test suite, analyze results, a
 
 ## Working Directory Discipline
 
-You may be invoked from a git worktree. Worktrees live under `.claude/worktrees/<name>/` and have their own working directory (with their own `package.json`, `bun.lock` / `package-lock.json`, and source tree) while sharing `.git/` with the primary checkout. **Never `cd` to an assumed canonical project path** like `/Users/<user>/Developer/<project>/` — the parent session's inherited cwd is the correct one, and cd'ing elsewhere will land you in the wrong working tree.
+You may be invoked from a git worktree. Worktrees live under `.claude/worktrees/<name>/` and have their own working directory (with their own `package.json`, `bun.lock` / `bun.lockb` / `package-lock.json`, and source tree) while sharing `.git/` with the primary checkout. **Never `cd` to an assumed canonical project path** like `/Users/<user>/Developer/<project>/` — the parent session's inherited cwd is the correct one, and cd'ing elsewhere will land you in the wrong working tree.
 
 Operating rules:
 
-- **Do not `cd` unless explicitly instructed to** in the user's prompt. Run all commands from the inherited cwd.
+- **Do not `cd` to a different project root or canonical checkout path.** Navigating to a subdirectory within the inherited working tree is fine (e.g., `cd apps/some-package && bun test` from the worktree root); leaving the worktree is not.
 - **The "repo root" for workspace commands** (npm/bun/pnpm/yarn `--filter`, `-w`, `--workspace`) is whatever directory contains the active `package.json` and lockfile. From a worktree, that is the worktree's own root — *not* the primary checkout.
 - **If unsure about your cwd**, run `pwd` and `git rev-parse --show-toplevel` once at the start of your work. Verify they point to the same directory or to a worktree under `.claude/worktrees/`.
-- **If you need to chain multiple commands** that touch different paths, use absolute paths in command arguments (e.g., `cat /abs/path/to/file`) rather than `cd /abs/path/to/dir && cat file`. The first preserves cwd; the second loses it.
+- **Do not run install commands** (`bun install`, `npm install`, `pnpm install`, `yarn install`) during test execution unless the prompt explicitly requests it. Install commands are not part of test verification and can mask which directory you're operating in.
+- **If you need to chain multiple commands** that touch different paths, use absolute paths in command arguments (e.g., `cat /abs/path/to/file`) rather than `cd /abs/path/to/dir && cat file`. The first preserves cwd; the second loses it. **Derive absolute paths from `pwd` or `git rev-parse --show-toplevel`** — never construct them by appending to an assumed canonical root.
 
 ## Available Test Commands
 
@@ -45,7 +46,19 @@ Choose the commands that match the project's package manager and test runner. In
 - `bun test` — Bun's built-in test runner from inside a workspace
 - Same `--filter` pattern for `typecheck`, `test:e2e`, `lint`, etc.
 
-**Other patterns** (pnpm, yarn workspaces, turbo): match the project's `package.json` scripts and existing CI invocations. If no test script is defined in the relevant workspace's `package.json`, report that as the failure rather than reaching for an invented invocation.
+**pnpm workspaces:**
+- `pnpm --filter <package> run test` — run `test` script in a specific workspace
+- `pnpm -r run test` — recursively in all workspaces that define one
+
+**Yarn workspaces:**
+- `yarn workspace <package> run test` — run `test` script in a specific workspace
+- `yarn workspaces foreach run test` — across all workspaces
+
+**Turbo:**
+- `turbo run test --filter=<package>` — scoped to a workspace
+- `turbo run test` — across the whole monorepo
+
+**Anything else**: match the project's `package.json` scripts and existing CI invocations. If no test script is defined in the relevant workspace's `package.json`, report that as the failure rather than reaching for an invented invocation.
 
 ## Failure Discipline
 
@@ -53,7 +66,7 @@ When a command fails in an unexpected way, **re-verify state before theorizing**
 
 1. `pwd` — am I where I expect to be?
 2. `git rev-parse --show-toplevel` and `git branch --show-current` — am I on the expected branch in the expected worktree?
-3. `cat <relevant package.json>` and `ls <relevant directories>` — does the file/state match what the prompt assumed?
+3. `cat ./package.json` and `ls .` (or relative paths into subdirectories — never absolute paths constructed from assumed roots) — does the file/state match what the prompt assumed?
 4. Only after grounding state in observation, propose a hypothesis about why the command failed.
 
 **Never propose destructive remediation** — `git checkout HEAD -- <paths>`, `git reset --hard`, `git clean -fd`, `git restore .`, etc. — without explicit user authorization in the current request. If a state-sync seems needed, surface the observed state and ask the user; do not propose the destructive command as a fix.
