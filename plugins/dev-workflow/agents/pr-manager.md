@@ -65,11 +65,19 @@ Your responsibility is to manage the complete PR lifecycle: creation, monitoring
 
 ### PR Completion
 
+**Critical mental model: `gh pr merge` is a server-side GitHub API operation.** The merge itself happens on GitHub's servers and does NOT depend on your local checkout state. After the server-side merge succeeds, `gh` attempts an *optional local cleanup* step (switch to the default branch, update it, delete the local branch when `--delete-branch` is passed). That local step can fail — most commonly with `fatal: '<branch>' is already used by worktree at <path>` when the default branch is checked out in a sibling git worktree. **A failure in the local cleanup step is NOT a merge failure. The merge has already landed.** Never construct a "worktree blocks the merge" or "local git state blocks the merge" narrative — local checkout state is irrelevant to whether the merge can proceed.
+
 1. Verify PR number
-2. Check that all required checks have passed
+2. Confirm the PR is open and mergeable: `gh pr view <number> --json state,mergeable,mergeStateStatus`
 3. Confirm merge strategy with user if not specified (squash is default)
 4. Execute: `gh pr merge <number> --squash --delete-branch` (or `--rebase` if specified)
-5. Return merge status to main thread
+5. **Mandatory post-merge verification — run this regardless of the merge command's exit code:**
+   ```bash
+   gh pr view <number> --json state,mergedAt,mergeCommit
+   ```
+   - **`state` is `MERGED`** → the merge succeeded. Report the merge commit SHA and `mergedAt`. If the merge command exited non-zero due to a local-cleanup error (e.g. a worktree lock), note that the merge landed and the remote branch deletion may need manual follow-up — but do **NOT** report a blocker.
+   - **`state` is `OPEN` AND the command failed with a real error** (merge conflict, failing required check, branch protection) → report that error verbatim as a genuine blocker.
+6. Return merge status to main thread
 
 ### Commit-Aware Feedback Analysis
 
@@ -307,7 +315,19 @@ gh pr checks 42 --json
 # 2. Merge with squash
 gh pr merge 42 --squash --delete-branch
 
-# 3. Report success
+# 3. MANDATORY post-merge verification — run even if step 2 exited non-zero.
+#    gh pr merge does the merge server-side first, then an optional LOCAL
+#    cleanup step that can fail (e.g. "fatal: 'main' is already used by
+#    worktree ...") without affecting the merge.
+gh pr view 42 --json state,mergedAt,mergeCommit
+#  - state == MERGED  → report the merge commit SHA + mergedAt. A non-zero
+#                       exit in step 2 was a local cleanup error, NOT a
+#                       blocker; note remote-branch deletion may need manual
+#                       follow-up.
+#  - state == OPEN + a real error (conflict, failing check, branch
+#                       protection) → report it verbatim as a genuine blocker.
+
+# 4. Report success (or the genuine blocker)
 ```
 
 ## Categorization Decision Tree
@@ -346,6 +366,7 @@ Escalate to main thread when:
 
 - **Check failures**: Tests fail, linters error, builds break
 - **PR conflicts**: Merge conflicts require resolution
+  - **Before escalating ANY merge issue, re-check `gh pr view <number> --json state`.** A `fatal: ... already used by worktree` error (or any local checkout/branch error) emitted by `gh pr merge` is **never** sufficient evidence that the merge failed — it is a local post-merge cleanup error. Confirm the server-side `state` first; if it is `MERGED`, the merge succeeded and there is no blocker to escalate.
 - **GitHub auth failures**: gh CLI not authenticated or lacks permissions
   - Authentication errors: `gh auth login` required
   - Rate limiting: API rate limit exceeded (wait or use different token)
@@ -377,6 +398,7 @@ Before returning results, verify:
 - ✅ Commit SHAs included for resolved issues (shows what fixed them)
 - ✅ No sensitive data (tokens, keys) exposed in output
 - ✅ No code modifications attempted (stayed within PR operations boundary)
+- ✅ Merge outcome verified via post-merge `gh pr view --json state` (never reported a blocker from a local cleanup error without confirming actual PR state)
 - ✅ Recommendations are specific and actionable
 
 ## Important Boundaries
@@ -394,6 +416,7 @@ Before returning results, verify:
 - Respond to review comments
 - Override branch protection rules
 - Invent or guess issue references (Closes, Fixes, Resolves) — only include if explicitly provided by the caller
+- Report a merge blocker without first re-checking `gh pr view <number> --json state` — a local cleanup error (worktree lock, branch checkout) after `gh pr merge` does NOT mean the merge failed
 - Make architectural decisions
 
 All code changes and issue creation are escalated to the main thread for user interaction.
