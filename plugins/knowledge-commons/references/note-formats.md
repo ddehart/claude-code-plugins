@@ -17,6 +17,11 @@ resolved by filename within the graph root.
   filename, the prefix is part of the link target:
   `[[2026-07 A dry run caught a config error that review missed]]`. Attractors carry **no** date prefix —
   they are long-lived and their titles are stable link targets.
+- **Titles must be filesystem-safe, so write them that way in the first place.** A title cannot contain `/`
+  or `:`, cannot start with `.`, and should stay well under the filesystem's length limit. Do **not** write a
+  title and then mangle it into a filename — the filename *is* the link target, so a mangled filename is a
+  broken wikilink. Phrase the title so the question never arises (say "the npm Todoist CLI package", not
+  "`@doist/todoist-cli`"), and keep the exact literal in the body where it belongs.
 - **The date is the source's, not the processor's.** Both the filename prefix and the `date:` field record
   **when the thing happened** — the month of the session or call the claim was distilled from — not the day
   `/process` got around to reading it. This matters because staleness is measured against evidence dates:
@@ -66,6 +71,12 @@ Run the artifact in the environment it will actually run in before trusting any 
   renders. An attractor without a "so what" is a topic, not an attractor.
 - `## evidence` is a bulleted list of wikilinks to evidence notes, each annotated with its `(domain)`.
 
+**The claim's own `domain:` frontmatter is authoritative.** The `(domain)` on the bullet is a convenience for
+a human reading the attractor — a cache, not the record. Count domains for graduation by **reading the
+claims**, never by counting the annotations: the two can drift, and a stale annotation would otherwise
+graduate an attractor that has not earned it. `commons-check` should treat a mismatch as a structural finding
+and correct the annotation.
+
 ## Attractor — e.g. `question`
 
 ```markdown
@@ -75,10 +86,15 @@ type: question
 status: open                   # open | graduated | abandoned  (positions 0 | 1 | 2)
 ---
 ## why I care
+Automating a step removes the judgment that made it work, and the failures are quiet.
 
 ## partial answers
 - [[2026-07 A dry run caught a config error that review missed]]   (homelab)
 ```
+
+**`## why I care` is written by the processor** — the stake the source material shows, not a blank left for
+the human to fill. It is proposed in the plan like everything else and confirmed at approval. A question with
+an empty `## why I care` is a topic, and topics do not accumulate evidence.
 
 A `question` declares `graduates-to: principle`, so reaching position 1 (`graduated`) does **not** merely
 flip its status — it **derives a new `principle`** carrying the stance the question arrived at, and
@@ -106,6 +122,7 @@ Lookup-retrieved facts. **Unbounded, never indexed, exempt from the attractor re
 <!-- reference/Wrangler config uses jsonc not toml.md -->
 ---
 type: reference
+domain: wellstead             # where it was learned — provenance, same as evidence
 verified: 2026-07-08
 ---
 Body: the fact, and how it was verified.
@@ -113,6 +130,11 @@ Body: the fact, and how it was verified.
 
 No `supports:` field. Reference notes do not point at attractors and are never rendered in the index — that
 is exactly what lets them grow without bound.
+
+They **do** carry `domain:`. It is not counted toward anything (reference has no lifecycle and never
+graduates), but a fact you cannot trace to where you learned it is a fact you cannot re-verify when it goes
+stale — and tool facts go stale constantly. Dropping provenance from an entire type would be a silent loss,
+not a simplification.
 
 ## `index.md` — graph root
 

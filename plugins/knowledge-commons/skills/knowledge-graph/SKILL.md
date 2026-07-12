@@ -72,8 +72,17 @@ link targets). Exact formats are in `note-formats.md`.
 **Evidence bodies are one self-contained paragraph.** Not a bullet list, not a section tree. A claim is one
 thing someone could stand behind.
 
-**Attractors need a `## so what`** — one clause of consequence, what changes because this is true. It is
-what the index renders. An attractor without a "so what" is a topic, not an attractor; refuse to create one.
+**Every attractor needs a stated stake** — the thing that makes it an attractor rather than a topic. Refuse to
+create one without it. But the *shape* of that stake is per-type, and `note-formats.md` is the authority on
+shape:
+
+- A **principle-like** attractor states it as `## so what` — one clause of consequence, what changes because
+  this is true. That clause is what the index renders.
+- A **question-like** attractor states it as `## why I care` — the stake that makes the question worth
+  accumulating answers to — plus `## partial answers`. It has **no** `## so what`; do not demand one, and do
+  not refuse to create a question because it lacks one.
+
+For the index, render an attractor's stake clause whatever its type calls it.
 
 ### Updating an attractor with new evidence
 

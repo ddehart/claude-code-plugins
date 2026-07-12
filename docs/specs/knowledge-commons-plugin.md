@@ -356,6 +356,15 @@ that installs nothing.
   commit is public history, including examples and fixtures. Fresh-authored examples only.**
 - **R3. Two graphs' instruction tiers drift** (graph principles vs. always-loaded rules). Resolved by
   design: rules are the graduation *target*, not a parallel store (D3).
+- **R4. The attractor partition is unstable, and proposal precision cannot see it.** Surfaced by a cold-read
+  execution test (below): two runs over the *same* corpus do not produce the same attractors. "Cluster the
+  claims by the stance they imply" is the right instruction and an underdetermined one. This matters because
+  the partition is where nearly all the value is — the claims are cheap, the attractors are the product — and
+  because **the Phase 1 gate cannot detect it.** Proposal precision measures whether the human accepts the
+  notes put in front of them, not whether a different run would have proposed a better set. A graph can score
+  high precision on every run and still be one of many arbitrary partitions of the same material. No fix
+  proposed yet; the first honest read on it comes from watching whether real runs keep re-cutting the same
+  corpus differently. Worth measuring deliberately in Phase 1 rather than discovering in Phase 4.
 - **O1.** `.commons.yml` schema — finalize against the first two instantiations, not in the abstract.
 - **O2.** Chronicle/session-record ledger format — where the `processed:` stamp lives for repos that don't
   yet keep chronicles (fall back to session transcript IDs?). Existing chronicle entries carry no
@@ -435,5 +444,29 @@ Also settled: a promoted note's `domain:` is the **originating graph's name** (`
 through no source tier, so nothing else could supply it, and without one the receiving graph's ≥2-domain bar
 silently under-counts. A professional graph's name therefore travels with everything it promotes, which is
 itself a boundary consideration (D4): name such graphs for their kind of work, not their party.
+
+**Three rounds of stateful execution tests then ran the pipeline for real** (cold agents, throwaway two-domain
+graph, sources copied so nothing touched this repo). Each round found defects that author review and the prior
+round's fixes had both passed. The pattern is worth recording, because it is the same one this plugin exists
+to catch:
+
+- **Round 2 found that `through:` self-matches** — with `ledger: source-note` the stamp is written *into* the
+  file, so `through:`'s value always appears in that file's own frontmatter. A naive search finds it,
+  concludes the source is covered, and skips: silently dropping every appended session. Round 1's fix had
+  reasoned out this *exact* self-reference problem for `digest:` and not noticed `through:` shared it.
+- **Round 3 found a cold-start deadlock.** `commons-check` runs at inspect, *before* the writes — so an
+  attractor born with two domains could not graduate in the run that created it, and the run that would clear
+  the flag finds no new sources and does nothing. **Over a fixed corpus of existing chronicles — precisely how
+  the personal commons gets instantiated — the graph would sit `graduation-pending` forever.** Fixed by
+  computing position at plan time (an attractor that arrives at the bar is *born* earned) and by making an
+  empty source queue a valid run rather than an exit.
+- **Round 3b confirmed convergence:** cold start then re-run over an unchanged corpus, zero flags stranded,
+  graph settled, no attractor stuck in a state no future run could change.
+
+Severity fell monotonically across the rounds — data loss, then contradictions, then ambiguities — which is
+the signal that the mechanism has stopped hiding bugs rather than that the reviewers got tired. **Every single
+one of these was found by execution. Author review found none of them.** That is the plugin's own thesis
+(D3, and the R2 boundary argument) demonstrated on itself, and it is why §8 makes the known-good instance the
+regression harness rather than a synthetic test.
 
 O1 and O2 remain open: they are confirmed against the live personal instance, per the resolution path above.

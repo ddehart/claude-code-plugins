@@ -88,6 +88,12 @@ rather than being left to a future session that would have to already know the c
 Also run the `commons-check` skill — **without `--index`**, since inspect must not write — so its flags
 (graduations earned, staleness, orphans) can be folded into the plan as proposed transitions.
 
+**An empty source queue is not an empty run.** If every source is stamped and unchanged, `/process` still has
+work: pending flags to apply, staleness to act on, an index to rebuild. Proceed with a plan containing only
+those. Say plainly that no new sources were found — do not report "nothing to do" and exit, or a graph whose
+sources have all been processed can never again change state, and flags raised on the last run are stranded
+permanently.
+
 ## Step 3: Propose the plan
 
 One concrete, reviewable plan. The human reads this and says yes once — so it must be specific enough that
@@ -114,6 +120,19 @@ For each source, propose:
   the type's own `lifecycle:` list — a `question` graduates to `graduated`, not to `held`, which it does not
   have.
 
+  **Compute the position of what this run is about to write, too — do not only replay old flags.**
+  `commons-check` ran at Step 2, *before* these writes, so its flags cannot know about the evidence this run
+  is adding. The plan does. For every attractor the plan creates or adds evidence to, count the domains it
+  will have **once the plan is applied**, and give it the position it will have earned:
+
+  - An attractor **created** with evidence from ≥2 domains is **born at position 1**. It earned the bar on
+    arrival; there is nothing to wait for.
+  - An **existing** attractor that this run pushes over the bar graduates **in this run**, not the next one.
+
+  Otherwise a cold start over a fixed corpus deadlocks: every attractor is born at position 0 flagged
+  `graduation-pending`, and the run that would clear the flags finds no new sources to process and does
+  nothing. The graph would sit pending forever, waiting for material nobody is going to write.
+
   **When the graduating type declares `graduates-to:`, the plan must show the derived note too** — its title
   and its `## so what` — because graduation there *writes a new attractor*, and the human is approving that
   note as much as the status change. A plan that shows only "question X graduates" hides the note it is
@@ -135,6 +154,11 @@ Then, two things that only this step can surface:
   re-deriving them. Proposing to promote a principle that is already a rule, verbatim, is the failure mode
   here. If the principle is already in the tier, say so and propose nothing; if it *sharpens* an existing
   rule, propose the amendment rather than a duplicate.
+
+  **If the tier is unreadable** — out of sandbox, no permission, not configured — **propose no promotions at
+  all** and say why. A promotion proposed without checking what is already there is a duplicate waiting to
+  happen, and the check is the only thing standing between this pipeline and a rules file that slowly fills
+  with restatements of itself.
 
 ### The cold start
 
@@ -258,6 +282,10 @@ normalized is a heading you cannot match. Keys are the keys of the `outputs:` ma
 This is what makes the queue enumerable and re-runs idempotent: nothing silently evaporates, a re-run resumes
 the errored class instead of redoing the whole source, and a source that grows after being stamped gets
 re-queued instead of being skipped forever.
+
+**Stamp only what you processed.** A source that was skipped is not re-stamped — refreshing its `date:` would
+churn every source on every no-op run and destroy the record of when it was actually mined. A run that
+processed no sources writes no stamps, and that is correct; it may still have rebuilt the index.
 
 Skip stamping entirely on `--dry-run`.
 

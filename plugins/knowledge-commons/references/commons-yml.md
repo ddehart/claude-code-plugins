@@ -153,6 +153,12 @@ rewrote is a heading you cannot match. If a source's units have no headings at a
 `none` matters: without it, a class that found nothing is indistinguishable from one that wrote something, and
 the stamp stops being a record of what happened.
 
+**What `ran` means for a class whose outputs are cross-source.** Attractors are clustered from claims across
+*several* sources, so no single source "produced" one. Read the stamp as being about **this source's
+contribution**: `ran` means this source contributed material to that class this run; `none` means it
+contributed nothing. The stamp answers "has this source been mined for this class of signal," which is what
+the resume path needs — not "which notes came from here," which no per-source stamp could tell you anyway.
+
 **The stamp's class keys are the keys of the `outputs:` map** — not roles, not type names in general. If
 `outputs:` declares `claim`, `principle`, `question`, `reference`, and `task`, the stamp has those five keys.
 

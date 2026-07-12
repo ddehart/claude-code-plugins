@@ -41,7 +41,11 @@ Run all of them; collect and report together.
   report it loudly.
 - Every `supports:` target resolves to an existing attractor file. Report dangling links with both ends.
 - Every note has the frontmatter its type requires (`type:`, plus `date:`/`domain:` for evidence,
-  `status:` for attractors, `verified:` for reference).
+  `status:` for attractors, `domain:`/`verified:` for reference).
+- **Every `(domain)` annotation on an attractor's evidence bullet matches that claim's own `domain:`.** The
+  claim's frontmatter is authoritative; the annotation is a cache. Count domains from the claims. A drifted
+  annotation is a structural finding — and a dangerous one, since counting the annotation instead of the
+  claim would graduate an attractor that has not earned it.
 - Filename matches the note's title, and evidence carries its `YYYY-MM ` prefix.
 
 ### Link containment
