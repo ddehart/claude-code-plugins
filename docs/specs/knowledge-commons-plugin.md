@@ -184,12 +184,20 @@ for review. Index size is a smoke alarm, not a wall.
 ```
 plugins/knowledge-commons/
   .claude-plugin/plugin.json
+  references/            # shared contract, read by the skills via ${CLAUDE_PLUGIN_ROOT}
+    mechanism.md         #   roles, the invariant, lifecycles, the boundary layers (D1, D4)
+    note-formats.md      #   on-disk note formats, index and changelog formats (D7)
+    commons-yml.md       #   config schema — DRAFT until the first two instantiations land (O1)
   skills/
     commons-init/        # interview → .commons.yml + scaffold + edge-skill stubs (D6)
     process/             # the orchestrator: inspect → plan → approve → run → stamp (D2, D5)
     knowledge-graph/     # graph read/write mechanics, driven by .commons.yml types (D1)
     commons-check/       # health check + index generation (D7)
 ```
+
+The `references/` tier exists because three of the four skills need the note formats and the role model.
+Inlining them in each `SKILL.md` would guarantee drift between the skill that *writes* a note and the skill
+that *validates* it — so the contract is stated once and read by all of them.
 
 - **commons-init** checks for an existing graph at the configured location and creates one if absent;
   interviews for the instantiation's types, sources, sinks, and boundary posture; writes `.commons.yml`;
@@ -360,3 +368,28 @@ sessions, against the live personal instantiation and the private reference inst
 why public registration (Phase 3) comes after them. A cold implementer starting from this spec alone is
 expected to be blocked on O1/O2; that is sequencing, not an omission. Everything needed to build the
 skills' skeletons and the personal instantiation alongside the author is specified above.
+
+---
+
+## Revision log
+
+### v0.3.1 — 2026-07-12 (Phase 1 build)
+
+The four skills were built (plugin v0.2.0, still unregistered). Three decisions taken during the build, all
+recorded here rather than left in the commit history:
+
+- **Skill names ship as specced** — `commons-init`, `process`, `knowledge-graph`, `commons-check`. The
+  repo's README convention (action-oriented gerunds) was **relaxed** rather than the names being deformed to
+  fit it. Research established that skill naming has no ecosystem standard: the slash command derives from
+  the *directory* name, auto-invocation is driven by the `description` field rather than the name, and
+  Anthropic's own bundled skills are mostly bare verbs (`/run`, `/loop`, `/simplify`). Plugin skills are
+  namespaced (`knowledge-commons:process`) regardless, which supplies the disambiguation a generic name
+  lacks.
+- **A plugin-level `references/` tier was added** (§5) as the single source of truth for the mechanism,
+  the note formats, and the config schema.
+- **Working defaults adopted for the open items,** marked provisional in `references/commons-yml.md`:
+  **O2** — the `processed:` stamp is additive frontmatter on the source note, with a sidecar
+  `.commons-ledger.yml` for sources that cannot carry frontmatter; the stamp is **per output class**, so a
+  partial failure resumes only the errored class. **O3** — staleness N defaults to 6 months.
+
+O1 and O2 remain open: they are confirmed against the live personal instance, per the resolution path above.
