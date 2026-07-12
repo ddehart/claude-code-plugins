@@ -1,6 +1,27 @@
 # Knowledge Commons Plugin — Specification
 
-> **Version:** 0.4 (draft) · **Status:** pre-build · **Date:** 2026-07-12
+> **Version:** 0.5 (draft) · **Status:** pre-build · **Date:** 2026-07-12
+>
+> **v0.5 corrects v0.4 after a cold-read implementability audit returned "No."** An independent session with no
+> context tried to build from v0.4 and could not. Its findings, all verified against the live reference before
+> being acted on:
+>
+> - **The lifecycle was declared a universal invariant, and its example statuses were fabricated.** The
+>   reference has no `status:` field and no lifecycle on any attractor; the values shown came from a different
+>   design document and were presented as if observed. The lifecycle, graduation, and `domain:` are
+>   **commons-tier mechanisms** (D5b), not invariants — and treating them as universal made the ≥2-domain bar
+>   incoherent in every feeder graph.
+> - **"Refuses" had no mechanism.** D6's entire architectural argument rests on the plugin refusing invariant
+>   violations at write time, but a markdown skill cannot refuse — it can only be told to. The plugin now ships
+>   an executable validator (`bin/validate.py`, stdlib only) that `knowledge-graph` runs before every write and
+>   `commons-check` runs over the whole graph.
+> - **The commons IS special-cased**, and v0.4 claimed otherwise on aesthetic grounds. The instruction tier is
+>   a flat directory of markdown files, not a graph; promotion into it cannot share a code path. Stated
+>   plainly rather than hidden behind a symmetry that breaks on contact with the filesystem.
+> - **The navigation tier had no on-disk format**, and `map` was not even a declared type — despite `type:`
+>   being authoritative and a folderless graph being required to validate.
+> - The interview, the extraction-skill template, and `--seed`'s read contract were **named and motivated but
+>   never defined.** All three are now specified.
 >
 > **Supersedes v0.3** (`knowledge-commons-plugin.md`), which was built and merged (PR #62) and then found to
 > be architecturally wrong. v0.3 assumed domain variation is **data-shaped** — that a generic runtime engine
@@ -125,9 +146,11 @@ existing map (never create an empty one); promote a map heading to a sub-map at 
 map obliges updating the atlas. Entries and headings are alphabetically ordered, inserted in position, never
 appended.
 
-### D3 — Four type roles, not two
+### D3 — Six type roles, not two
 
-v0.3 had evidence and attractors. The reference has four, and the two it added carry real constraints.
+v0.3 had evidence and attractors, and modelled the rest as an afterthought. There are six, and the ones it
+missed carry real constraints. (`atlas` and `map` are declared types too — see §7 — because `type:` is
+authoritative and a folderless graph must still be able to identify its own navigation tier.)
 
 | Role | Behavior | Reference | Commons |
 |---|---|---|---|
@@ -155,15 +178,51 @@ Hubs are **optional** — a graph with no entities worth curating omits them and
 ### D4 — The invariant, stated once
 
 > Every note is reachable from the atlas: its `genitor` resolves, and its parent map lists it. Evidence must
-> point at ≥1 attractor. Attractors accumulate evidence and carry a lifecycle whose statuses each graph names
-> for itself: **proposed → earned → retired**. Hubs and attractors maintain bidirectional link obligations.
-> Reference is lookup-only. Dispatch routes out. A health check enforces the structure. A changelog records
-> why the graph looks the way it does. An index renders attractors for association. Promotion *derives*
-> portable notes upward; it never moves them.
+> point at ≥1 attractor. Attractors accumulate evidence. Hubs and attractors maintain bidirectional link
+> obligations. Reference is lookup-only. Dispatch routes out. A health check enforces the structure. A
+> changelog records why the graph looks the way it does. Promotion *derives* portable notes upward; it never
+> moves them.
 
-Note what it does **not** say: it does not name the statuses. Lifecycles are declared per type as an ordered
-list, and every rule in every skill resolves the status **by position**. A rule that says "flag it `held`" is
-wrong — a `question` has no `held`.
+**What is deliberately NOT in it: the lifecycle, graduation, and `domain:`.** Those are **commons-tier
+mechanisms** (D5b), not universal invariants — and getting this wrong is the single most consequential error
+in the drafts of this spec.
+
+The reference graph — the one that demonstrably works — has **no `status:` field, no lifecycle, and no
+`domain:` field on any note.** Its attractors simply accumulate evidence and never graduate. An earlier draft
+of this spec declared the lifecycle an invariant and illustrated it with statuses fabricated from a *different*
+design document, presented as if observed in the reference. They were not.
+
+The error was not cosmetic. It made the **≥2-domain graduation bar incoherent in every feeder graph** — in a
+single-domain graph, "evidence from two domains" can never happen, so the bar either never fires or, worse,
+gets quietly reinterpreted against whatever field happens to be handy.
+
+### D5b — The commons tier: lifecycle, graduation, and `domain:`
+
+A **feeder graph** is single-domain by construction: it holds one engagement, one project, one body of work.
+Its attractors accumulate evidence and that is all they do.
+
+The **commons** is the only graph that federates *across* domains, so it is the only graph where "this has now
+appeared in a second domain" is a statement that can be made at all. Three mechanisms exist there and nowhere
+else:
+
+- **`domain:`** — carried by a note that arrived **by promotion**, and set to the **originating graph's
+  `graph.name`**. A feeder graph's notes carry no `domain:`; their provenance is `source:` and their
+  associations are link-lists. **One field, one writer, one meaning.**
+- **A lifecycle** — an ordered `[proposed, earned, retired]`, named by the commons for itself. Resolved **by
+  position**, never by literal name, so a rule that says "flag it `held`" is wrong for a type that has no
+  `held`.
+- **Graduation at ≥2 domains** — an attractor whose evidence spans two distinct originating graphs has earned
+  a stance. Below that bar it hasn't; questions absorb the singletons (§5, item 3).
+
+**A feeder graph declares no lifecycle, and `commons-check` runs no graduation check against it.** The
+regenerated reference therefore has no lifecycle either — which is correct, because the original doesn't, and
+adding one would make "functional equivalent" mean "equivalent, plus a tier we invented."
+
+**A consequence worth stating plainly (entailed by D8):** the commons has **no source tiers of its own.**
+Nothing is processed directly into it; everything in it arrived by promotion from a feeder. So a project whose
+chronicles should feed the commons needs its **own `knowledge/` graph** first — that graph processes the
+chronicles into local claims, and promotes the portable ones upward. The commons is the distillate, never the
+inbox.
 
 ### D5 — The specialization split (the correction to v0.3's D6)
 
@@ -192,6 +251,31 @@ mechanism updates.* The answer is to make the fork surface small.
 - a half-written bidirectional pair → refused
 - a note with no `genitor`, or absent from its map → refused
 - a wikilink that resolves outside the graph → refused
+
+**"Refuses" must be mechanical, not rhetorical.** A skill is a markdown instruction file; a skill cannot
+refuse anything — it can only be *told* to refuse, and an instruction to refuse is exactly the kind of
+guardrail that the method note (§9) says author review never catches failing.
+
+So the plugin ships an **executable validator**:
+
+```
+plugins/knowledge-commons/bin/validate.py     # stdlib only; no dependencies to install
+```
+
+`knowledge-graph` is instructed to run it **before every write**, passing the graph root and the proposed
+note, and to **abort the write on a non-zero exit** and report. `commons-check` runs the *same* validator over
+the whole graph. One implementation, two entrypoints — so the write-time gate and the health check can never
+disagree about what the rules are.
+
+The validator is where cross-file obligations live, because they are the ones a per-file check cannot see:
+*does the parent map actually list this note? is the bidirectional pair consistent in both directions? does
+this wikilink resolve, following aliases?* Those are the invariants, and they are only checkable with the
+whole graph in view.
+
+**Stdlib only.** The repository's `CLAUDE.md` states there are no dependencies to install, and the plugin must
+run on a fresh machine and under any user account. That rules out PyYAML — the validator parses frontmatter
+itself. (The reference's checker imports PyYAML and delegates link resolution to a desktop-app CLI; both are
+dependencies the plugin cannot inherit, and the second is unusable from a second user account anyway.)
 
 So the generated skill decides **which** types, in **what** order, with **what** side-effects — the domain
 choreography. It cannot route around the invariants, and it does not need to know what a "firm" is.
@@ -231,10 +315,26 @@ professional graphs   ──┘                        │  promotes-to
                                        (~/.claude/rules/ — behavioral)
 ```
 
-Every graph declares **`promotes-to:`** — the graph it derives upward into. The commons is not special-cased:
-it is simply the graph whose `promotes-to:` is the **instruction tier**, which is what makes D7's
-"steering-grade principles graduate outward" the *same mechanism* as everything else rather than a separate
-one. A graph with no `promotes-to:` is a leaf, and that is a deliberate choice, not a default.
+Every feeder graph declares **`promotes-to:`** — the graph it derives upward into. A graph with no
+`promotes-to:` is a leaf, and that is a deliberate choice, not a default.
+
+**The commons IS special-cased, and an earlier draft claimed otherwise on aesthetic grounds.** That draft said
+the commons was "simply the graph whose `promotes-to:` is the instruction tier," making D7's graduation the
+same mechanism as every other promotion. It is not, because **the instruction tier is not a graph**:
+`~/.claude/rules/` is a flat directory of markdown files with no atlas, no maps, no types, no
+evidence→attractor edge, and no `.commons.yml`. Promotion into it cannot share a code path with promotion into
+a graph, and pretending otherwise would have produced a spec whose central symmetry breaks on first contact
+with the filesystem.
+
+The commons is therefore special in three concrete ways, each stated rather than hidden:
+
+1. It has **no source tiers** — nothing is processed into it; everything arrives by promotion (D5b).
+2. It is the only graph with a **lifecycle, graduation, and `domain:`** (D5b).
+3. Its `promotes-to:` names the **instruction tier**, which is a *different kind of target* — a rules
+   directory, not a graph. Graduating a principle into it means writing a rule file, not deriving a note, and
+   it runs its own gate: *is this steering-grade — does it change how a session should behave?* plus human
+   approval. **Read the existing rules first**; a graph built from sessions those rules steered will keep
+   re-deriving them.
 
 **Three promotion paths, and the first is the load-bearing one:**
 
@@ -339,16 +439,22 @@ first-class plugin concept.
 
 ```
 plugins/knowledge-commons/
+  bin/
+    validate.py        # THE validator. stdlib only. Cross-file invariants.
+                       #   knowledge-graph runs it before every write (abort on non-zero);
+                       #   commons-check runs it over the whole graph. One implementation,
+                       #   two entrypoints — so the write gate and the health check can
+                       #   never disagree about the rules.
   references/          # the contract, read by every skill via ${CLAUDE_PLUGIN_ROOT}
-    mechanism.md       #   roles, the invariant, navigation, lifecycles, the boundary
-    note-formats.md    #   frontmatter contract, note shapes, index + changelog formats
+    mechanism.md       #   roles, the invariant, navigation, the boundary
+    note-formats.md    #   frontmatter contract, note + map + atlas + hub shapes
     commons-yml.md     #   config schema
-    templates/         #   the generator's skill templates (extraction, sink, resolver)
+    templates/         #   the generator's skill templates — FRESH-AUTHORED (R2)
   skills/
     commons-init/      # the GENERATOR: interview → config + scaffold + project skills
     process/           # the orchestrator: resolve → inspect → plan → approve → run → stamp
-    knowledge-graph/   # write mechanics; enforces every invariant; refuses violations
-    commons-check/     # health check + index generation
+    knowledge-graph/   # write mechanics; calls the validator; refuses violations
+    commons-check/     # health check (same validator) + index generation
 ```
 
 ### commons-init — the generator
@@ -387,6 +493,101 @@ are exactly where a misreading gets caught. This is the path the reference regen
 **It never copies `process`, `knowledge-graph`, or `commons-check` into the project.** Those are the
 mechanism.
 
+#### The interview
+
+Six blocks. The first four fill `.commons.yml`; the last two fill the **extraction skill**, and they are the
+ones that matter — R4 names them the generator's central unvalidated assumption.
+
+**1. The graph.** Root; name; posture (personal/professional); is this a feeder or the commons; if a feeder,
+what does it promote to (find-or-create).
+
+**2. The types.** What does this domain call its evidence? Its attractors — and is each *open* (accumulating
+toward an outcome) or *settled* (a decision with reasoning)? Are there entities worth curating a hub around,
+and which attractor does each hub bind to? Is there a reference tier? A source tier that must be preserved
+verbatim?
+
+**3. The schema.** Per type: required fields, forbidden fields, controlled vocabularies. **And the tag-vs-field
+question, asked explicitly for every candidate:** *would searching this tag's parent alone return a useful
+set?* If no, it is a field, not a tag.
+
+**4. Sources and sinks.** What arrives on its own, and how is it resolved? Does it produce a durable note (if
+not → `ledger: none`)? What signal classes should inspection look for? Where do non-graph outputs go, with
+what approval mode, and what must run before what?
+
+**5. Extraction — the domain's procedure.** The block the whole generator exists for:
+- Walk me through processing one source, start to finish. What gets created, in what order?
+- When you create a piece of evidence, **what else must change?** (the attractor's evidence section; its
+  frontmatter; the hub's section; the map entry; the source note's backfill) — this is the propagation
+  choreography, and the ordering is load-bearing.
+- **What is durable here, and what belongs in an operational system instead?**
+- What distinguishes a good note of each type from a merely correct one?
+- What conditional extractions fire on recognizing a situation in the material?
+- **What must never be captured in this graph?**
+
+**6. Judgment and bias — the debiasing block.** Elicited as *rules*, not preferences:
+- When you're uncertain whether something clears the bar, do you capture or skip — **and which error costs
+  more?** (In the reference: capture, because a missed observation is invisible damage. **This asymmetry must
+  be stated, not assumed** — a graph where noise is the expensive error wants the opposite bar.)
+- What are the failure modes you've *seen* in this domain — where has a plausible-looking note been wrong?
+- What distinctions get collapsed that shouldn't be?
+
+The interview writes the answers to blocks 5 and 6 into the extraction skill **as prose**, because that is
+what they are. It does not attempt to reduce them to config.
+
+#### What a generated extraction skill contains
+
+Fixed shape, five slots. The template ships the invariant scaffolding; the interview fills the italics.
+
+```markdown
+---
+name: <extract-via name>
+description: >
+  Turn a <source type> into notes in the <graph> knowledge graph. Called by the
+  knowledge-commons orchestrator during /process; not usually invoked directly.
+allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Skill"]
+---
+
+# <name>
+
+## the invariants (do not remove; the plugin enforces them anyway)
+Every write goes through the `knowledge-graph` skill, which runs the validator and
+refuses violations. Never write a note directly. Check before creating: search
+first; if a note on the topic exists, update it. Stub before linking.
+
+## what this domain captures          <- interview block 5
+*<what is durable here; what belongs in an operational system instead;
+  what must never be captured>*
+
+## the procedure                       <- interview block 5
+*<walk of one source, start to finish: what is created, in what order>*
+
+## propagation                         <- interview block 5
+*<when evidence is created, what else must change — and in what order>*
+
+## judgment                            <- interview block 6
+*<the promote-vs-skip bar and its error asymmetry; the debiasing rules;
+  the distinctions that must not be collapsed>*
+```
+
+**The template is fresh-authored** (R2). Its scaffolding is written from the mechanism; only the *italic*
+slots carry domain content, and that content comes from the interview — never lifted from a reference skill's
+prose.
+
+#### `--seed <path>`
+
+Reads a directory of `SKILL.md` files plus any `references/` and checker script beside them, and **proposes**
+each interview answer for confirmation. It never writes without confirmation.
+
+Two rules, both forced by §8's bug list:
+
+- **Prose is authoritative over code for *intent*; code is authoritative over prose for *current behavior*.**
+  Where they disagree — and they will, since four of six controlled vocabularies are documented but unenforced
+  — **surface the disagreement to the human rather than picking.** That divergence is a finding about the
+  reference, not an ambiguity to be silently resolved.
+- **`--seed` may not invent a field the source doesn't have.** If the reference has no lifecycle (it does not),
+  seeding a feeder graph proposes none. A field absent from the source is absent from the proposal, and if the
+  target config requires it, the interview asks cold and says why.
+
 ### process — the orchestrator
 
 A **thin router and sequencer**. It never reimplements a downstream skill's logic.
@@ -423,6 +624,23 @@ A **thin router and sequencer**. It never reimplements a downstream skill's logi
 **Re-pause only for:** genuine ambiguity, or **conflict with the existing record** — which is not an error to
 route around but the most interesting thing that can happen. Do **not** pause to create a new entity that
 doesn't exist yet; that runs under the approved plan.
+
+#### `--promote <target-graph>` — the explicit path
+
+Step 8 is the *in-band* promotion path and it is the load-bearing one. `--promote` is the manual escape hatch,
+and it is its own mode because a promotion has no source queue.
+
+It **loads two configs**, and confusing them is the first way this goes wrong:
+
+- **The target's `.commons.yml` governs every write** — its type names, its directories, its map structure,
+  its attractor field. You are writing into *that* graph.
+- **The source's is read for exactly one value: `graph.name`**, which becomes the promoted note's `domain:`.
+
+Derive candidates (write the note you *would* write — the rewrite is where sanitization happens), run D9's
+three layers on each **including on the `domain:` value**, present for explicit human approval, then write via
+`knowledge-graph` against the *target's* config. A promotion **may create the attractor it lands on**, since
+evidence cannot cross without one and a fresh commons has none. **Never carry an attractor's evidence list
+across** — rebuild it from what was actually promoted; a source-graph note title can itself be a leak.
 
 ### knowledge-graph — the write layer
 
@@ -470,39 +688,68 @@ Exit non-zero **iff** an error. Warnings do not fail the run.
 `--index` regenerates `index.md`: attractors only, one line each — **bold title — the "so what" in one clause
 — `[domains]`.**
 
+### Operational constants
+
+Small individually; collectively a day of guessing if left unstated.
+
+| Thing | Value |
+|---|---|
+| **Inspect fan-out threshold** | ~1,500 words. Below → inline single pass; above → one subagent per `inspect-classes` entry. **A tunable heuristic, not a hard rule.** |
+| **Subagent finding-list format** | Each returns a JSON list of `{class, summary, evidence_quote, entities[], confidence}`. The orchestrator synthesizes; it does not re-read the source. |
+| **`split-note-at-lines`** | Lines. Renamed from `split-note-at` to say so. |
+| **Who creates a map** | `knowledge-graph`, at write time: if a note's `genitor` names a map that does not exist and ≥`new-map-at` notes now cluster there, it proposes the map **in the plan**. Maps are never created silently, and `commons-check` **flags** a needed map rather than creating one. *(v0.4 left this ownerless — the growth thresholds were config and the rule shapes invariant, and no component created anything.)* |
+| **`min-attractors`** | Config, floor of 1. **A config value below the invariant is a config error, not an override** — `commons-check` rejects `min-attractors: 0`. D4 wins. |
+| **Filename case** | Content notes: the natural title, spaces and all — the filename **is** the link target and the display name. Maps and the atlas: lowercase concept names (`insights.md`, `principium.md`). Date prefixes only where the note *is* a dated event, per type (`date-prefix: true`). |
+| **Aliases** | `aliases:` — a list of display synonyms. **The validator resolves wikilinks through them.** The reference's checker does not, which is §8's most likely latent bug; the plugin must not inherit it. |
+
+### What happens to the existing `references/note-formats.md`
+
+The superseded plugin ships a coherent on-disk contract that knows nothing of `genitor`, maps, the atlas,
+hubs, `source:`, or `processed:`. **Half of it survives and half is obsolete, and a builder must not have to
+guess which.**
+
+- **Survives:** the index line format; the changelog format and monthly rotation; the closed flag vocabulary;
+  the evidence/attractor/question/reference body shapes; filesystem-safe titles.
+- **Obsolete:** anything implying a graph has no navigation tier; the `YYYY-MM ` prefix as universal (it is
+  per-type); `domain:` on every evidence note (commons-only, per D5b).
+- **Missing entirely, and must be added:** the frontmatter contract (`genitor`, `tags`, `aliases`, `type`,
+  `source`, `processed`); the map file shape (category headings at `heading-level`, entries as the *first*
+  wikilink on a bullet line, alphabetical within heading); the atlas shape; the hub shape (curated link
+  sections — *editorial, not an exhaustive mirror of the map*).
+
+It is an **amendment**, not a rewrite.
+
 ---
 
 ## 7. Configuration (`.commons.yml`)
 
 The data-shaped half. Sketch — finalized against the reference regeneration, not in the abstract.
 
+**A FEEDER graph** (a project tier, or a professional engagement graph):
+
 ```yaml
 graph:
-  root: ~/Obsidian/<graph>
-  name: <graph-name>            # the domain: stamped on notes this graph promotes elsewhere
-  atlas: principium.md
+  root: <path>
+  name: <graph-name>            # becomes `domain:` on notes this graph promotes UPWARD.
+                                # Notes in THIS graph carry no `domain:` — see D5b.
+  atlas: principium.md          # the one note with no genitor
   maps-dir: maps/
   parent-field: genitor
-  growth: { new-map-at: 5, promote-heading-at: 7, split-note-at: 200 }
-
-  # D8 — the federation edge. Where this graph derives upward into.
-  # A leaf has none; that is a choice, not a default.
-  promotes-to: ~/commons
-
-# Only the commons carries this: the graphs that feed it, so the sweep can enumerate them.
-# commons-init appends to it when it wires a new project graph.
-feeders:
-  - { name: <graph>, root: ~/Developer/<project>/knowledge, posture: personal }
-  - { name: <graph>, root: ~/Obsidian/<graph>,              posture: professional }
+  growth: { new-map-at: 5, promote-heading-at: 7, split-note-at-lines: 200 }
+  promotes-to: <path-to-commons>   # D8. A leaf omits it.
 
 types:
   # `type:` in frontmatter is AUTHORITATIVE. Directory is a default, not a rule —
-  # a graph with no folders still validates.
+  # a graph with no folders still validates. That is why `map` and `atlas` are
+  # declared types: in a folderless graph, nothing else identifies them.
+  atlas:     { name: atlas }
+  map:       { name: map, heading-level: 1 }     # category headings inside a map
   source:    { name: transcript, dir: transcripts/, preserve-verbatim: true }
   evidence:  { name: insight,    dir: insights/, attractor-field: opportunities, min-attractors: 1 }
   attractors:
-    - { name: opportunity, dir: opportunities/, lifecycle: [provisional, held, stale] }
-    - { name: decision,    dir: decisions/,     lifecycle: [open, settled, superseded] }
+    # NO lifecycle. A feeder graph is single-domain; nothing graduates. See D5b.
+    - { name: opportunity, dir: opportunities/ }
+    - { name: decision,    dir: decisions/ }
   hubs:                                          # optional
     - { name: firm,   dir: firms/,  bidir-with: opportunity, section: "## opportunities" }
     - { name: person, dir: people/, bidir-with: null }
@@ -510,18 +757,16 @@ types:
 
 schema:                                          # per-type frontmatter contract
   insight:
-    required:  [date, source, product-area, signal]
-    forbidden: []
+    required:  [genitor, tags, date, source, <controlled-field>, <controlled-field>]
+    forbidden: [domain]                          # `domain:` exists only in the commons
     filename:  { case: natural, date-prefix: false }
   firm:
     forbidden: [firms, date]                     # a hub doesn't reference itself; not a dated event
   controlled-values:
-    product-area: [api, billing, ...]
-    signal:       [pain-point, feature-request, ...]
+    <field>: [<value>, <value>, ...]
 
 sources:
   - type: call-transcript
-    domain: <name>
     resolve-via: <resolver-skill>                # URL → text
     extract-via: <extraction-skill>              # ← the hook v0.3 lacked
     inspect-classes: [follow-up, entity-change, decision, ...]
@@ -540,6 +785,49 @@ boundary:
   promotion-gate: [mechanical, llm-review, human-approval]
 ```
 
+**The COMMONS** — genuinely different, and the differences are the ones D5b and D8 name:
+
+```yaml
+graph:
+  root: ~/commons
+  name: commons
+  atlas: principium.md
+  maps-dir: maps/
+  promotes-to: ~/.claude/rules/     # NOT a graph — the instruction tier. See D8.
+  target-kind: instruction-tier     # so /process knows this edge writes rules, not notes
+
+types:
+  atlas:    { name: atlas }
+  map:      { name: map, heading-level: 1 }
+  evidence: { name: claim, dir: claims/, attractor-field: supports, min-attractors: 1 }
+  attractors:
+    # ONLY the commons has these. See D5b.
+    - { name: principle, dir: principles/, lifecycle: [provisional, held, stale] }
+    - { name: question,  dir: questions/,  lifecycle: [open, graduated, abandoned],
+        graduates-to: principle }
+  reference: { name: reference, dir: reference/ }
+
+schema:
+  claim:
+    required: [genitor, tags, date, domain]   # `domain:` REQUIRED here and nowhere else
+    filename: { case: natural, date-prefix: true }
+
+# NO `sources:` block. Nothing is processed into the commons; everything arrives
+# by promotion from a feeder (D5b). The commons is the distillate, never the inbox.
+
+graduation:
+  bar: 2                          # distinct `domain:` values (i.e. distinct feeder graphs)
+  staleness-months: 6
+
+feeders:                          # the registry; commons-init appends on each wiring
+  - { name: <graph>, root: <path>, posture: personal }
+  - { name: <graph>, root: <path>, posture: professional }
+
+boundary:
+  posture: personal
+  promotion-gate: [mechanical, llm-review, human-approval]
+```
+
 ### The ledger
 
 **The unit of input is one event, not one file.** The reference keys its ledger on a canonical `source:`
@@ -549,6 +837,16 @@ v0.3 mapped "the source note is the ledger" onto **one file**, but a chronicle *
 sessions. That single mis-mapping produced an append problem the reference doesn't have, and then a pile of
 machinery to solve it (`through:`, `digest:`, self-match bugs, unit-scoped augment). **All of it is deleted.**
 One session block = one event = one canonical identity.
+
+**The scope limit — an input that produces no durable note has no ledger.** The ledger *is* the source's note,
+so a tier that deliberately creates none (an email tier, which needs no synthesis artifact and is batched at
+the entity level) has nothing to carry `processed:`. Such a tier declares **`ledger: none`** and is **treated
+as new on every pass.**
+
+That is acceptable *only* where the tier is low-volume and a human is in the loop to notice re-proposals — the
+same limit the reference accepts and names. **It must be declared, not discovered.** A tier that produces no
+note and does not say `ledger: none` is a config error: `/process` would search for a ledger note forever, find
+nothing, and silently re-read and re-propose that source on every run, compounding. `commons-check` flags it.
 
 ```yaml
 processed:
