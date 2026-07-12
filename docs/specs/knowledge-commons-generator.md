@@ -1,8 +1,28 @@
 # Knowledge Commons Plugin — Specification
 
-> **Version:** 0.5 (draft) · **Status:** pre-build · **Date:** 2026-07-12
+> **Version:** 0.6 (draft) · **Status:** pre-build · **Date:** 2026-07-12
 >
-> **v0.5 corrects v0.4 after a cold-read implementability audit returned "No."** An independent session with no
+> **v0.6** adds what a second, *non-adversarial* cold read found — an engineer told simply to build it, not to
+> hunt for problems. Its verdict was **"buildable; I'd start Monday,"** and it independently arrived at two of
+> v0.5's own corrections (the checker must be an executable, and *"I don't trust prose to refuse itself"*),
+> which is the strongest available evidence those were right. What it still had to invent:
+>
+> - **A write is a transaction, not a file.** Creating one evidence note also edits its map, its attractor's
+>   evidence section, and a hub's section. Validate-one-file cannot see that. `knowledge-graph` now performs
+>   the whole set, re-validates the touched scope, and **reverts on any new error.**
+> - **"Stdlib only" has a price v0.5 asserted away.** Verified: `python3` here is 3.9.6 with **no PyYAML**. The
+>   validator must parse YAML itself (`bin/_miniyaml.py`). The reference's checker would not run on this
+>   machine at all.
+> - **The multi-event ledger was deleted but never replaced.** An event's canonical identity is now
+>   `<artifact-path>#<verbatim-heading>`, found via an `event-delimiter:`, and the ledger note lives **in the
+>   graph** — so `/process` never writes into the source repository, and the self-match bug cannot recur.
+> - **Feeder graphs need a queue.** v0.5 made `/process` purely input-driven, which is right for a pasted URL
+>   and wrong for a chronicle: it reintroduces "remember to hand it over," which is the failure the design
+>   exists to eliminate. Both entry modes are now specified.
+> - **`--upgrade` was undefinable.** Generated skills now carry `kc:invariant` / `kc:procedure` markers, which
+>   is what makes D6's "the fork surface is only the procedure" a fact rather than an aspiration.
+>
+> **v0.5 corrected v0.4 after an adversarial cold-read audit returned "No."** An independent session with no
 > context tried to build from v0.4 and could not. Its findings, all verified against the live reference before
 > being acted on:
 >
@@ -272,10 +292,28 @@ The validator is where cross-file obligations live, because they are the ones a 
 this wikilink resolve, following aliases?* Those are the invariants, and they are only checkable with the
 whole graph in view.
 
-**Stdlib only.** The repository's `CLAUDE.md` states there are no dependencies to install, and the plugin must
-run on a fresh machine and under any user account. That rules out PyYAML — the validator parses frontmatter
-itself. (The reference's checker imports PyYAML and delegates link resolution to a desktop-app CLI; both are
-dependencies the plugin cannot inherit, and the second is unusable from a second user account anyway.)
+**A write is a transaction, not a file.** Creating one evidence note also edits its parent map (the down-link),
+the attractor's evidence section, and — if a hub is named — the hub's section. Validating one file cannot see
+that. So `knowledge-graph`:
+
+1. performs the **whole set** of edits,
+2. re-runs the validator scoped to the touched files,
+3. and on any **new** error, **reverts the entire set** and reports the refusal.
+
+Half a bidirectional pair is not a smaller violation than none; it is a worse one. The transaction is what
+makes "refuses" mean something.
+
+**Stdlib only — and this has a real cost that must be priced, not asserted.** The repository's `CLAUDE.md`
+states there are no dependencies to install, and the plugin must run on a fresh machine and under any user
+account. **Verified on this machine: `python3` is 3.9.6 and PyYAML is not installed.** So "stdlib only" means
+the validator **parses YAML itself** — a vendored subset parser (`bin/_miniyaml.py`) covering exactly what
+`.commons.yml` and note frontmatter use: block maps, block lists, inline flow maps and lists, quoted scalars,
+comments. Prefer PyYAML when importable; fall back to the vendored parser otherwise.
+
+This is not a footnote. The reference's checker does `import yaml` and delegates link resolution to a
+desktop-app CLI — **it would not run on this machine at all.** Both are dependencies the plugin cannot inherit,
+and the CLI is unusable from a second user account regardless. Writing the parser is a real line item in the
+build.
 
 So the generated skill decides **which** types, in **what** order, with **what** side-effects — the domain
 choreography. It cannot route around the invariants, and it does not need to know what a "firm" is.
@@ -544,16 +582,22 @@ name: <extract-via name>
 description: >
   Turn a <source type> into notes in the <graph> knowledge graph. Called by the
   knowledge-commons orchestrator during /process; not usually invoked directly.
-allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Skill"]
+allowed-tools: ["Read", "Grep", "Glob", "Skill"]     # deliberately NO Write/Edit
 ---
 
-# <name>
+<!-- kc:invariant v0.5 — plugin-owned. `commons-init --upgrade` replaces this block. -->
+## the contract
+Every write goes through the plugin's `knowledge-graph` skill, which runs the validator
+and refuses violations. **This skill never writes a file.** It chooses which notes, in
+what order, with what side-effects; the plugin enforces the invariants and you cannot
+route around them — and you don't need to.
 
-## the invariants (do not remove; the plugin enforces them anyway)
-Every write goes through the `knowledge-graph` skill, which runs the validator and
-refuses violations. Never write a note directly. Check before creating: search
-first; if a note on the topic exists, update it. Stub before linking.
+Check before creating: search first; if a note on the topic exists, update it.
+Stub before linking. Every level of a tag hierarchy must be independently useful for
+retrieval; if searching the parent alone wouldn't return a useful set, it's a field.
+<!-- /kc:invariant -->
 
+<!-- kc:procedure — project-owned. `--upgrade` NEVER touches this block. -->
 ## what this domain captures          <- interview block 5
 *<what is durable here; what belongs in an operational system instead;
   what must never be captured>*
@@ -561,13 +605,23 @@ first; if a note on the topic exists, update it. Stub before linking.
 ## the procedure                       <- interview block 5
 *<walk of one source, start to finish: what is created, in what order>*
 
-## propagation                         <- interview block 5
+## propagation (ordered — the ordering is load-bearing)   <- interview block 5
 *<when evidence is created, what else must change — and in what order>*
 
 ## judgment                            <- interview block 6
 *<the promote-vs-skip bar and its error asymmetry; the debiasing rules;
   the distinctions that must not be collapsed>*
+<!-- /kc:procedure -->
 ```
+
+**`allowed-tools` deliberately omits `Write` and `Edit`.** The generated skill *cannot* write a file even if
+its prose drifted — it has to go through `knowledge-graph`. This is the cheapest possible enforcement of D6,
+and it costs nothing.
+
+**The `kc:invariant` / `kc:procedure` markers are what make `--upgrade` possible at all.** Without a marked
+boundary between plugin-owned and project-owned text, there is nothing to diff: `--upgrade` re-renders the
+invariant block from the current template and leaves the procedure block untouched, forever. This is the
+mechanism that makes D6's "the fork surface is only the procedure" a fact rather than an aspiration.
 
 **The template is fresh-authored** (R2). Its scaffolding is written from the mechanism; only the *italic*
 slots carry domain content, and that content comes from the interview — never lifted from a reference skill's
@@ -593,6 +647,19 @@ Two rules, both forced by §8's bug list:
 A **thin router and sequencer**. It never reimplements a downstream skill's logic.
 
 **resolve → inspect → plan → approve → run → stamp → report**
+
+0. **Two entry modes, and a graph may use both.**
+   - **Handed an input** (`/process <url-or-path>`) — the reference's mode. The trigger is a human passing
+     something in.
+   - **Enumerating a queue** (`/process` with no argument) — for tiers that declare a `path:` and `glob:`.
+     `/process` globs them, splits multi-event artifacts on `event-delimiter:`, and works the **unprocessed**
+     events: those whose canonical identity has no ledger note in the graph.
+
+   **A feeder graph fed by chronicles needs the queue mode**, and dropping it would be a quiet regression.
+   The reference is input-driven because a call arrives as a URL someone pastes. A chronicle arrives by
+   *existing* — and if a human has to remember to hand each one over, that is the "remember to write notes"
+   failure the entire design exists to eliminate (D8), reintroduced one level up. **The trigger is a thing
+   existing, not a person remembering.**
 
 1. **Resolve and identify.** Match the input to a source tier; normalize to its **canonical `source:`
    identity**; invoke the tier's resolver if it needs one.
@@ -701,6 +768,10 @@ Small individually; collectively a day of guessing if left unstated.
 | **`min-attractors`** | Config, floor of 1. **A config value below the invariant is a config error, not an override** — `commons-check` rejects `min-attractors: 0`. D4 wins. |
 | **Filename case** | Content notes: the natural title, spaces and all — the filename **is** the link target and the display name. Maps and the atlas: lowercase concept names (`insights.md`, `principium.md`). Date prefixes only where the note *is* a dated event, per type (`date-prefix: true`). |
 | **Aliases** | `aliases:` — a list of display synonyms. **The validator resolves wikilinks through them.** The reference's checker does not, which is §8's most likely latent bug; the plugin must not inherit it. |
+| **`map:` per type** | Every type declares which map it is entered in. The check table needs a type→expected-parent binding and there was none; without it the down-link check has no target. |
+| **`hubs[].field`** | The frontmatter field **on the attractor side** that names the hub. `bidir-with` and `section` give the hub's half; this gives the attractor's. (Guessing it by pluralizing the hub's type name is the kind of silent convention that breaks on the first type that doesn't pluralize.) |
+| **`promotes-to`** | An object, `{kind: graph\|instruction-tier, path: <path>}` — not a bare path. The instruction tier is not a graph (D8) and the code path differs, so the config must say which kind it is rather than making the reader infer it from the path. |
+| **Schema violations** | **Errors, not warnings.** `knowledge-graph` *refuses* a missing required field at write time; a health check that merely warns about what the writer refuses is incoherent. (The reference warns. That is a divergence, and a deliberate one.) |
 
 ### What happens to the existing `references/note-formats.md`
 
@@ -736,24 +807,28 @@ graph:
   maps-dir: maps/
   parent-field: genitor
   growth: { new-map-at: 5, promote-heading-at: 7, split-note-at-lines: 200 }
-  promotes-to: <path-to-commons>   # D8. A leaf omits it.
+  promotes-to: { kind: graph, path: <path-to-commons> }   # D8. A leaf omits it.
 
 types:
   # `type:` in frontmatter is AUTHORITATIVE. Directory is a default, not a rule —
   # a graph with no folders still validates. That is why `map` and `atlas` are
   # declared types: in a folderless graph, nothing else identifies them.
+  # Every type declares the `map:` it is entered in — that is the down-link's target.
   atlas:     { name: atlas }
   map:       { name: map, heading-level: 1 }     # category headings inside a map
-  source:    { name: transcript, dir: transcripts/, preserve-verbatim: true }
-  evidence:  { name: insight,    dir: insights/, attractor-field: opportunities, min-attractors: 1 }
+  source:    { name: transcript, dir: transcripts/, map: transcripts, preserve-verbatim: true }
+  evidence:  { name: insight,    dir: insights/,    map: insights,
+               attractor-field: opportunities, min-attractors: 1 }
   attractors:
     # NO lifecycle. A feeder graph is single-domain; nothing graduates. See D5b.
-    - { name: opportunity, dir: opportunities/ }
-    - { name: decision,    dir: decisions/ }
+    - { name: opportunity, dir: opportunities/, map: opportunities }
+    - { name: decision,    dir: decisions/,     map: decisions }
   hubs:                                          # optional
-    - { name: firm,   dir: firms/,  bidir-with: opportunity, section: "## opportunities" }
-    - { name: person, dir: people/, bidir-with: null }
-  reference: { name: research, dir: research/ }
+    # `field:` is the frontmatter key ON THE ATTRACTOR that names this hub.
+    - { name: firm,   dir: firms/,  map: firms,  bidir-with: opportunity,
+        section: "## opportunities", field: firms }
+    - { name: person, dir: people/, map: people, bidir-with: null }
+  reference: { name: research, dir: research/, map: research }
 
 schema:                                          # per-type frontmatter contract
   insight:
@@ -766,13 +841,24 @@ schema:                                          # per-type frontmatter contract
     <field>: [<value>, <value>, ...]
 
 sources:
-  - type: call-transcript
-    resolve-via: <resolver-skill>                # URL → text
-    extract-via: <extraction-skill>              # ← the hook v0.3 lacked
+  # Two entry modes. A tier may support either or both.
+  - type: call-transcript                        # HANDED IN: a human pastes a URL
+    resolve-via: <resolver-skill>                #   URL → text
+    extract-via: <extraction-skill>              #   ← the hook v0.3 lacked
     inspect-classes: [follow-up, entity-change, decision, ...]
-    ledger: source-note                          # the source's own note carries `processed:`
+    ledger: source-note                          #   a source note in THE GRAPH holds `processed:`
+
+  - type: session-chronicle                      # ENUMERATED: the trigger is a thing existing
+    path: <repo>/docs/chronicle/                 #   globbed by `/process` with no argument
+    glob: "20*.md"                               #   required; a permissive default queues non-sources
+    event-delimiter: "^## \\d{2}:\\d{2}"         #   one FILE is a day; one EVENT is a session
+    extract-via: <extraction-skill>
+    ledger: source-note
+
   - type: email-thread
-    extract-via: <different-skill>               # structurally different pipeline
+    extract-via: <different-skill>               #   structurally different pipeline
+    ledger: none                                 #   produces no note; treated as new each pass.
+                                                 #   DECLARED, not discovered.
 
 outputs:
   insight:     { sink: graph }
@@ -837,6 +923,32 @@ v0.3 mapped "the source note is the ledger" onto **one file**, but a chronicle *
 sessions. That single mis-mapping produced an append problem the reference doesn't have, and then a pile of
 machinery to solve it (`through:`, `digest:`, self-match bugs, unit-scoped augment). **All of it is deleted.**
 One session block = one event = one canonical identity.
+
+**And here is what actually replaces it, because "one event" is an assertion until the identity is named.**
+
+An artifact holding several events (a chronicle file = one *day*, holding two or three sessions) declares an
+**`event-delimiter:`** — a heading regex that finds the boundaries. `/process` splits on it and treats each
+block as its own input. Nothing else about the artifact matters.
+
+**The canonical identity of an event is `<artifact-path>#<verbatim-heading>`**, e.g.
+`docs/chronicle/2026-07-12.md### 14:01 — Converged the design`. The heading is copied **verbatim** — it exists
+to be *found again*, and a heading you normalized is a heading you cannot match.
+
+**The ledger note lives in the graph, not in the source repo.** For each processed event, `knowledge-graph`
+writes a **source-role note** into the graph carrying that identity in `source:` and holding the `processed:`
+stamp — exactly as the reference writes a transcript note carrying a recording URL. `/process` finds it by
+searching the *graph* for the `source:`, which is what §6 step 2 already says.
+
+Two things fall out, and both are wins:
+
+- **`/process` never writes into the source repository.** A commons pointed at three projects' chronicles
+  leaves no trace in any of them — no stamped frontmatter, no diff in a repo you're working in. v0.3's
+  `ledger: source-note` would have written into all three.
+- **The self-match bug cannot occur.** The stamp is not in the file it describes, so nothing can match itself.
+
+`ledger: none` remains for tiers that deliberately produce no note (an email tier batched at the entity level).
+Such a tier is treated as new on every pass — acceptable only where volume is low and a human is in the loop,
+and it must be **declared, not discovered.**
 
 **The scope limit — an input that produces no durable note has no ledger.** The ledger *is* the source's note,
 so a tier that deliberately creates none (an email tier, which needs no synthesis artifact and is batched at
