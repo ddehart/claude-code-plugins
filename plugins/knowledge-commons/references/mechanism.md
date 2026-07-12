@@ -22,12 +22,17 @@ attractors; forcing them to share a name would make working graphs worse to make
 | Role | Behavior | Work-graph example | Personal-commons example |
 |---|---|---|---|
 | **Source** | raw, inert, arrives on its own, carries the ledger stamp | call transcript | session chronicle / transcript |
-| **Intermediate** | bounded-event synthesis; disposable scaffolding | call synthesis | — |
+| **Intermediate** † | bounded-event synthesis; disposable scaffolding | call synthesis | — |
 | **Evidence** | atomic, provenanced, **must point at ≥1 attractor** | insight | claim |
 | **Attractor** | accumulates evidence; has a "so what"; has a lifecycle | opportunity, decision | principle, question |
 | **Entity** | the nouns; lookup-only; **never promotes** | account, person | — |
 | **Reference** | lookup-retrieved facts; unbounded; never indexed | integration notes | tool facts |
 | **Dispatch** | extracted but routed *out* of the graph to an external sink | task, tracker update | task |
+
+† **`Intermediate` is defined but not yet wired.** No skill currently produces or consumes one — `/process`
+handles long sources by fanning out subagents by signal class instead. It is retained here because the
+reference work instance uses it (a call synthesis between transcript and insights) and Phase 2 will need it.
+Do not treat it as available machinery until then.
 
 ## Lifecycles
 

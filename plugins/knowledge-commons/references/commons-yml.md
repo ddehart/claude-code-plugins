@@ -25,11 +25,17 @@ graph:
     reference:  { name: reference, dir: reference/ }
 
 sources:
-  - { type: session-chronicle, path: docs/chronicle/, resolve-via: null, ledger: source-note }
+  - type: session-chronicle
+    domain: devbox                       # the provenance stamped onto every claim from this tier
+    path: docs/chronicle/
+    glob: "20*.md"                       # tier membership — excludes reflective-practice.md et al.
+    resolve-via: null
+    ledger: source-note
 
 outputs:
   claim:     { sink: graph }
   principle: { sink: graph }
+  reference: { sink: graph }
   task:      { sink: todoist, via: todoist-dispatch, approval: per-item, defaults: { labels: [next] } }
 
 boundary:
@@ -58,9 +64,26 @@ A list of source tiers. Each artifact in a tier is enumerable, inert, and carrie
 | Field | Required | Notes |
 |---|---|---|
 | `type` | yes | Free-form label for the tier (`session-chronicle`, `call-transcript`, `document`). |
-| `path` | yes | Where artifacts land, relative to the project or absolute. Globbed at inspect time. |
+| **`domain`** | **yes** | **The provenance value stamped onto every evidence note derived from this tier.** See below — this is load-bearing. |
+| `path` | yes | Where artifacts land, relative to the project or absolute. |
+| `glob` | no | Which files in `path` are actually of this tier. Defaults to `*.md`. Set it whenever the directory holds anything that is *not* a source — e.g. `docs/chronicle/` also contains `reflective-practice.md`, which is a practice file, not a session record. |
 | `resolve-via` | no | Name of a project-local **edge skill** that turns a raw artifact into readable text (resolve a recording URL, format a transcript). `null` when the artifact is already readable markdown. Discovered at runtime; **never a hardcoded catalog**. |
 | `ledger` | yes | Where the `processed:` stamp lives. See below. |
+
+### `domain` — the currency of the whole mechanism
+
+Every evidence note carries `domain:`. It is **not decoration**: it is what attractors count to decide
+graduation (evidence from ≥2 distinct domains → `held`), what triggers demotion, and what the index renders
+in `[domains]`.
+
+It comes from **the source tier**, declared here. The processor stamps it onto every claim derived from that
+tier and confirms it at plan approval. It is never inferred from the artifact's contents, and never a link.
+
+**A graph with only one source tier has only one domain — so nothing in it can ever graduate.** That is a
+coherent configuration (a project knowledge tier is legitimately single-domain), but it means the lifecycle
+machinery is inert: every attractor sits at `provisional` forever, flagged `⚠️ single-domain`, and the
+demotion counterweight never fires. If you want graduation to *mean* something, the graph needs source tiers
+from genuinely different domains. `commons-init` warns when it is about to write a single-tier config.
 
 ### `ledger` — **provisional (O2)**
 
@@ -85,6 +108,32 @@ Two values, and the choice is per source tier:
 Existing chronicle entries carry no `processed:` field today; the stamp is purely additive, and its absence
 means "not yet processed." This is the working default — **confirm it against the live personal instance
 before treating it as settled.**
+
+#### A stamp is not "done" — it is "done as of a point in time"
+
+**Sources get appended to.** A chronicle file holds one *day*, not one *session*: a second session that
+evening appends a new block to the same file, under the same frontmatter. A stamp that means "this file is
+processed" would cause `/process` to skip that file forever, **silently dropping every session appended
+after the stamp** — the exact silent evaporation the ledger exists to prevent.
+
+So the stamp records **what was seen**, and inspect re-queues anything that has changed since:
+
+```yaml
+processed:
+  date: 2026-07-12
+  through: "2026-07-12 14:01"   # the last source unit covered — the final session block's heading
+  digest: sha256:1a2b3c…        # OR, for sources with no internal unit structure, a content digest
+  claim: ran
+  principle: ran
+  task: errored
+```
+
+At inspect time, a source is **re-queued** if it contains any unit after `through:` (or if its digest no
+longer matches). It is skipped only when the stamp covers the file *as it currently stands*. Re-queued
+sources are processed in `--augment` mode automatically — propose only what is new — rather than requiring
+the user to remember the flag.
+
+**Never treat the presence of a stamp as sufficient to skip.** Compare it against the source.
 
 ## `outputs` — required
 

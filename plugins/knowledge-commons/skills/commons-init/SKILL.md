@@ -57,10 +57,16 @@ graph:
       - { name: question,  dir: questions/,  lifecycle: [open, graduated, abandoned] }
     reference:  { name: reference, dir: reference/ }
 sources:
-  - { type: session-chronicle, path: docs/chronicle/, resolve-via: null, ledger: source-note }
+  - type: session-chronicle
+    domain: <asked>            # required — the provenance stamped on every claim from this tier
+    path: docs/chronicle/
+    glob: "20*.md"             # keeps reflective-practice.md out of the source queue
+    resolve-via: null
+    ledger: source-note
 outputs:
   claim:     { sink: graph }
   principle: { sink: graph }
+  reference: { sink: graph }
 boundary:
   posture: personal
   promotion-gate: [mechanical, llm-review, human-approval]
@@ -78,8 +84,17 @@ What to ask:
    optionally reference / entity / intermediate. Offer the defaults; ask what this graph actually calls
    these things. A work graph's `opportunity` is not a personal commons' `principle`, and forcing shared
    names would make the graph worse to make the model tidier.
-4. **Source tiers** — what artifacts arrive on their own, where they land, and whether each needs an edge
-   skill to become readable text (a recording URL to resolve, a transcript to format) or is already markdown.
+4. **Source tiers** — what artifacts arrive on their own, where they land, **what domain each carries**, and
+   whether each needs an edge skill to become readable text (a recording URL to resolve, a transcript to
+   format) or is already markdown. Set each tier's `glob:` if its directory holds anything that is not a
+   source (`docs/chronicle/` also contains `reflective-practice.md`, which is not a session record).
+
+   **Warn if the config ends up with only one domain.** Graduation requires evidence from ≥2 distinct
+   domains, so a single-domain graph has an inert lifecycle: nothing ever reaches `held`, nothing ever
+   demotes, and every attractor carries `⚠️ single-domain` forever. That is a legitimate configuration — a
+   project knowledge tier is single-domain by definition — but the user should choose it knowingly rather
+   than discover it months later when nothing has ever graduated. Say it plainly, and offer to add a second
+   tier.
 5. **Output classes → sinks → approval** — the graph is one sink; a task manager or tracker may be others.
    For each non-graph sink, get the edge skill's name and its approval mode (`per-item` for a task manager).
    Note any sink defaults that must always apply — e.g. Todoist tasks that land without a `next` label fall

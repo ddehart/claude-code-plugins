@@ -38,14 +38,20 @@ Resolve role → type name → directory. The graph may call its evidence `insig
 
 ## Step 2: Inspect
 
-**Enumerate the queue.** For each source tier in `sources:`, glob its `path` and read the ledger stamp
+**Enumerate the queue.** For each source tier in `sources:`, glob its `path` (using the tier's `glob:`, which
+is what keeps non-source files in the same directory out of the queue) and read the ledger stamp
 (`processed:` frontmatter on the source, or the sidecar — per the tier's `ledger:` setting).
 
 - No stamp → unprocessed. Queue it.
-- Stamped, all classes `ran` → skip, unless `--augment`.
+- Stamped, but the source **has changed since the stamp** — it contains units past the stamp's `through:`, or
+  its digest no longer matches → **queue it in `--augment` mode**, proposing only what is new. Sources get
+  appended to: a chronicle file holds a *day*, and an evening session adds a block to the morning's file.
+  **A stamp means "processed as of this point," never "done."** Treating it as "done" silently drops
+  everything appended after it — which is precisely the evaporation the ledger exists to prevent.
+- Stamped, unchanged, all classes `ran` → skip.
 - Stamped with any class `errored` → **queue it**; resume that class only. This is what the per-class stamp
   is for.
-- `--augment` → reprocess, proposing only what is *new* relative to what the graph already holds.
+- `--augment` → force this mode for every source, regardless of stamp.
 
 **Resolve each source to readable text.** If the tier declares `resolve-via:`, invoke that edge skill (see
 *Edge-skill discovery* below). If it is `null`, the artifact is already readable — just read it.
@@ -60,8 +66,8 @@ material and the entire distilled corpus *simultaneously* is the condition that 
 association possible at all. It is the reason this step happens here, in the session that is paid to look,
 rather than being left to a future session that would have to already know the connection exists to find it.
 
-Also run the `commons-check` skill, so its flags (graduations earned, staleness, orphans) can be folded into
-the plan as proposed transitions.
+Also run the `commons-check` skill — **without `--index`**, since inspect must not write — so its flags
+(graduations earned, staleness, orphans) can be folded into the plan as proposed transitions.
 
 ## Step 3: Propose the plan
 
@@ -70,10 +76,20 @@ One concrete, reviewable plan. The human reads this and says yes once — so it 
 
 For each source, propose:
 
-- **Evidence notes** — title, the one-line substance, and **which attractors each supports**. An evidence
-  note with no attractor is not proposable; either find its attractor, propose a new one, or drop it.
-- **New attractors** — title and the `## so what` clause. Proposing a new attractor is a bigger deal than
-  proposing a claim; it should be rare, and the plan should show why the existing attractors don't fit.
+- **Evidence notes** — title, **the full paragraph body** (not a one-line gloss), and **which attractors each
+  supports**. Show the paragraph that will actually be written: the human is approving the note, and a plan
+  that shows a summary while the run writes a paragraph is asking for approval of something not on screen.
+  Proposal precision — the fraction of proposed notes accepted unedited — is the health metric for this whole
+  pipeline, and it is only meaningful if the thing approved is the thing written.
+
+  An evidence note with no attractor is not proposable; either find its attractor, propose a new one, or drop it.
+- **New attractors** — title and the `## so what` clause. On an established graph, proposing a new attractor
+  is a bigger deal than proposing a claim: it should be rare, and the plan should show why the existing
+  attractors don't fit. (On a cold start it is not rare — see below.)
+- **Reference notes** — the durable, lookup-retrieved facts the source produced (a tool's actual behavior, a
+  CLI's real interface). These are exempt from the attractor requirement and never indexed, which is exactly
+  what lets them grow without bound. Propose them if the config declares a `reference` type; a source full of
+  hard-won tool facts that produces no reference notes is leaving the cheapest value on the floor.
 - **Lifecycle transitions to apply**, from `commons-check`'s flags. State the evidence: *"principle X now
   has evidence from devbox and wellstead → graduates to `held`."*
 - **Dispatch items** — tasks and tracker updates, with their sink and the defaults that will be applied.
@@ -88,6 +104,31 @@ Then, two things that only this step can surface:
   candidates for the always-loaded instruction tier (e.g. `~/.claude/rules/`). Flag them as candidates —
   promotion out is a decision, and it goes in the plan like everything else.
 
+  **Read the instruction tier before proposing a promotion.** The rules that already exist are the ones most
+  likely to be rediscovered — a graph built from sessions that were *steered by those rules* will keep
+  re-deriving them. Proposing to promote a principle that is already a rule, verbatim, is the failure mode
+  here. If the principle is already in the tier, say so and propose nothing; if it *sharpens* an existing
+  rule, propose the amendment rather than a duplicate.
+
+### The cold start
+
+A new graph has **no attractors** — `commons-init` deliberately seeds none, because a graph pre-loaded with
+fake claims starts with content nobody stands behind. So the first run is the one case where "propose few
+new attractors" is exactly wrong advice.
+
+On an empty or near-empty graph, work **bottom-up**:
+
+1. Extract the claims first, without worrying about what they support.
+2. Cluster them by the *stance they imply* — not by topic, not by which source they came from.
+3. Name an attractor per cluster, and write its `## so what` as the thing that changes because the cluster
+   is true. A cluster that cannot produce a "so what" is a topic; drop it rather than promoting it.
+4. A claim that joins no cluster and forces an attractor of its own is a smell. One orphan claim does not
+   justify an attractor — hold it back rather than inventing a stance to hang it on.
+
+**Expect the first run to be attractor-heavy and every later run to be attractor-light.** A *second* run that
+proposes many new attractors is the real smell — it means the first run's attractors were named too
+narrowly to accumulate anything.
+
 ## Step 4: One approval gate
 
 Present the plan. Take **one** approval for the whole thing.
@@ -98,8 +139,12 @@ Then **run to completion.** Pause mid-run *only* on:
 - **Conflict with the existing record** — the new material contradicts an attractor the graph already holds.
   That is not an error to route around; it is the most interesting thing that can happen. Surface it.
 
-Do not pause to re-confirm things the plan already covered. The plan approval *was* the confirmation, and a
-pipeline that re-asks is a pipeline the human learns to click through.
+Do not pause to re-confirm things the plan already covered — **except where an output class or the boundary
+gate declares otherwise**, which they do deliberately (`per-item` sinks, and every cross-boundary promotion).
+Those are not re-confirmations of the plan; they are gates the plan never claimed to cover.
+
+Beyond those, the plan approval *was* the confirmation, and a pipeline that re-asks is a pipeline the human
+learns to click through.
 
 ## Step 5: Run
 
@@ -140,24 +185,35 @@ A promoted note is **newly written and self-contained**, carrying only portable 
 non-resolving provenance. It is never the original note moved. *If it needs its source to make sense, it has
 not generalized* — do not promote it; say why.
 
-## Step 6: Stamp
+## Step 6: Regenerate the index
 
-Write the ledger stamp to each processed source — **per output class**:
+**Run `commons-check --index`.** The run just changed which attractors exist and what evidence they carry —
+so the index is now stale, and the index is not a nicety: it is the distilled corpus that Step 2 of the
+*next* run reads in order to make associations at all. An index left stale silently degrades every future
+run's ability to notice that a pattern has appeared before.
+
+This is the only point in the pipeline where the index is written. Skip it on `--dry-run`.
+
+## Step 7: Stamp
+
+Write the ledger stamp to each processed source — **per output class**, and recording *how far* it got:
 
 ```yaml
 processed:
   date: 2026-07-12
+  through: "2026-07-12 14:01"   # the last source unit covered (see commons-yml.md)
   claim: ran
   principle: ran
   task: errored
 ```
 
-This is what makes the queue enumerable and re-runs idempotent: nothing silently evaporates, and a re-run
-resumes the errored class instead of redoing the whole source.
+This is what makes the queue enumerable and re-runs idempotent: nothing silently evaporates, a re-run resumes
+the errored class instead of redoing the whole source, and a source that grows after being stamped gets
+re-queued instead of being skipped forever.
 
 Skip stamping entirely on `--dry-run`.
 
-## Step 7: Report
+## Step 8: Report
 
 - What was written to the graph, and where.
 - What was routed to which sink.
@@ -184,7 +240,7 @@ Instead:
 
 ## `--dry-run`
 
-Inspect and propose. **No writes, no stamp, no dispatch.** Print the plan and stop.
+Inspect and propose. **No writes, no stamp, no index regeneration, no dispatch.** Print the plan and stop.
 
 This is the mode that makes the plugin's own acceptance test possible: feed it a source the incumbent
 workflow already processed, and compare the proposed plan against what the incumbent produced. Anything the

@@ -102,6 +102,9 @@ side effect of some other write.
 Append **one dated bullet per graph-shaping event** to `changelog.md` at the graph root: what changed and
 why. This is not a commit log — it is the record of *why the graph looks the way it does*.
 
+**Create `changelog.md` if it is missing.** `commons-init` seeds it, but a graph adopted in place or built by
+hand will not have one, and a missing changelog must never be a reason to drop the entry.
+
 Creating a claim is not usually graph-shaping. Creating an attractor, graduating one, demoting one,
 abandoning a question — those are. When in doubt, ask whether a reader six months out would want to know
 why this happened.

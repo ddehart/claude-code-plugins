@@ -12,11 +12,16 @@ resolved by filename within the graph root.
 
 - **The filename is the note title.** `principles/Execution beats review for validating configuration.md`
   is linked as `[[Execution beats review for validating configuration]]`.
-- **Evidence filenames are prefixed `YYYY-MM `** — the month it was written, space-separated:
+- **Evidence filenames are prefixed `YYYY-MM `** — space-separated:
   `claims/2026-07 A dry run caught a config error that review missed.md`. Because wikilinks resolve by
   filename, the prefix is part of the link target:
   `[[2026-07 A dry run caught a config error that review missed]]`. Attractors carry **no** date prefix —
   they are long-lived and their titles are stable link targets.
+- **The date is the source's, not the processor's.** Both the filename prefix and the `date:` field record
+  **when the thing happened** — the month of the session or call the claim was distilled from — not the day
+  `/process` got around to reading it. This matters because staleness is measured against evidence dates:
+  if `date:` were the processing date, working through a two-year backlog in an afternoon would make every
+  attractor look freshly exercised.
 - Directories come from `.commons.yml` type config, not from this file. `claims/`, `principles/`,
   `questions/`, `reference/` below are the personal-commons defaults.
 
