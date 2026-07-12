@@ -337,6 +337,12 @@ re-queued instead of being skipped forever.
 churn every source on every no-op run and destroy the record of when it was actually mined. A run that
 processed no sources writes no stamps, and that is correct; it may still have rebuilt the index.
 
+**If a `source-note` stamp cannot be written — stop and say so.** A tier configured `ledger: source-note`
+whose artifacts cannot carry frontmatter (an external transcript, a read-only export, a PDF) can never be
+marked processed. Do not shrug and continue: the source would be re-read and its claims re-proposed on every
+run, forever, and the duplicates would look like new material. Report it as a config error and name the fix —
+that tier wants `ledger: sidecar`.
+
 Skip stamping entirely on `--dry-run`.
 
 ## Step 8: Report

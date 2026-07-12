@@ -102,6 +102,18 @@ What to ask:
    format) or is already markdown. Set each tier's `glob:` if its directory holds anything that is not a
    source (`docs/chronicle/` also contains `reflective-practice.md`, which is not a session record).
 
+   **Ask, per tier: can this artifact carry frontmatter?** That sets `ledger:`, which is required and has no
+   safe default:
+   - **Yes** (a markdown chronicle you own) → `ledger: source-note`. The stamp is additive frontmatter on the
+     source, and the source *is* the ledger.
+   - **No** (a transcript from an external service, a read-only export, a PDF, anything you cannot write
+     back to) → `ledger: sidecar`. The stamp lives in `.commons-ledger.yml` at the graph root, keyed by
+     source identity.
+
+   Do not assume `source-note` because it is the common case. Writing it for a tier that cannot take a stamp
+   means `/process` can never mark those sources processed — so it re-reads them on every run and re-proposes
+   the same claims forever. The failure is silent and it compounds.
+
    **Warn if the config ends up with only one domain.** Graduation requires evidence from ≥2 distinct
    domains, so a single-domain graph has an inert lifecycle: nothing ever reaches position 1, and nothing
    ever demotes. That is a legitimate configuration — a project knowledge tier is single-domain by
