@@ -1,6 +1,30 @@
 # Knowledge Commons Plugin — Specification
 
-> **Version:** 0.3 (draft) · **Status:** pre-build · **Date:** 2026-07-12
+> **SUPERSEDED 2026-07-12** by `knowledge-commons-generator.md` (v0.4). Retained unmodified below as design
+> history.
+>
+> **Why it was superseded.** This spec was written without reading the reference implementation it was
+> generalizing, and it assumed the domain variation between graphs is **data-shaped** — that a generic runtime
+> engine reading `.commons.yml` could serve any instantiation. Reading the reference afterward showed the
+> opposite: most of what makes the system work is **procedure-shaped** (extraction workflows, debiasing
+> instructions, promote-vs-skip asymmetries, cross-type propagation choreography, per-section writing briefs),
+> and no config file can hold it. A generic engine could never reproduce the system it was built to
+> generalize, so this design was in principle incapable of passing its own acceptance test.
+>
+> v0.4 corrects the model — **the plugin is a generator** — and adds what this spec missed: a hook for the
+> domain's extraction procedure, the navigation tier (*"every graph has to have a map"*), the hub type role
+> with its bidirectional obligations, event-granular ledger identity, dependency ordering, check-before-
+> creating, and the lean-promote bias this spec inverted.
+>
+> **Worth keeping** from this document: the note formats, the boundary gate (and the discovery that its third
+> question is inverted — a defect inherited from the private v0.2), the outputs/sinks routing model, and the
+> heterogeneous approval semantics. All carried forward into v0.4.
+>
+> Everything below is the original v0.3 text, unmodified. It was built and merged as PR #62.
+
+---
+
+> **Version:** 0.3 (draft) · **Status:** superseded · **Date:** 2026-07-12
 >
 > This is the public **mechanism** spec. It supersedes an earlier private draft (v0.2, retained as design
 > history in the author's private notes) that designed the same system around ambient discovery and a
