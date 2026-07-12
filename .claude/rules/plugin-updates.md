@@ -12,3 +12,10 @@ When modifying any plugin component (agents, skills, hooks), you MUST also updat
 Both files must have matching versions for the updated plugin.
 
 This is not optional. Include these updates in your implementation plan before starting work.
+
+## Exception: unregistered plugins
+
+A plugin that is not yet listed in `.claude-plugin/marketplace.json` has no marketplace entry to bump — only
+step 1 applies. This is the normal state for a plugin still being built: the marketplace should never
+advertise an installable that installs nothing. Register it, at the version it has reached, when it is ready
+to install.

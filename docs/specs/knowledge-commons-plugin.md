@@ -76,11 +76,18 @@ each role in config:
 
 The mechanism, stated once:
 
-> Evidence must point at ≥1 attractor. Attractors accumulate evidence and carry a lifecycle
-> (`provisional` → `held` → `stale`). Entities and reference are lookup-only. Dispatch classes route to
-> external sinks under per-sink approval semantics and are exempt from graph constraints. A health check
-> enforces the structure. A changelog records why the graph looks the way it does. An index renders
-> attractors for consultation. Promotion *derives* portable notes upward; it never moves them.
+> Evidence must point at ≥1 attractor. Attractors accumulate evidence and carry a lifecycle whose statuses
+> each graph names for itself: **proposed → earned → retired**. Entities and reference are lookup-only.
+> Dispatch classes route to external sinks under per-sink approval semantics and are exempt from graph
+> constraints. A health check enforces the structure. A changelog records why the graph looks the way it
+> does. An index renders attractors for consultation. Promotion *derives* portable notes upward; it never
+> moves them.
+
+The lifecycle is deliberately stated **by position, not by status name.** `provisional`/`held`/`stale` is one
+graph's naming of the three positions; a `question` names them `open`/`graduated`/`abandoned`. Every rule in
+every skill resolves the status out of the type's own `lifecycle:` list — a rule that says "flag it `held`"
+is wrong, because a question has no `held`. (Amended v0.3.1; the original wording hardcoded the principle
+names, and an execution test caught skills faithfully reproducing that mistake.)
 
 **Rejected — one shared type set for every graph.** A work graph's `opportunity` is not a personal
 commons' `principle`. Forcing shared types would make working graphs worse to make the model tidier.
@@ -135,9 +142,16 @@ For any promotion out of a professional domain, three layers — none sufficient
 1. **Mechanical.** No wikilink in the target graph may resolve outside it. Catches structure. (Entity
    names in free prose cannot be mechanically excluded — a denylist would import the very names it
    protects — so this layer is necessary, not sufficient.)
-2. **LLM review gate.** Before writing: does this name or identify any person, organization, or client?
-   Does it disclose any fact specific to one engagement? Would it remain true and useful if every party
-   involved vanished? Three noes required. Catches prose.
+2. **LLM review gate.** Before writing, three questions, **every answer must be "no"**; any single "yes"
+   refuses. Does this name or identify any person, organization, or client? Does it disclose any fact
+   specific to one engagement? **Would it stop being true or useful if every party involved vanished?**
+   Catches prose. The questions are run against the note's `domain:` value as well as its body — that field
+   carries the originating graph's name, and nothing else in the three layers reads it.
+
+   *(Amended v0.3.1. The original phrased the third question positively — "would it remain true and useful"
+   — while requiring "three noes," which inverts one limb of the gate: a portable note answers* yes *to it.
+   Read literally the gate admitted only non-portable notes and refused every legitimate one. An adversarial
+   execution test caught it; author review had passed the wording three times.)*
 3. **Human approval.** Every cross-boundary promotion is approved explicitly. Non-negotiable.
 
 ### D5 — Outputs are typed and routed to sinks
@@ -184,12 +198,20 @@ for review. Index size is a smoke alarm, not a wall.
 ```
 plugins/knowledge-commons/
   .claude-plugin/plugin.json
+  references/            # shared contract, read by the skills via ${CLAUDE_PLUGIN_ROOT}
+    mechanism.md         #   roles, the invariant, lifecycles, the boundary layers (D1, D4)
+    note-formats.md      #   on-disk note formats, index and changelog formats (D7)
+    commons-yml.md       #   config schema — DRAFT until the first two instantiations land (O1)
   skills/
     commons-init/        # interview → .commons.yml + scaffold + edge-skill stubs (D6)
     process/             # the orchestrator: inspect → plan → approve → run → stamp (D2, D5)
     knowledge-graph/     # graph read/write mechanics, driven by .commons.yml types (D1)
     commons-check/       # health check + index generation (D7)
 ```
+
+The `references/` tier exists because three of the four skills need the note formats and the role model.
+Inlining them in each `SKILL.md` would guarantee drift between the skill that *writes* a note and the skill
+that *validates* it — so the contract is stated once and read by all of them.
 
 - **commons-init** checks for an existing graph at the configured location and creates one if absent;
   interviews for the instantiation's types, sources, sinks, and boundary posture; writes `.commons.yml`;
@@ -348,6 +370,15 @@ that installs nothing.
   commit is public history, including examples and fixtures. Fresh-authored examples only.**
 - **R3. Two graphs' instruction tiers drift** (graph principles vs. always-loaded rules). Resolved by
   design: rules are the graduation *target*, not a parallel store (D3).
+- **R4. The attractor partition is unstable, and proposal precision cannot see it.** Surfaced by a cold-read
+  execution test (below): two runs over the *same* corpus do not produce the same attractors. "Cluster the
+  claims by the stance they imply" is the right instruction and an underdetermined one. This matters because
+  the partition is where nearly all the value is — the claims are cheap, the attractors are the product — and
+  because **the Phase 1 gate cannot detect it.** Proposal precision measures whether the human accepts the
+  notes put in front of them, not whether a different run would have proposed a better set. A graph can score
+  high precision on every run and still be one of many arbitrary partitions of the same material. No fix
+  proposed yet; the first honest read on it comes from watching whether real runs keep re-cutting the same
+  corpus differently. Worth measuring deliberately in Phase 1 rather than discovering in Phase 4.
 - **O1.** `.commons.yml` schema — finalize against the first two instantiations, not in the abstract.
 - **O2.** Chronicle/session-record ledger format — where the `processed:` stamp lives for repos that don't
   yet keep chronicles (fall back to session transcript IDs?). Existing chronicle entries carry no
@@ -360,3 +391,96 @@ sessions, against the live personal instantiation and the private reference inst
 why public registration (Phase 3) comes after them. A cold implementer starting from this spec alone is
 expected to be blocked on O1/O2; that is sequencing, not an omission. Everything needed to build the
 skills' skeletons and the personal instantiation alongside the author is specified above.
+
+---
+
+## Revision log
+
+### v0.3.1 — 2026-07-12 (Phase 1 build)
+
+The four skills were built (plugin v0.2.0, still unregistered). Three decisions taken during the build, all
+recorded here rather than left in the commit history:
+
+- **Skill names ship as specced** — `commons-init`, `process`, `knowledge-graph`, `commons-check`. The
+  repo's README convention (action-oriented gerunds) was **relaxed** rather than the names being deformed to
+  fit it. Research established that skill naming has no ecosystem standard: the slash command derives from
+  the *directory* name, auto-invocation is driven by the `description` field rather than the name, and
+  Anthropic's own bundled skills are mostly bare verbs (`/run`, `/loop`, `/simplify`). Plugin skills are
+  namespaced (`knowledge-commons:process`) regardless, which supplies the disambiguation a generic name
+  lacks.
+- **A plugin-level `references/` tier was added** (§5) as the single source of truth for the mechanism,
+  the note formats, and the config schema.
+- **Working defaults adopted for the open items,** marked provisional in `references/commons-yml.md`:
+  **O2** — the `processed:` stamp is additive frontmatter on the source note, with a sidecar
+  `.commons-ledger.yml` for sources that cannot carry frontmatter; the stamp is **per output class**, so a
+  partial failure resumes only the errored class. **O3** — staleness N defaults to 6 months.
+
+**A cold-read dry run was run before the build was called done.** A no-context agent was given only the skill
+files and a throwaway config, and asked to execute `/process --dry-run` against three real chronicle entries.
+The proposals themselves were sound — atomic claims, attractors with real "so what" clauses — which is the
+first (weak, n=1) signal on **R1 proposal precision**. But the run surfaced three load-bearing defects that
+author review had not:
+
+- **`domain:` had no defined origin.** It gates graduation, demotion, and the index — and no field in
+  `.commons.yml` produced it. Now a required field on each source tier.
+- **Nothing regenerated `index.md` after a run.** The index *is* the distilled corpus that the next run's
+  association step reads, so every run after the first would have read a stale one — quietly degrading the
+  exact capability D3 is built on.
+- **The ledger stamped whole files, but chronicle files hold several sessions and are appended to.** A file
+  stamped in the afternoon would have silently dropped that evening's session forever.
+
+**This materially advances O2.** The open item existed because the ledger format could not be settled in the
+abstract — and the thing that settled it was a real source with real structure. The stamp now records *how
+far it got* (`through:`) rather than a boolean, and inspect re-queues any source that has grown since. That
+is the shape to confirm against the live instance, not a guess to replace.
+
+The third finding is also the strongest available evidence for the design's own thesis: **an independent
+reader with no stake in the author's intent caught what the author's review could not.** Worth noticing that
+the failure mode it caught — a plausible artifact that passes textual review and fails on contact with a real
+input — is the same one the previous session recorded, one entry earlier in this same chronicle.
+
+**A code review then found bugs in the fixes.** Three are worth recording, because each is a case of the
+mechanism being described correctly in prose and specified wrongly in the parts a following agent executes:
+
+- **The ledger's `digest` self-invalidated.** With `ledger: source-note` the stamp is written *into* the file
+  the digest covers — so stamping changed the bytes, every subsequent run saw a mismatch, and the source
+  would have been re-queued forever. The digest is now scoped to exclude the `processed:` block. Note the
+  shape: this bug was *introduced by the fix* for the previous ledger bug.
+- **Lifecycle rules named statuses literally** (`provisional → held`) while lifecycles are configurable per
+  type — and the shipped `question` type has no `held`. Lifecycles are now defined **by position**
+  (`[proposed, earned, retired]`, D1 amended accordingly); skills resolve the name from the type's own list.
+- **`question → principle` graduation was specified and unimplemented.** `note-formats` said a question
+  "graduates to a principle," but every skill treated graduation as a status flip, which would have stranded
+  the accumulated reasoning in a note marked resolved. Graduation can now **derive a new attractor**, declared
+  per type as `graduates-to:`.
+
+Also settled: a promoted note's `domain:` is the **originating graph's name** (`graph.name`) — it passes
+through no source tier, so nothing else could supply it, and without one the receiving graph's ≥2-domain bar
+silently under-counts. A professional graph's name therefore travels with everything it promotes, which is
+itself a boundary consideration (D4): name such graphs for their kind of work, not their party.
+
+**Three rounds of stateful execution tests then ran the pipeline for real** (cold agents, throwaway two-domain
+graph, sources copied so nothing touched this repo). Each round found defects that author review and the prior
+round's fixes had both passed. The pattern is worth recording, because it is the same one this plugin exists
+to catch:
+
+- **Round 2 found that `through:` self-matches** — with `ledger: source-note` the stamp is written *into* the
+  file, so `through:`'s value always appears in that file's own frontmatter. A naive search finds it,
+  concludes the source is covered, and skips: silently dropping every appended session. Round 1's fix had
+  reasoned out this *exact* self-reference problem for `digest:` and not noticed `through:` shared it.
+- **Round 3 found a cold-start deadlock.** `commons-check` runs at inspect, *before* the writes — so an
+  attractor born with two domains could not graduate in the run that created it, and the run that would clear
+  the flag finds no new sources and does nothing. **Over a fixed corpus of existing chronicles — precisely how
+  the personal commons gets instantiated — the graph would sit `graduation-pending` forever.** Fixed by
+  computing position at plan time (an attractor that arrives at the bar is *born* earned) and by making an
+  empty source queue a valid run rather than an exit.
+- **Round 3b confirmed convergence:** cold start then re-run over an unchanged corpus, zero flags stranded,
+  graph settled, no attractor stuck in a state no future run could change.
+
+Severity fell monotonically across the rounds — data loss, then contradictions, then ambiguities — which is
+the signal that the mechanism has stopped hiding bugs rather than that the reviewers got tired. **Every single
+one of these was found by execution. Author review found none of them.** That is the plugin's own thesis
+(D3, and the R2 boundary argument) demonstrated on itself, and it is why §8 makes the known-good instance the
+regression harness rather than a synthetic test.
+
+O1 and O2 remain open: they are confirmed against the live personal instance, per the resolution path above.

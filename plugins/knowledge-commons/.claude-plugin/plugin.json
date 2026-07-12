@@ -1,7 +1,7 @@
 {
   "name": "knowledge-commons",
   "description": "Knowledge graph machinery: a ledgered /process pipeline that refines source material (session chronicles, transcripts, documents) into an attractor-linked knowledge graph, routing typed outputs to per-project sinks",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Derek DeHart"
   },

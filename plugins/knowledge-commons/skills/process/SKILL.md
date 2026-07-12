@@ -1,0 +1,385 @@
+---
+name: process
+description: >
+  Refine source artifacts — session chronicles, call transcripts, documents — into an attractor-linked
+  knowledge graph, routing typed outputs to their sinks. A ledgered pipeline: inspect the queue, propose a
+  concrete plan, take one approval, run to completion, stamp each source, report. Use when asked to process
+  session records or chronicles, refine sources into the graph, run the commons pipeline, or catch the graph
+  up on new material. Supports --dry-run (propose only, no writes) and --augment (reprocess for what's new).
+argument-hint: "[source-path] [--augment] [--dry-run] [--promote <graph>]"
+allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "AskUserQuestion", "Agent", "Skill"]
+---
+
+# Process
+
+The orchestrator. Capture happens as a **byproduct of work**, never as a separate act of authorship — the
+trigger is *a thing existing*, not a person remembering.
+
+The flow, and it does not vary:
+
+**inspect → propose plan → single approval → run to completion → stamp → report**
+
+Read the contract before starting:
+
+- `${CLAUDE_PLUGIN_ROOT}/references/mechanism.md` — roles, the invariant, the boundary, graduation
+- `${CLAUDE_PLUGIN_ROOT}/references/note-formats.md` — what the proposed notes will look like
+- `${CLAUDE_PLUGIN_ROOT}/references/commons-yml.md` — config schema, including the ledger stamp
+
+The human's role in a healthy run is **one plan approval**. If runs routinely turn into editing sessions,
+that is the signal the proposals are bad — not that the human should settle in and edit. Say so.
+
+## Step 1: Load the config
+
+Find `.commons.yml` (cwd, then the graph root). **Absent → stop.** Report it and point at `/commons-init`.
+Do not improvise a graph layout, invent type names, or guess at sinks.
+
+Resolve role → type name → directory. The graph may call its evidence `insight` and its attractors
+`opportunity`; never assume the personal-commons names.
+
+## Step 2: Inspect
+
+**Enumerate the queue.** For each source tier in `sources:`, glob its `path` (using the tier's `glob:`, which
+is what keeps non-source files in the same directory out of the queue) and read the ledger stamp
+(`processed:` frontmatter on the source, or the sidecar — per the tier's `ledger:` setting).
+
+- No stamp → unprocessed. Queue it.
+- Stamped, but the source **has changed since the stamp** — it contains units past the stamp's `through:`, or
+  its digest no longer matches → **queue it in `--augment` mode**, proposing only what is new. Sources get
+  appended to: a chronicle file holds a *day*, and an evening session adds a block to the morning's file.
+  **A stamp means "processed as of this point," never "done."** Treating it as "done" silently drops
+  everything appended after it — which is precisely the evaporation the ledger exists to prevent.
+
+  **Match `through:` against the source's body, never its frontmatter.** With `ledger: source-note` the stamp
+  lives *inside* the file, so `through:`'s value is guaranteed to appear there — in the `processed:` block
+  itself. Search the raw file and you always get a hit, on the stamp matching itself, and conclude the source
+  is covered. Strip the frontmatter first. If `through:` matches nothing in the body, the stamp is unusable:
+  **read the whole source and rely on the dedupe step** — over-reading is recoverable, under-reading loses
+  material silently.
+- Stamped, unchanged, all classes `ran` → skip.
+- Stamped with any class `errored` → **queue it**; resume that class only. This is what the per-class stamp
+  is for.
+- `--augment` → force this mode for every source, regardless of stamp.
+
+**What `--augment` actually does.** This is the *common* path, not a rare flag — chronicle files grow, so
+most re-queued sources arrive here. It is two steps, and skipping the second produces near-duplicate claims:
+
+1. **Read only the new units** — the blocks after the stamp's `through:`. Not the whole file. The already-
+   processed units produced their claims on the last run; re-reading them only invites re-proposing them.
+2. **Dedupe candidates against what the graph already holds.** Glob the evidence directory and compare each
+   candidate against the existing notes on *substance*, not title — a claim rephrased is still the same
+   claim. Drop the duplicates, and say in the plan how many you dropped.
+
+If a source has no `through:` (a digest-tracked source with no units), you cannot scope to new material —
+read the whole source and rely entirely on step 2.
+
+**Resolve each source to readable text.** If the tier declares `resolve-via:`, invoke that edge skill (see
+*Edge-skill discovery* below). If it is `null`, the artifact is already readable — just read it.
+
+**Adapt to input size.** Read short sources inline. For long ones (a full transcript, a month of
+chronicles), **fan out subagents by signal class** — one pass looking for claims, one for tasks, one for
+lifecycle transitions — so each reads the whole source with a single question in mind. A single pass looking
+for everything finds the obvious and misses the rest.
+
+**Read the full `index.md` into context.** This is not optional and it is not bookkeeping: holding the new
+material and the entire distilled corpus *simultaneously* is the condition that makes cross-domain
+association possible at all. It is the reason this step happens here, in the session that is paid to look,
+rather than being left to a future session that would have to already know the connection exists to find it.
+
+Also run the `commons-check` skill — **without `--index`**, since inspect must not write — so its flags
+(graduations earned, staleness, orphans) can be folded into the plan as proposed transitions.
+
+**An empty source queue is not an empty run.** If every source is stamped and unchanged, `/process` still has
+work: pending flags to apply, staleness to act on, an index to rebuild. Proceed with a plan containing only
+those. Say plainly that no new sources were found — do not report "nothing to do" and exit, or a graph whose
+sources have all been processed can never again change state, and flags raised on the last run are stranded
+permanently.
+
+## Step 3: Propose the plan
+
+One concrete, reviewable plan. The human reads this and says yes once — so it must be specific enough that
+"yes" is a real decision, not a shrug.
+
+For each source, propose:
+
+- **Evidence notes** — title, **the full paragraph body** (not a one-line gloss), and **which attractors each
+  supports**. Show the paragraph that will actually be written: the human is approving the note, and a plan
+  that shows a summary while the run writes a paragraph is asking for approval of something not on screen.
+  Proposal precision — the fraction of proposed notes accepted unedited — is the health metric for this whole
+  pipeline, and it is only meaningful if the thing approved is the thing written.
+
+  An evidence note with no attractor is not proposable; either find its attractor, propose a new one, or drop it.
+- **New attractors** — title and the `## so what` clause. On an established graph, proposing a new attractor
+  is a bigger deal than proposing a claim: it should be rare, and the plan should show why the existing
+  attractors don't fit. (On a cold start it is not rare — see below.)
+- **Reference notes** — the durable, lookup-retrieved facts the source produced (a tool's actual behavior, a
+  CLI's real interface). These are exempt from the attractor requirement and never indexed, which is exactly
+  what lets them grow without bound. Propose them if the config declares a `reference` type; a source full of
+  hard-won tool facts that produces no reference notes is leaving the cheapest value on the floor.
+- **Lifecycle transitions to apply**, from `commons-check`'s flags. State the evidence: *"principle X now
+  has evidence from devbox and wellstead → graduates to `held`."* Name the target status by reading it from
+  the type's own `lifecycle:` list — a `question` graduates to `graduated`, not to `held`, which it does not
+  have.
+
+  **Compute the position of what this run is about to write, too — do not only replay old flags.**
+  `commons-check` ran at Step 2, *before* these writes, so its flags cannot know about the evidence this run
+  is adding. The plan does. For every attractor the plan creates or adds evidence to, count the domains it
+  will have **once the plan is applied**, and give it the position it will have earned:
+
+  - An attractor **created** with evidence from ≥2 domains is **born at position 1**. It earned the bar on
+    arrival; there is nothing to wait for.
+  - An **existing** attractor that this run pushes over the bar graduates **in this run**, not the next one.
+
+  Otherwise a cold start over a fixed corpus deadlocks: every attractor is born at position 0 flagged
+  `graduation-pending`, and the run that would clear the flags finds no new sources to process and does
+  nothing. The graph would sit pending forever, waiting for material nobody is going to write.
+
+  **When the graduating type declares `graduates-to:`, the plan must show the derived note too** — its title
+  and its `## so what` — because graduation there *writes a new attractor*, and the human is approving that
+  note as much as the status change. A plan that shows only "question X graduates" hides the note it is
+  about to author.
+- **Dispatch items** — tasks and tracker updates, with their sink and the defaults that will be applied.
+- **What is skipped, and why.** Silence is not a skip. Every source in the queue that produces nothing gets
+  a line saying so.
+
+Then, two things that only this step can surface:
+
+- **Cross-domain connections.** *"This is the third domain where this pattern has appeared — it graduates."*
+  This is the payoff of holding the index and the new material at once. Surface it explicitly, by name.
+- **Steering-grade principles.** The few principles that ought to change how sessions *behave* are
+  candidates for the always-loaded instruction tier (e.g. `~/.claude/rules/`). Flag them as candidates —
+  promotion out is a decision, and it goes in the plan like everything else.
+
+  **Read the instruction tier before proposing a promotion.** The rules that already exist are the ones most
+  likely to be rediscovered — a graph built from sessions that were *steered by those rules* will keep
+  re-deriving them. Proposing to promote a principle that is already a rule, verbatim, is the failure mode
+  here. If the principle is already in the tier, say so and propose nothing; if it *sharpens* an existing
+  rule, propose the amendment rather than a duplicate.
+
+  **If the tier is unreadable** — out of sandbox, no permission, not configured — **propose no promotions at
+  all** and say why. A promotion proposed without checking what is already there is a duplicate waiting to
+  happen, and the check is the only thing standing between this pipeline and a rules file that slowly fills
+  with restatements of itself.
+
+### The cold start
+
+A new graph has **no attractors** — `commons-init` deliberately seeds none, because a graph pre-loaded with
+fake claims starts with content nobody stands behind. So the first run is the one case where "propose few
+new attractors" is exactly wrong advice.
+
+On an empty or near-empty graph, work **bottom-up**:
+
+1. Extract the claims first, without worrying about what they support.
+2. Cluster them by the *stance they imply* — not by topic, not by which source they came from.
+3. Name an attractor per cluster, and write its `## so what` as the thing that changes because the cluster
+   is true. A cluster that cannot produce a "so what" is a topic; drop it rather than promoting it.
+4. A claim that joins no cluster and forces an attractor of its own is a smell. One orphan claim does not
+   justify an attractor — hold it back rather than inventing a stance to hang it on.
+
+**Expect the first run to be attractor-heavy and every later run to be attractor-light.** A *second* run that
+proposes many new attractors is the real smell — it means the first run's attractors were named too
+narrowly to accumulate anything.
+
+**Don't open a question that the same run already answers.** On a cold start, a question clustered from two
+domains meets the graduation bar the instant it exists — so writing it as a `question` and graduating it in
+the same pass produces a note that was never `open`, plus a derived principle, plus a transition, for what is
+simply a principle. **Write the principle directly.** Open a question only when the material genuinely leaves
+it open: the evidence pulls in different directions, or it comes from one domain and you want somewhere to
+accumulate the answer.
+
+The lifecycle exists to record a stance *earning* its keep over time. Manufacturing the whole arc inside one
+run is theater — it documents a history that did not happen.
+
+## Step 4: One approval gate
+
+Present the plan. Take **one** approval for the whole thing.
+
+Then **run to completion.** Pause mid-run *only* on:
+
+- **Genuine ambiguity** the plan did not resolve, or
+- **Conflict with the existing record** — the new material contradicts an attractor the graph already holds.
+  That is not an error to route around; it is the most interesting thing that can happen. Surface it.
+
+Do not pause to re-confirm things the plan already covered — **except where an output class or the boundary
+gate declares otherwise**, which they do deliberately (`per-item` sinks, and every cross-boundary promotion).
+Those are not re-confirmations of the plan; they are gates the plan never claimed to cover.
+
+Beyond those, the plan approval *was* the confirmation, and a pipeline that re-asks is a pipeline the human
+learns to click through.
+
+## Step 5: Run
+
+**Delegate every graph write to the `knowledge-graph` skill.** Do not write graph notes directly — that
+skill owns the invariant enforcement, and routing around it is how orphan evidence gets in.
+
+`knowledge-graph` and `commons-check` ship in this same plugin, so when the plugin is installed they are
+available to invoke. If they are not — you are running the plugin from a checkout, or it is not yet
+installed — **read their `SKILL.md` from `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and follow them to
+the letter.** Do not improvise the write path because the skill was not invocable. Their rules are the
+contract whether they execute as a separate skill or as instructions you follow yourself.
+
+**Route each dispatch class to its configured edge skill.** Dispatch outputs (tasks, tracker updates) never
+become graph notes: they are extracted, routed with their configured `defaults` folded in, and recorded in
+the stamp.
+
+**Approval semantics are heterogeneous by design.** A graph write and a tracker mutation do not deserve the
+same gate:
+
+| `approval:` | Behavior |
+|---|---|
+| `plan` (default) | Covered by the Step 4 approval. Just run. |
+| `per-item` | Confirm each item interactively before dispatch. |
+| `field-level` | Confirm individual fields before writing them. |
+
+**Continue-and-collect on failure.** A failing output class does not abort the run: mark it `errored`,
+carry on with the rest, and report every failure together at the end. Failures are **never silently
+swallowed** — an error that vanishes is worse than one that stops the run, because the graph then silently
+disagrees with reality.
+
+### The boundary gate
+
+For a `professional` posture, or **any** promotion across a domain boundary, all three layers — none
+sufficient alone (see `mechanism.md`):
+
+1. **Mechanical** — no wikilink resolves outside the target graph. `knowledge-graph` enforces this at write.
+2. **LLM review** — three questions. **Every answer must be "no"**; a single "yes" refuses. Does this name or
+   identify any person, organization, or client? Does it disclose any fact specific to one engagement (a
+   figure, a date, a timeline, a contract term, a headcount)? **Would it stop being true or useful if every
+   party involved vanished?** Run all three against the note's `domain:` value as well as its body — see
+   `mechanism.md`, and refuse a promotion whose originating graph is *named* for its client.
+3. **Human approval** — explicit, per promotion. **Non-negotiable.** Not covered by the plan approval; this
+   one is asked separately, every time.
+
+A promoted note is **newly written and self-contained**, carrying only portable substance, with `domain:` set
+to **the originating graph's `graph.name`** — non-resolving provenance, a name and never a path. It arrived
+through no source tier, so that is the only place its domain can come from, and it needs one: the receiving
+graph counts it toward graduation. It is never the original note moved. *If it needs its source to make sense, it has
+not generalized* — do not promote it; say why.
+
+## Promotion — `--promote <path-to-source-graph>`
+
+The steps above are built around a *source queue*. **A promotion has no source queue**, so it does not arrive
+through them — it is its own mode, and this is the only entrypoint to it.
+
+`--promote` reads material from another graph and derives portable notes into *this* one. Two configs are live
+at once, and confusing them is the first way this goes wrong:
+
+- **The target's `.commons.yml` governs every write** — its type names, its directories, its posture. You are
+  writing into *this* graph.
+- **The source's `.commons.yml` is read for exactly one thing: its `graph.name`**, which becomes the promoted
+  notes' `domain:`. Nothing else from it applies.
+
+The flow:
+
+1. **Read the source graph** — its index and the attractors/evidence under consideration.
+2. **Derive candidates, do not collect them.** For each, write the note you *would* write: new prose, carrying
+   only the portable substance. Rewriting is not a formality — it is where the sanitization actually happens.
+   A note you cannot restate without its particulars is a note that has not generalized. Drop it.
+3. **Run the boundary gate on every candidate** (all three layers, above), including on the `domain:` value.
+4. **Present them for explicit human approval** — the promotion gate is separate from any plan approval.
+   Do **not** offer a refused note as an approvable option; the gate exists to keep it off the human's desk.
+5. **Write**, delegating to `knowledge-graph` against the *target's* config.
+6. **Regenerate the index** and record the promotions in the changelog.
+
+Three rules that only apply here:
+
+- **A promotion may create the attractor it lands on.** Evidence cannot cross alone — the invariant requires
+  it to support an attractor that exists in the target, and a fresh commons has none. So the first promotion
+  into an empty graph derives *both* the attractor and its evidence. This is the one case where a new
+  attractor is not clustered from sources, and it is explicitly authorized. The derived attractor is born at
+  the position its *promoted* evidence earns in the target — normally position 0, since one originating graph
+  is one domain.
+- **Never carry an attractor's `## evidence` list across.** It lists the titles of notes in the *source*
+  graph — and a title can itself be a leak (an insight titled for the client is a client name in a link).
+  **Rebuild the evidence list from what was actually promoted**, and from nothing else. If the mechanical
+  layer fires on a containment error here, the fix is to drop the link, never to drag its target across to
+  satisfy it.
+- **A promoted note's `date:` is the date of promotion**, not the originating note's. It passed through no
+  source, and the source's date is itself an engagement fact — a timeline the gate would otherwise never
+  examine. Staleness in the receiving graph should measure from when the note entered *it*.
+
+**Record refusals in the changelog too.** A refusal is a shaping decision: this graph deliberately does not
+hold that evidence. Without a record, the next session re-derives the same candidate from scratch and the
+reasoning that stopped it is lost. Word the entry so it does not restate the thing it refused — *"refused a
+candidate whose substance was inseparable from the parties of a single engagement"* says everything needed and
+leaks nothing.
+
+## Step 6: Regenerate the index
+
+**Run `commons-check --index`.** The run just changed which attractors exist and what evidence they carry —
+so the index is now stale, and the index is not a nicety: it is the distilled corpus that Step 2 of the
+*next* run reads in order to make associations at all. An index left stale silently degrades every future
+run's ability to notice that a pattern has appeared before.
+
+This is the only point in the pipeline where the index is written. Skip it on `--dry-run`.
+
+## Step 7: Stamp
+
+Write the ledger stamp to each processed source — **per output class**, and recording *how far* it got:
+
+```yaml
+processed:
+  date: 2026-07-12
+  through: "## 14:01 — Converged the design into a plugin"   # verbatim heading of the last unit covered
+  claim: ran
+  principle: none               # ran | none | errored | skipped: <reason>
+  task: errored
+```
+
+Copy `through:` **verbatim** from the source — it exists to be found again on the next run, and a heading you
+normalized is a heading you cannot match. Keys are the keys of the `outputs:` map. Full semantics in
+`commons-yml.md`.
+
+This is what makes the queue enumerable and re-runs idempotent: nothing silently evaporates, a re-run resumes
+the errored class instead of redoing the whole source, and a source that grows after being stamped gets
+re-queued instead of being skipped forever.
+
+**Stamp only what you processed.** A source that was skipped is not re-stamped — refreshing its `date:` would
+churn every source on every no-op run and destroy the record of when it was actually mined. A run that
+processed no sources writes no stamps, and that is correct; it may still have rebuilt the index.
+
+**If a `source-note` stamp cannot be written — stop and say so.** A tier configured `ledger: source-note`
+whose artifacts cannot carry frontmatter (an external transcript, a read-only export, a PDF) can never be
+marked processed. Do not shrug and continue: the source would be re-read and its claims re-proposed on every
+run, forever, and the duplicates would look like new material. Report it as a config error and name the fix —
+that tier wants `ledger: sidecar`.
+
+Skip stamping entirely on `--dry-run`.
+
+## Step 8: Report
+
+- What was written to the graph, and where.
+- What was routed to which sink.
+- **What failed** — collected, with the actual errors.
+- **Cross-domain connections found.**
+- **Graduation candidates** and steering-grade principles flagged for the instruction tier.
+
+## Edge-skill discovery
+
+Config **names** edge skills (`resolve-via:`, `via:`); it never contains their procedure. Match those names
+against the **live skill list available in this session, at runtime.**
+
+**Where that list comes from:** the skills available to the session are listed in your own context — that
+enumeration is the authority, and it already includes plugin-provided skills, project skills, and personal
+skills alike. Do **not** substitute a filesystem scan of `.claude/skills/` for it: that directory holds
+project skills only, so a perfectly available plugin- or user-level edge skill would look missing and its
+output class would be skipped for no reason.
+
+**Never work from a hardcoded catalog of edge skills.** The set of them is open, project-owned, and expected
+to drift — a catalog in this file would be wrong the first time a project adds a sink.
+
+**If a named edge skill is missing:** do **not** improvise the procedure. Writing to someone's task manager
+or tracker by guessing at its interface is exactly the kind of confident wrongness that costs trust.
+Instead:
+
+1. Report the gap in the plan.
+2. Mark that output class **skipped-with-reason** in the stamp.
+3. Continue with every other class — continue-and-collect.
+4. Point at `/commons-init`, which stubs missing edge skills.
+
+## `--dry-run`
+
+Inspect and propose. **No writes, no stamp, no index regeneration, no dispatch.** Print the plan and stop.
+
+This is the mode that makes the plugin's own acceptance test possible: feed it a source the incumbent
+workflow already processed, and compare the proposed plan against what the incumbent produced. Anything the
+generalization dropped shows up immediately, with nothing at risk.
