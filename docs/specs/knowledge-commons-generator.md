@@ -1,12 +1,66 @@
 # Knowledge Commons Plugin — Specification
 
-> **Version:** 0.6.1 (draft) · **Status:** pre-build · **Date:** 2026-07-12
+> **Version:** 0.7 (draft) · **Status:** PR-A built · **Date:** 2026-07-12
 >
 > **Start here if you are implementing.** §6 (components) and §7 (config) are what you build from; §§1–5 are
 > why. The build rewrites `plugins/knowledge-commons/` in place — that plugin was built from the superseded
 > v0.3 (`knowledge-commons-plugin.md`) and its architecture is known-wrong, though roughly 40% of its content
 > survives (see §6's note on `note-formats.md`). **Read `references/` in the existing plugin before deleting
 > anything.**
+>
+> ---
+>
+> ## v0.7 — what building it found
+>
+> **The executable layer now exists** (`bin/validate.py`, `bin/_miniyaml.py`, 74 passing tests). Everything
+> below was found by *writing the code*, and every one of them is a defect no amount of further reading would
+> have surfaced — which is the sixth consecutive confirmation of §9's method note. The spec had been audited
+> five times and had produced zero lines of code; the first afternoon of building produced four corrections to
+> it. **Where this section and the prose below disagree, this section wins, and `bin/validate.py` wins over
+> both** — it is the executable contract.
+>
+> - **D6 contradicted itself, and a builder following it literally would have gutted the design.** Paragraph 2
+>   says run the validator *"before every write, passing the graph root and the proposed note … abort on
+>   non-zero."* Paragraph 4 says *"a write is a transaction, not a file"* — the note, its map's down-link, the
+>   attractor's evidence section, the hub's section. **These cannot both be obeyed.** Validating the proposed
+>   note *before* the set is complete fails **always**: its map does not list it yet, and its attractor has no
+>   evidence bullet yet. The builder's natural repair is to weaken the down-link check — which deletes the
+>   invariant D2 calls *"the one people forget."* **Paragraph 4 supersedes paragraph 2. The gate is
+>   transaction-commit, not per-file pre-validation.**
+>
+> - **"Prefer PyYAML when importable" is a bug, and the vendored parser is now the *only* runtime parser.**
+>   PyYAML resolves `date: 2026-07-08` to a `datetime.date`, silently last-wins on duplicate keys, and carries
+>   no line numbers. Preferring it when present ships **two different validator behaviors gated on whether a
+>   machine happens to have a library** — precisely the environment-dependent divergence that "stdlib only"
+>   exists to prevent, and one that would appear in some users and never in CI. PyYAML is now a **differential
+>   test oracle** and nothing else. (A duplicate key is an *error* here, not last-wins: a silently discarded
+>   key is exactly §8's dead-config-key bug.)
+>
+> - **The orphan check had no usable definition.** "No inbound link of *any* kind" cannot be right in either
+>   reading: if a parent map's entry counts, then every correctly down-linked note has one and **the check can
+>   never fire on a valid graph**; if it does not count, **every leaf note is an orphan** and it fires on
+>   everything. Neither is a check. It means **no *lateral* inbound link** — excluding maps, the atlas, and the
+>   `genitor` field — which makes it the dead-vault detector D1 actually wants. The dead vault's diagnosis was
+>   *"effectively zero lateral links."*
+>
+> - **Four config keys the check table requires and §7 never declared.** Added:
+>   `attractors[].stake-section`, `attractors[].evidence-section`, `graph.ordering-exempt`,
+>   `graph.expected-orphans`. The first is not cosmetic — without it, the "an attractor has a *so what*" check
+>   must **hardcode a heading name**, which is *literally* §8's bug 8. A spec cannot name a bug and then force
+>   it.
+>
+> **Two rulings on genuine ambiguities in the text, both now executable:**
+>
+> - **The down-link (a note absent from its map) is an ERROR, not a warning.** §6's severity policy ("an
+>   incomplete index is a warning") and D6's refusal list ("absent from its map → refused") appear to collide.
+>   They do not: the severity policy governs **`index.md`** — the *generated editorial artifact* — and map
+>   **tidiness** (ordering). Reachability is half the invariant, so it is an error, and the write gate and the
+>   health check therefore agree, exactly as D6 requires.
+> - **A graph is the commons iff it declares a `graduation:` block.** Nothing in the spec said how to tell.
+>   Getting this wrong re-introduces the incoherence D5b names as the most consequential error in this spec's
+>   history, so it is now mechanical: a feeder declares no `graduation:`, and **`commons-check` runs no
+>   lifecycle, graduation, or `domain:` check against it.** The validator refuses a `status:` on a type with no
+>   declared lifecycle.
 >
 > **v0.6** adds what a second, *non-adversarial* cold read found — an engineer told simply to build it, not to
 > hunt for problems. Its verdict was **"buildable; I'd start Monday,"** and it independently arrived at two of

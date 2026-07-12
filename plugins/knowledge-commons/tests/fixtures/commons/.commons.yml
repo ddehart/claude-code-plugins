@@ -1,0 +1,47 @@
+# The COMMONS. Genuinely different from a feeder, and the differences are load-bearing.
+#   - NO `sources:` block. Nothing is processed into it; everything arrives by promotion
+#     from a feeder. The commons is the distillate, never the inbox.
+#   - It is the ONLY graph with a lifecycle, graduation, and `domain:`.
+#   - Its `promotes-to:` names the instruction tier, which is NOT a graph.
+
+graph:
+  root: .
+  name: commons
+  atlas: principium.md
+  maps-dir: maps/
+  parent-field: genitor
+  promotes-to: { kind: instruction-tier, path: ~/.claude/rules/ }
+
+types:
+  atlas:    { name: atlas }
+  map:      { name: map, heading-level: 2 }
+  evidence: { name: claim, dir: claims/, map: claims,
+              attractor-field: supports, min-attractors: 1 }
+  attractors:
+    - { name: principle, dir: principles/, map: principles,
+        lifecycle: [provisional, held, stale],
+        stake-section: "## so what", evidence-section: "## evidence" }
+    - { name: question, dir: questions/, map: questions,
+        lifecycle: [open, graduated, abandoned], graduates-to: principle,
+        stake-section: "## why I care", evidence-section: "## partial answers" }
+  reference: { name: reference, dir: reference/, map: reference }
+
+schema:
+  atlas:     { required: [type] }
+  map:       { required: [type] }
+  claim:     { required: [type, genitor, date, domain, supports] }
+  principle: { required: [type, genitor, status] }
+  question:  { required: [type, genitor, status] }
+  reference: { required: [type, genitor] }
+
+graduation:
+  bar: 2
+  staleness-months: 6
+
+feeders:
+  - { name: orchard,  root: ../orchard,  posture: personal }
+  - { name: workshop, root: ../workshop, posture: personal }
+
+boundary:
+  posture: personal
+  promotion-gate: [mechanical, llm-review, human-approval]

@@ -74,13 +74,29 @@ Skills differ from agents:
 
 Ideas and enhancements are tracked in [GitHub Issues](https://github.com/ddehart/claude-code-plugins/issues) with tiered priority labels (tier-1 through tier-4).
 
-## No Build System
+## Build System
 
-This is a documentation-only repository. There are:
-- No dependencies to install
-- No build process
-- No tests to run
-- No linting configured
+**No dependencies to install, and no build process.** Plugins are markdown and JSON, and that is still true of
+almost everything here.
+
+**One exception: `knowledge-commons` ships an executable and has tests.** Its whole architecture rests on the
+plugin *refusing* invalid writes, and a markdown skill cannot refuse anything — it can only be told to. So the
+plugin ships a real validator, and the validator has a test suite:
+
+```bash
+python3 plugins/knowledge-commons/tests/run.py          # the whole suite
+python3 plugins/knowledge-commons/bin/validate.py check --graph <a-graph>
+```
+
+Stdlib only, Python 3.9 floor — the plugin must run on a fresh machine with nothing installed. (PyYAML is used
+in the tests as a differential oracle when present, and never at runtime.) The suite's load-bearing test is
+`test_every_check_is_proven_to_fire`: every check must have a test that breaks a fixture graph and watches it
+fire, because **a check with no firing test is indistinguishable from a check that always passes.**
+
+Everything else is validated by ensuring:
+1. JSON files are valid (`marketplace.json`, `plugin.json`)
+2. Agent and skill Markdown files have valid YAML frontmatter
+3. Instructions are clear and actionable
 
 Changes are validated by ensuring:
 1. JSON files are valid (`marketplace.json`, `plugin.json`)

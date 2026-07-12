@@ -1,0 +1,58 @@
+# A fresh-authored fixture graph: a community orchard.
+# Deliberately neutral -- no engagement, client, or employer surface anywhere.
+# This is a FEEDER graph: single-domain, so it declares no lifecycle and no graduation.
+
+graph:
+  root: .
+  name: orchard
+  atlas: grove.md
+  maps-dir: maps/
+  parent-field: genitor
+  growth: { new-map-at: 5, promote-heading-at: 7, split-note-at-lines: 200 }
+  promotes-to: { kind: graph, path: ../commons }
+  expected-orphans: []
+
+types:
+  atlas:     { name: atlas, map: null }
+  map:       { name: map, heading-level: 2 }
+  source:    { name: logbook, dir: logbook/, map: logbook, preserve-verbatim: true }
+  evidence:  { name: observation, dir: observations/, map: observations,
+               attractor-field: supports, min-attractors: 1 }
+  attractors:
+    - { name: pattern, dir: patterns/, map: patterns,
+        stake-section: "## so what", evidence-section: "## evidence" }
+    - { name: practice, dir: practices/, map: practices,
+        stake-section: "## so what", evidence-section: "## evidence" }
+  hubs:
+    - { name: plot, dir: plots/, map: plots, bidir-with: pattern,
+        section: "## patterns", field: plots }
+  reference: { name: varietal, dir: varietals/, map: varietals }
+
+schema:
+  atlas:    { required: [type] }
+  map:      { required: [type] }
+  logbook:  { required: [type, genitor, source] }
+  observation:
+    required:  [type, genitor, date, source, supports]
+    forbidden: [domain, status]
+  pattern:  { required: [type, genitor], forbidden: [domain, status] }
+  practice: { required: [type, genitor], forbidden: [domain, status] }
+  plot:     { required: [type, genitor], forbidden: [plots, date] }
+  varietal: { required: [type, genitor, verified] }
+  controlled-values:
+    season: [spring, summer, autumn, winter]
+
+sources:
+  - type: orchard-logbook
+    path: logbook-source/
+    glob: "20*.md"
+    event-delimiter: "^## \\d{2}:\\d{2}"
+    extract-via: extract-logbook
+    ledger: source-note
+
+outputs:
+  observation: { sink: graph }
+
+boundary:
+  posture: personal
+  promotion-gate: [mechanical, llm-review, human-approval]
