@@ -57,8 +57,8 @@ staleness:
 | `types.attractors` | yes | One or more. Each needs `name`, `dir`, and `lifecycle` — an **ordered** list whose positions are `[proposed, earned, retired]` (see `mechanism.md` § Lifecycles). Position 0 is the status on creation. Skills resolve statuses **by position**, so the names are yours to choose. |
 | `types.attractors[].graduates-to` | no | Name of another attractor type. When set, reaching **position 1** derives a new attractor of that type rather than merely flipping status — e.g. `question` sets `graduates-to: principle`, because a question answered from two domains has become a stance. Omit it and graduation is a status change only. |
 | `types.reference` | no | Omit if the graph has no reference tier. Reference notes are exempt from the attractor requirement and never indexed. |
-| `types.entity` | no | Lookup-only nouns. Never promotes. Omit for a personal commons. |
-| `types.intermediate` | no | Disposable synthesis scaffolding. Omit unless sources are large enough to need it. |
+| `types.entity` | **not yet wired** | Lookup-only nouns. **Do not use.** No on-disk format is defined and `knowledge-graph` cannot write one. Reserved for Phase 2; see `mechanism.md`. |
+| `types.intermediate` | **not yet wired** | Disposable synthesis scaffolding. **Do not use.** No skill produces or consumes one. Reserved for Phase 2. |
 
 ## `sources` — required
 

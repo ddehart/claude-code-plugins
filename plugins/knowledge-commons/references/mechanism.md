@@ -7,11 +7,15 @@ Read this before writing to or checking a graph. The authoritative design is
 
 ## The invariant, stated once
 
-> Evidence must point at ≥1 attractor. Attractors accumulate evidence and carry a lifecycle
-> (`provisional` → `held` → `stale`). Entities and reference are lookup-only. Dispatch classes route to
-> external sinks under per-sink approval semantics and are exempt from graph constraints. A health check
-> enforces the structure. A changelog records why the graph looks the way it does. An index renders
+> Evidence must point at ≥1 attractor. Attractors accumulate evidence and carry a lifecycle whose statuses
+> each graph names for itself: **proposed → earned → retired**. Reference is lookup-only. Dispatch classes
+> route to external sinks under per-sink approval semantics and are exempt from graph constraints. A health
+> check enforces the structure. A changelog records why the graph looks the way it does. An index renders
 > attractors for consultation. Promotion *derives* portable notes upward; it never moves them.
+
+Note what that sentence does **not** say: it does not name the statuses. `provisional`/`held`/`stale` are one
+graph's names for the three positions; a `question` calls them `open`/`graduated`/`abandoned`. Everything
+below is stated **by position**, and so is every rule in every skill. See § Lifecycles.
 
 ## Roles
 
@@ -25,14 +29,21 @@ attractors; forcing them to share a name would make working graphs worse to make
 | **Intermediate** † | bounded-event synthesis; disposable scaffolding | call synthesis | — |
 | **Evidence** | atomic, provenanced, **must point at ≥1 attractor** | insight | claim |
 | **Attractor** | accumulates evidence; has a "so what"; has a lifecycle | opportunity, decision | principle, question |
-| **Entity** | the nouns; lookup-only; **never promotes** | account, person | — |
+| **Entity** † | the nouns; lookup-only; **never promotes** | account, person | — |
 | **Reference** | lookup-retrieved facts; unbounded; never indexed | integration notes | tool facts |
 | **Dispatch** | extracted but routed *out* of the graph to an external sink | task, tracker update | task |
 
-† **`Intermediate` is defined but not yet wired.** No skill currently produces or consumes one — `/process`
-handles long sources by fanning out subagents by signal class instead. It is retained here because the
-reference work instance uses it (a call synthesis between transcript and insights) and Phase 2 will need it.
-Do not treat it as available machinery until then.
+† **`Intermediate` and `Entity` are defined but not yet wired.** Both are retained here because the reference
+work instance uses them — an intermediate call synthesis between transcript and insights; entities for
+accounts and people — and Phase 2 will need them. Neither is available machinery yet:
+
+- **`Intermediate`** — no skill produces or consumes one. `/process` handles long sources by fanning out
+  subagents by signal class instead.
+- **`Entity`** — `note-formats.md` defines no on-disk format for one, and `knowledge-graph` (the only skill
+  that writes notes) has no path to write one. **`commons-init` must not offer it** until both exist.
+
+Do not treat either as available. A type a graph can declare but no skill can write is a trap: the config
+accepts it, and the first `/process` run that tries to produce one has nothing to follow.
 
 ## Lifecycles
 

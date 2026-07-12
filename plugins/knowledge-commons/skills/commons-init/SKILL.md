@@ -83,9 +83,14 @@ What to ask:
    promotions *out* are gated by all three layers; a personal graph is usually the promotion *target*.
    Explain that when asking.
 3. **Types per role** — evidence (exactly one), attractors (one or more, each with a lifecycle), and
-   optionally reference / entity / intermediate. Offer the defaults; ask what this graph actually calls
-   these things. A work graph's `opportunity` is not a personal commons' `principle`, and forcing shared
-   names would make the graph worse to make the model tidier.
+   optionally reference. Offer the defaults; ask what this graph actually calls these things. A work graph's
+   `opportunity` is not a personal commons' `principle`, and forcing shared names would make the graph worse
+   to make the model tidier.
+
+   **Do not offer `entity` or `intermediate`.** Both are defined in `mechanism.md` for Phase 2, and neither
+   is wired: there is no on-disk format for an entity and no skill that can write one. Configuring a type
+   nothing can produce would leave the first `/process` run with an output class it has no instructions for.
+   If the user asks for one, say plainly that it is not implemented yet.
 
    Each attractor's `lifecycle:` is an ordered `[proposed, earned, retired]` — the names are the graph's to
    choose, and the skills resolve them by position. If a type *becomes* another type when it earns its keep

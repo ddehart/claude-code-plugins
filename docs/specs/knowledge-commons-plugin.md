@@ -76,11 +76,18 @@ each role in config:
 
 The mechanism, stated once:
 
-> Evidence must point at ≥1 attractor. Attractors accumulate evidence and carry a lifecycle
-> (`provisional` → `held` → `stale`). Entities and reference are lookup-only. Dispatch classes route to
-> external sinks under per-sink approval semantics and are exempt from graph constraints. A health check
-> enforces the structure. A changelog records why the graph looks the way it does. An index renders
-> attractors for consultation. Promotion *derives* portable notes upward; it never moves them.
+> Evidence must point at ≥1 attractor. Attractors accumulate evidence and carry a lifecycle whose statuses
+> each graph names for itself: **proposed → earned → retired**. Entities and reference are lookup-only.
+> Dispatch classes route to external sinks under per-sink approval semantics and are exempt from graph
+> constraints. A health check enforces the structure. A changelog records why the graph looks the way it
+> does. An index renders attractors for consultation. Promotion *derives* portable notes upward; it never
+> moves them.
+
+The lifecycle is deliberately stated **by position, not by status name.** `provisional`/`held`/`stale` is one
+graph's naming of the three positions; a `question` names them `open`/`graduated`/`abandoned`. Every rule in
+every skill resolves the status out of the type's own `lifecycle:` list — a rule that says "flag it `held`"
+is wrong, because a question has no `held`. (Amended v0.3.1; the original wording hardcoded the principle
+names, and an execution test caught skills faithfully reproducing that mistake.)
 
 **Rejected — one shared type set for every graph.** A work graph's `opportunity` is not a personal
 commons' `principle`. Forcing shared types would make working graphs worse to make the model tidier.
