@@ -19,16 +19,18 @@ generalizing — a working `/process` + knowledge-graph system that has run in o
 a year, producing 676 notes with 93% touched in 90 days and a 2:1 derived-to-source ratio.
 
 Reading it afterward showed the error immediately. The reference's value is not in its type names or its
-directory layout. It is in things like:
+directory layout. It is in instructions of a kind no configuration file can express — paraphrasing, to keep
+this document's examples fresh-authored (§11, R2):
 
-- *"Split observations from proposed solutions before evaluating either — the speculative-ness of a proposed
-  solution does not bear on the observation."*
-- *"When uncertain between promote-single-source and skip-cleanly, lean promote — a thin captured insight is
-  recoverable on a future pass; a missed observation is invisible damage."*
-- *"Disqualifiers like 'obvious' or 'speculative' often attach to the surface framing rather than the
-  underlying observation; re-check which one the disqualifier is actually applying to before skipping."*
+- **Separate what was observed from what was proposed in response, and evaluate them apart.** A speculative
+  solution says nothing about the quality of the observation that prompted it, and collapsing the two loses
+  the observation.
+- **Under uncertainty, capture.** A thin note is recoverable on a later pass; an observation never written
+  down is invisible damage. The error costs are asymmetric, so the bar is asymmetric.
+- **Check what a disqualifier is actually attaching to.** Words like "obvious" or "speculative" often describe
+  the *surface framing* of a thing rather than the thing, and skipping on that basis discards good material.
 
-These are **debiasing instructions for an LLM**. They are the reason the graph produces insight instead of
+These are **debiasing instructions for an LLM**. They are the reason the graph produces insight rather than
 transcription. **No YAML key can hold them.** A generic engine reading a config file could never reproduce the
 system it was built to generalize — which means v0.3 was, in principle, incapable of passing its own
 acceptance test.
@@ -208,7 +210,54 @@ stances accumulate evidence; the instruction tier is the **behavioral** view of 
 are the graduation *target*, not a parallel store. **Read the instruction tier before proposing a promotion** —
 a graph built from sessions that were steered by those rules will keep re-deriving them.
 
-### D8 — Promotion is derivation; the boundary is defense in depth
+### D8 — Graphs federate; the commons is fed, never authored
+
+**A graph in isolation is a dead end, and a spec that generates isolated graphs has missed the point.** The
+commons does not accumulate knowledge because someone sits down to write it. It accumulates because *every
+other graph feeds it as a byproduct of work.* Remove the feeding and the commons starves — which is precisely
+how the dead vault's `decision/` folder died at seven notes.
+
+Graphs form a **tree of derivation**, and each edge is a boundary crossing under D9's gate:
+
+```
+project graphs        ──┐
+(a repo's knowledge/    │   promotes-to
+ tier; domain-local     ├──────────────▶   the commons
+ material lives and     │                  (cross-domain; personal)
+ dies here)             │                        │
+professional graphs   ──┘                        │  promotes-to
+(the reference; a                                ▼
+ client engagement)                    the instruction tier
+                                       (~/.claude/rules/ — behavioral)
+```
+
+Every graph declares **`promotes-to:`** — the graph it derives upward into. The commons is not special-cased:
+it is simply the graph whose `promotes-to:` is the **instruction tier**, which is what makes D7's
+"steering-grade principles graduate outward" the *same mechanism* as everything else rather than a separate
+one. A graph with no `promotes-to:` is a leaf, and that is a deliberate choice, not a default.
+
+**Three promotion paths, and the first is the load-bearing one:**
+
+1. **In-band, at `/process` time.** Every run on a graph with a `promotes-to:` ends by asking *"does any of
+   this generalize?"* and proposes derived notes for the target graph **inside the same plan**. This is
+   capture-as-byproduct, and it is the single mechanism that separates a living graph from a dead one. **It is
+   not optional and it is not a fast path** — v0.3 described it as a "non-load-bearing fast path" and then
+   implemented nothing, which is how a described-but-absent mechanism survives review.
+2. **The scheduled cross-graph sweep.** A periodic pass that reads a feeder graph in bulk, proposes what
+   in-band missed, and — more valuably — spots patterns invisible note-by-note (*"this has now appeared in a
+   third domain; it graduates"*). The safety net, which is why it is not optional either: the in-band protocol
+   works best in a bounded domain where the skill is always loaded, and a session in some unrelated repo may
+   simply never think to propose a claim.
+3. **Explicit `/process --promote <graph>`.** The manual escape hatch.
+
+**The commons must know its feeders.** `commons-init` registers each new graph with its target, so the sweep
+can enumerate what to read. Without a registry, path 2 has no input and the safety net is imaginary.
+
+**Nothing is authored directly into the commons.** If a claim did not derive from a feeder graph under the
+gate, it does not belong there — the commons is the *distillate*, and hand-writing into it reintroduces the
+exact "remember to write notes" failure that kills every personal knowledge system.
+
+### D9 — Promotion is derivation; the boundary is defense in depth
 
 A domain note **never moves**. Promotion writes a **new, self-contained note** carrying only portable
 substance, with provenance as a non-resolving field (`domain: <originating-graph-name>`) — never a path, never
@@ -253,8 +302,8 @@ This is the class v0.3 under-built. It is not a short list, and it is the substa
    different* pipelines: a call is a rich bounded event warranting an intermediate synthesis; email is
    transactional, needs no synthesis artifact, and must be **batched at the entity level rather than
    thread-by-thread, because cross-thread synthesis is where the value is.** No config expresses that.
-2. **Debiasing instructions.** *"Split observations from proposed solutions before evaluating either."*
-   *"Re-check which one the disqualifier is actually applying to before skipping."*
+2. **Debiasing instructions** — separate the observation from the solution proposed in response; check what a
+   disqualifier is actually attaching to before acting on it.
 3. **The promote-vs-skip bar and its error asymmetry.** *"Lean promote — a missed observation is invisible
    damage."* v0.3 **inverted this**, calling a singleton claim "a smell" and dropping it. The correct
    resolution — and the reason the two-attractor model exists — is: **evidence is captured freely; attractors
@@ -307,9 +356,20 @@ plugins/knowledge-commons/
 **Interviews deeply, then writes a working skill set — not stubs.** A stub would mean the domain procedure is
 hand-authored anyway, and the acceptance test would measure the author, not the generator.
 
+**It instantiates a graph *into a federation*, never in isolation.** Every invocation:
+
+1. **Finds or creates the commons.** If no commons exists at the configured location, it creates one — the
+   root graph, whose own `promotes-to:` is the instruction tier. This is the first thing it does, before
+   touching the project.
+2. **Creates and wires the project graph**, with `promotes-to:` pointing at that commons.
+3. **Registers the project graph with the commons**, so the cross-graph sweep can enumerate its feeders.
+
+A `commons-init` that generates a standalone graph has produced an island, and islands starve. The wiring is
+not a follow-up step.
+
 It produces:
 
-- **`.commons.yml`** — the data-shaped half.
+- **`.commons.yml`** — the data-shaped half, including `promotes-to:`.
 - **`.claude/skills/<extract>/SKILL.md`** — the domain's extraction skill, **generated with its procedure
   filled in from the interview**, carrying the invariants and delegating every write to the plugin's
   `knowledge-graph`. One per source type where the pipelines differ structurally.
@@ -350,8 +410,15 @@ A **thin router and sequencer**. It never reimplements a downstream skill's logi
 7. **Approval is heterogeneous, and fine-grained subsumes coarse-grained.** Graph writes run under the plan
    approval. A record sink re-confirms at field level. A task sink confirms **per item** — and *because* it
    does, it needs no separate batch gate. **Never stack both.**
-8. **Continue-and-collect** on failure. Never silently swallow.
-9. **Stamp and report.**
+8. **Ask whether any of it generalizes.** On a graph with a `promotes-to:`, the run ends by proposing derived
+   notes for the target graph — **in the same plan**, so the human approves capture and promotion together
+   (D8, path 1). Every professional-posture promotion additionally passes D9's three layers, and its human
+   gate is asked **separately, every time.** A run that writes to the graph and never asks this question is the
+   failure mode the whole design exists to prevent: the source material is refined and the generalization is
+   lost, silently, forever.
+9. **Continue-and-collect** on failure. Never silently swallow.
+10. **Stamp and report.** The stamp records promotion outcomes alongside everything else, so a partial failure
+    resumes.
 
 **Re-pause only for:** genuine ambiguity, or **conflict with the existing record** — which is not an error to
 route around but the most interesting thing that can happen. Do **not** pause to create a new entity that
@@ -417,6 +484,16 @@ graph:
   maps-dir: maps/
   parent-field: genitor
   growth: { new-map-at: 5, promote-heading-at: 7, split-note-at: 200 }
+
+  # D8 — the federation edge. Where this graph derives upward into.
+  # A leaf has none; that is a choice, not a default.
+  promotes-to: ~/commons
+
+# Only the commons carries this: the graphs that feed it, so the sweep can enumerate them.
+# commons-init appends to it when it wires a new project graph.
+feeders:
+  - { name: <graph>, root: ~/Developer/<project>/knowledge, posture: personal }
+  - { name: <graph>, root: ~/Obsidian/<graph>,              posture: professional }
 
 types:
   # `type:` in frontmatter is AUTHORITATIVE. Directory is a default, not a rule —
@@ -560,10 +637,17 @@ execution test are not optional finishing steps.
 | Phase | Work | Gate |
 |---|---|---|
 | **1** | Build the plugin. Regenerate the reference with `--seed`. Side-by-side equivalence. | The regenerated system reproduces the reference's workflows (§9) |
-| **2** | Instantiate the personal commons from the *proven* generator. | Proposal precision holds over ~2 weeks of real runs |
-| **3** | Register in `marketplace.json`; README and docs. | Installable by a stranger; examples fresh-authored |
-| **4** | Scheduled cross-graph sweep + LLM contradiction pass. | The sweep surfaces a promotion the in-band path missed |
-| **5** | Bulk-source processing (read-later archives, highlight exports). | Signal-to-noise justifies the stage |
+| **2** | Instantiate the commons from the *proven* generator. Wire the reference to it with `promotes-to:`. | **A real claim derives from the reference upward into the commons, through all three layers of D9's gate.** |
+| **3** | A project knowledge tier in a third repo, wired to the same commons. | **An attractor in the commons carries evidence from two different domains** — i.e. the federation actually produced a cross-domain connection, which is the entire premise |
+| **4** | Register in `marketplace.json`; README and docs. | Installable by a stranger; examples fresh-authored |
+| **5** | Scheduled cross-graph sweep + LLM contradiction pass. | The sweep surfaces a promotion the in-band path missed |
+| **6** | Bulk-source processing (read-later archives, highlight exports). | Signal-to-noise justifies the stage |
+
+**Phases 2 and 3 are the gates that would have caught this spec's own blind spot.** A phase that ends with a
+working graph proves the generator. Only a phase that ends with **a claim having crossed a boundary**, and
+then with **an attractor spanning two domains**, proves the *federation* — and the federation is the product.
+Every earlier version of this spec gated on graphs existing, which is why every earlier version shipped
+islands.
 
 **The reference comes first, and that ordering is the whole lesson of v0.3.** It is the only instantiation
 whose correct output is already known — which is what makes it a regression harness. Validating a generator
@@ -577,9 +661,20 @@ The plugin stays **unregistered** until Phase 3.
 
 - **R1. Proposal precision at the abstraction level.** Deriving portable principles is genuine abstraction,
   harder than structured extraction against a tight ontology. Measured directly in Phase 2.
-- **R2. Boundary leaks via prose.** D8's layers reduce but cannot eliminate; the human gate is the backstop.
+- **R2. Boundary leaks via prose.** D9's layers reduce but cannot eliminate; the human gate is the backstop.
   **Nothing engagement-, client-, or employer-specific ever enters this public repo — every commit is public
   history, including examples and fixtures. Fresh-authored examples only.**
+
+  **This applies to the generator's own templates.** `references/templates/` must be written from the
+  *mechanism*, never lifted from a reference skill's prose — a template is the most-copied artifact in the
+  plugin, and a phrase lifted into it propagates into every project anyone ever generates. The same rule
+  governs this spec: its illustrations are paraphrased, not quoted.
+- **R6. The federation may not fire outside a bounded domain.** In-band capture (D8, path 1) works in the
+  reference partly *because* the domain is bounded and the skill is always loaded. A session in some unrelated
+  repo may simply never think to propose a claim — which is why the scheduled sweep is a safety net rather
+  than a nicety, and why Phase 3 gates on an attractor actually spanning two domains rather than on a project
+  graph merely existing. If the sweep is what produces every cross-domain connection and in-band produces
+  none, the in-band premise is wrong and should be said so plainly.
 - **R3. The attractor partition is unstable, and proposal precision cannot detect it.** Two runs over the same
   corpus produce different attractors. "Cluster by the stance they imply" is the right instruction and an
   underdetermined one. The partition is where nearly all the value lives, and the Phase-2 gate is blind to it:
