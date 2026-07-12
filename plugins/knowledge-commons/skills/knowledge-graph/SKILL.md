@@ -97,6 +97,27 @@ it an attractor link.
 approved transition, change `status:` and record it in the changelog. Never flip a status silently as a
 side effect of some other write.
 
+**Resolve the new status by position, out of the type's own `lifecycle:` list** — never by literal name. The
+positions are defined in `mechanism.md`. A `principle` calls position 1 `held`; a `question` calls it
+`graduated` and has no `held`. Writing `status: held` onto a question produces a status its type does not
+have.
+
+### Graduation that derives a new attractor (`graduates-to:`)
+
+When the graduating type declares `graduates-to: <type>`, graduation is **not** a status flip. Two writes,
+one approved transition:
+
+1. **Derive the new attractor.** Write a new note of the target type. Its `## so what` is the stance the
+   graduating note arrived at — carried forward as a claim someone stands behind, not as a summary of the
+   question. Re-point the graduating note's evidence at it, preserving each `(domain)` annotation, so the
+   new attractor inherits the domain count that earned it.
+2. **Move the original to position 1** and record what it became — a line under its body naming the derived
+   note, so the trail is not lost.
+
+If you flip the status without deriving the note, the accumulated reasoning is stranded in a note that has
+just been marked resolved. That is the exact failure `graduates-to:` exists to prevent — do not do half of
+it.
+
 ## Step 4: Changelog
 
 Append **one dated bullet per graph-shaping event** to `changelog.md` at the graph root: what changed and

@@ -36,20 +36,49 @@ Do not treat it as available machinery until then.
 
 ## Lifecycles
 
-Attractor lifecycles are declared per type in config. The common shapes:
+**This section is the single definition of the lifecycle rules.** `commons-check` applies them and
+`/process` executes the flags; neither restates them. Change them here.
 
-- **principle-like:** `provisional` → `held` → `stale`
-- **question-like:** `open` → `graduated` | `abandoned`
+Attractor lifecycles are declared **per type** in config, as an ordered list. Every type's list is a
+different name for the same three positions — so **the rules below are stated by position, never by literal
+status name.** A rule that says "flag it `held`" is wrong: a `question` has no `held`.
+
+| Position | Meaning | `principle` | `question` |
+|---|---|---|---|
+| **0 — proposed** | created; has not yet earned its keep | `provisional` | `open` |
+| **1 — earned** | evidence from ≥2 distinct domains | `held` | `graduated` |
+| **2 — retired** | no longer live | `stale` | `abandoned` |
+
+Read the target status out of the type's own `lifecycle:` list at position 0/1/2. A type may declare a
+2-position lifecycle (no retired state); then staleness has nowhere to go and is reported without a
+transition.
 
 **Transitions are flagged, never applied silently.** `commons-check` flags them; they are applied during the
 next `/process` run under plan approval. The rules:
 
-| Flag | Condition |
-|---|---|
-| **Graduation** | a `provisional` attractor with evidence from ≥2 distinct `domain:` values → promote to `held` |
-| **Demotion** | a `held` attractor whose evidence is all from a single domain → it was promoted early |
-| **Staleness** | no new evidence in N months (config `staleness.months`) → flag for review |
-| **Orphan** | an attractor with zero evidence |
+| Flag | Condition | Transition |
+|---|---|---|
+| **Graduation** | an attractor at **position 0** with evidence from ≥2 distinct `domain:` values | → **position 1** |
+| **Demotion** | an attractor at **position 1** whose evidence is all from a single domain — it was promoted early | → **position 0** |
+| **Staleness** | no new evidence in N months (config `staleness.months`) | → **position 2** |
+| **Orphan** | an attractor with zero evidence | none — report only |
+
+### Graduation may derive a new attractor
+
+Some attractor types graduate *into another type* rather than merely changing status. A `question` that has
+accumulated answers from two domains has stopped being a question — it has become a stance, and the stance
+belongs in a `principle`.
+
+A type declares this with `graduates-to: <type>` in config. When it is set, reaching **position 1** means
+two things happen together, both under the same plan approval:
+
+1. A **new attractor of the target type is derived** from the graduating one — carrying its substance
+   forward as a `## so what`, and re-pointing its evidence at the new note.
+2. The original moves to **position 1** (`graduated`), recording what it became.
+
+Without `graduates-to:`, position 1 is a status change and nothing more. **If a type declares
+`graduates-to:` and only the status flips, the accumulated reasoning is stranded in a note now marked
+resolved** — which is the failure this field exists to prevent.
 
 ## Retrieval model
 
@@ -69,6 +98,15 @@ design fixes where: in the refinement loop, by the session whose job it is to lo
 A domain note **never moves** to a more general graph. Promotion writes a **new, self-contained note**
 carrying only the portable substance, with provenance as a non-resolving field (`domain: <name>`) — never a
 path, never a link. *If a derived note needs its source to make sense, it has not generalized.*
+
+**The promoted note's `domain:` is the originating graph's name** (`graph.name` in its config) — not a source
+tier of the receiving graph, because it never passed through one. This is load-bearing: a promoted note is
+evidence in the graph it lands in, and its domain is what that graph counts toward the ≥2-domain bar. A
+promotion arriving with no domain silently under-counts.
+
+Note the consequence for a professional graph: **its name travels with every note it promotes.** A graph
+named for a client or an employer discloses that by existing in someone else's `domain:` field. Name
+professional graphs for their *kind of work*, not their party.
 
 For any promotion out of a professional domain, three layers — **none sufficient alone**:
 

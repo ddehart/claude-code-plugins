@@ -72,13 +72,31 @@ Run the artifact in the environment it will actually run in before trusting any 
 <!-- questions/When is a checklist better than automation.md -->
 ---
 type: question
-status: open                   # open | graduated | abandoned
+status: open                   # open | graduated | abandoned  (positions 0 | 1 | 2)
 ---
 ## why I care
 
 ## partial answers
-- [[…]]                        # graduates to a principle at ≥2 domains
+- [[2026-07 A dry run caught a config error that review missed]]   (homelab)
 ```
+
+A `question` declares `graduates-to: principle`, so reaching position 1 (`graduated`) does **not** merely
+flip its status — it **derives a new `principle`** carrying the stance the question arrived at, and
+re-points this note's evidence at it. The question then records what it became:
+
+```markdown
+---
+type: question
+status: graduated
+---
+## why I care
+…
+## became
+[[Execution beats review for validating configuration]]
+```
+
+Flipping the status without deriving the principle strands the reasoning in a note now marked resolved.
+See `mechanism.md` § Graduation may derive a new attractor.
 
 ## Reference
 

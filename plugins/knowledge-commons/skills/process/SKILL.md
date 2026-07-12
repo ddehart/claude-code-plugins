@@ -53,6 +53,18 @@ is what keeps non-source files in the same directory out of the queue) and read 
   is for.
 - `--augment` → force this mode for every source, regardless of stamp.
 
+**What `--augment` actually does.** This is the *common* path, not a rare flag — chronicle files grow, so
+most re-queued sources arrive here. It is two steps, and skipping the second produces near-duplicate claims:
+
+1. **Read only the new units** — the blocks after the stamp's `through:`. Not the whole file. The already-
+   processed units produced their claims on the last run; re-reading them only invites re-proposing them.
+2. **Dedupe candidates against what the graph already holds.** Glob the evidence directory and compare each
+   candidate against the existing notes on *substance*, not title — a claim rephrased is still the same
+   claim. Drop the duplicates, and say in the plan how many you dropped.
+
+If a source has no `through:` (a digest-tracked source with no units), you cannot scope to new material —
+read the whole source and rely entirely on step 2.
+
 **Resolve each source to readable text.** If the tier declares `resolve-via:`, invoke that edge skill (see
 *Edge-skill discovery* below). If it is `null`, the artifact is already readable — just read it.
 
@@ -91,7 +103,14 @@ For each source, propose:
   what lets them grow without bound. Propose them if the config declares a `reference` type; a source full of
   hard-won tool facts that produces no reference notes is leaving the cheapest value on the floor.
 - **Lifecycle transitions to apply**, from `commons-check`'s flags. State the evidence: *"principle X now
-  has evidence from devbox and wellstead → graduates to `held`."*
+  has evidence from devbox and wellstead → graduates to `held`."* Name the target status by reading it from
+  the type's own `lifecycle:` list — a `question` graduates to `graduated`, not to `held`, which it does not
+  have.
+
+  **When the graduating type declares `graduates-to:`, the plan must show the derived note too** — its title
+  and its `## so what` — because graduation there *writes a new attractor*, and the human is approving that
+  note as much as the status change. A plan that shows only "question X graduates" hides the note it is
+  about to author.
 - **Dispatch items** — tasks and tracker updates, with their sink and the defaults that will be applied.
 - **What is skipped, and why.** Silence is not a skip. Every source in the queue that produces nothing gets
   a line saying so.
@@ -181,8 +200,10 @@ sufficient alone (see `mechanism.md`):
 3. **Human approval** — explicit, per promotion. **Non-negotiable.** Not covered by the plan approval; this
    one is asked separately, every time.
 
-A promoted note is **newly written and self-contained**, carrying only portable substance, with `domain:` as
-non-resolving provenance. It is never the original note moved. *If it needs its source to make sense, it has
+A promoted note is **newly written and self-contained**, carrying only portable substance, with `domain:` set
+to **the originating graph's `graph.name`** — non-resolving provenance, a name and never a path. It arrived
+through no source tier, so that is the only place its domain can come from, and it needs one: the receiving
+graph counts it toward graduation. It is never the original note moved. *If it needs its source to make sense, it has
 not generalized* — do not promote it; say why.
 
 ## Step 6: Regenerate the index
@@ -225,6 +246,12 @@ Skip stamping entirely on `--dry-run`.
 
 Config **names** edge skills (`resolve-via:`, `via:`); it never contains their procedure. Match those names
 against the **live skill list available in this session, at runtime.**
+
+**Where that list comes from:** the skills available to the session are listed in your own context — that
+enumeration is the authority, and it already includes plugin-provided skills, project skills, and personal
+skills alike. Do **not** substitute a filesystem scan of `.claude/skills/` for it: that directory holds
+project skills only, so a perfectly available plugin- or user-level edge skill would look missing and its
+output class would be skipped for no reason.
 
 **Never work from a hardcoded catalog of edge skills.** The set of them is open, project-owned, and expected
 to drift — a catalog in this file would be wrong the first time a project adds a sink.

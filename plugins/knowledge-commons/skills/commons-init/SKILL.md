@@ -50,11 +50,12 @@ near-minimal, and offering a filled-in default is faster than asking six open qu
 ```yaml
 graph:
   root: <asked>
+  name: <asked>              # the domain: this graph stamps on notes it promotes elsewhere
   types:
     evidence:   { name: claim,     dir: claims/,     requires: attractor-link }
     attractors:
       - { name: principle, dir: principles/, lifecycle: [provisional, held, stale] }
-      - { name: question,  dir: questions/,  lifecycle: [open, graduated, abandoned] }
+      - { name: question,  dir: questions/,  lifecycle: [open, graduated, abandoned], graduates-to: principle }
     reference:  { name: reference, dir: reference/ }
 sources:
   - type: session-chronicle
@@ -76,7 +77,8 @@ staleness:
 
 What to ask:
 
-1. **Graph root** — where the notes live.
+1. **Graph root, and the graph's name** — where the notes live, and what this graph is called. The name is
+   not cosmetic: it becomes the `domain:` on any note this graph promotes into another one.
 2. **Boundary posture** — `personal` or `professional`. This is the consequential one: a professional graph's
    promotions *out* are gated by all three layers; a personal graph is usually the promotion *target*.
    Explain that when asking.
@@ -84,6 +86,12 @@ What to ask:
    optionally reference / entity / intermediate. Offer the defaults; ask what this graph actually calls
    these things. A work graph's `opportunity` is not a personal commons' `principle`, and forcing shared
    names would make the graph worse to make the model tidier.
+
+   Each attractor's `lifecycle:` is an ordered `[proposed, earned, retired]` — the names are the graph's to
+   choose, and the skills resolve them by position. If a type *becomes* another type when it earns its keep
+   (a `question` answered across two domains has become a stance, i.e. a `principle`), set
+   `graduates-to: <type>` — otherwise graduation is a bare status flip and the reasoning gets stranded in a
+   note marked resolved.
 4. **Source tiers** — what artifacts arrive on their own, where they land, **what domain each carries**, and
    whether each needs an edge skill to become readable text (a recording URL to resolve, a transcript to
    format) or is already markdown. Set each tier's `glob:` if its directory holds anything that is not a
@@ -114,8 +122,11 @@ the first real `/process` run then has to argue with it.
 
 ## Step 4: Stub the missing edge skills
 
-For every `resolve-via:` and `via:` name in the config, check the **live skill list**. For each one that
-does not exist, write a stub to the *target project's* `.claude/skills/<name>/SKILL.md`.
+For every `resolve-via:` and `via:` name in the config, check the **live skill list** — the skills enumerated
+in your own session context, which already covers plugin, project, and personal skills. Do not scan
+`.claude/skills/` instead; that holds project skills only, and you would stub over an edge skill that already
+exists at another level. For each name genuinely absent, write a stub to the *target project's*
+`.claude/skills/<name>/SKILL.md`.
 
 A stub is a **contract, not an implementation**: valid frontmatter, and a body stating what it receives,
 what it must return, and its approval mode — with the procedure left as a clearly-marked TODO.

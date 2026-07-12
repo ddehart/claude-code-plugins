@@ -416,4 +416,24 @@ reader with no stake in the author's intent caught what the author's review coul
 the failure mode it caught — a plausible artifact that passes textual review and fails on contact with a real
 input — is the same one the previous session recorded, one entry earlier in this same chronicle.
 
+**A code review then found bugs in the fixes.** Three are worth recording, because each is a case of the
+mechanism being described correctly in prose and specified wrongly in the parts a following agent executes:
+
+- **The ledger's `digest` self-invalidated.** With `ledger: source-note` the stamp is written *into* the file
+  the digest covers — so stamping changed the bytes, every subsequent run saw a mismatch, and the source
+  would have been re-queued forever. The digest is now scoped to exclude the `processed:` block. Note the
+  shape: this bug was *introduced by the fix* for the previous ledger bug.
+- **Lifecycle rules named statuses literally** (`provisional → held`) while lifecycles are configurable per
+  type — and the shipped `question` type has no `held`. Lifecycles are now defined **by position**
+  (`[proposed, earned, retired]`, D1 amended accordingly); skills resolve the name from the type's own list.
+- **`question → principle` graduation was specified and unimplemented.** `note-formats` said a question
+  "graduates to a principle," but every skill treated graduation as a status flip, which would have stranded
+  the accumulated reasoning in a note marked resolved. Graduation can now **derive a new attractor**, declared
+  per type as `graduates-to:`.
+
+Also settled: a promoted note's `domain:` is the **originating graph's name** (`graph.name`) — it passes
+through no source tier, so nothing else could supply it, and without one the receiving graph's ≥2-domain bar
+silently under-counts. A professional graph's name therefore travels with everything it promotes, which is
+itself a boundary consideration (D4): name such graphs for their kind of work, not their party.
+
 O1 and O2 remain open: they are confirmed against the live personal instance, per the resolution path above.

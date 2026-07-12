@@ -49,28 +49,29 @@ Run all of them; collect and report together.
 No wikilink resolves outside the graph root. A link that escapes is a structural boundary leak — report it
 as such, not as a broken link.
 
-### Graduation
+### Lifecycle transitions
 
-An attractor at the first lifecycle status (`provisional`, `open`) whose evidence spans **≥2 distinct
-`domain:` values** has earned promotion. Flag it: `provisional` → `held`.
+**The rules live in `mechanism.md` § Lifecycles. Apply them from there; do not restate them here** — a
+second copy is a second thing to fix.
+
+Two things that copy will not do for you, and that are the usual source of wrong flags:
+
+- **Resolve every status by position, never by name.** The rules are stated as position 0 (proposed) → 1
+  (earned) → 2 (retired), and each attractor type names those positions itself in its `lifecycle:` list. A
+  `principle` calls position 1 `held`; a `question` calls it `graduated` and has no `held` at all. Flagging
+  a question for promotion to `held` is a status the type cannot hold. **Read the name out of the type's own
+  list.**
+- **Honor `graduates-to:`.** If the graduating type declares it, graduation is not a status flip — it also
+  derives a new attractor of the target type. Flag *both* halves, or the reasoning is stranded in a note
+  that has just been marked resolved.
 
 Two domains is the bar because a pattern that has only ever appeared in one domain is a local habit, not a
-principle.
-
-### Demotion
-
-An attractor at `held` whose evidence is **all from a single domain** was promoted early. Flag it for
-demotion. This is the counterweight that keeps the ≥2-domain bar honest.
-
-### Staleness
-
-An attractor with no new evidence in **N months** (`staleness.months` in config, default 6) → flag `stale`.
-Stale is not wrong; it is unexercised. The flag prompts a review, not a deletion.
+principle. Staleness is not wrongness — it is unexercisedness; the flag prompts a review, not a deletion.
 
 ### Orphans
 
 An attractor with **zero** evidence. Either it was created speculatively, or its evidence was never linked.
-Report it; the plan decides.
+Report it; the plan decides. No transition.
 
 ## `--index` — regenerate the index
 
