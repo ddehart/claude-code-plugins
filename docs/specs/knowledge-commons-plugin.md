@@ -142,9 +142,16 @@ For any promotion out of a professional domain, three layers — none sufficient
 1. **Mechanical.** No wikilink in the target graph may resolve outside it. Catches structure. (Entity
    names in free prose cannot be mechanically excluded — a denylist would import the very names it
    protects — so this layer is necessary, not sufficient.)
-2. **LLM review gate.** Before writing: does this name or identify any person, organization, or client?
-   Does it disclose any fact specific to one engagement? Would it remain true and useful if every party
-   involved vanished? Three noes required. Catches prose.
+2. **LLM review gate.** Before writing, three questions, **every answer must be "no"**; any single "yes"
+   refuses. Does this name or identify any person, organization, or client? Does it disclose any fact
+   specific to one engagement? **Would it stop being true or useful if every party involved vanished?**
+   Catches prose. The questions are run against the note's `domain:` value as well as its body — that field
+   carries the originating graph's name, and nothing else in the three layers reads it.
+
+   *(Amended v0.3.1. The original phrased the third question positively — "would it remain true and useful"
+   — while requiring "three noes," which inverts one limb of the gate: a portable note answers* yes *to it.
+   Read literally the gate admitted only non-portable notes and refused every legitimate one. An adversarial
+   execution test caught it; author review had passed the wording three times.)*
 3. **Human approval.** Every cross-boundary promotion is approved explicitly. Non-negotiable.
 
 ### D5 — Outputs are typed and routed to sinks

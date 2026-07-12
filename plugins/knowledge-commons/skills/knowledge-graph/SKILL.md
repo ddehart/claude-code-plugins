@@ -30,6 +30,13 @@ assume the personal-commons names — read them.
 
 If `.commons.yml` is absent, stop and point at `/commons-init`. Do not improvise a graph layout.
 
+**During a promotion, two configs are live — the one that governs the write is the TARGET's.** Do not resolve
+it from cwd, which may sit in the source graph: the caller names which graph is being written to, and its
+config supplies every type name and directory. The source's config is consulted for exactly one value, its
+`graph.name`, which becomes the promoted note's `domain:`. Getting this backwards writes an `insight`
+supporting an `opportunity` into a graph whose directories are `claims/` and `principles/` — a graph that
+type-checks against the wrong config and is silently malformed.
+
 ## Step 2: Enforce the invariant at write time
 
 This is the load-bearing constraint. **One enforced rule is why the graph has edges at all** — unenforced

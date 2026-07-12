@@ -139,12 +139,23 @@ For any promotion out of a professional domain, three layers — **none sufficie
 1. **Mechanical.** No wikilink in the target graph may resolve outside it. Catches structure. (Entity names
    in free prose cannot be mechanically excluded — a denylist would import the very names it protects — so
    this layer is necessary, not sufficient.)
-2. **LLM review gate.** Before writing, three questions, **three noes required**:
+2. **LLM review gate.** Before writing, three questions. **Every answer must be "no."** Any single "yes"
+   refuses the promotion.
    - Does this name or identify any person, organization, or client?
-   - Does it disclose any fact specific to one engagement?
-   - Would it remain true and useful if every party involved vanished?
+   - Does it disclose any fact specific to one engagement — a figure, a date, a timeline, a contract term,
+     a headcount?
+   - **Would it stop being true or useful if every party involved vanished?** (Phrased for a "no": a
+     genuinely portable note survives the disappearance of everyone concerned. If erasing the parties would
+     gut it, its substance *is* the engagement.)
 
    Catches prose.
+
+   **Run all three against the `domain:` value too, not only the body.** The promoted note's `domain:` is the
+   originating graph's `graph.name`, and the promotion mechanism writes it into the target's frontmatter
+   automatically. A graph named for its client would sail through every prose check and stamp that client's
+   name into every note it ever promotes — the one field none of the three layers would otherwise read. If
+   the name fails, **refuse the promotion and fix the name**; do not quietly substitute a different one, which
+   would leave the graph's own config still carrying it.
 3. **Human approval.** Every cross-boundary promotion is approved explicitly. **Non-negotiable.**
 
 ## Steering-grade principles graduate outward

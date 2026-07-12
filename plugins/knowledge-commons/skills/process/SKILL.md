@@ -6,7 +6,7 @@ description: >
   concrete plan, take one approval, run to completion, stamp each source, report. Use when asked to process
   session records or chronicles, refine sources into the graph, run the commons pipeline, or catch the graph
   up on new material. Supports --dry-run (propose only, no writes) and --augment (reprocess for what's new).
-argument-hint: "[source-path] [--augment] [--dry-run]"
+argument-hint: "[source-path] [--augment] [--dry-run] [--promote <graph>]"
 allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "AskUserQuestion", "Agent", "Skill"]
 ---
 
@@ -241,9 +241,11 @@ For a `professional` posture, or **any** promotion across a domain boundary, all
 sufficient alone (see `mechanism.md`):
 
 1. **Mechanical** — no wikilink resolves outside the target graph. `knowledge-graph` enforces this at write.
-2. **LLM review** — three questions, **three noes required**: Does this name or identify any person,
-   organization, or client? Does it disclose any fact specific to one engagement? Would it remain true and
-   useful if every party involved vanished?
+2. **LLM review** — three questions. **Every answer must be "no"**; a single "yes" refuses. Does this name or
+   identify any person, organization, or client? Does it disclose any fact specific to one engagement (a
+   figure, a date, a timeline, a contract term, a headcount)? **Would it stop being true or useful if every
+   party involved vanished?** Run all three against the note's `domain:` value as well as its body — see
+   `mechanism.md`, and refuse a promotion whose originating graph is *named* for its client.
 3. **Human approval** — explicit, per promotion. **Non-negotiable.** Not covered by the plan approval; this
    one is asked separately, every time.
 
@@ -252,6 +254,54 @@ to **the originating graph's `graph.name`** — non-resolving provenance, a name
 through no source tier, so that is the only place its domain can come from, and it needs one: the receiving
 graph counts it toward graduation. It is never the original note moved. *If it needs its source to make sense, it has
 not generalized* — do not promote it; say why.
+
+## Promotion — `--promote <path-to-source-graph>`
+
+The steps above are built around a *source queue*. **A promotion has no source queue**, so it does not arrive
+through them — it is its own mode, and this is the only entrypoint to it.
+
+`--promote` reads material from another graph and derives portable notes into *this* one. Two configs are live
+at once, and confusing them is the first way this goes wrong:
+
+- **The target's `.commons.yml` governs every write** — its type names, its directories, its posture. You are
+  writing into *this* graph.
+- **The source's `.commons.yml` is read for exactly one thing: its `graph.name`**, which becomes the promoted
+  notes' `domain:`. Nothing else from it applies.
+
+The flow:
+
+1. **Read the source graph** — its index and the attractors/evidence under consideration.
+2. **Derive candidates, do not collect them.** For each, write the note you *would* write: new prose, carrying
+   only the portable substance. Rewriting is not a formality — it is where the sanitization actually happens.
+   A note you cannot restate without its particulars is a note that has not generalized. Drop it.
+3. **Run the boundary gate on every candidate** (all three layers, above), including on the `domain:` value.
+4. **Present them for explicit human approval** — the promotion gate is separate from any plan approval.
+   Do **not** offer a refused note as an approvable option; the gate exists to keep it off the human's desk.
+5. **Write**, delegating to `knowledge-graph` against the *target's* config.
+6. **Regenerate the index** and record the promotions in the changelog.
+
+Three rules that only apply here:
+
+- **A promotion may create the attractor it lands on.** Evidence cannot cross alone — the invariant requires
+  it to support an attractor that exists in the target, and a fresh commons has none. So the first promotion
+  into an empty graph derives *both* the attractor and its evidence. This is the one case where a new
+  attractor is not clustered from sources, and it is explicitly authorized. The derived attractor is born at
+  the position its *promoted* evidence earns in the target — normally position 0, since one originating graph
+  is one domain.
+- **Never carry an attractor's `## evidence` list across.** It lists the titles of notes in the *source*
+  graph — and a title can itself be a leak (an insight titled for the client is a client name in a link).
+  **Rebuild the evidence list from what was actually promoted**, and from nothing else. If the mechanical
+  layer fires on a containment error here, the fix is to drop the link, never to drag its target across to
+  satisfy it.
+- **A promoted note's `date:` is the date of promotion**, not the originating note's. It passed through no
+  source, and the source's date is itself an engagement fact — a timeline the gate would otherwise never
+  examine. Staleness in the receiving graph should measure from when the note entered *it*.
+
+**Record refusals in the changelog too.** A refusal is a shaping decision: this graph deliberately does not
+hold that evidence. Without a record, the next session re-derives the same candidate from scratch and the
+reasoning that stopped it is lost. Word the entry so it does not restate the thing it refused — *"refused a
+candidate whose substance was inseparable from the parties of a single engagement"* says everything needed and
+leaks nothing.
 
 ## Step 6: Regenerate the index
 

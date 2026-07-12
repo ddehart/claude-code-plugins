@@ -27,6 +27,11 @@ resolved by filename within the graph root.
   `/process` got around to reading it. This matters because staleness is measured against evidence dates:
   if `date:` were the processing date, working through a two-year backlog in an afternoon would make every
   attractor look freshly exercised.
+
+  **Exception — a promoted note is dated by its promotion.** It passed through no source, so there is no
+  source date to take; and the originating note's date is itself an engagement fact (a timeline), which is
+  exactly what a cross-boundary promotion must not carry. Staleness in the receiving graph should measure
+  from when the note entered *that* graph anyway.
 - Directories come from `.commons.yml` type config, not from this file. `claims/`, `principles/`,
   `questions/`, `reference/` below are the personal-commons defaults.
 
