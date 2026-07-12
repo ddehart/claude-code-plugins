@@ -879,8 +879,9 @@ graph:
   name: commons
   atlas: principium.md
   maps-dir: maps/
-  promotes-to: ~/.claude/rules/     # NOT a graph — the instruction tier. See D8.
-  target-kind: instruction-tier     # so /process knows this edge writes rules, not notes
+  # The instruction tier is NOT a graph (D8), and `kind:` says so explicitly rather
+  # than making /process infer it from the path.
+  promotes-to: { kind: instruction-tier, path: ~/.claude/rules/ }
 
 types:
   atlas:    { name: atlas }
@@ -934,6 +935,19 @@ block as its own input. Nothing else about the artifact matters.
 `docs/chronicle/2026-07-12.md### 14:01 — Converged the design`. The heading is copied **verbatim** — it exists
 to be *found again*, and a heading you normalized is a heading you cannot match.
 
+**What verbatim costs, stated rather than discovered.** Two edges follow from keying on the heading text, and
+both are accepted deliberately:
+
+- **Editing a heading after processing orphans its ledger note**, and the event re-processes as new. Fixing a
+  typo in a session title costs one duplicate proposal.
+- **Two identical headings in one artifact collide** on the same identity; the second is treated as already
+  processed.
+
+Both are rare, and the human-in-the-loop catches the re-proposal — but they are the price of an identity that
+can be *found again*, and the alternative (a normalized or generated id) buys stability by making the identity
+unmatchable against the artifact, which is the failure v0.3 spent three rounds discovering. `commons-check`
+flags a duplicate-heading collision as an error, since that one is silent.
+
 **The ledger note lives in the graph, not in the source repo.** For each processed event, `knowledge-graph`
 writes a **source-role note** into the graph carrying that identity in `source:` and holding the `processed:`
 stamp — exactly as the reference writes a transcript note carrying a recording URL. `/process` finds it by
@@ -941,24 +955,21 @@ searching the *graph* for the `source:`, which is what §6 step 2 already says.
 
 Two things fall out, and both are wins:
 
-- **`/process` never writes into the source repository.** A commons pointed at three projects' chronicles
-  leaves no trace in any of them — no stamped frontmatter, no diff in a repo you're working in. v0.3's
-  `ledger: source-note` would have written into all three.
+- **`/process` never writes into the source repository.** A project graph whose source tier globs its own
+  repo's `docs/chronicle/` leaves no trace there — no stamped frontmatter, no diff in a tree you are actively
+  working in. v0.3's `ledger: source-note` wrote the stamp *into the chronicle file*, which is also what made
+  the self-match bug possible.
 - **The self-match bug cannot occur.** The stamp is not in the file it describes, so nothing can match itself.
-
-`ledger: none` remains for tiers that deliberately produce no note (an email tier batched at the entity level).
-Such a tier is treated as new on every pass — acceptable only where volume is low and a human is in the loop,
-and it must be **declared, not discovered.**
 
 **The scope limit — an input that produces no durable note has no ledger.** The ledger *is* the source's note,
 so a tier that deliberately creates none (an email tier, which needs no synthesis artifact and is batched at
 the entity level) has nothing to carry `processed:`. Such a tier declares **`ledger: none`** and is **treated
-as new on every pass.**
+as new on every pass** — acceptable *only* where the tier is low-volume and a human is in the loop to notice
+re-proposals, which is the same limit the reference accepts and names.
 
-That is acceptable *only* where the tier is low-volume and a human is in the loop to notice re-proposals — the
-same limit the reference accepts and names. **It must be declared, not discovered.** A tier that produces no
-note and does not say `ledger: none` is a config error: `/process` would search for a ledger note forever, find
-nothing, and silently re-read and re-propose that source on every run, compounding. `commons-check` flags it.
+**It must be declared, not discovered.** A tier that produces no note and does not say `ledger: none` is a
+config error: `/process` would search for a ledger note forever, find nothing, and silently re-read and
+re-propose that source on every run, compounding. `commons-check` flags it.
 
 ```yaml
 processed:
