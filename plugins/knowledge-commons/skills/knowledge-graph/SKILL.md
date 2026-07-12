@@ -109,10 +109,16 @@ one approved transition:
 
 1. **Derive the new attractor.** Write a new note of the target type. Its `## so what` is the stance the
    graduating note arrived at — carried forward as a claim someone stands behind, not as a summary of the
-   question. Re-point the graduating note's evidence at it, preserving each `(domain)` annotation, so the
-   new attractor inherits the domain count that earned it.
-2. **Move the original to position 1** and record what it became — a line under its body naming the derived
-   note, so the trail is not lost.
+   question.
+
+   **Born at position 1**, not position 0: it inherits the domain count that earned it. (Creating it at
+   position 0 would have the next health check immediately re-flag it for the graduation that just made it.)
+
+   **Add** the graduating note's evidence to it, preserving each `(domain)` annotation. **Add — do not move.**
+   Each claim now lists *both* attractors in its `supports:`. Stripping the question from those claims would
+   leave it with zero evidence and manufacture an orphan on every graduation.
+2. **Move the original to position 1** and record what it became: a `## became` section naming the derived
+   note as a wikilink, so the trail is not lost. It keeps its evidence and its body.
 
 If you flip the status without deriving the note, the accumulated reasoning is stranded in a note that has
 just been marked resolved. That is the exact failure `graduates-to:` exists to prevent — do not do half of

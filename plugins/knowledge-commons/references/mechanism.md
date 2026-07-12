@@ -61,7 +61,11 @@ next `/process` run under plan approval. The rules:
 | **Graduation** | an attractor at **position 0** with evidence from ≥2 distinct `domain:` values | → **position 1** |
 | **Demotion** | an attractor at **position 1** whose evidence is all from a single domain — it was promoted early | → **position 0** |
 | **Staleness** | no new evidence in N months (config `staleness.months`) | → **position 2** |
-| **Orphan** | an attractor with zero evidence | none — report only |
+| **Orphan** | an attractor **at position 0** with zero evidence | none — report only |
+
+The orphan check applies **only at position 0**. An attractor that has been graduated or retired is not an
+orphan — it is finished, and its evidence may legitimately have moved on. Checking it would flag every
+graduated note forever.
 
 ### Graduation may derive a new attractor
 
@@ -73,12 +77,23 @@ A type declares this with `graduates-to: <type>` in config. When it is set, reac
 two things happen together, both under the same plan approval:
 
 1. A **new attractor of the target type is derived** from the graduating one — carrying its substance
-   forward as a `## so what`, and re-pointing its evidence at the new note.
-2. The original moves to **position 1** (`graduated`), recording what it became.
+   forward as a `## so what`. The graduating note's evidence is **added to** the new note, preserving each
+   `(domain)` annotation.
+2. The original moves to **position 1** and records what it became (a `## became` wikilink).
 
 Without `graduates-to:`, position 1 is a status change and nothing more. **If a type declares
 `graduates-to:` and only the status flips, the accumulated reasoning is stranded in a note now marked
 resolved** — which is the failure this field exists to prevent.
+
+Two rules that fall out of this, and that are easy to get wrong in opposite directions:
+
+- **The graduating note keeps its evidence.** Its claims now support *both* it and the derived note. A
+  question is the record of what was asked and how it came to be answered; stripping its evidence to "move"
+  it to the principle would leave an attractor with zero evidence — which the orphan check would then flag,
+  **manufacturing an orphan on every single graduation.** Add; do not move.
+- **The derived note is born at position 1, not position 0.** It inherits the domain count that earned it —
+  that is the entire premise of graduating it. Creating it at position 0 would have the next health check
+  immediately flag it for graduation: a redundant transition on a note that graduation just produced.
 
 ## Retrieval model
 

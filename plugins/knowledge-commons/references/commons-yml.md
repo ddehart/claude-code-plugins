@@ -93,8 +93,9 @@ It remains **provenance, not a link**: the originating graph's *name*, never a p
 
 **A graph with only one source tier has only one domain — so nothing in it can ever graduate.** That is a
 coherent configuration (a project knowledge tier is legitimately single-domain), but it means the lifecycle
-machinery is inert: every attractor sits at `provisional` forever, flagged `⚠️ single-domain`, and the
-demotion counterweight never fires. If you want graduation to *mean* something, the graph needs source tiers
+machinery is inert: every attractor sits at position 0 forever and the demotion counterweight never fires.
+(They are not *flagged* for it — an unearned attractor is normal, not defective. `commons-check` reports the
+inert lifecycle **once, about the graph**, rather than decorating every note in it.) If you want graduation to *mean* something, the graph needs source tiers
 from genuinely different domains. `commons-init` warns when it is about to write a single-tier config.
 
 ### `ledger` — **provisional (O2)**
@@ -133,12 +134,34 @@ So the stamp records **what was seen**, and inspect re-queues anything that has 
 ```yaml
 processed:
   date: 2026-07-12
-  through: "2026-07-12 14:01"   # the last source unit covered — the final session block's heading
+  through: "## 14:01 — Converged the design into a plugin"   # verbatim heading of the last unit covered
   digest: sha256:1a2b3c…        # OR, for sources with no internal unit structure, a content digest
   claim: ran
-  principle: ran
+  principle: none               # ran | none | errored | skipped: <reason>
   task: errored
 ```
+
+**`through:` is the last covered unit's heading, copied verbatim** — the exact heading text as it appears in
+the source, including its `##` marker, not a reconstruction of it. A re-run finds that string in the source
+and treats everything below it as new. Do not invent a normalized form (`"2026-03-21 Session 1"` from a
+heading that reads `## Session 1`): the value has one job, which is to be *found again*, and a heading you
+rewrote is a heading you cannot match. If a source's units have no headings at all, it has no unit structure
+— use `digest:`.
+
+**Per-class values.** `ran` (produced output), `none` (processed, produced nothing — not a failure), `errored`
+(attempted, failed), `skipped: <reason>` (never attempted; the reason is required, e.g. a missing edge skill).
+`none` matters: without it, a class that found nothing is indistinguishable from one that wrote something, and
+the stamp stops being a record of what happened.
+
+**The stamp's class keys are the keys of the `outputs:` map** — not roles, not type names in general. If
+`outputs:` declares `claim`, `principle`, `question`, `reference`, and `task`, the stamp has those five keys.
+
+**Under `--augment`, the per-class value describes the source cumulatively, not the increment.** A class that
+ran successfully on an earlier pass stays `ran` even if this increment produced nothing from it — the stamp
+records *the state of this source*, not a log of the last run. So: never downgrade `ran` to `none`. Do
+upgrade `none` → `ran` when new material finally produces output, and do clear `errored` → `ran` when a retry
+succeeds. An `errored` class is re-attempted **over the whole source**, not just the increment — it never
+completed, so there is no covered portion to skip.
 
 At inspect time, a source is **re-queued** if it contains any unit after `through:` (or if its digest no
 longer matches). It is skipped only when the stamp covers the file *as it currently stands*. Re-queued
@@ -146,6 +169,30 @@ sources are processed in `--augment` mode automatically — propose only what is
 the user to remember the flag.
 
 **Never treat the presence of a stamp as sufficient to skip.** Compare it against the source.
+
+#### Both `through:` and `digest:` must ignore the stamp — or they read themselves
+
+With `ledger: source-note` the stamp is written **into the file it describes.** That single fact breaks both
+mechanisms, in the same way, and it must be handled for both:
+
+- **`through:` self-matches.** Its value is a heading copied from the source — so it is *guaranteed* to appear
+  in that file, in the `processed:` block itself. Search the raw file for it and you will always find it, in
+  the frontmatter, and conclude the stamp covers the source. Every appended session is then silently dropped
+  — **the exact evaporation the ledger exists to prevent.**
+
+  **Strip the frontmatter, then search the body.** The only occurrence that counts is the one in the source's
+  own text.
+
+- **`digest:` self-invalidates** — see below.
+
+**If `through:` does not match any heading in the body**, do not guess and do not treat the whole file as
+new. The stamp is unusable: **read the entire source and rely wholly on the `--augment` dedupe step.** That is
+the same fallback as a source with no `through:` at all. Over-reading is recoverable (dedupe catches it);
+under-reading silently loses material.
+
+**`through:` cannot see edits to units it already covers.** It marks a position, not a state — a unit rewritten
+*above* the mark will never re-queue. If in-place edits to processed material are expected, use `digest:`,
+which detects any change, at the cost of not knowing *what* changed.
 
 #### The digest must exclude the stamp — or it invalidates itself
 

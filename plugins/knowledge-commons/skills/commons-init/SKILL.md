@@ -98,9 +98,9 @@ What to ask:
    source (`docs/chronicle/` also contains `reflective-practice.md`, which is not a session record).
 
    **Warn if the config ends up with only one domain.** Graduation requires evidence from ≥2 distinct
-   domains, so a single-domain graph has an inert lifecycle: nothing ever reaches `held`, nothing ever
-   demotes, and every attractor carries `⚠️ single-domain` forever. That is a legitimate configuration — a
-   project knowledge tier is single-domain by definition — but the user should choose it knowingly rather
+   domains, so a single-domain graph has an inert lifecycle: nothing ever reaches position 1, and nothing
+   ever demotes. That is a legitimate configuration — a project knowledge tier is single-domain by
+   definition — but the user should choose it knowingly rather
    than discover it months later when nothing has ever graduated. Say it plainly, and offer to add a second
    tier.
 5. **Output classes → sinks → approval** — the graph is one sink; a task manager or tracker may be others.

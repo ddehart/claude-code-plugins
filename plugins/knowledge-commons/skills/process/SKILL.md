@@ -48,6 +48,13 @@ is what keeps non-source files in the same directory out of the queue) and read 
   appended to: a chronicle file holds a *day*, and an evening session adds a block to the morning's file.
   **A stamp means "processed as of this point," never "done."** Treating it as "done" silently drops
   everything appended after it — which is precisely the evaporation the ledger exists to prevent.
+
+  **Match `through:` against the source's body, never its frontmatter.** With `ledger: source-note` the stamp
+  lives *inside* the file, so `through:`'s value is guaranteed to appear there — in the `processed:` block
+  itself. Search the raw file and you always get a hit, on the stamp matching itself, and conclude the source
+  is covered. Strip the frontmatter first. If `through:` matches nothing in the body, the stamp is unusable:
+  **read the whole source and rely on the dedupe step** — over-reading is recoverable, under-reading loses
+  material silently.
 - Stamped, unchanged, all classes `ran` → skip.
 - Stamped with any class `errored` → **queue it**; resume that class only. This is what the per-class stamp
   is for.
@@ -148,6 +155,16 @@ On an empty or near-empty graph, work **bottom-up**:
 proposes many new attractors is the real smell — it means the first run's attractors were named too
 narrowly to accumulate anything.
 
+**Don't open a question that the same run already answers.** On a cold start, a question clustered from two
+domains meets the graduation bar the instant it exists — so writing it as a `question` and graduating it in
+the same pass produces a note that was never `open`, plus a derived principle, plus a transition, for what is
+simply a principle. **Write the principle directly.** Open a question only when the material genuinely leaves
+it open: the evidence pulls in different directions, or it comes from one domain and you want somewhere to
+accumulate the answer.
+
+The lifecycle exists to record a stance *earning* its keep over time. Manufacturing the whole arc inside one
+run is theater — it documents a history that did not happen.
+
 ## Step 4: One approval gate
 
 Present the plan. Take **one** approval for the whole thing.
@@ -169,6 +186,12 @@ learns to click through.
 
 **Delegate every graph write to the `knowledge-graph` skill.** Do not write graph notes directly — that
 skill owns the invariant enforcement, and routing around it is how orphan evidence gets in.
+
+`knowledge-graph` and `commons-check` ship in this same plugin, so when the plugin is installed they are
+available to invoke. If they are not — you are running the plugin from a checkout, or it is not yet
+installed — **read their `SKILL.md` from `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` and follow them to
+the letter.** Do not improvise the write path because the skill was not invocable. Their rules are the
+contract whether they execute as a separate skill or as instructions you follow yourself.
 
 **Route each dispatch class to its configured edge skill.** Dispatch outputs (tasks, tracker updates) never
 become graph notes: they are extracted, routed with their configured `defaults` folded in, and recorded in
@@ -222,11 +245,15 @@ Write the ledger stamp to each processed source — **per output class**, and re
 ```yaml
 processed:
   date: 2026-07-12
-  through: "2026-07-12 14:01"   # the last source unit covered (see commons-yml.md)
+  through: "## 14:01 — Converged the design into a plugin"   # verbatim heading of the last unit covered
   claim: ran
-  principle: ran
+  principle: none               # ran | none | errored | skipped: <reason>
   task: errored
 ```
+
+Copy `through:` **verbatim** from the source — it exists to be found again on the next run, and a heading you
+normalized is a heading you cannot match. Keys are the keys of the `outputs:` map. Full semantics in
+`commons-yml.md`.
 
 This is what makes the queue enumerable and re-runs idempotent: nothing silently evaporates, a re-run resumes
 the errored class instead of redoing the whole source, and a source that grows after being stamped gets

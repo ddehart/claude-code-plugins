@@ -68,10 +68,20 @@ Two things that copy will not do for you, and that are the usual source of wrong
 Two domains is the bar because a pattern that has only ever appeared in one domain is a local habit, not a
 principle. Staleness is not wrongness — it is unexercisedness; the flag prompts a review, not a deletion.
 
+**An attractor at position 0 on one domain is not a finding.** It is unearned, which is the normal state of
+most attractors. Do not flag it. The flag vocabulary is closed (`note-formats.md`) — do not invent new ones.
+
+**Report an inert lifecycle once, about the graph, not per note.** If every source tier declares the same
+`domain:`, no attractor in the graph can ever reach position 1. Say that plainly at the top of the report —
+once — rather than decorating every attractor with a flag that is really a property of the config.
+
 ### Orphans
 
-An attractor with **zero** evidence. Either it was created speculatively, or its evidence was never linked.
-Report it; the plan decides. No transition.
+An attractor **at position 0** with **zero** evidence. Either it was created speculatively, or its evidence
+was never linked. Report it; the plan decides. No transition.
+
+**Only position 0.** A graduated or retired attractor is finished, not orphaned — flagging it would mark
+every graduated note as a defect forever.
 
 ## `--index` — regenerate the index
 
@@ -82,7 +92,9 @@ should be none — it is generated, and says so in its own header).
   evidence spans.
 - **Attractors only.** Claims and reference notes **never** appear. This is what keeps the index a distilled
   corpus small enough to read whole, which is what makes association at `/process` time possible at all.
-- Group by attractor type; render each attractor's flags inline (`⚠️ single-domain`, `⚠️ stale`).
+- Group by attractor type; render each attractor's flags inline, from the **closed vocabulary** in
+  `note-formats.md` (`⚠️ graduation-pending`, `⚠️ single-domain`, `⚠️ stale`, `⚠️ orphan`). Do not invent a
+  flag for a state the vocabulary lacks — if you need one, the vocabulary is wrong and should be fixed there.
 
 Exact format is in `note-formats.md`.
 
