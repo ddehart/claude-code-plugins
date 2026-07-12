@@ -1,6 +1,12 @@
 # Knowledge Commons Plugin — Specification
 
-> **Version:** 0.6 (draft) · **Status:** pre-build · **Date:** 2026-07-12
+> **Version:** 0.6.1 (draft) · **Status:** pre-build · **Date:** 2026-07-12
+>
+> **Start here if you are implementing.** §6 (components) and §7 (config) are what you build from; §§1–5 are
+> why. The build rewrites `plugins/knowledge-commons/` in place — that plugin was built from the superseded
+> v0.3 (`knowledge-commons-plugin.md`) and its architecture is known-wrong, though roughly 40% of its content
+> survives (see §6's note on `note-formats.md`). **Read `references/` in the existing plugin before deleting
+> anything.**
 >
 > **v0.6** adds what a second, *non-adversarial* cold read found — an engineer told simply to build it, not to
 > hunt for problems. Its verdict was **"buildable; I'd start Monday,"** and it independently arrived at two of
