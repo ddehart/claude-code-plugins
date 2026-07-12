@@ -51,12 +51,12 @@ def materialize(base="orchard", edits=None, deletes=None, adds=None):
     return dest
 
 
-def run_check(root, scope=None, source_scan=False):
+def run_check(root, scope=None, source_scan=False, today=None):
     """Run the validator in-process. Returns a list of Finding."""
     config = validate.load_config(root)
     findings = validate.check_config(config)
     if not any(f.severity == "error" for f in findings):
-        graph = validate.build_graph(root, config)
+        graph = validate.build_graph(root, config, today=today)
         findings.extend(validate.run_graph_checks(graph, source_scan=source_scan))
     if scope:
         wanted = set(scope)

@@ -272,6 +272,25 @@ class Schema(GraphCase):
                 replace("status: provisional", "status: canonised")})
         self.assertFires("KC024", run_check(root))
 
+    def test_KC022_promoted_below_the_bar(self):
+        """The question is `open` on one domain. Flip it to `graduated` and it has been
+        promoted on evidence that did not earn it -- which is the whole reason for the bar."""
+        root = materialize(base="commons", edits={
+            "questions/When is a checklist better than automation.md":
+                replace("status: open", "status: graduated")})
+        self.assertFires("KC022", run_check(root), severity="warning")
+
+    def test_KC023_staleness(self):
+        """`today` is injected, because a check whose result depends on the wall clock is a
+        check nobody can prove fires -- and an unprovable check is the whole failure mode
+        this suite exists to prevent."""
+        findings = run_check(fixture("commons"), today="2027-06-01")
+        self.assertFires("KC023", findings, severity="warning")
+
+    def test_KC023_does_not_fire_on_fresh_evidence(self):
+        findings = run_check(fixture("commons"), today="2026-08-01")
+        self.assertNotIn("KC023", codes(findings))
+
 
 class Links(GraphCase):
 
@@ -295,6 +314,23 @@ class Links(GraphCase):
             "Site frost-tender varietals uphill",
             "Site frost-tender varietals uphill in the [[Lower Orchard]]")})
         self.assertClean(run_check(root))
+
+    def test_KC018_a_wikilink_may_not_escape_the_graph(self):
+        """D9's first layer, and the only one that does not depend on an LLM reading prose.
+
+        Promotion DERIVES a new, self-contained note. It never links across a boundary -- if
+        a derived note needs its source to make sense, it has not generalized.
+        """
+        root = materialize(edits={PATTERN: replace(
+            "Site frost-tender varietals uphill",
+            "Site frost-tender varietals uphill, see [[../commons/Some principle]]")})
+        self.assertFires("KC018", run_check(root))
+
+    def test_KC018_catches_an_absolute_path(self):
+        root = materialize(edits={PATTERN: replace(
+            "Site frost-tender varietals uphill",
+            "Site frost-tender varietals uphill, see [[/etc/passwd]]")})
+        self.assertFires("KC018", run_check(root))
 
     def test_KC020_lateral_orphan(self):
         """Not 'no inbound link of any kind' -- that could never fire. LATERAL inbound."""
@@ -432,20 +468,30 @@ class EveryCheckFires(GraphCase):
     """
 
     def test_every_check_is_proven_to_fire(self):
+        """Every code MENTIONED anywhere in the validator must have a test that fires it.
+
+        This deliberately greps the whole module, docstrings included -- not just quoted
+        strings. The first version of this test only looked for `"KC0xx"` in quotes, i.e.
+        codes actually emitted, and so it could not see a check that was *named and never
+        implemented*. Two were: KC018 (a wikilink escaping the graph -- the boundary's only
+        mechanical layer) and KC023 (staleness, which was even rendered in the index's flag
+        vocabulary). Both were caught by reading the docs against the code, not by this test.
+
+        A check that is documented but unimplemented is worse than a missing one: the clean
+        run tells you it passed.
+        """
         import validate as v
         import inspect
         import re
 
-        declared = set()
-        for name, fn in vars(v).items():
-            if name.startswith("check_") and callable(fn):
-                declared |= set(re.findall(r'"(KC\d{3})"', inspect.getsource(fn)))
-
-        untested = declared - GraphCase.asserted
+        source = inspect.getsource(v)
+        mentioned = set(re.findall(r"\bKC\d{3}\b", source))
+        untested = mentioned - GraphCase.asserted
         self.assertEqual(
             set(), untested,
-            "these checks are declared but no test proves they fire: %s"
-            % sorted(untested))
+            "mentioned in validate.py but no test proves they fire: %s. Either write a test, "
+            "or delete the mention -- a check named and never fired is indistinguishable "
+            "from a check that always passes." % sorted(untested))
 
 
 def load_tests(loader, tests, pattern):

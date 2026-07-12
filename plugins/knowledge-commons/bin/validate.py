@@ -131,9 +131,10 @@ class Note:
 class Graph:
     """The whole graph, indexed. Always built whole, never partially."""
 
-    def __init__(self, root, config):
+    def __init__(self, root, config, today=None):
         self.root = root
         self.config = config
+        self.today = today
         self.notes = {}
         self.file_index = {}     # casefolded title/alias -> [rel, ...]
         self.map_entries = {}    # map rel -> [(entry_title, line, heading)]
@@ -153,6 +154,7 @@ def main():
     p_check.add_argument("--format", choices=["text", "json"], default="text")
     p_check.add_argument("--source-scan", action="store_true",
                          help="also scan source artifacts for event-identity collisions")
+    p_check.add_argument("--today", help="ISO date to measure staleness against (default: today)")
     p_check.set_defaults(func=cmd_check)
 
     p_base = sub.add_parser("baseline", help="write the whole-graph fingerprint set")
@@ -189,7 +191,7 @@ def cmd_check(args):
         # A wrong config makes every graph finding meaningless. Say so and stop.
         return _report(findings, args, note="config errors -- graph checks not run")
 
-    graph = build_graph(args.graph, config)
+    graph = build_graph(args.graph, config, today=getattr(args, "today", None))
     findings.extend(run_graph_checks(graph, source_scan=args.source_scan))
     return _report(findings, args)
 
@@ -202,7 +204,7 @@ def cmd_baseline(args):
         return _fail("cannot read %s: %s" % (CONFIG_NAME, exc), "text")
     findings = check_config(config)
     if not _has_error(findings):
-        graph = build_graph(args.graph, config)
+        graph = build_graph(args.graph, config, today=getattr(args, "today", None))
         findings.extend(run_graph_checks(graph))
     payload = {
         "version": 1,
@@ -419,9 +421,9 @@ def check_config(config):
 # --------------------------------------------------------------------------- graph
 
 
-def build_graph(root, config):
+def build_graph(root, config, today=None):
     """Walk the graph and build every index. Always whole, never scoped."""
-    graph = Graph(os.path.abspath(root), config)
+    graph = Graph(os.path.abspath(root), config, today=today)
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if not d.startswith(".")]
         for name in filenames:
@@ -1078,11 +1080,24 @@ def check_controlled_values(graph):
 
 
 def check_wikilinks(graph):
-    """KC017/KC018 -- links resolve, and nothing escapes the graph."""
+    """KC017 -- links resolve. KC018 -- nothing escapes the graph.
+
+    KC018 is D9's first layer: mechanical containment. A promoted note must be self-contained,
+    so a link that reaches out of the graph root -- `[[../commons/Something]]`, or an absolute
+    path -- is a boundary breach and not merely a broken link. It is the one boundary layer
+    that does not depend on an LLM reading prose, which is why it must actually exist.
+    """
     out = []
     for rel, note in sorted(graph.notes.items()):
         if note.fm_error:
             continue
+        for link in _lateral_links(note, "\0") + _fm_links(note, "genitor"):
+            if _escapes(link.target):
+                out.append(Finding(
+                    "KC018", "error", [rel],
+                    "[[%s]] reaches outside the graph -- a wikilink may not cross a graph "
+                    "boundary. Promotion DERIVES a new note; it never links across."
+                    % link.target, line=link.line, key=link.target))
         for link in _body_links(note):
             candidates = resolve_candidates(graph, link.target)
             if not candidates:
@@ -1100,6 +1115,15 @@ def check_wikilinks(graph):
                     hint="an ambiguous target makes resolution nondeterministic, which is "
                          "silently-wrong rather than loudly-broken"))
     return out
+
+
+def _escapes(target):
+    """True if a wikilink target reaches outside the graph root."""
+    if not target:
+        return False
+    clean = target.strip()
+    return (clean.startswith("/") or clean.startswith("~")
+            or clean.startswith("../") or "/../" in clean)
 
 
 def check_alias_collisions(graph):
@@ -1303,7 +1327,75 @@ def _check_graduation(graph):
                     "KC022", "warning", [rel],
                     "at %r on evidence from %d domain(s), below the bar of %d -- promoted "
                     "early" % (status, count, bar), key="single-domain"))
+
+    out.extend(_check_staleness(graph))
     return out
+
+
+def _check_staleness(graph):
+    """KC023 -- no new evidence in N months.
+
+    `today` is injectable, because a check whose result changes with the wall clock cannot be
+    tested, and an untestable check is one nobody can prove fires. The staleness threshold
+    itself is an open item in the spec -- to be picked empirically once there are real
+    attractors to measure -- so this reports rather than prescribes.
+    """
+    out = []
+    config = graph.config
+    graduation = config.get("graduation") or {}
+    months = graduation.get("staleness-months")
+    if not isinstance(months, int):
+        return out
+
+    evidence_def = (config.get("types") or {}).get("evidence") or {}
+    ev_name = evidence_def.get("name")
+    ev_field = evidence_def.get("attractor-field")
+    if not ev_name or not ev_field:
+        return out
+
+    newest = {}
+    for rel, note in graph.notes.items():
+        if note.fm_error or note.type != ev_name:
+            continue
+        date = str(note.fm.get("date") or "")
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+            continue
+        for link in _fm_links(note, ev_field):
+            resolved = resolve_link(graph, link.target)
+            if resolved:
+                if date > newest.get(resolved, ""):
+                    newest[resolved] = date
+
+    today = graph.today or _today()
+    cutoff = _months_before(today, months)
+    for td in type_table(config).get("attractors", []):
+        lifecycle = _as_list(td.get("lifecycle"))
+        for rel, note in sorted(graph.notes.items()):
+            if note.fm_error or note.type != td.get("name"):
+                continue
+            # A retired attractor (the last lifecycle position) is not "stale"; it is done.
+            if lifecycle and note.fm.get("status") == lifecycle[-1]:
+                continue
+            last = newest.get(rel)
+            if last and last < cutoff:
+                out.append(Finding(
+                    "KC023", "warning", [rel],
+                    "no new evidence since %s (threshold: %d months before %s)"
+                    % (last, months, today), key="stale"))
+    return out
+
+
+def _today():
+    """Today, as an ISO date string."""
+    import datetime
+    return datetime.date.today().isoformat()
+
+
+def _months_before(iso, months):
+    """The ISO date `months` before `iso`."""
+    year, month, day = (int(x) for x in iso.split("-"))
+    total = year * 12 + (month - 1) - months
+    return "%04d-%02d-%02d" % (total // 12, total % 12 + 1, day)
 
 
 def check_processed_stamp(graph):
