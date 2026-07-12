@@ -392,4 +392,28 @@ recorded here rather than left in the commit history:
   `.commons-ledger.yml` for sources that cannot carry frontmatter; the stamp is **per output class**, so a
   partial failure resumes only the errored class. **O3** — staleness N defaults to 6 months.
 
+**A cold-read dry run was run before the build was called done.** A no-context agent was given only the skill
+files and a throwaway config, and asked to execute `/process --dry-run` against three real chronicle entries.
+The proposals themselves were sound — atomic claims, attractors with real "so what" clauses — which is the
+first (weak, n=1) signal on **R1 proposal precision**. But the run surfaced three load-bearing defects that
+author review had not:
+
+- **`domain:` had no defined origin.** It gates graduation, demotion, and the index — and no field in
+  `.commons.yml` produced it. Now a required field on each source tier.
+- **Nothing regenerated `index.md` after a run.** The index *is* the distilled corpus that the next run's
+  association step reads, so every run after the first would have read a stale one — quietly degrading the
+  exact capability D3 is built on.
+- **The ledger stamped whole files, but chronicle files hold several sessions and are appended to.** A file
+  stamped in the afternoon would have silently dropped that evening's session forever.
+
+**This materially advances O2.** The open item existed because the ledger format could not be settled in the
+abstract — and the thing that settled it was a real source with real structure. The stamp now records *how
+far it got* (`through:`) rather than a boolean, and inspect re-queues any source that has grown since. That
+is the shape to confirm against the live instance, not a guess to replace.
+
+The third finding is also the strongest available evidence for the design's own thesis: **an independent
+reader with no stake in the author's intent caught what the author's review could not.** Worth noticing that
+the failure mode it caught — a plausible artifact that passes textual review and fails on contact with a real
+input — is the same one the previous session recorded, one entry earlier in this same chronicle.
+
 O1 and O2 remain open: they are confirmed against the live personal instance, per the resolution path above.
