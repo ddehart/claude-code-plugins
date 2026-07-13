@@ -136,9 +136,11 @@ class Graph:
         self.config = config
         self.today = today
         self.notes = {}
-        self.file_index = {}     # casefolded title/alias -> [rel, ...]
-        self.map_entries = {}    # map rel -> [(entry_title, line, heading)]
-        self.lateral_inbound = {}  # rel -> set(rel) of body links, excluding map entries
+        self.file_index = {}       # casefolded title/alias -> [rel, ...]
+        self.map_entries = {}      # map rel -> [(entry_title, line, heading)]
+        self.lateral_inbound = {}  # rel -> set(rel) that point at it, excluding navigation
+        self.notes_by_type = {}    # type name -> [rel, ...]
+        self.owned_fields = set()  # frontmatter fields some check already resolves
 
 
 def main():
@@ -498,12 +500,29 @@ def _read_note(path, rel):
 
 
 def _build_indexes(graph):
-    """Build the file index (alias-aware), the map-entry index, and lateral inbound links."""
+    """Build every derived index once: files/aliases, types, owned fields, maps, lateral links."""
+    config = graph.config
+
+    # Which frontmatter fields already have a check that resolves them. Derived from the
+    # config, so adding a hub (or renaming `parent-field`) cannot leave this stale -- it used
+    # to be a hand-maintained set rebuilt per note.
+    graph.owned_fields = {(config.get("graph") or {}).get("parent-field", "genitor")}
+    evidence = (config.get("types") or {}).get("evidence")
+    if isinstance(evidence, dict) and evidence.get("attractor-field"):
+        graph.owned_fields.add(evidence["attractor-field"])
+    for hub in type_table(config).get("hubs", []):
+        if hub.get("field"):
+            graph.owned_fields.add(hub["field"])
+
     for rel, note in graph.notes.items():
         graph.file_index.setdefault(note.title.casefold(), []).append(rel)
         for alias in note.aliases:
             if isinstance(alias, str):
                 graph.file_index.setdefault(alias.casefold(), []).append(rel)
+        if note.type and not note.fm_error:
+            graph.notes_by_type.setdefault(note.type, []).append(rel)
+    for rels in graph.notes_by_type.values():
+        rels.sort()
 
     map_type = (graph.config.get("types") or {}).get("map") or {}
     heading_level = map_type.get("heading-level", 1)
@@ -532,22 +551,12 @@ def _build_indexes(graph):
 
 
 def _lateral_links(note, parent_field):
-    """Every non-navigation link a note makes: body prose, plus frontmatter minus `genitor`.
+    """Every LATERAL link: everything a note points at except its navigation parent.
 
-    Only genuine `[[wikilinks]]` count here. `_fm_links` deliberately falls back to the raw
-    value (so an unbracketed `genitor: observations` still resolves), but that fallback would
-    turn `date: 2026-07-08` into a link to a note called "2026-07-08".
+    Genuine `[[wikilinks]]` only -- which is what `note_links` yields. The raw-value fallback
+    in `_fm_links` would turn `date: 2026-07-08` into a link to a note called "2026-07-08".
     """
-    links = list(_body_links(note))
-    for key in note.fm:
-        if key == parent_field:
-            continue
-        for value in _as_list(note.fm.get(key)):
-            if not isinstance(value, str):
-                continue
-            for match in WIKILINK_RE.finditer(value):
-                links.append(Link(match.group(1).strip(), note.line_of(key), field=key))
-    return [l for l in links if l.target]
+    return [l for l in note_links(note) if l.field != parent_field and l.target]
 
 
 def _atlas_rel(graph):
@@ -607,25 +616,58 @@ def _parse_map(note, heading_level):
     return entries
 
 
-def _body_links(note):
-    """Every wikilink in a note's body."""
+def notes_of(graph, type_name):
+    """(rel, note) for every well-formed note of `type_name`, in a stable order.
+
+    Replaces the `for rel, note in sorted(graph.notes.items()): if note.fm_error or
+    note.type != X: continue` preamble that appeared in a dozen checks -- each one an
+    opportunity to forget the fm_error guard and read frontmatter that failed to parse.
+    """
+    return [(rel, graph.notes[rel]) for rel in graph.notes_by_type.get(type_name, [])]
+
+
+def note_links(note):
+    """EVERY wikilink a note makes, each tagged with where it came from.
+
+    This is the one link primitive. `link.field` is the frontmatter key the link was found
+    under, or None for a link in the body. Every caller filters this list rather than
+    re-walking the note, so there is exactly one place that knows how a link is spelled.
+
+    (There were four near-identical extractors here, each with its own slightly different
+    rule about which fields count. That is how the boundary check came to hardcode "genitor"
+    and miss a configured `parent-field`, and how frontmatter links went unresolved for
+    fields nobody had written a check for. One walk, tagged, filtered by the caller.)
+    """
     out = []
     for offset, raw in enumerate(note.body.split("\n")):
         for match in WIKILINK_RE.finditer(raw):
             out.append(Link(match.group(1).strip(), note.body_line + offset))
+    for key in note.fm:
+        for value in _flatten(note.fm.get(key)):
+            if not isinstance(value, str):
+                continue
+            for match in WIKILINK_RE.finditer(value):
+                out.append(Link(match.group(1).strip(), note.line_of(key), field=key))
     return out
 
 
-def _fm_links(note, field):
-    """Every wikilink in a frontmatter field.
+def _body_links(note):
+    """Wikilinks in the body only."""
+    return [l for l in note_links(note) if l.field is None]
 
-    Values are FLATTENED first, and this is load-bearing. An unquoted wikilink --
-    `genitor: [[observations]]`, which people write constantly -- is valid YAML for a nested
-    flow sequence, so it parses to `[["observations"]]`, not to a string. Skipping non-strings
-    (as this used to) meant `_fm_links` returned nothing, `check_genitor` found `raw` truthy so
-    KC003 stayed quiet, and then hit `if not links: continue` -- silently skipping KC004 and
-    KC005 entirely. A note could name a genitor that does not exist and the graph validated
-    clean. Flattening recovers the target and the checks run.
+
+def _fm_links(note, field):
+    """The links a FIELD names, treating the whole value as a target when it is not bracketed.
+
+    This is deliberately not just `note_links` filtered: a field that a check OWNS (`genitor`,
+    the attractor field, a hub field) may be written unbracketed -- `genitor: observations` --
+    and still means a link. Elsewhere a bare string is just a string.
+
+    Values are FLATTENED first, and that is load-bearing. An unquoted `genitor: [[X]]` --
+    which people write constantly -- is valid YAML for a NESTED LIST, so it parses to
+    `[["X"]]`, not to a string. Skipping non-strings (as this once did) meant no links came
+    back, `check_genitor` saw a truthy raw value so KC003 stayed quiet, and then skipped KC004
+    and KC005 entirely: a note could name a genitor that does not exist and validate clean.
     """
     out = []
     for value in _flatten(note.fm.get(field)):
@@ -659,17 +701,10 @@ def resolve_link(graph, target):
     today because a desktop-app CLI does the resolving -- the very dependency this plugin
     must drop.
     """
-    if not target:
-        return None
-    key = target.strip()
-    stem = os.path.splitext(os.path.basename(key))[0]
-    for candidate in (key.casefold(), stem.casefold()):
-        hits = graph.file_index.get(candidate)
-        if hits:
-            # An ambiguous target resolves deterministically to the first candidate; KC019
-            # reports the collision itself, as an error. No resolution policy lives here.
-            return sorted(hits)[0]
-    return None
+    candidates = resolve_candidates(graph, target)
+    # An ambiguous target resolves deterministically to the first candidate; KC019 reports the
+    # collision itself, as an error. No resolution policy lives here.
+    return candidates[0] if candidates else None
 
 
 def resolve_candidates(graph, target):
@@ -968,9 +1003,7 @@ def check_evidence(graph):
     if not ev_name or not field:
         return out
 
-    for rel, note in sorted(graph.notes.items()):
-        if note.fm_error or note.type != ev_name:
-            continue
+    for rel, note in notes_of(graph, ev_name):
         links = _fm_links(note, field)
         if len(links) < minimum:
             out.append(Finding(
@@ -1017,13 +1050,11 @@ def check_hubs(graph):
         if not section or not field:
             continue   # KC105 already errored on the config
 
-        hub_rels = [r for r, n in graph.notes.items()
-                    if not n.fm_error and n.type == hub_name]
-        attractor_rels = [r for r, n in graph.notes.items()
-                          if not n.fm_error and n.type == bound_to]
+        hub_rels = [r for r, _ in notes_of(graph, hub_name)]
+        attractor_rels = [r for r, _ in notes_of(graph, bound_to)]
 
         # forward: hub's section lists an attractor -> that attractor must name the hub
-        for hub_rel in sorted(hub_rels):
+        for hub_rel in hub_rels:
             hub = graph.notes[hub_rel]
             listed = _section_links(hub, section)
             if listed is None:
@@ -1053,7 +1084,7 @@ def check_hubs(graph):
                         line=link.line, key="pair"))
 
         # reverse: attractor names a hub -> that hub's section must link back
-        for att_rel in sorted(attractor_rels):
+        for att_rel in attractor_rels:
             attractor = graph.notes[att_rel]
             for link in _fm_links(attractor, field):
                 resolved = resolve_link(graph, link.target)
@@ -1215,32 +1246,13 @@ def check_wikilinks(graph):
 
 
 def _other_fm_links(graph, note):
-    """Frontmatter wikilinks in fields that have no dedicated resolution check of their own.
+    """Frontmatter wikilinks in fields no other check already resolves.
 
-    `genitor`, the evidence type's attractor field, and hub fields are each resolved by the
-    check that owns them, and reporting them twice would double-count. Everything else lands
-    here, so no frontmatter field can carry a dangling link unnoticed just because nobody
-    wrote a check for it.
+    `graph.owned_fields` is computed once, from the config, when the graph is built -- it used
+    to be rebuilt (rebuilding the whole type table with it) for every note.
     """
-    config = graph.config
-    owned = {(config.get("graph") or {}).get("parent-field", "genitor")}
-    evidence = (config.get("types") or {}).get("evidence")
-    if isinstance(evidence, dict) and evidence.get("attractor-field"):
-        owned.add(evidence["attractor-field"])
-    for hub in type_table(config).get("hubs", []):
-        if hub.get("field"):
-            owned.add(hub["field"])
-
-    out = []
-    for key in note.fm:
-        if key in owned:
-            continue
-        for value in _flatten(note.fm.get(key)):
-            if not isinstance(value, str):
-                continue
-            for match in WIKILINK_RE.finditer(value):
-                out.append(Link(match.group(1).strip(), note.line_of(key), field=key))
-    return out
+    return [l for l in note_links(note)
+            if l.field is not None and l.field not in graph.owned_fields]
 
 
 def _escapes(target):
@@ -1313,9 +1325,7 @@ def check_attractor_shape(graph):
 
     inbound = {}
     if ev_name and ev_field:
-        for rel, note in graph.notes.items():
-            if note.fm_error or note.type != ev_name:
-                continue
+        for rel, note in notes_of(graph, ev_name):
             for link in _fm_links(note, ev_field):
                 resolved = resolve_link(graph, link.target)
                 if resolved:
@@ -1325,9 +1335,7 @@ def check_attractor_shape(graph):
         name = td.get("name")
         stake = td.get("stake-section")
         evidence_section = td.get("evidence-section")
-        for rel, note in sorted(graph.notes.items()):
-            if note.fm_error or note.type != name:
-                continue
+        for rel, note in notes_of(graph, name):
             supporters = inbound.get(rel, set())
 
             if not supporters:
@@ -1380,9 +1388,7 @@ def check_lifecycle(graph):
     for td in type_table(config).get("attractors", []):
         name = td.get("name")
         lifecycle = _as_list(td.get("lifecycle"))
-        for rel, note in sorted(graph.notes.items()):
-            if note.fm_error or note.type != name:
-                continue
+        for rel, note in notes_of(graph, name):
             status = note.fm.get("status")
             if not lifecycle:
                 if status is not None:
@@ -1422,9 +1428,7 @@ def _check_graduation(graph):
         return out
 
     domains = {}
-    for rel, note in graph.notes.items():
-        if note.fm_error or note.type != ev_name:
-            continue
+    for rel, note in notes_of(graph, ev_name):
         domain = note.fm.get("domain")
         for link in _fm_links(note, ev_field):
             resolved = resolve_link(graph, link.target)
@@ -1435,9 +1439,7 @@ def _check_graduation(graph):
         lifecycle = _as_list(td.get("lifecycle"))
         if len(lifecycle) < 2:
             continue
-        for rel, note in sorted(graph.notes.items()):
-            if note.fm_error or note.type != td.get("name"):
-                continue
+        for rel, note in notes_of(graph, td.get("name")):
             status = note.fm.get("status")
             if status not in lifecycle:
                 continue
@@ -1480,9 +1482,7 @@ def _check_staleness(graph):
         return out
 
     newest = {}
-    for rel, note in graph.notes.items():
-        if note.fm_error or note.type != ev_name:
-            continue
+    for rel, note in notes_of(graph, ev_name):
         date = str(note.fm.get("date") or "")
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
             continue
@@ -1496,9 +1496,7 @@ def _check_staleness(graph):
     cutoff = _months_before(today, months)
     for td in type_table(config).get("attractors", []):
         lifecycle = _as_list(td.get("lifecycle"))
-        for rel, note in sorted(graph.notes.items()):
-            if note.fm_error or note.type != td.get("name"):
-                continue
+        for rel, note in notes_of(graph, td.get("name")):
             # A retired attractor (the last lifecycle position) is not "stale"; it is done.
             if lifecycle and note.fm.get("status") == lifecycle[-1]:
                 continue
@@ -1650,9 +1648,7 @@ def render_index(graph, findings=None):
     ev_field = evidence_def.get("attractor-field")
     domains = {}
     if ev_name and ev_field:
-        for rel, note in graph.notes.items():
-            if note.fm_error or note.type != ev_name:
-                continue
+        for rel, note in notes_of(graph, ev_name):
             domain = note.fm.get("domain")
             for link in _fm_links(note, ev_field):
                 resolved = resolve_link(graph, link.target)
@@ -1664,8 +1660,7 @@ def render_index(graph, findings=None):
     for td in type_table(config).get("attractors", []):
         name = td.get("name")
         stake = td.get("stake-section")
-        rels = sorted(r for r, n in graph.notes.items()
-                      if not n.fm_error and n.type == name)
+        rels = [r for r, _ in notes_of(graph, name)]
         if not rels:
             continue
         lines.append("## %ss" % name)

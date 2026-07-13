@@ -139,8 +139,6 @@ def _tokenize(text):
             raise MiniYAMLError(lineno, "tab indentation is not supported -- use spaces", raw)
         stripped = _strip_comment(raw, lineno)
         if not stripped.strip():
-            if pending:
-                continue
             continue
 
         if pending is None:
