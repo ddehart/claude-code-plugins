@@ -39,8 +39,6 @@ import re
 
 __all__ = ["MiniYAMLError", "Mapping", "load", "load_file", "split_frontmatter"]
 
-IMPLEMENTATION = "vendored"
-
 
 class MiniYAMLError(Exception):
     """Malformed or unsupported YAML. Carries the line number and the offending source."""
@@ -49,7 +47,12 @@ class MiniYAMLError(Exception):
         self.line = line
         self.reason = reason
         self.source_line = source_line
-        super().__init__("line %d: %s" % (line, reason))
+        message = "line %d: %s" % (line, reason)
+        if source_line.strip():
+            # Every raise site passes this and nothing ever showed it. The offending text is
+            # the single most useful thing in the message.
+            message += "\n    %s" % source_line.strip()
+        super().__init__(message)
 
 
 class Mapping(dict):

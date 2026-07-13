@@ -47,6 +47,23 @@ import _miniyaml as miniyaml  # noqa: E402
 
 CONFIG_NAME = ".commons.yml"
 
+#: The index's CLOSED flag vocabulary, mapped to the check that produces each flag. A
+#: generated file whose vocabulary each run improvises is not a stable artifact, so this is
+#: the whole set, and it lives beside the checks -- the flags and the checks must not be able
+#: to disagree.
+#:
+#: `orphan` here means KC025, "an attractor with zero evidence", which is what the note-format
+#: contract defines it as. KC020 -- the LATERAL-orphan warning, the dead-vault detector -- is
+#: a different condition and is deliberately NOT an index flag. (A reviewer read that pairing
+#: as a bug. It is not, and the contract says so; this comment exists so the next reader does
+#: not have to re-derive it.)
+INDEX_FLAGS = {
+    "KC021": "graduation-pending",
+    "KC022": "single-domain",
+    "KC023": "stale",
+    "KC025": "orphan",
+}
+
 EXIT_OK = 0
 EXIT_USAGE = 1        # the validator could not run. Never mistake this for "clean".
 EXIT_ERRORS = 2
@@ -124,8 +141,8 @@ class Note:
         self.aliases = _as_list(self.fm.get("aliases"))
 
     def line_of(self, key):
-        """Source line of a frontmatter key, if known."""
-        return self.fm.line_of(key) if hasattr(self.fm, "line_of") else None
+        """Source line of a frontmatter key, if known. `fm` is always a Mapping (see __init__)."""
+        return self.fm.line_of(key)
 
 
 class Graph:
@@ -141,6 +158,7 @@ class Graph:
         self.lateral_inbound = {}  # rel -> set(rel) that point at it, excluding navigation
         self.notes_by_type = {}    # type name -> [rel, ...]
         self.owned_fields = set()  # frontmatter fields some check already resolves
+        self.evidence_edges = []   # (evidence_rel, evidence_note, attractor_rel)
 
 
 def main():
@@ -169,7 +187,7 @@ def main():
     p_schema = sub.add_parser("schema", help="validate .commons.yml only")
     p_schema.add_argument("--graph", required=True)
     p_schema.add_argument("--format", choices=["text", "json"], default="text")
-    p_schema.set_defaults(func=cmd_schema)
+    p_schema.set_defaults(func=cmd_schema, scope=[], baseline=None, today=None)
 
     p_index = sub.add_parser("index", help="render index.md")
     p_index.add_argument("--graph", required=True)
@@ -259,8 +277,6 @@ def cmd_schema(args):
         config = load_config(args.graph)
     except (miniyaml.MiniYAMLError, IOError, OSError) as exc:
         return _fail("cannot read %s: %s" % (CONFIG_NAME, exc), args.format)
-    args.scope = []
-    args.baseline = None
     return _report(check_config(config), args)
 
 
@@ -271,8 +287,8 @@ def cmd_index(args):
     except (miniyaml.MiniYAMLError, IOError, OSError) as exc:
         return _fail("cannot read %s: %s" % (CONFIG_NAME, exc), "text")
     graph = build_graph(args.graph, config)
-    # Validate once and hand the findings over, rather than letting render_index run all 42
-    # checks again purely to recover four lifecycle flags.
+    # Validate once and hand the findings over, rather than re-walking the whole graph
+    # purely to recover four lifecycle flags.
     text = render_index(graph, findings=run_graph_checks(graph))
     if args.write:
         with open(os.path.join(args.graph, "index.md"), "w", encoding="utf-8") as fh:
@@ -548,6 +564,38 @@ def _build_indexes(graph):
             resolved = resolve_link(graph, link.target)
             if resolved and resolved != rel:
                 graph.lateral_inbound.setdefault(resolved, set()).add(rel)
+
+    # THE evidence -> attractor edge, resolved once. Four separate checks used to rebuild it
+    # (inbound supporters, domain counting for graduation, newest-evidence date for staleness,
+    # and the index's domain list) -- and two of those copies had already drifted, one adding
+    # the raw `domain` value and the other `str(domain)`. Four rebuilds of one relation is
+    # four chances for the graduation bar and the index to disagree about what supports what.
+    evidence = (config.get("types") or {}).get("evidence")
+    if isinstance(evidence, dict) and evidence.get("name") and evidence.get("attractor-field"):
+        field = evidence["attractor-field"]
+        for rel, note in notes_of(graph, evidence["name"]):
+            for link in _fm_links(note, field):
+                resolved = resolve_link(graph, link.target)
+                if resolved:
+                    graph.evidence_edges.append((rel, note, resolved))
+
+
+def supporters_of(graph):
+    """attractor rel -> set(evidence rel). The one source of 'what supports this'."""
+    out = {}
+    for ev_rel, _note, att_rel in graph.evidence_edges:
+        out.setdefault(att_rel, set()).add(ev_rel)
+    return out
+
+
+def domains_of(graph):
+    """attractor rel -> set(domain). Counted off the EVIDENCE notes, never the bullet list."""
+    out = {}
+    for _ev_rel, note, att_rel in graph.evidence_edges:
+        domain = note.fm.get("domain")
+        if domain:
+            out.setdefault(att_rel, set()).add(str(domain))
+    return out
 
 
 def _lateral_links(note, parent_field):
@@ -1115,16 +1163,22 @@ def check_hubs(graph):
     return out
 
 
-def _section_links(note, section):
-    """Wikilinks under a named section. None if the section is absent.
+def _section_lines(note, section):
+    """The (line_number, text) lines under a named section. None if the section is ABSENT.
 
-    The heading is matched on normalized text, case-insensitively -- never by a hardcoded
-    case-sensitive regex, which in the reference means renaming a section silently disables
-    the check that depends on it. Here a missing section is loud (KC033).
+    THE one section finder. The heading is matched on normalized text, case-insensitively --
+    never by a hardcoded case-sensitive regex, which in the reference means renaming a section
+    silently disables the check that depends on it. Here a missing section is loud (KC033).
+
+    Depth is honoured: a config that declares `## so what` does not match a `### so what`.
+    There used to be a SECOND, depth-blind copy of this logic behind the index renderer, so
+    KC034 would report "no '## so what' section" while the index happily rendered a so-what
+    from the `###` heading. The flags and the checks must not be able to disagree -- that is
+    the entire reason the index lives inside the validator.
     """
     want = section.lstrip("#").strip().casefold()
     depth = len(section) - len(section.lstrip("#"))
-    links = []
+    out = []
     inside = False
     for offset, raw in enumerate(note.body.split("\n")):
         head = HEADING_RE.match(raw)
@@ -1136,9 +1190,17 @@ def _section_links(note, section):
             if inside and level <= (depth or level):
                 break
         if inside:
-            for match in WIKILINK_RE.finditer(raw):
-                links.append(Link(match.group(1).strip(), note.body_line + offset))
-    return links if inside else None
+            out.append((note.body_line + offset, raw))
+    return out if inside else None
+
+
+def _section_links(note, section):
+    """Wikilinks under a named section. None if the section is absent."""
+    lines = _section_lines(note, section)
+    if lines is None:
+        return None
+    return [Link(m.group(1).strip(), line)
+            for line, raw in lines for m in WIKILINK_RE.finditer(raw)]
 
 
 def check_schema_fields(graph):
@@ -1320,16 +1382,9 @@ def check_attractor_shape(graph):
     out = []
     config = graph.config
     evidence_def = (config.get("types") or {}).get("evidence") or {}
-    ev_name = evidence_def.get("name")
     ev_field = evidence_def.get("attractor-field")
 
-    inbound = {}
-    if ev_name and ev_field:
-        for rel, note in notes_of(graph, ev_name):
-            for link in _fm_links(note, ev_field):
-                resolved = resolve_link(graph, link.target)
-                if resolved:
-                    inbound.setdefault(resolved, set()).add(rel)
+    inbound = supporters_of(graph)
 
     for td in type_table(config).get("attractors", []):
         name = td.get("name")
@@ -1412,6 +1467,7 @@ def check_lifecycle(graph):
 
     if commons:
         out.extend(_check_graduation(graph))
+        out.extend(_check_staleness(graph))
     return out
 
 
@@ -1427,13 +1483,7 @@ def _check_graduation(graph):
     if not ev_name or not ev_field or not isinstance(bar, int):
         return out
 
-    domains = {}
-    for rel, note in notes_of(graph, ev_name):
-        domain = note.fm.get("domain")
-        for link in _fm_links(note, ev_field):
-            resolved = resolve_link(graph, link.target)
-            if resolved and domain:
-                domains.setdefault(resolved, set()).add(domain)
+    domains = domains_of(graph)
 
     for td in type_table(config).get("attractors", []):
         lifecycle = _as_list(td.get("lifecycle"))
@@ -1482,15 +1532,10 @@ def _check_staleness(graph):
         return out
 
     newest = {}
-    for rel, note in notes_of(graph, ev_name):
+    for _ev_rel, note, att_rel in graph.evidence_edges:
         date = str(note.fm.get("date") or "")
-        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
-            continue
-        for link in _fm_links(note, ev_field):
-            resolved = resolve_link(graph, link.target)
-            if resolved:
-                if date > newest.get(resolved, ""):
-                    newest[resolved] = date
+        if re.match(r"^\d{4}-\d{2}-\d{2}$", date) and date > newest.get(att_rel, ""):
+            newest[att_rel] = date
 
     today = graph.today or _today()
     cutoff = _months_before(today, months)
@@ -1618,42 +1663,24 @@ def check_event_identity(graph):
 # --------------------------------------------------------------------------- index
 
 
-def render_index(graph, findings=None):
+def render_index(graph, findings):
     """Render index.md -- attractors only, one line each. The stimulus for association.
 
     The flag vocabulary is closed and maps 1:1 onto the checks, which is exactly why the
     index lives inside the validator: the flags and the checks must not be able to disagree.
 
-    `findings` is passed in when the caller has already validated, so regenerating the index
-    does not walk and re-validate the whole graph a second time. It is computed only when the
-    caller has nothing to hand over.
+    `findings` is REQUIRED: the caller has already validated, and recomputing here would walk
+    and re-validate the whole graph a second time.
     """
     config = graph.config
-    if findings is None:
-        findings = run_graph_checks(graph)
     flags = {}
     for finding in findings:
-        flag = {
-            "KC021": "graduation-pending",
-            "KC022": "single-domain",
-            "KC023": "stale",
-            "KC025": "orphan",
-        }.get(finding.check)
+        flag = INDEX_FLAGS.get(finding.check)
         if flag:
             for rel in finding.paths:
                 flags.setdefault(rel, set()).add(flag)
 
-    evidence_def = (config.get("types") or {}).get("evidence") or {}
-    ev_name = evidence_def.get("name")
-    ev_field = evidence_def.get("attractor-field")
-    domains = {}
-    if ev_name and ev_field:
-        for rel, note in notes_of(graph, ev_name):
-            domain = note.fm.get("domain")
-            for link in _fm_links(note, ev_field):
-                resolved = resolve_link(graph, link.target)
-                if resolved and domain:
-                    domains.setdefault(resolved, set()).add(str(domain))
+    domains = domains_of(graph)
 
     lines = ["# Index", "",
              "_Generated by `commons-check --index`. Do not hand-edit._", ""]
@@ -1681,18 +1708,10 @@ def render_index(graph, findings=None):
 
 
 def _first_prose(note, section):
-    """The first non-empty prose line under a section."""
-    want = section.lstrip("#").strip().casefold()
-    inside = False
-    for raw in note.body.split("\n"):
-        head = HEADING_RE.match(raw)
-        if head:
-            if head.group(2).strip().casefold() == want:
-                inside = True
-                continue
-            if inside:
-                break
-        if inside and raw.strip():
+    """The first non-empty prose line under a section. Shares _section_lines, so the index
+    and KC034 can never disagree about whether the section exists."""
+    for _line, raw in _section_lines(note, section) or []:
+        if raw.strip():
             return raw.strip()
     return ""
 

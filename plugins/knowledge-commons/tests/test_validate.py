@@ -636,6 +636,57 @@ class ColdReviewRegressions(GraphCase):
         self.assertIn("WARNING", text)
 
 
+class IndexRendering(GraphCase):
+    """The index had NO test at all.
+
+    That gap let a NameError ship in `render_index` while all 97 other tests stayed green --
+    the exact failure this whole branch is about, committed by the person writing the branch
+    about it. A green suite proves the paths it walks and says nothing about the rest.
+    """
+
+    def test_index_renders(self):
+        code, text = run_cli("index", "--graph", fixture("commons"))
+        self.assertEqual(0, code, "index crashed:\n%s" % text)
+        self.assertIn("# Index", text)
+
+    def test_index_lists_attractors_and_not_evidence(self):
+        _code, text = run_cli("index", "--graph", fixture("commons"))
+        self.assertIn("Execution beats review for validating a guard", text)
+        self.assertIn("When is a checklist better than automation", text)
+        # claims are evidence; they never appear in the index
+        self.assertNotIn("Executing a config caught an error", text)
+
+    def test_index_renders_the_so_what_and_the_domains(self):
+        _code, text = run_cli("index", "--graph", fixture("commons"))
+        self.assertIn("Run the artifact against a deliberately-broken input", text)
+        self.assertIn("[orchard, workshop]", text)
+
+    def test_index_flags_come_from_the_checks(self):
+        """The flags and the checks must not be able to disagree."""
+        _code, text = run_cli("index", "--graph", fixture("commons"))
+        self.assertIn("graduation-pending", text)
+
+    def test_every_index_flag_names_a_real_check(self):
+        """An index flag keyed on a code no check emits would print a flag nothing can produce."""
+        import validate as v
+        import inspect
+        import re
+        emitted = set(re.findall(r'Finding\(\s*"(KC\d{3})"', inspect.getsource(v)))
+        unknown = set(v.INDEX_FLAGS) - emitted
+        self.assertEqual(set(), unknown,
+                         "INDEX_FLAGS names codes no check emits: %s" % sorted(unknown))
+
+    def test_the_index_and_KC034_agree_about_whether_a_section_exists(self):
+        """They did not. `_first_prose` ignored heading depth, so KC034 reported "no
+        '## so what' section" while the index happily rendered a so-what from a `###`."""
+        root = materialize(edits={PATTERN: replace("## so what", "### so what")})
+        findings = run_check(root)
+        self.assertFires("KC034", findings, severity="warning")
+        _code, text = run_cli("index", "--graph", root)
+        self.assertNotIn("Site frost-tender varietals uphill", text,
+                         "the index rendered a so-what from a section KC034 says is absent")
+
+
 class EveryCheckFires(GraphCase):
     """The load-bearing test.
 
@@ -677,7 +728,7 @@ def load_tests(loader, tests, pattern):
     suite = unittest.TestSuite()
     classes = [ValidFixtures, Frontmatter, Navigation, Reasoning, Hubs, Schema, Links,
                Ledger, Config, ScopeAndBaseline, ExitCodes, ColdReviewRegressions,
-               EveryCheckFires]
+               IndexRendering, EveryCheckFires]
     for cls in classes:
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return suite
