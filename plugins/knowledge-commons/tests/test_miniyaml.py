@@ -139,6 +139,11 @@ class Refusals(unittest.TestCase):
         ("unsupported escape", 'a: "\\q"\n'),
         ("no colon", "just a bare line\n"),
         ("unbalanced bracket", "a: 1]\n"),
+        # A tag in KEY position parsed silently to {"!mytag": "foo"} -- the line-start pattern
+        # only caught DOUBLE-bang, and block-map keys never pass through _parse_scalar (which
+        # does reject a leading `!`). The one unsupported construct that got guessed.
+        ("tag in key position", "!mytag: foo\n"),
+        ("tag in flow-map key", "a: { !t: 1 }\n"),
     ]
 
     def test_each_unsupported_construct_raises(self):
@@ -155,6 +160,20 @@ class Refusals(unittest.TestCase):
         carry, so the branch never fires and nothing ever says so."""
         with self.assertRaises(m.MiniYAMLError):
             m.load("schema:\n  required: [a]\n  required: [b]\n")
+
+    def test_deeply_nested_flow_raises_rather_than_blowing_the_stack(self):
+        """The scanner recurses. A pathological `[[[[...` raised RecursionError -- an uncaught
+        crash, from a module whose whole contract is that bad input raises MiniYAMLError with
+        a line number."""
+        with self.assertRaises(m.MiniYAMLError):
+            m.load("a: " + "[" * 3000 + "]" * 3000)
+
+    def test_block_and_flow_map_keys_agree(self):
+        """Flow-map keys were TYPED (via _parse_scalar) while block-map keys were not, so the
+        two paths disagreed about what a key even is: `{true: 1}` keyed on the boolean True,
+        `true: 1` on the string "true". Keys are always strings in this subset."""
+        self.assertEqual(["true"], list(m.load("true: 1\n").keys()))
+        self.assertEqual(["true"], list(m.load("a: { true: 1 }\n")["a"].keys()))
 
     def test_values_containing_special_characters_still_parse(self):
         d = m.load("a: \"a & b\"\nb: 3 * 4\nc: not!bang\n")

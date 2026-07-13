@@ -98,11 +98,6 @@ Everything else is validated by ensuring:
 2. Agent and skill Markdown files have valid YAML frontmatter
 3. Instructions are clear and actionable
 
-Changes are validated by ensuring:
-1. JSON files are valid (`marketplace.json`, `plugin.json`)
-2. Agent Markdown files have valid YAML frontmatter
-3. Agent instructions are clear and actionable
-
 ## Development Workflow
 
 Checklist for adding or updating plugin components (agents, skills, hooks):

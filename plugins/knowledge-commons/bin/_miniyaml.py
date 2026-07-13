@@ -78,7 +78,7 @@ _UNSUPPORTED = [
     (re.compile(r"^\s*-?\s*&\S"), "anchors (&) are not supported"),
     (re.compile(r"^\s*-?\s*\*\S"), "aliases (*) are not supported"),
     (re.compile(r"^\s*<<\s*:"), "merge keys (<<:) are not supported"),
-    (re.compile(r"^\s*!!"), "tags (!!) are not supported"),
+    (re.compile(r"^\s*-?\s*!\S"), "tags (!) are not supported"),
     (re.compile(r"^\s*\?\s"), "complex keys (?) are not supported"),
 ]
 
@@ -402,6 +402,12 @@ def _parse_value(raw, lineno):
     return _parse_scalar(raw, lineno)
 
 
+#: Flow collections nest, and the scanner recurses to do it. Python's stack is finite, so a
+#: pathological `[[[[...` would raise RecursionError -- an uncaught crash, from a module whose
+#: entire contract is that every bad input raises MiniYAMLError with a line number.
+MAX_FLOW_DEPTH = 64
+
+
 def _parse_flow(text, lineno):
     """Parse an inline flow map or sequence. Nestable."""
     value, consumed = _scan_flow(text, 0, lineno)
@@ -410,19 +416,22 @@ def _parse_flow(text, lineno):
     return value
 
 
-def _scan_flow(text, i, lineno):
+def _scan_flow(text, i, lineno, depth=0):
     """Scan one flow collection or scalar starting at `i`. Returns (value, next_index)."""
+    if depth > MAX_FLOW_DEPTH:
+        raise MiniYAMLError(
+            lineno, "flow collections nested more than %d deep" % MAX_FLOW_DEPTH, text)
     i = _skip_space(text, i)
     if i >= len(text):
         raise MiniYAMLError(lineno, "unexpected end of flow collection", text)
     if text[i] == "{":
-        return _scan_flow_map(text, i, lineno)
+        return _scan_flow_map(text, i, lineno, depth)
     if text[i] == "[":
-        return _scan_flow_seq(text, i, lineno)
+        return _scan_flow_seq(text, i, lineno, depth)
     return _scan_flow_scalar(text, i, lineno)
 
 
-def _scan_flow_map(text, i, lineno):
+def _scan_flow_map(text, i, lineno, depth=0):
     """Scan `{a: b, c: [d]}` starting at the brace."""
     mapping = Mapping()
     i += 1
@@ -432,11 +441,11 @@ def _scan_flow_map(text, i, lineno):
             raise MiniYAMLError(lineno, "unterminated flow map", text)
         if text[i] == "}":
             return mapping, i + 1
-        key, i = _scan_flow_scalar(text, i, lineno, stop=":")
+        key, i = _scan_flow_scalar(text, i, lineno, stop=":", as_key=True)
         i = _skip_space(text, i)
         if i >= len(text) or text[i] != ":":
             raise MiniYAMLError(lineno, "expected `:` in flow map", text)
-        value, i = _scan_flow(text, i + 1, lineno)
+        value, i = _scan_flow(text, i + 1, lineno, depth + 1)
         if key in mapping:
             raise MiniYAMLError(lineno, "duplicate key %r in flow map" % key, text)
         mapping[key] = value
@@ -450,7 +459,7 @@ def _scan_flow_map(text, i, lineno):
         raise MiniYAMLError(lineno, "expected `,` or `}` in flow map", text)
 
 
-def _scan_flow_seq(text, i, lineno):
+def _scan_flow_seq(text, i, lineno, depth=0):
     """Scan `[a, b, c]` starting at the bracket."""
     items = []
     i += 1
@@ -460,7 +469,7 @@ def _scan_flow_seq(text, i, lineno):
             raise MiniYAMLError(lineno, "unterminated flow sequence", text)
         if text[i] == "]":
             return items, i + 1
-        value, i = _scan_flow(text, i, lineno)
+        value, i = _scan_flow(text, i, lineno, depth + 1)
         items.append(value)
         i = _skip_space(text, i)
         if i < len(text) and text[i] == ",":
@@ -471,8 +480,16 @@ def _scan_flow_seq(text, i, lineno):
         raise MiniYAMLError(lineno, "expected `,` or `]` in flow sequence", text)
 
 
-def _scan_flow_scalar(text, i, lineno, stop=""):
-    """Scan a scalar inside a flow collection, stopping at a structural character."""
+def _scan_flow_scalar(text, i, lineno, stop="", as_key=False):
+    """Scan a scalar inside a flow collection, stopping at a structural character.
+
+    `as_key` returns the literal as a STRING rather than typing it. Keys are always strings in
+    this subset -- block-map keys always were (they never pass through _parse_scalar), and
+    having the flow path type them meant the two paths disagreed about what a key is: `{true: 1}`
+    keyed on the boolean True while `true: 1` keyed on the string "true". Neither `.commons.yml`
+    nor note frontmatter has a typed key, and a `true:` quietly becoming a boolean is a worse
+    outcome than declining to type it.
+    """
     if text[i] in ("'", '"'):
         raw, i = _scan_quoted(text, i, lineno)
         return _unquote(raw, lineno), i
@@ -482,6 +499,10 @@ def _scan_flow_scalar(text, i, lineno, stop=""):
     literal = text[start:i].strip()
     if not literal:
         raise MiniYAMLError(lineno, "empty scalar in flow collection", text)
+    if as_key:
+        if literal[0] in ("&", "*", "!"):
+            raise MiniYAMLError(lineno, "anchors, aliases and tags are not supported", literal)
+        return literal, i
     return _parse_scalar(literal, lineno), i
 
 

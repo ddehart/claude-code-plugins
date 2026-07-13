@@ -35,6 +35,8 @@ Stdlib only. Python 3.9 floor.
 """
 
 import argparse
+import calendar
+import datetime
 import hashlib
 import json
 import os
@@ -82,6 +84,10 @@ KNOWN_GRAPH_KEYS = {
 }
 KNOWN_TOP_KEYS = {"graph", "types", "schema", "sources", "outputs", "boundary",
                   "graduation", "feeders"}
+
+
+class BadDate(Exception):
+    """An unusable date came in from --today or from a baseline file."""
 
 
 class Finding:
@@ -219,30 +225,64 @@ def cmd_check(args):
         _report(findings, args, note="config errors -- NO graph check ran")
         return EXIT_ERRORS
 
-    graph = build_graph(args.graph, config, today=_resolve_today(args))
+    try:
+        today = _resolve_today(args)
+    except BadDate as exc:
+        return _fail(str(exc), args.format)
+    graph = build_graph(args.graph, config, today=today)
     findings.extend(run_graph_checks(graph, source_scan=args.source_scan))
     return _report(findings, args)
 
 
+ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _valid_date(iso):
+    """True if `iso` is a real ISO calendar date. `2026-02-31` is not."""
+    if not iso or not ISO_DATE_RE.match(str(iso)):
+        return False
+    try:
+        datetime.date.fromisoformat(str(iso))
+        return True
+    except ValueError:
+        return False
+
+
 def _resolve_today(args):
-    """The date to measure staleness against.
+    """The date to measure staleness against. Raises BadDate on anything unusable.
 
     An explicit --today wins; otherwise inherit the date RECORDED IN THE BASELINE. Without
     that inheritance, a baseline taken on one date and a check run with a different --today
     disagree about which attractors are stale, and the difference surfaces as findings marked
     NEW that the edit did not cause. Any time-dependent check that is not pinned to the same
     instant on both sides of the diff will manufacture phantom refusals.
+
+    Both inputs are VALIDATED here. `--today` is an unchecked argparse string, and the
+    baseline's `today` is read off disk, so either can be garbage -- and both used to flow
+    straight into integer arithmetic, where a bad value raised a bare ValueError and printed
+    a traceback. This is the call the write gate makes, and a traceback on stdout is exactly
+    what the `{"fatal": ...}` contract exists to prevent.
     """
     explicit = getattr(args, "today", None)
-    if explicit:
+    if explicit is not None:
+        # `is not None`, not truthiness: `--today ""` was PASSED, and silently treating an
+        # explicitly-empty value as "unset" is a guess. This module does not guess.
+        if not _valid_date(explicit):
+            raise BadDate("--today must be a real ISO date (YYYY-MM-DD), got %r" % explicit)
         return explicit
     baseline = getattr(args, "baseline", None)
     if baseline:
         try:
             with open(baseline, "r", encoding="utf-8") as fh:
-                return json.load(fh).get("today")
+                recorded = json.load(fh).get("today")
         except (IOError, OSError, ValueError):
             return None
+        if recorded is None:
+            return None
+        if not _valid_date(recorded):
+            raise BadDate("baseline %s records an unusable `today`: %r"
+                          % (baseline, recorded))
+        return recorded
     return None
 
 
@@ -252,7 +292,10 @@ def cmd_baseline(args):
         config = load_config(args.graph)
     except (miniyaml.MiniYAMLError, IOError, OSError) as exc:
         return _fail("cannot read %s: %s" % (CONFIG_NAME, exc), "text")
-    today = getattr(args, "today", None) or _today()
+    try:
+        today = _resolve_today(args) or _today()
+    except BadDate as exc:
+        return _fail(str(exc), "text")
     findings = check_config(config)
     if not _has_error(findings):
         graph = build_graph(args.graph, config, today=today)
@@ -1610,7 +1653,6 @@ def _check_staleness(graph):
 
 def _today():
     """Today, as an ISO date string."""
-    import datetime
     return datetime.date.today().isoformat()
 
 
@@ -1622,7 +1664,6 @@ def _months_before(iso, months):
     impossible date silently flags attractors stale several days early whenever `today`
     lands on the 29th to the 31st.
     """
-    import calendar
     year, month, day = (int(x) for x in iso.split("-"))
     total = year * 12 + (month - 1) - months
     target_year, target_month = total // 12, total % 12 + 1

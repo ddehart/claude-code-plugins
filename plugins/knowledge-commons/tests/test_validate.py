@@ -775,6 +775,47 @@ class Round3Regressions(GraphCase):
         self.assertIn("Site frost-tender varietals uphill", text)
 
 
+class Round4Regressions(GraphCase):
+    """A GitHub review, done STATICALLY (its sandbox had no Bash). Every claim held up when
+    executed -- including the one it flagged as unverified."""
+
+    def test_a_malformed_today_is_a_clean_fatal_not_a_traceback(self):
+        """--today is an unchecked argparse string that flowed straight into int() arithmetic.
+        This is the call the write gate makes; a traceback on stdout is what the {fatal:...}
+        contract exists to prevent."""
+        for bad in ("notadate", "2026-02-31", "26-1-1", ""):
+            with self.subTest(today=bad):
+                code, text = run_cli("check", "--graph", fixture("commons"), "--today", bad)
+                self.assertNotIn("Traceback", text)
+                self.assertEqual(1, code)
+
+    def test_a_malformed_today_is_fatal_in_json_too(self):
+        import json
+        code, text = run_cli("check", "--graph", fixture("commons"),
+                             "--today", "notadate", "--format", "json")
+        self.assertEqual(1, code)
+        self.assertIn("fatal", json.loads(text))
+
+    def test_a_corrupted_baseline_date_is_a_clean_fatal(self):
+        """The baseline's `today` comes off disk and could be anything."""
+        import json
+        import tempfile
+        out = os.path.join(tempfile.mkdtemp(), "b.json")
+        run_cli("baseline", "--graph", fixture("commons"), "--out", out)
+        with open(out) as fh:
+            payload = json.load(fh)
+        payload["today"] = "garbage"
+        with open(out, "w") as fh:
+            json.dump(payload, fh)
+        code, text = run_cli("check", "--graph", fixture("commons"), "--baseline", out)
+        self.assertNotIn("Traceback", text)
+        self.assertEqual(1, code)
+
+    def test_a_valid_today_still_works(self):
+        code, _text = run_cli("check", "--graph", fixture("commons"), "--today", "2030-01-01")
+        self.assertEqual(0, code)
+
+
 class EveryCheckFires(GraphCase):
     """The load-bearing test.
 
@@ -816,7 +857,8 @@ def load_tests(loader, tests, pattern):
     suite = unittest.TestSuite()
     classes = [ValidFixtures, Frontmatter, Navigation, Reasoning, Hubs, Schema, Links,
                Ledger, Config, ScopeAndBaseline, ExitCodes, ColdReviewRegressions,
-               IndexRendering, Round3Regressions, EveryCheckFires]
+               IndexRendering, Round3Regressions, Round4Regressions,
+               EveryCheckFires]
     for cls in classes:
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return suite
