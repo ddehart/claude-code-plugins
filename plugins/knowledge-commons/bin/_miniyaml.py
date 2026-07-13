@@ -266,13 +266,34 @@ def _parse_sequence(tokens, index, indent):
             items.append(_parse_flow(rest, lineno))
             continue
         if _looks_like_key(rest):
-            # A sequence of block maps: `- name: firm` with siblings indented beneath.
-            inner_indent = indent + 2
+            # A sequence of block maps: `- name: firm`, with the rest of the mapping indented
+            # beneath it.
+            #
+            # The first key sits at the column the `-` marker pushed it to, so compute that
+            # column rather than assuming "- " is always exactly two characters. Every
+            # following token keeps its OWN indent, which is what lets a nested block under
+            # one of these keys still parse as a nested block:
+            #
+            #     - type: chronicle        <- inner_indent
+            #       defaults:              <- inner_indent (a sibling key)
+            #         project: devbox      <- deeper: a CHILD of `defaults`
+            #
+            # Forcing every continuation token to inner_indent (which this did) collapses the
+            # last two lines to the same level, so `defaults` silently becomes None and its
+            # children leak upward as siblings -- a wrong value returned without a word, which
+            # is the one thing this parser exists to make impossible.
+            after_dash = content[1:]
+            inner_indent = indent + 1 + (len(after_dash) - len(after_dash.lstrip()))
             synthetic = [(inner_indent, rest, lineno)]
             while index < len(tokens) and tokens[index][0] > indent:
                 if tokens[index][1].startswith("- ") or tokens[index][1] == "-":
                     break
-                synthetic.append((inner_indent, tokens[index][1], tokens[index][2]))
+                if tokens[index][0] < inner_indent:
+                    raise MiniYAMLError(
+                        tokens[index][2],
+                        "indent %d is less than the sequence item's first key at column %d"
+                        % (tokens[index][0], inner_indent), tokens[index][1])
+                synthetic.append(tokens[index])
                 index += 1
             value, consumed = _parse_mapping(synthetic, 0, inner_indent)
             if consumed != len(synthetic):

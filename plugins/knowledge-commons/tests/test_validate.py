@@ -14,7 +14,7 @@ exactly how the reference's own dead checks survived for a year.
 import os
 import unittest
 
-from support import GraphCase, codes, materialize, run_check, fixture
+from support import GraphCase, codes, materialize, run_check, run_cli, fixture
 
 
 def drop_line(needle):
@@ -112,6 +112,13 @@ class Navigation(GraphCase):
         root = materialize(edits={OBS_ROW: replace('genitor: "[[observations]]"',
                                                    'genitor: "[[patterns]]"')})
         self.assertFires("KC005", run_check(root))
+
+    def test_KC006_two_notes_could_claim_the_atlas(self):
+        """The atlas is the root of the whole reachability invariant, so which note holds the
+        role must not depend on the order os.walk happened to yield."""
+        root = materialize(adds={"logbook/grove.md":
+                                 "---\ntype: atlas\n---\n# Impostor\n"})
+        self.assertFires("KC006", run_check(root))
 
     def test_KC006_atlas_with_a_genitor(self):
         root = materialize(edits={ATLAS: replace("type: atlas",
@@ -291,6 +298,19 @@ class Schema(GraphCase):
         findings = run_check(fixture("commons"), today="2026-08-01")
         self.assertNotIn("KC023", codes(findings))
 
+    def test_the_staleness_cutoff_is_always_a_real_date(self):
+        """Naive month arithmetic returned 2027-02-31 for one month before 2027-03-31, and
+        the cutoff is compared lexicographically -- so notes dated the 28th or 29th were
+        judged stale days early whenever `today` landed on the 29th to the 31st."""
+        import datetime
+        import validate as v
+        for iso, months in [("2027-03-31", 1), ("2027-03-30", 1), ("2026-05-31", 3),
+                            ("2028-03-29", 1), ("2027-01-31", 2), ("2027-12-31", 12)]:
+            with self.subTest(iso=iso, months=months):
+                cutoff = v._months_before(iso, months)
+                datetime.date.fromisoformat(cutoff)   # raises if it is not a real date
+                self.assertLess(cutoff, iso)
+
 
 class Links(GraphCase):
 
@@ -439,6 +459,22 @@ class ScopeAndBaseline(GraphCase):
         self.assertFires("KC012", run_check(root, scope=[PATTERN]))
         self.assertFires("KC012", run_check(root, scope=[PLOT]))
 
+    def test_a_config_error_is_never_scoped_away(self):
+        """Regression, and the worst bug in the first cut of this file.
+
+        A config finding's only path is `.commons.yml`, which no scoped note ever matches, so
+        the scope filter removed it -- and a --scope'd run on a graph with a broken config
+        printed "0 errors" and exited 0. That is exactly the call `knowledge-graph` makes
+        before every write, so the transaction gate would have waved every write through on a
+        graph it could not even validate.
+        """
+        root = materialize(edits={".commons.yml": replace("min-attractors: 1",
+                                                          "min-attractors: 0")})
+        scoped = run_check(root, scope=[PATTERN])
+        self.assertFires("KC102", scoped)
+        self.assertTrue(any(f.severity == "error" for f in scoped),
+                        "a scoped run on a broken config must still report an error")
+
     def test_fingerprints_survive_a_line_shift(self):
         """A line-sensitive identity would make every pre-existing finding look brand new,
         and the transaction would then refuse every write into an imperfect graph."""
@@ -456,6 +492,61 @@ class ScopeAndBaseline(GraphCase):
         self.assertTrue(before, "expected a pre-existing finding to compare")
         self.assertTrue(before <= after,
                         "a pre-existing finding changed fingerprint after an unrelated edit")
+
+
+class ExitCodes(GraphCase):
+    """The exit code is the contract. knowledge-graph reads nothing else."""
+
+    def test_valid_graph_exits_zero(self):
+        code, _ = run_cli("check", "--graph", fixture("orchard"))
+        self.assertEqual(0, code)
+
+    def test_broken_graph_exits_two(self):
+        root = materialize(edits={OBS_ROW: drop_line("genitor:")})
+        code, _ = run_cli("check", "--graph", root)
+        self.assertEqual(2, code)
+
+    def test_a_scoped_run_on_a_broken_config_does_not_exit_zero(self):
+        """The regression that mattered: this printed "0 errors" and exited 0."""
+        root = materialize(edits={".commons.yml": replace("min-attractors: 1",
+                                                          "min-attractors: 0")})
+        code, out = run_cli("check", "--graph", root, "--scope", PATTERN)
+        self.assertEqual(2, code,
+                         "a broken config must never report clean, scoped or not. Got:\n%s" % out)
+
+    def test_a_missing_config_is_fatal_and_not_clean(self):
+        root = materialize(deletes=[".commons.yml"])
+        code, _ = run_cli("check", "--graph", root)
+        self.assertEqual(1, code)
+
+    def test_baseline_pins_today_so_a_later_check_agrees_with_it(self):
+        """A time-dependent check not pinned on both sides manufactures phantom NEW findings.
+
+        Asserted on the JSON, not the prose: an earlier version of this test grepped stdout
+        for "NEW" and matched the summary line "0 NEW errors vs baseline", so it failed
+        against a working fix.
+        """
+        import json
+        import tempfile
+        out = os.path.join(tempfile.mkdtemp(), "base.json")
+        code, _ = run_cli("baseline", "--graph", fixture("commons"),
+                          "--out", out, "--today", "2028-01-01")
+        self.assertEqual(0, code)
+
+        with open(out) as fh:
+            self.assertEqual("2028-01-01", json.load(fh)["today"],
+                             "the baseline must record the date it was taken against")
+
+        # No --today here: it must be inherited from the baseline, not re-read from the clock.
+        code, text = run_cli("check", "--graph", fixture("commons"), "--baseline", out,
+                             "--format", "json")
+        self.assertEqual(0, code)
+        payload = json.loads(text)
+        phantom = [f["check"] for f in payload["findings"] if f["new"]]
+        self.assertEqual([], phantom,
+                         "nothing was edited, so nothing may be NEW. These findings appeared "
+                         "only because the baseline and the check disagreed about `today`: %s"
+                         % phantom)
 
 
 class EveryCheckFires(GraphCase):
@@ -498,7 +589,7 @@ def load_tests(loader, tests, pattern):
     """Force EveryCheckFires to run last, after every other test has registered its code."""
     suite = unittest.TestSuite()
     classes = [ValidFixtures, Frontmatter, Navigation, Reasoning, Hubs, Schema, Links,
-               Ledger, Config, ScopeAndBaseline, EveryCheckFires]
+               Ledger, Config, ScopeAndBaseline, ExitCodes, EveryCheckFires]
     for cls in classes:
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return suite

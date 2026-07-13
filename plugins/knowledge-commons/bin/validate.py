@@ -160,6 +160,8 @@ def main():
     p_base = sub.add_parser("baseline", help="write the whole-graph fingerprint set")
     p_base.add_argument("--graph", required=True)
     p_base.add_argument("--out", required=True)
+    p_base.add_argument("--today", help="ISO date to measure staleness against; RECORDED in "
+                                        "the baseline so a later check reuses it")
     p_base.set_defaults(func=cmd_baseline)
 
     p_schema = sub.add_parser("schema", help="validate .commons.yml only")
@@ -191,9 +193,31 @@ def cmd_check(args):
         # A wrong config makes every graph finding meaningless. Say so and stop.
         return _report(findings, args, note="config errors -- graph checks not run")
 
-    graph = build_graph(args.graph, config, today=getattr(args, "today", None))
+    graph = build_graph(args.graph, config, today=_resolve_today(args))
     findings.extend(run_graph_checks(graph, source_scan=args.source_scan))
     return _report(findings, args)
+
+
+def _resolve_today(args):
+    """The date to measure staleness against.
+
+    An explicit --today wins; otherwise inherit the date RECORDED IN THE BASELINE. Without
+    that inheritance, a baseline taken on one date and a check run with a different --today
+    disagree about which attractors are stale, and the difference surfaces as findings marked
+    NEW that the edit did not cause. Any time-dependent check that is not pinned to the same
+    instant on both sides of the diff will manufacture phantom refusals.
+    """
+    explicit = getattr(args, "today", None)
+    if explicit:
+        return explicit
+    baseline = getattr(args, "baseline", None)
+    if baseline:
+        try:
+            with open(baseline, "r", encoding="utf-8") as fh:
+                return json.load(fh).get("today")
+        except (IOError, OSError, ValueError):
+            return None
+    return None
 
 
 def cmd_baseline(args):
@@ -202,13 +226,15 @@ def cmd_baseline(args):
         config = load_config(args.graph)
     except (miniyaml.MiniYAMLError, IOError, OSError) as exc:
         return _fail("cannot read %s: %s" % (CONFIG_NAME, exc), "text")
+    today = getattr(args, "today", None) or _today()
     findings = check_config(config)
     if not _has_error(findings):
-        graph = build_graph(args.graph, config, today=getattr(args, "today", None))
+        graph = build_graph(args.graph, config, today=today)
         findings.extend(run_graph_checks(graph))
     payload = {
         "version": 1,
         "graph": os.path.abspath(args.graph),
+        "today": today,
         "fingerprints": sorted(f.fingerprint() for f in findings),
         "counts": _counts(findings),
     }
@@ -238,7 +264,9 @@ def cmd_index(args):
     except (miniyaml.MiniYAMLError, IOError, OSError) as exc:
         return _fail("cannot read %s: %s" % (CONFIG_NAME, exc), "text")
     graph = build_graph(args.graph, config)
-    text = render_index(graph)
+    # Validate once and hand the findings over, rather than letting render_index run all 42
+    # checks again purely to recover four lifecycle flags.
+    text = render_index(graph, findings=run_graph_checks(graph))
     if args.write:
         with open(os.path.join(args.graph, "index.md"), "w", encoding="utf-8") as fh:
             fh.write(text)
@@ -513,14 +541,26 @@ def _lateral_links(note, parent_field):
 
 
 def _atlas_rel(graph):
-    """The atlas's rel path, from graph.atlas."""
+    """The atlas's rel path. An exact path wins; a basename match is a deterministic fallback.
+
+    The atlas is the root of the entire reachability invariant -- every down-link check and
+    the root count hang off it -- so which note holds the role must not depend on the order
+    os.walk happened to yield. Matching a bare basename anywhere in the tree let a second
+    `grove.md` in some subdirectory silently claim the role. Exact match first, then a
+    basename match chosen deterministically; the ambiguity itself is reported by check_atlas.
+    """
     atlas = (graph.config.get("graph") or {}).get("atlas")
     if not atlas:
         return None
-    for rel in graph.notes:
-        if rel == atlas or os.path.basename(rel) == atlas:
-            return rel
-    return None
+    if atlas in graph.notes:
+        return atlas
+    candidates = _atlas_candidates(graph, atlas)
+    return candidates[0] if candidates else None
+
+
+def _atlas_candidates(graph, atlas):
+    """Every note whose basename matches the configured atlas filename, sorted."""
+    return sorted(rel for rel in graph.notes if os.path.basename(rel) == atlas)
 
 
 class Link:
@@ -594,7 +634,9 @@ def resolve_link(graph, target):
     for candidate in (key.casefold(), stem.casefold()):
         hits = graph.file_index.get(candidate)
         if hits:
-            return sorted(hits)[0] if len(hits) == 1 else sorted(hits)[0]
+            # An ambiguous target resolves deterministically to the first candidate; KC019
+            # reports the collision itself, as an error. No resolution policy lives here.
+            return sorted(hits)[0]
     return None
 
 
@@ -721,12 +763,21 @@ def check_atlas(graph):
     config = graph.config
     field = (config.get("graph") or {}).get("parent-field", "genitor")
     atlas_type = ((config.get("types") or {}).get("atlas") or {}).get("name")
+    name = (config.get("graph") or {}).get("atlas")
     atlas_rel = _atlas_rel(graph)
     if not atlas_rel:
-        name = (config.get("graph") or {}).get("atlas")
         return [Finding("KC006", "error", [CONFIG_NAME],
                         "the atlas %r does not exist -- a graph with no root is unreachable"
                         % name, key="atlas-missing")]
+    if atlas_rel not in graph.notes or name not in graph.notes:
+        candidates = _atlas_candidates(graph, name)
+        if len(candidates) > 1:
+            out.append(Finding(
+                "KC006", "error", candidates,
+                "%d notes are named %r, so which one is the atlas depends on filesystem "
+                "order -- and the atlas is the root of the whole reachability invariant. "
+                "Name the atlas by its path in `graph.atlas`." % (len(candidates), name),
+                key="ambiguous-atlas"))
     roots = [r for r, n in sorted(graph.notes.items())
              if not n.fm_error and not n.fm.get(field) and n.type == atlas_type]
     if len(roots) > 1:
@@ -1392,10 +1443,19 @@ def _today():
 
 
 def _months_before(iso, months):
-    """The ISO date `months` before `iso`."""
+    """The ISO date `months` before `iso`, with the day clamped to the target month.
+
+    Naive arithmetic that keeps the day-of-month yields 2027-02-31 for one month before
+    2027-03-31. The cutoff is compared lexicographically against evidence dates, so an
+    impossible date silently flags attractors stale several days early whenever `today`
+    lands on the 29th to the 31st.
+    """
+    import calendar
     year, month, day = (int(x) for x in iso.split("-"))
     total = year * 12 + (month - 1) - months
-    return "%04d-%02d-%02d" % (total // 12, total % 12 + 1, day)
+    target_year, target_month = total // 12, total % 12 + 1
+    day = min(day, calendar.monthrange(target_year, target_month)[1])
+    return "%04d-%02d-%02d" % (target_year, target_month, day)
 
 
 def check_processed_stamp(graph):
@@ -1485,14 +1545,19 @@ def check_event_identity(graph):
 # --------------------------------------------------------------------------- index
 
 
-def render_index(graph):
+def render_index(graph, findings=None):
     """Render index.md -- attractors only, one line each. The stimulus for association.
 
     The flag vocabulary is closed and maps 1:1 onto the checks, which is exactly why the
     index lives inside the validator: the flags and the checks must not be able to disagree.
+
+    `findings` is passed in when the caller has already validated, so regenerating the index
+    does not walk and re-validate the whole graph a second time. It is computed only when the
+    caller has nothing to hand over.
     """
     config = graph.config
-    findings = run_graph_checks(graph)
+    if findings is None:
+        findings = run_graph_checks(graph)
     flags = {}
     for finding in findings:
         flag = {
@@ -1601,7 +1666,12 @@ def _report(findings, args, note=""):
     """Filter by scope, mark against baseline, render, and pick an exit code."""
     scope = {s.replace(os.sep, "/") for s in getattr(args, "scope", []) or []}
     if scope:
-        findings = [f for f in findings if scope & set(f.paths)]
+        # A config finding is NEVER scoped away. Its only path is `.commons.yml`, which no
+        # scoped note ever matches, so filtering it out made a broken config report "0 errors,
+        # exit 0" on precisely the call `knowledge-graph` makes before every write -- the gate
+        # would have waved every write through on a graph it could not even validate.
+        findings = [f for f in findings
+                    if CONFIG_NAME in f.paths or scope & set(f.paths)]
 
     baseline = None
     if getattr(args, "baseline", None):

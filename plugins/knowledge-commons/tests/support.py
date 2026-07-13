@@ -60,8 +60,23 @@ def run_check(root, scope=None, source_scan=False, today=None):
         findings.extend(validate.run_graph_checks(graph, source_scan=source_scan))
     if scope:
         wanted = set(scope)
-        findings = [f for f in findings if wanted & set(f.paths)]
+        # Mirrors _report: a config finding is never scoped away.
+        findings = [f for f in findings
+                    if validate.CONFIG_NAME in f.paths or wanted & set(f.paths)]
     return findings
+
+
+def run_cli(*args):
+    """Run validate.py as a real subprocess. Returns (exit_code, stdout).
+
+    The exit code IS the contract -- knowledge-graph reads nothing else -- so the checks that
+    matter most are asserted through the process boundary, not around it.
+    """
+    import subprocess
+    proc = subprocess.run(
+        [sys.executable, os.path.join(BIN, "validate.py")] + [str(a) for a in args],
+        capture_output=True, text=True)
+    return proc.returncode, proc.stdout + proc.stderr
 
 
 def codes(findings, severity=None):

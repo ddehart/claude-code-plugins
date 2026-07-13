@@ -47,6 +47,32 @@ class Subset(unittest.TestCase):
                    "  - type: email\n    ledger: none\n")
         self.assertEqual(["chronicle", "email"], [s["type"] for s in d["sources"]])
 
+    def test_nested_block_map_inside_a_sequence_item(self):
+        """Regression. This used to be flattened, SILENTLY.
+
+        Every continuation token was rewritten to one synthetic indent, which collapsed a
+        nested block to its parent's level: `defaults` came back as None and `project` and
+        `labels` leaked upward as siblings of `type`. No error -- a wrong value returned
+        without a word, which is the single thing this parser exists to make impossible.
+        """
+        d = m.load("sources:\n"
+                   "  - type: chronicle\n"
+                   "    ledger: source-note\n"
+                   "    defaults:\n"
+                   "      project: devbox\n"
+                   "      labels: [next]\n"
+                   "  - type: email\n"
+                   "    ledger: none\n")
+        self.assertEqual(
+            {"type": "chronicle", "ledger": "source-note",
+             "defaults": {"project": "devbox", "labels": ["next"]}},
+            d["sources"][0])
+        self.assertEqual({"type": "email", "ledger": "none"}, d["sources"][1])
+
+    def test_deeply_nested_block_map_inside_a_sequence_item(self):
+        d = m.load("outputs:\n  - name: a\n    deep:\n      one:\n        two: 3\n")
+        self.assertEqual({"name": "a", "deep": {"one": {"two": 3}}}, d["outputs"][0])
+
     def test_sequence_of_scalars(self):
         d = m.load('supports:\n  - "[[A]]"\n  - "[[B]]"\n')
         self.assertEqual(["[[A]]", "[[B]]"], d["supports"])
