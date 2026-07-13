@@ -94,17 +94,10 @@ Once installed, the agents and skills are automatically available. Claude will p
 
 ## Naming Conventions
 
-**Skills** use names that are specific and intention-revealing:
-- Ask: "Reading this name in a `/` menu, would I know what it does?"
-- Examples: `spec-writing`, `self-documentation`, `session-export`, `commons-check`
-- Avoid names so generic they carry no signal on their own (`process` and `check` are fine *inside* a
-  plugin namespace — `knowledge-commons:process` — but not as standalone skills)
-
-Note that a skill's slash command comes from its **directory name**, and auto-invocation is driven by its
-**`description`** field — not by the `name` in frontmatter. So the name's real job is discoverability in the
-menu, which is why "specific" matters more than any particular word form. Gerunds (`spec-writing`) read
-well and are common here, but they are a house preference, not a requirement: Anthropic's own bundled skills
-are mostly bare verbs (`/run`, `/loop`, `/simplify`) and noun compounds (`/code-review`).
+**Skills** use action-oriented names that pass the "adept at" test:
+- Ask: "Would you say someone is adept at ___?"
+- Examples: `spec-writing`, `self-documentation`, `session-export`
+- Pattern: Noun-gerund or compound action words representing a craft/expertise
 
 **Agents** use role-oriented names describing their function:
 - Examples: `test-runner`, `branch-creator`, `pr-manager`, `chrome-verifier`

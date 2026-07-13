@@ -1,9 +1,0 @@
-{
-  "name": "knowledge-commons",
-  "description": "Knowledge graph machinery: a ledgered /process pipeline that refines source material (session chronicles, transcripts, documents) into an attractor-linked knowledge graph, routing typed outputs to per-project sinks",
-  "version": "0.2.0",
-  "author": {
-    "name": "Derek DeHart"
-  },
-  "keywords": ["knowledge", "knowledge-graph", "pkm", "obsidian", "process", "refinement", "synthesis", "notes", "second-brain"]
-}
