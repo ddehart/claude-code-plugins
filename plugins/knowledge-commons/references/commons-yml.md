@@ -253,7 +253,7 @@ both.
 | `feeders[]` | no | The commons' registry of the graphs that feed it. Without it, the scheduled cross-graph sweep has no input and the safety net is imaginary. |
 | `graduation` | **yes (presence)** | **The presence of this block is what makes a graph the commons.** |
 | `graduation.bar` | **yes** | Distinct `domain:` values required to earn position 1. Default 2. Counted **off the evidence notes' `domain:` fields, never off the bullets in an attractor's evidence section** — the two can drift, and a stale annotation would graduate an attractor that had not earned it. |
-| `graduation.staleness-months` | **no — not implemented** | Specified; nothing reads it, and KC023 emits nothing today. Said plainly rather than letting a passing run imply staleness is being checked. |
+| `graduation.staleness-months` | **yes** | Months without new evidence before an attractor is flagged stale (KC023). Measured against `--today`, which is injectable and is **recorded in the baseline** — a time-dependent check that is not pinned to the same instant on both sides of a diff invents findings marked NEW that no edit caused. |
 
 Anything else at the top level is **KC109**, a warning. The known set is exactly: `graph`, `types`, `schema`,
 `sources`, `outputs`, `boundary`, `graduation`, `feeders`.

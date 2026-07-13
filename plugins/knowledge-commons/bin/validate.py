@@ -190,8 +190,13 @@ def cmd_check(args):
 
     findings = check_config(config)
     if _has_error(findings):
-        # A wrong config makes every graph finding meaningless. Say so and stop.
-        return _report(findings, args, note="config errors -- graph checks not run")
+        # A wrong config makes every graph finding meaningless, so no graph check runs -- and
+        # that is exactly why this must return non-zero UNCONDITIONALLY, ignoring both --scope
+        # and --baseline. A pre-existing config error is present in the baseline, hence "not
+        # new", hence exit 0 -- while nothing whatsoever was validated. The graph could be in
+        # any state at all. A graph that cannot be validated is never safe to write to.
+        _report(findings, args, note="config errors -- NO graph check ran")
+        return EXIT_ERRORS
 
     graph = build_graph(args.graph, config, today=_resolve_today(args))
     findings.extend(run_graph_checks(graph, source_scan=args.source_scan))
@@ -468,8 +473,13 @@ def build_graph(root, config, today=None):
 
 def _read_note(path, rel):
     """Parse one note. A parse failure becomes a Note carrying the error, never an exception."""
-    with open(path, "r", encoding="utf-8") as fh:
-        text = fh.read()
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            text = fh.read()
+    except (UnicodeDecodeError, IOError, OSError) as exc:
+        # The open() used to sit outside the try, so a single latin-1 byte anywhere in the
+        # graph killed the whole run with a traceback instead of reporting one bad note.
+        return Note(rel, None, "", 1, fm_error="cannot read file: %s" % exc)
     try:
         fm_text, body, body_line = miniyaml.split_frontmatter(text)
     except miniyaml.MiniYAMLError as exc:
@@ -607,14 +617,36 @@ def _body_links(note):
 
 
 def _fm_links(note, field):
-    """Every wikilink in a frontmatter field."""
+    """Every wikilink in a frontmatter field.
+
+    Values are FLATTENED first, and this is load-bearing. An unquoted wikilink --
+    `genitor: [[observations]]`, which people write constantly -- is valid YAML for a nested
+    flow sequence, so it parses to `[["observations"]]`, not to a string. Skipping non-strings
+    (as this used to) meant `_fm_links` returned nothing, `check_genitor` found `raw` truthy so
+    KC003 stayed quiet, and then hit `if not links: continue` -- silently skipping KC004 and
+    KC005 entirely. A note could name a genitor that does not exist and the graph validated
+    clean. Flattening recovers the target and the checks run.
+    """
     out = []
-    for value in _as_list(note.fm.get(field)):
+    for value in _flatten(note.fm.get(field)):
         if not isinstance(value, str):
             continue
         match = WIKILINK_RE.search(value)
         target = match.group(1).strip() if match else value.strip()
-        out.append(Link(target, note.line_of(field), field=field))
+        if target:
+            out.append(Link(target, note.line_of(field), field=field))
+    return out
+
+
+def _flatten(value):
+    """Flatten arbitrarily nested lists to a flat list of scalars."""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        return [value]
+    out = []
+    for item in value:
+        out.extend(_flatten(item))
     return out
 
 
@@ -735,6 +767,13 @@ def check_genitor(graph):
             continue
         links = _fm_links(note, field)
         if not links:
+            # `raw` is truthy but yielded no target -- an empty list, a mapping, something
+            # structurally odd. This used to `continue`, which silently skipped every genitor
+            # check below it. There is no shape of a present-but-unusable genitor that should
+            # validate clean.
+            out.append(Finding("KC003", "error", [rel],
+                               "`%s:` is present but names no note (got %r)"
+                               % (field, raw), line=note.line_of(field), key=field))
             continue
         target = links[0].target
         resolved = resolve_link(graph, target)
@@ -1139,23 +1178,30 @@ def check_wikilinks(graph):
     that does not depend on an LLM reading prose, which is why it must actually exist.
     """
     out = []
+    parent_field = (graph.config.get("graph") or {}).get("parent-field", "genitor")
     for rel, note in sorted(graph.notes.items()):
         if note.fm_error:
             continue
-        for link in _lateral_links(note, "\0") + _fm_links(note, "genitor"):
+        for link in _lateral_links(note, "\0") + _fm_links(note, parent_field):
             if _escapes(link.target):
                 out.append(Finding(
                     "KC018", "error", [rel],
                     "[[%s]] reaches outside the graph -- a wikilink may not cross a graph "
                     "boundary. Promotion DERIVES a new note; it never links across."
                     % link.target, line=link.line, key=link.target))
-        for link in _body_links(note):
+        # Body links AND frontmatter wikilinks. `_lateral_links` already counts a frontmatter
+        # wikilink as a graph edge -- "exactly what the dead vault lacked" -- but nothing
+        # resolved it unless the field happened to have a dedicated check (`genitor`, the
+        # attractor field, a hub field). Any other association field (`related:`, `see-also:`,
+        # anything a domain invents) could point at nothing at all, forever, in silence.
+        for link in _body_links(note) + _other_fm_links(graph, note):
             candidates = resolve_candidates(graph, link.target)
             if not candidates:
                 out.append(Finding(
                     "KC017", "error", [rel],
-                    "[[%s]] does not resolve" % link.target, line=link.line,
-                    key=link.target,
+                    "[[%s]] does not resolve%s" % (
+                        link.target, " (in `%s:`)" % link.field if link.field else ""),
+                    line=link.line, key=link.target,
                     hint="stub before linking -- a one-line stub is fine, and stubs "
                          "accumulate content over time"))
             elif len(candidates) > 1:
@@ -1165,6 +1211,35 @@ def check_wikilinks(graph):
                     line=link.line, key=link.target,
                     hint="an ambiguous target makes resolution nondeterministic, which is "
                          "silently-wrong rather than loudly-broken"))
+    return out
+
+
+def _other_fm_links(graph, note):
+    """Frontmatter wikilinks in fields that have no dedicated resolution check of their own.
+
+    `genitor`, the evidence type's attractor field, and hub fields are each resolved by the
+    check that owns them, and reporting them twice would double-count. Everything else lands
+    here, so no frontmatter field can carry a dangling link unnoticed just because nobody
+    wrote a check for it.
+    """
+    config = graph.config
+    owned = {(config.get("graph") or {}).get("parent-field", "genitor")}
+    evidence = (config.get("types") or {}).get("evidence")
+    if isinstance(evidence, dict) and evidence.get("attractor-field"):
+        owned.add(evidence["attractor-field"])
+    for hub in type_table(config).get("hubs", []):
+        if hub.get("field"):
+            owned.add(hub["field"])
+
+    out = []
+    for key in note.fm:
+        if key in owned:
+            continue
+        for value in _flatten(note.fm.get(key)):
+            if not isinstance(value, str):
+                continue
+            for match in WIKILINK_RE.finditer(value):
+                out.append(Link(match.group(1).strip(), note.line_of(key), field=key))
     return out
 
 
@@ -1675,8 +1750,14 @@ def _report(findings, args, note=""):
 
     baseline = None
     if getattr(args, "baseline", None):
-        with open(args.baseline, "r", encoding="utf-8") as fh:
-            baseline = set(json.load(fh).get("fingerprints") or [])
+        try:
+            with open(args.baseline, "r", encoding="utf-8") as fh:
+                baseline = set(json.load(fh).get("fingerprints") or [])
+        except (IOError, OSError, ValueError) as exc:
+            # Never treat an unreadable baseline as an empty one: every finding would look
+            # NEW, or -- worse, if the caller ignores the code -- the run would look clean.
+            return _fail("cannot read baseline %s: %s" % (args.baseline, exc),
+                         getattr(args, "format", "text"))
         for finding in findings:
             finding.new = finding.fingerprint() not in baseline
 
@@ -1705,8 +1786,8 @@ def _report(findings, args, note=""):
             if finding.line:
                 where += ":%d" % finding.line
             marker = "NEW " if finding.new else ""
-            print("%-5s %s %s  %s" % (finding.severity.upper()[:5], finding.check,
-                                      where, marker + finding.message))
+            print("%-7s %s %s  %s" % (finding.severity.upper(), finding.check,
+                                       where, marker + finding.message))
             if finding.hint:
                 print("      %s" % finding.hint)
         summary = "%d error%s, %d warning%s" % (

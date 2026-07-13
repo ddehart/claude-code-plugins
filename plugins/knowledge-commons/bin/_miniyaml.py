@@ -176,7 +176,7 @@ def _flow_depth(line, depth, lineno):
     """
     quote = None
     escaped = False
-    for ch in line:
+    for i, ch in enumerate(line):
         if escaped:
             escaped = False
             continue
@@ -187,7 +187,7 @@ def _flow_depth(line, depth, lineno):
             if ch == quote:
                 quote = None
             continue
-        if ch in ("'", '"'):
+        if ch in ("'", '"') and _opens_quote(line, i):
             quote = ch
             continue
         if ch in ("{", "["):
@@ -197,6 +197,29 @@ def _flow_depth(line, depth, lineno):
             if depth < 0:
                 raise MiniYAMLError(lineno, "unbalanced `%s`" % ch, line)
     return depth
+
+
+#: A quote character only OPENS a quoted scalar when it sits where a scalar may begin: at the
+#: start of the line, or just after `:`, `,`, `-`, `[` or `{`. Anywhere else it is an ordinary
+#: character.
+#:
+#: This matters far more than it looks. Treating every `'` as a quote makes
+#:
+#:     summary: the orchard's south rows wake first
+#:
+#: -- ordinary, valid YAML, the kind of sentence that appears in real notes constantly -- a
+#: hard parse error. The note is then dropped from every other check, and its attractor emits
+#: a spurious drift error for the evidence that "vanished". An apostrophe is not a quote.
+_SCALAR_MAY_START_AFTER = (":", ",", "-", "[", "{")
+
+
+def _opens_quote(text, i):
+    """True if the quote character at `text[i]` begins a quoted scalar."""
+    for j in range(i - 1, -1, -1):
+        if text[j] in (" ", "\t"):
+            continue
+        return text[j] in _SCALAR_MAY_START_AFTER
+    return True   # nothing but whitespace before it: start of the line
 
 
 def _strip_comment(line, lineno):
@@ -218,7 +241,7 @@ def _strip_comment(line, lineno):
             if ch == quote:
                 quote = None
             continue
-        if ch in ("'", '"'):
+        if ch in ("'", '"') and _opens_quote(line, i):
             quote = ch
             out.append(ch)
             continue
@@ -360,7 +383,7 @@ def _split_key(content, lineno):
             if ch == quote:
                 quote = None
             continue
-        if ch in ("'", '"'):
+        if ch in ("'", '"') and _opens_quote(content, i):
             quote = ch
             continue
         if ch == ":" and (i + 1 == len(content) or content[i + 1] in (" ", "\t")):

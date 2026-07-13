@@ -392,7 +392,7 @@ Note `⚠️ single-domain` is a **position 1** condition. A position-0 attracto
 not flagged at all.
 
 Two honest notes about the current validator, so nobody reads a passing run as more than it is: **KC023 is in
-the flag vocabulary but no check emits it yet** — staleness is specified and not implemented, and
+the flag vocabulary and KC023 emits it** — staleness is implemented, measured against an injectable `--today`, and
 `graduation.staleness-months` is read by nothing. And **KC020**, the *lateral*-orphan warning (a note with no
 inbound association from any other note's body or frontmatter — the dead-vault detector), is a distinct
 finding from KC025 and is **not** rendered in the index.

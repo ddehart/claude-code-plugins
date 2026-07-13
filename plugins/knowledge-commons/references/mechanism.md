@@ -221,6 +221,18 @@ validator**, `bin/validate.py`, stdlib only. `knowledge-graph` runs it before ev
 non-zero exit; `commons-check` runs the *same* validator over the whole graph. One implementation, two
 entrypoints — so the write-time gate and the health check can never disagree about what the rules are.
 
+> ### ⚠️ Status: the validator exists; the gate is not yet wired
+>
+> **`knowledge-graph` does not currently invoke `bin/validate.py`.** Its `allowed-tools` carries no `Bash`, so
+> it physically cannot. The skills in `skills/` are still the superseded v0.3 versions and are rewritten in
+> **PR-B**, which is where the transaction (`begin` → edit the whole set → re-validate → **revert on any new
+> error**) actually lands.
+>
+> This paragraph describes the contract the validator is *built to serve*, and it is stated here so PR-B has a
+> specification to hit. It is **not** a description of what runs today. Saying otherwise would be precisely the
+> defect this plugin exists to catch — a guard that is documented, believed, and never fires — and an
+> independent cold read of this branch caught exactly that claim in this exact sentence.
+
 Two facts govern its design, and both matter to callers:
 
 - **Scoping narrows reporting, never analysis.** Every run parses every note under the graph root and builds

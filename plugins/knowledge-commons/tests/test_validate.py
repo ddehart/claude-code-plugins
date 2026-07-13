@@ -549,6 +549,93 @@ class ExitCodes(GraphCase):
                          % phantom)
 
 
+class ColdReviewRegressions(GraphCase):
+    """Bugs an independent reviewer found that this suite was blind to.
+
+    Every one of them lived outside what the fixtures exercise. That is the whole lesson: a
+    green suite proves the paths it walks, and nothing else.
+    """
+
+    def test_a_config_error_is_never_excused_by_a_baseline(self):
+        """The --scope hole, through a different door, and worse.
+
+        A pre-existing config error is IN the baseline, so it is "not new", so exit 0 -- while
+        cmd_check ran NO graph check at all. Deleting an attractor two notes depend on (five
+        real errors) was waved straight through.
+        """
+        import tempfile
+        root = materialize(edits={".commons.yml": replace("min-attractors: 1",
+                                                          "min-attractors: 0")})
+        out = os.path.join(tempfile.mkdtemp(), "base.json")
+        run_cli("baseline", "--graph", root, "--out", out)
+
+        os.remove(os.path.join(root, PATTERN))       # wreck the graph
+        code, text = run_cli("check", "--graph", root, "--baseline", out)
+        self.assertEqual(2, code,
+                         "a graph whose config cannot be validated is NEVER safe to write to, "
+                         "baseline or no baseline. Got:\n%s" % text)
+
+    def test_an_unquoted_genitor_wikilink_does_not_disable_genitor_checking(self):
+        """`genitor: [[X]]` is valid YAML for a NESTED LIST, not a string.
+
+        _fm_links skipped non-strings, so it returned nothing; check_genitor saw a truthy raw
+        value (so KC003 stayed quiet) and then `continue`d past KC004 and KC005. A note could
+        name a genitor that does not exist and the graph validated completely clean.
+        """
+        root = materialize(edits={OBS_ROW: replace('genitor: "[[observations]]"',
+                                                   "genitor: [[Totally Nonexistent Map]]")})
+        findings = run_check(root)
+        self.assertTrue(any(f.severity == "error" for f in findings),
+                        "an unresolvable genitor must never validate clean, quoted or not")
+        self.assertFires("KC004", findings)
+
+    def test_an_unquoted_genitor_still_resolves_when_it_is_valid(self):
+        root = materialize(edits={OBS_ROW: replace('genitor: "[[observations]]"',
+                                                   "genitor: [[observations]]")})
+        self.assertClean(run_check(root))
+
+    def test_KC018_honours_a_custom_parent_field(self):
+        """It hardcoded "genitor", so the identical boundary breach went unreported under a
+        configured parent-field -- the hardcoded-lookup-table failure this file is written
+        against."""
+        root = materialize(edits={
+            ".commons.yml": lambda t: t.replace("parent-field: genitor",
+                                                "parent-field: parent"),
+            OBS_ROW: replace('genitor: "[[observations]]"',
+                             'parent: "[[../commons/observations]]"')})
+        self.assertFires("KC018", run_check(root))
+
+    def test_KC017_resolves_wikilinks_in_arbitrary_frontmatter_fields(self):
+        """_lateral_links counts them as graph edges; nothing resolved them unless the field
+        happened to have a dedicated check."""
+        root = materialize(edits={OBS_ROW: replace(
+            "type: observation",
+            'type: observation\nrelated: "[[No Such Note At All]]"')})
+        self.assertFires("KC017", run_check(root))
+
+    def test_a_non_utf8_note_is_a_finding_not_a_traceback(self):
+        """_read_note promises "never an exception"; the open() sat outside the try."""
+        root = materialize()
+        with open(os.path.join(root, "observations", "Latin1.md"), "wb") as fh:
+            fh.write(b"---\ntype: observation\n---\ncaf\xe9\n")
+        code, text = run_cli("check", "--graph", root)
+        self.assertEqual(2, code)
+        self.assertNotIn("Traceback", text)
+        self.assertIn("KC001", text)
+
+    def test_an_unreadable_baseline_is_fatal_not_empty(self):
+        """Treating it as empty would mark every finding NEW -- or look clean."""
+        code, text = run_cli("check", "--graph", fixture("orchard"),
+                             "--baseline", "/nonexistent/nope.json")
+        self.assertEqual(1, code)
+        self.assertNotIn("Traceback", text)
+
+    def test_severity_labels_are_not_truncated(self):
+        code, text = run_cli("check", "--graph", fixture("commons"))
+        self.assertNotIn("WARNI ", text)
+        self.assertIn("WARNING", text)
+
+
 class EveryCheckFires(GraphCase):
     """The load-bearing test.
 
@@ -589,7 +676,8 @@ def load_tests(loader, tests, pattern):
     """Force EveryCheckFires to run last, after every other test has registered its code."""
     suite = unittest.TestSuite()
     classes = [ValidFixtures, Frontmatter, Navigation, Reasoning, Hubs, Schema, Links,
-               Ledger, Config, ScopeAndBaseline, ExitCodes, EveryCheckFires]
+               Ledger, Config, ScopeAndBaseline, ExitCodes, ColdReviewRegressions,
+               EveryCheckFires]
     for cls in classes:
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return suite
