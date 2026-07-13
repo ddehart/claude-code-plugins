@@ -320,6 +320,7 @@ still see it.
 
 | Code | Checks | Severity | Key |
 |---|---|---|---|
+| **KC101** | `graph:`, `types:`, `schema:` and `graduation:` are mappings. A non-mapping block used to be an unhandled `AttributeError` — the config self-check is what turns config mistakes into findings, so it may not itself crash on one | error | — |
 | **KC102** | `min-attractors` is an integer ≥ 1; `evidence` declares an `attractor-field` | error | `types.evidence` |
 | **KC103** | `graph.atlas` is set; every content type declares a `map:` | error | `graph.atlas`, `types.<t>.map` |
 | **KC104** | A feeder attractor declares a lifecycle (**warning** — nothing graduates in a single-domain graph); a commons attractor declares none (**error**) | warning / error | `types.attractors[].lifecycle`, `graduation` |

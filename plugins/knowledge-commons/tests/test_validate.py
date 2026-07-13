@@ -687,6 +687,94 @@ class IndexRendering(GraphCase):
                          "the index rendered a so-what from a section KC034 says is absent")
 
 
+class Round3Regressions(GraphCase):
+    """A third independent review, after the simplification pass. All five were real."""
+
+    def test_a_source_artifact_is_not_a_note(self):
+        """The worst one, and no test could have caught it: the fixtures ship an EMPTY source
+        tier.
+
+        `sources[].path` names RAW material -- a chronicle, a transcript, no frontmatter. The
+        walker ingested it as a note, so every source artifact became a KC001 "no frontmatter"
+        ERROR. A feeder graph whose source tier actually had anything in it could never
+        validate, and since the write gate refuses on any error, could never be written to
+        again. The whole point of the queue entry mode is that those files EXIST.
+        """
+        root = materialize(adds={
+            "logbook-source/2026-03-14.md":
+                "# 2026-03-14\n\n## 09:15\nWalked the north plot.\n\n## 14:30\nBlossom damage.\n"})
+        findings = run_check(root)
+        self.assertEqual([], [f for f in findings if f.severity == "error"],
+                         "a raw source artifact must not be validated as a note: %s"
+                         % [(f.check, f.locus()) for f in findings])
+
+    def test_the_source_artifact_is_still_scanned_for_event_collisions(self):
+        """Excluded from the NOTE walk, but --source-scan must still read it."""
+        root = materialize(adds={
+            "logbook-source/2026-05-01.md":
+                "# 2026-05-01\n\n## 09:20 Walk\nFirst.\n\n## 09:20 Walk\nSecond.\n"})
+        self.assertFires("KC028", run_check(root, source_scan=True))
+
+    def test_KC023_is_emitted_once_per_attractor(self):
+        """A regression the refactor introduced: _check_staleness was hoisted out of
+        _check_graduation and called from check_lifecycle, but the ORIGINAL call was never
+        deleted. KC023 fired twice for every attractor, the summary double-counted, and the
+        baseline stored duplicate fingerprints -- and 103 tests stayed green, because nothing
+        asserted a finding COUNT."""
+        findings = run_check(fixture("commons"), today="2030-01-01")
+        stale = [f for f in findings if f.check == "KC023"]
+        self.assertEqual(2, len(stale),
+                         "expected one KC023 per attractor, got %d: %s"
+                         % (len(stale), [f.locus() for f in stale]))
+
+    def test_no_finding_is_emitted_twice(self):
+        """The general form of the above. A duplicate finding inflates the summary and puts
+        duplicate fingerprints in the baseline."""
+        for name, today in (("orchard", None), ("commons", "2030-01-01")):
+            with self.subTest(graph=name):
+                findings = run_check(fixture(name), today=today)
+                prints = [f.fingerprint() for f in findings]
+                dupes = {p for p in prints if prints.count(p) > 1}
+                self.assertEqual(set(), dupes,
+                                 "%d duplicate findings" % len(dupes))
+
+    def test_an_owned_field_on_the_wrong_type_is_still_resolved(self):
+        """Field ownership is TYPE-SCOPED, because the owning checks are.
+
+        `check_evidence` resolves `supports:` only on the evidence type; the hub reverse-loop
+        resolves a hub field only on the attractor it is bound to. Global ownership meant a
+        `practice` carrying `supports:` had that link excluded from KC017 as somebody else's
+        job, while nobody scanned it -- dangling, silently, forever.
+        """
+        root = materialize(edits={PRACTICE: replace(
+            'genitor: "[[practices]]"',
+            'genitor: "[[practices]]"\n'
+            'supports: "[[No Such Attractor At All]]"\n'
+            'plots: "[[No Such Plot Whatsoever]]"')})
+        findings = run_check(root)
+        unresolved = {f.key for f in findings if f.check == "KC017"}
+        self.assertIn("No Such Attractor At All", unresolved)
+        self.assertIn("No Such Plot Whatsoever", unresolved)
+
+    def test_KC101_a_non_mapping_config_block(self):
+        """check_config exists to turn config mistakes into findings; it may not crash on one."""
+        for bad in ("graph: hello\ntypes: {}\n", "graph:\n  - a\n  - b\ntypes: {}\n"):
+            with self.subTest(config=bad.split("\n")[0]):
+                root = materialize(edits={".commons.yml": lambda _t, b=bad: b})
+                self.assertFires("KC101", run_check(root))
+                code, text = run_cli("check", "--graph", root)
+                self.assertNotIn("Traceback", text)
+                self.assertEqual(2, code)
+
+    def test_the_index_renders_prose_not_a_sub_heading(self):
+        """_section_lines rightly includes deeper headings (a link under a sub-heading is
+        still under the section), but a heading is not prose, and index.md is generated."""
+        root = materialize(edits={PATTERN: replace("## so what\n", "## so what\n### summary\n")})
+        _code, text = run_cli("index", "--graph", root)
+        self.assertNotIn("### summary", text)
+        self.assertIn("Site frost-tender varietals uphill", text)
+
+
 class EveryCheckFires(GraphCase):
     """The load-bearing test.
 
@@ -728,7 +816,7 @@ def load_tests(loader, tests, pattern):
     suite = unittest.TestSuite()
     classes = [ValidFixtures, Frontmatter, Navigation, Reasoning, Hubs, Schema, Links,
                Ledger, Config, ScopeAndBaseline, ExitCodes, ColdReviewRegressions,
-               IndexRendering, EveryCheckFires]
+               IndexRendering, Round3Regressions, EveryCheckFires]
     for cls in classes:
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return suite

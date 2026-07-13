@@ -157,7 +157,8 @@ class Graph:
         self.map_entries = {}      # map rel -> [(entry_title, line, heading)]
         self.lateral_inbound = {}  # rel -> set(rel) that point at it, excluding navigation
         self.notes_by_type = {}    # type name -> [rel, ...]
-        self.owned_fields = set()  # frontmatter fields some check already resolves
+        self.owned_always = set()  # fields resolved on EVERY note (the parent field)
+        self.owned_by_type = {}    # type -> fields resolved by a check scoped to that type
         self.evidence_edges = []   # (evidence_rel, evidence_note, attractor_rel)
 
 
@@ -361,6 +362,17 @@ def is_commons(config):
 def check_config(config):
     """Config self-checks. These run first; an error here stops the graph checks."""
     out = []
+    for key in ("graph", "types", "schema", "graduation"):
+        value = config.get(key)
+        if value is not None and not isinstance(value, dict):
+            # This used to be an unhandled AttributeError. The config self-check is the thing
+            # that turns config mistakes into findings; it may not itself crash on one.
+            out.append(Finding("KC101", "error", [CONFIG_NAME],
+                               "`%s:` must be a mapping, got %s"
+                               % (key, type(value).__name__), key=key))
+    if out:
+        return out
+
     graph = config.get("graph") or {}
     types = config.get("types") or {}
     typedefs = all_typedefs(config)
@@ -475,6 +487,7 @@ def check_config(config):
 def build_graph(root, config, today=None):
     """Walk the graph and build every index. Always whole, never scoped."""
     graph = Graph(os.path.abspath(root), config, today=today)
+    skip_dirs = _source_dirs(root, config)
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if not d.startswith(".")]
         for name in filenames:
@@ -482,11 +495,44 @@ def build_graph(root, config, today=None):
                 continue
             path = os.path.join(dirpath, name)
             rel = os.path.relpath(path, root).replace(os.sep, "/")
-            if rel in ("index.md", "changelog.md") or rel.startswith("changelog/"):
+            if _is_generated(rel) or _under(rel, skip_dirs):
                 continue
             graph.notes[rel] = _read_note(path, rel)
     _build_indexes(graph)
     return graph
+
+
+def _is_generated(rel):
+    """Files the validator itself writes, or that are not notes."""
+    return rel in ("index.md", "changelog.md") or rel.startswith("changelog/")
+
+
+def _source_dirs(root, config):
+    """Graph-relative directories holding RAW SOURCE ARTIFACTS, which are not notes.
+
+    A source tier's `path:` names raw material -- a chronicle, a transcript -- preserved
+    exactly as received and carrying no frontmatter. It is the INPUT to /process, not a note
+    in the graph: the ledger note that records it is written separately, into the graph's
+    source type.
+
+    Walking those files in as notes made every one of them a KC001 error ("no frontmatter"),
+    so a feeder graph whose source tier actually had anything in it could never validate --
+    and, since the write gate refuses on any error, could never be written to again. The
+    fixtures never caught it because they ship an empty source tier.
+    """
+    out = set()
+    for tier in config.get("sources") or []:
+        if isinstance(tier, dict) and tier.get("path"):
+            path = str(tier["path"])
+            if os.path.isabs(path) or path.startswith("~"):
+                continue          # outside the graph entirely; os.walk never reaches it
+            out.add(path.rstrip("/").replace(os.sep, "/"))
+    return out
+
+
+def _under(rel, dirs):
+    """True if `rel` sits inside any of `dirs`."""
+    return any(rel == d or rel.startswith(d + "/") for d in dirs)
 
 
 def _read_note(path, rel):
@@ -519,16 +565,24 @@ def _build_indexes(graph):
     """Build every derived index once: files/aliases, types, owned fields, maps, lateral links."""
     config = graph.config
 
-    # Which frontmatter fields already have a check that resolves them. Derived from the
-    # config, so adding a hub (or renaming `parent-field`) cannot leave this stale -- it used
-    # to be a hand-maintained set rebuilt per note.
-    graph.owned_fields = {(config.get("graph") or {}).get("parent-field", "genitor")}
+    # Which frontmatter fields already have a check that resolves them -- and, crucially, ON
+    # WHICH NOTE TYPES. Ownership is TYPE-SCOPED, because the owning checks are:
+    # `check_evidence` resolves `supports:` only on the evidence type; the hub reverse-loop
+    # resolves a hub field only on the attractor it is bound to. Treating ownership as global
+    # meant a `practice` carrying `supports:` had that link excluded from KC017 as "someone
+    # else's job" while no check scanned it -- a dangling link, silently, forever, which is
+    # the exact failure KC017 exists to close.
+    #
+    # `genitor` is owned everywhere, because check_genitor scans every type.
+    graph.owned_always = {(config.get("graph") or {}).get("parent-field", "genitor")}
     evidence = (config.get("types") or {}).get("evidence")
-    if isinstance(evidence, dict) and evidence.get("attractor-field"):
-        graph.owned_fields.add(evidence["attractor-field"])
+    if isinstance(evidence, dict) and evidence.get("name") and evidence.get("attractor-field"):
+        graph.owned_by_type.setdefault(evidence["name"], set()).add(
+            evidence["attractor-field"])
     for hub in type_table(config).get("hubs", []):
-        if hub.get("field"):
-            graph.owned_fields.add(hub["field"])
+        bound_to = hub.get("bidir-with")
+        if hub.get("field") and bound_to:
+            graph.owned_by_type.setdefault(bound_to, set()).add(hub["field"])
 
     for rel, note in graph.notes.items():
         graph.file_index.setdefault(note.title.casefold(), []).append(rel)
@@ -1308,13 +1362,14 @@ def check_wikilinks(graph):
 
 
 def _other_fm_links(graph, note):
-    """Frontmatter wikilinks in fields no other check already resolves.
+    """Frontmatter wikilinks in fields no other check resolves ON THIS NOTE'S TYPE.
 
-    `graph.owned_fields` is computed once, from the config, when the graph is built -- it used
-    to be rebuilt (rebuilding the whole type table with it) for every note.
+    Ownership is type-scoped (see _build_indexes): a field is only somebody else's job if the
+    check that owns it actually scans this type. Otherwise the link belongs to KC017.
     """
+    owned = graph.owned_always | graph.owned_by_type.get(note.type, set())
     return [l for l in note_links(note)
-            if l.field is not None and l.field not in graph.owned_fields]
+            if l.field is not None and l.field not in owned]
 
 
 def _escapes(target):
@@ -1506,7 +1561,6 @@ def _check_graduation(graph):
                     "at %r on evidence from %d domain(s), below the bar of %d -- promoted "
                     "early" % (status, count, bar), key="single-domain"))
 
-    out.extend(_check_staleness(graph))
     return out
 
 
@@ -1708,10 +1762,16 @@ def render_index(graph, findings):
 
 
 def _first_prose(note, section):
-    """The first non-empty prose line under a section. Shares _section_lines, so the index
-    and KC034 can never disagree about whether the section exists."""
+    """The first non-empty PROSE line under a section.
+
+    Shares _section_lines, so the index and KC034 can never disagree about whether the
+    section exists. Headings are skipped: _section_lines deliberately includes deeper
+    headings (a link under a sub-heading is still under the section), but a heading is not
+    prose, and rendering `### summary` as an attractor's "so what" puts raw markdown into a
+    generated, do-not-hand-edit artifact.
+    """
     for _line, raw in _section_lines(note, section) or []:
-        if raw.strip():
+        if raw.strip() and not HEADING_RE.match(raw):
             return raw.strip()
     return ""
 
