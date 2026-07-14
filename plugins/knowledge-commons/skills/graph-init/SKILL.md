@@ -55,60 +55,70 @@ block.
 1. What's this graph's name? It becomes `domain:` on every note this graph promotes — name it for the
    *kind of work* (`orchard`, `wellstead`), not for any person or party.
 2. Where does it live? A root path, relative to the project (e.g. `knowledge/`).
-3. What does it promote to — a path to an existing commons, "none" for a leaf graph, or "I don't have
-   one yet"?
+3. What should the atlas — the graph's single navigation root — be called? Any name works
+   (`principium.md`, `atlas.md`, `index.md`); it's recorded as `graph.atlas` and every map's genitor
+   points at it. Don't assume a default without asking.
+4. What does it promote to — a path to an existing commons, "none" for a leaf graph, or "I don't have
+   one yet"? If a path is given (or you're about to suggest one), **verify it before relying on it**:
+   check for a `.commons.yml` there. If the expected location has none, don't conclude the commons
+   doesn't exist — search likely roots first (`ls -d ~/commons ~/Developer/commons 2>/dev/null`; then a
+   shallow scan such as `ls ~/*/.commons.yml ~/Developer/*/.commons.yml 2>/dev/null`) and confirm any
+   candidate whose `graph.name` is `commons` with the user. Only after the search comes up empty do you
+   offer to create one.
 
 **Block 2 — Types.**
-4. What does this domain call its evidence type — the atomic, provenanced note (e.g. `observation`,
+5. What does this domain call its evidence type — the atomic, provenanced note (e.g. `observation`,
    `claim`)?
-5. What attractor types does it need? For each, is it *open* (accumulates evidence, no verdict —
+6. What attractor types does it need? For each, is it *open* (accumulates evidence, no verdict —
    like a pattern) or *settled* (a decision with reasoning attached)?
-6. Are there entities worth lookup-only notes — the nouns worth a name but no synthesis? Name them or
+7. Are there entities worth lookup-only notes — the nouns worth a name but no synthesis? Name them or
    say none.
-7. Does this graph need a reference tier for unbounded lookup facts that are never an association
+8. Does this graph need a reference tier for unbounded lookup facts that are never an association
    surface?
-8. Are there source tiers whose raw material must be preserved verbatim, distinct from the types
+9. Are there source tiers whose raw material must be preserved verbatim, distinct from the types
    above? And do any rich bounded sources (a call, a meeting) warrant an intermediate *synthesis* note
    between the source and its evidence — one note distilling the event before atomic extraction?
 
 **Block 3 — Sources.**
-9. What arrives on its own, without being asked for — a chronicle directory and glob, pasted URLs,
+10. What arrives on its own, without being asked for — a chronicle directory and glob, pasted URLs,
    something else? Name every tier.
-10. For each tier: how does an input resolve to the canonical `source:` identity the ledger keys on,
+11. For each tier: how does an input resolve to the canonical `source:` identity the ledger keys on,
     and is there a resolver skill, or is it already local content?
-11. What signal classes should inspection look for in this source — the categories of thing worth
+12. What signal classes should inspection look for in this source — the categories of thing worth
     turning into a note?
 
 **Block 4 — Sinks.**
-12. Where do non-graph outputs go — tasks, tracker rows, anything that isn't a note? Name every sink
+13. Where do non-graph outputs go — tasks, tracker rows, anything that isn't a note? Name every sink
     and which skill handles it.
-13. What's the approval mode per sink — per-item (the sink confirms itself), batch (one combined
+14. What's the approval mode per sink — per-item (the sink confirms itself), batch (one combined
     confirmation), or silent?
 
 **Block 5 — Procedure.**
-14. Walk one source through, start to finish: what gets created, in what order, and what else has to
+15. Walk one source through, start to finish: what gets created, in what order, and what else has to
     update alongside it — attractor evidence sections, entity notes, map entries?
-15. What's durable here versus operational — the line between what earns a note and what belongs in
+16. What's durable here versus operational — the line between what earns a note and what belongs in
     an operational system?
-16. What must never be captured in this graph — sensitive personal data, anything with a legal or
+17. What must never be captured in this graph — sensitive personal data, anything with a legal or
     safety sensitivity specific to this domain?
 
 **Block 6 — Judgment.**
-17. When it's unclear whether something clears the bar, capture or skip — and which error costs more
+18. When it's unclear whether something clears the bar, capture or skip — and which error costs more
     here, a thin note or a missed one?
-18. What tends to generalize out of this domain, and what must never leave it?
+19. What tends to generalize out of this domain, and what must never leave it?
 
 ### 3. Find or create the commons
 
-If block 1's answer to "promotes to" names a commons whose `.commons.yml` doesn't exist yet, offer to
-instantiate it before touching the project graph. The commons is a fixed preset, not a fresh
-interview — confirm only its root path (default `~/commons`), then write it directly:
+If block 1's answer to "promotes to" names a commons whose `.commons.yml` doesn't exist yet — after
+the search in block 1 question 4 has actually come up empty, not merely after one default path missed —
+offer to instantiate it before touching the project graph. The commons is a fixed preset, not a fresh
+interview — confirm only its root path (default `~/commons`) and its atlas name (same question as
+block 1 question 3), then write it directly:
 
 ```yaml
 graph:
   name: commons
   root: <confirmed root>
-  atlas: atlas.md
+  atlas: <confirmed atlas name>
 types:
   evidence:   { name: claim, dir: claims/, supports: principles-or-questions }
   attractors:
