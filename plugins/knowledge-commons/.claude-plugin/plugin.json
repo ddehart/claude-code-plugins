@@ -1,7 +1,7 @@
 {
   "name": "knowledge-commons",
   "description": "Generator for per-project knowledge graphs with cross-domain promotion: scaffolds a graph, a /process pipeline, and project-owned skills from a config-driven interview; promotes portable claims into a personal commons",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": {
     "name": "Derek DeHart"
   },

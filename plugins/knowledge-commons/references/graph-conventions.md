@@ -36,6 +36,11 @@ A map file is category headings over bullet-line entries. Each line has one job:
 for attractors, say why it matters.
 
 ```markdown
+---
+genitor: "[[atlas]]"
+tags: [map]
+---
+
 # Patterns
 
 ## Pruning

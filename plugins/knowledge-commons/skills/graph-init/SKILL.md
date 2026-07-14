@@ -149,7 +149,8 @@ the spec doesn't name (there is no `feeders:` or similar registry in this design
 Create, under `graph.root`:
 - `{atlas}` (the file named in `graph.atlas`) with initial links to the maps you're about to create.
 - `maps/`, with one map file per type that will hold notes immediately — every source, evidence,
-  attractor, entity, and reference type declared in this graph's config. This is the one place graph-init
+  attractor, entity, and reference type declared in this graph's config. Each map carries frontmatter:
+  `genitor:` pointing at the atlas, `tags: [map]`. This is the one place graph-init
   deliberately overrides "maps are never created empty" (graph-conventions.md's Navigation section):
   the type directories are about to receive their first notes, so seed each with an index from the
   start rather than waiting for five notes to accumulate with nowhere to go. Don't extend this
