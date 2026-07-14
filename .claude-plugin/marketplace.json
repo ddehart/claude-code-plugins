@@ -21,6 +21,12 @@
       "source": "./plugins/pm-workflow",
       "description": "Product management workflow skills: PRD writing, PRD evaluation, and product one-pagers",
       "version": "1.1.0"
+    },
+    {
+      "name": "knowledge-commons",
+      "source": "./plugins/knowledge-commons",
+      "description": "Generator for per-project knowledge graphs with cross-domain promotion: scaffolds a graph, a /process pipeline, and project-owned skills from a config-driven interview; promotes portable claims into a personal commons",
+      "version": "0.1.0"
     }
   ]
 }

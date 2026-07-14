@@ -355,8 +355,9 @@ window first; refine the method inside it`
 | **3** | `--config-only` on the reference graph; first cross-domain promotion from it. | A commons principle carries evidence from two domains |
 | **4** | Second project graph (devbox). Register in `marketplace.json`; README. | Installable by a stranger |
 
-The plugin stays unregistered until Phase 4 (per the unregistered-plugin exception in
-`.claude/rules/plugin-updates.md`).
+*(Amended 2026-07-14, post-merge: the registration originally gated behind Phase 4 was pulled forward —
+the plugin registered in `marketplace.json` at 0.1.0 immediately after the Phase-1 merge, so real installs
+drive Phases 2–3. Phase 4 keeps devbox and any remaining README polish.)*
 
 ## 8. Risks & open items
 

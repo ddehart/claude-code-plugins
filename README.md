@@ -58,6 +58,17 @@ Product management workflow skills for writing and evaluating PRDs and product o
 | `prd-writing` | Interview users to transform rough product ideas into comprehensive one-pagers for product kick-offs |
 | `prd-evaluation` | Evaluate PRDs from a product leader's perspective, surfacing gaps in reasoning and unstated assumptions |
 
+### knowledge-commons
+
+Generator for per-project knowledge graphs with cross-domain promotion. Scaffolds a graph (atlas, maps, type directories), a ledgered `/process` pipeline, and project-owned skills from a config-driven interview; portable claims promote into a personal commons, and steering-grade principles graduate into always-loaded rules. No validators or enforcement machinery — plan approval is the gate.
+
+**Skills included:**
+
+| Skill | Description |
+|-------|-------------|
+| `graph-init` | Interview → `.commons.yml` + graph scaffold + generated project-owned `process` and `knowledge-graph` skills; `--config-only` wires an existing hand-built graph into promotion |
+| `promote` | Derive a portable claim into a target graph (or a rule into the instruction tier) with association against the target's maps and per-promotion approval |
+
 ## Usage
 
 Once installed, the agents and skills are automatically available. Claude will proactively use them when you:
@@ -90,6 +101,7 @@ Once installed, the agents and skills are automatically available. Claude will p
 /plugin update dev-workflow@ddehart-plugins
 /plugin update meta-claude@ddehart-plugins
 /plugin update pm-workflow@ddehart-plugins
+/plugin update knowledge-commons@ddehart-plugins
 ```
 
 ## Naming Conventions
