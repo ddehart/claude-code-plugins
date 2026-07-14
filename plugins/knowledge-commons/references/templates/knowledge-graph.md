@@ -20,9 +20,10 @@ allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
 
 ## Overview
 
-The graph lives at `{graph.root}`, with the atlas at `{graph.root}/{graph.atlas}`. This skill is the only
-thing that creates or edits notes in it. You are the graph's primary writer; a human approves what gets
-written by reading the plan before it lands, and browses the result directly in Obsidian. There is no
+The graph lives at `{graph.root}`, with the atlas at `{graph.root}/{graph.atlas}`. This skill defines how
+notes in it are shaped — `/process` and `/promote` write through these conventions, and direct captures
+land here too. You are the graph's primary writer; a human approves what gets written by reading the plan
+before it lands, and browses the result directly in Obsidian. There is no
 validator standing between a bad plan and the graph — the conventions below, plus that approval, are what
 keep it healthy.
 
@@ -32,8 +33,8 @@ where a convention or a judgment call was off.
 
 ## Conventions
 
-A compact restatement of the graph's structural contract. The full version lives in the plugin's
-`references/graph-conventions.md`; everything a writing session needs day to day is here.
+A compact restatement of the graph's structural contract. The full version lives in the knowledge-commons
+plugin at `{resolved-conventions-path}`; everything a writing session needs day to day is here.
 
 **Navigation.** Every note carries `genitor: "[[parent-map]]"` in its frontmatter, pointing at the map that
 indexes it, and gets an entry in that map, alphabetically. The atlas links to maps; maps link to notes.
@@ -113,7 +114,7 @@ concreteness. -->
 
 ## Extraction Workflow: {source-type}
 
-Working a `{source-type}` — here, one entry from an orchard logbook (`journal/2026-06-02.md`):
+Working a `{source-type}` — here, one entry from an orchard logbook (`docs/chronicle/2026-06-02.md`):
 
 1. If this entry has no source note yet, create one under `sources/` — raw content preserved, canonical
    `source:` in frontmatter — and add it to the sources map. This note is the ledger `/process` stamps.

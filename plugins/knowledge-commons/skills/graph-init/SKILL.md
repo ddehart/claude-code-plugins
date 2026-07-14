@@ -39,7 +39,7 @@ number, see the interview below) rather than starting over. Don't silently overw
 config.
 
 If no `.commons.yml` exists, proceed to the interview. Once block 1 has answered `root:`, before
-scaffolding (step 4), check whether that directory already holds files. An empty or missing
+scaffolding (step 5), check whether that directory already holds files. An empty or missing
 directory scaffolds cleanly; a populated one means this is probably a hand-built graph that needs
 `--config-only`, not a fresh scaffold — stop and say so rather than writing over existing notes.
 
@@ -118,16 +118,18 @@ types:
 promotes-to: ~/.claude/rules/
 ```
 
-No `sources:` and no `sinks:` — the commons never processes anything (D5); everything in it arrives
-by promotion. Scaffold it per step 4 and generate its `knowledge-graph` skill per step 5 — but **not**
+No `sources:` and no `sinks:` — the commons never processes anything; everything in it arrives
+by promotion. Scaffold it per step 5 and generate its `knowledge-graph` skill per step 6 — but **not**
 a `process` skill: a graph with no sources has nothing to orchestrate.
 
 ### 4. Write `.commons.yml`
 
 At the project root, write the config from the interview answers, following the shape in the spec's
-`.commons.yml` sketch (§5): `graph:`, `types:`, `sources:`, `sinks:`, `promotes-to:`. Omit `sources:`
-and `sinks:` entirely for a graph that has none — don't write empty lists. Do not invent keys the spec
-doesn't name (there is no `feeders:` or similar registry in this design).
+`.commons.yml` sketch (§5): `graph:`, `types:`, `sources:`, `sinks:`, `promotes-to:`. Under `types:`,
+entity and synthesis tiers (when the interview declared them) follow the reference tier's shape —
+`entity: { name: <name>, dir: <dir>/ }`, `synthesis: { name: <name>, dir: <dir>/ }`. Omit `sources:`
+and `sinks:` entirely for a graph that has none — don't write empty lists. Do not invent top-level keys
+the spec doesn't name (there is no `feeders:` or similar registry in this design).
 
 ### 5. Scaffold
 
@@ -156,6 +158,10 @@ with no sources (the commons).
 For each template:
 - Replace every `{brace}` value with the concrete config value it names, rendered as natural prose
   where a literal paste would read oddly (`root: .` becomes "the project root", not a bare `.`).
+- Where a template refers to "the plugin's `references/graph-conventions.md`", stamp the resolved
+  concrete path (`${CLAUDE_PLUGIN_ROOT}/references/graph-conventions.md` resolves for *you*, the
+  generator, even though it won't for the generated skill) — a generated skill in a project has no
+  other way to find the plugin's files.
 - Write prose into every `<!-- SLOT: ... -->` block from the matching interview answers — the
   comment names which block. The example under each SLOT shows the *kind* of prose expected, not
   content to reuse; write this domain's own.

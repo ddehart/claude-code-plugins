@@ -65,7 +65,8 @@ Follow the target's frontmatter and note-shape conventions exactly
 Read the target's attractor maps — the annotated entries are the distilled corpus, and reading them is the
 fastest way to see what the claim might connect to. Three outcomes, in order of preference:
 
-1. **Supports an existing attractor.** Add the claim to its `supports:` frontmatter and add a line to that
+1. **Supports an existing attractor.** Name the attractor in the *claim's* `supports:` frontmatter
+   (attractors never carry `supports:` — they're what gets supported), and add a line to that
    attractor's `## evidence` section, with the `(domain)` annotation. If this is the attractor's first
    evidence from a second domain, say so explicitly in the proposal — under the commons' convention that's
    the line between a provisional stance and a held one, and it's worth the reader's attention.

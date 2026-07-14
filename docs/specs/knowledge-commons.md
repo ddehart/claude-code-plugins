@@ -274,6 +274,8 @@ types:
   attractors:
     - { name: pattern,  dir: patterns/ }
     - { name: decision, dir: decisions/ }
+  entity:     { name: plot, dir: plots/ }          # optional — the nouns worth lookup notes
+  synthesis:  { name: walkthrough, dir: walkthroughs/ }   # optional — intermediate for rich bounded sources
   reference:  { name: reference, dir: reference/ }
 sources:
   - { type: chronicle, path: docs/chronicle/, glob: "20*.md" }
