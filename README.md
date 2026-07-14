@@ -94,10 +94,13 @@ Once installed, the agents and skills are automatically available. Claude will p
 
 ## Naming Conventions
 
-**Skills** use action-oriented names that pass the "adept at" test:
-- Ask: "Would you say someone is adept at ___?"
-- Examples: `spec-writing`, `self-documentation`, `session-export`
-- Pattern: Noun-gerund or compound action words representing a craft/expertise
+**Skills** use specific, intention-revealing names:
+- Ask: "Reading this name in a `/` menu, would I know what it does?"
+- Examples: `spec-writing`, `self-documentation`, `session-export`, `graph-init`, `promote`
+- Gerunds read well and are common here, but they're a house preference, not a requirement — a
+  skill's slash command comes from its directory name and auto-invocation is driven by its
+  `description`, so the name's real job is menu discoverability. Plugin namespacing
+  (`knowledge-commons:promote`) supplies disambiguation for otherwise-generic names.
 
 **Agents** use role-oriented names describing their function:
 - Examples: `test-runner`, `branch-creator`, `pr-manager`, `chrome-verifier`

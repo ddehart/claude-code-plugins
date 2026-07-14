@@ -1,6 +1,15 @@
 # Knowledge Commons Plugin — Specification
 
-> **Version:** 1.0 (draft) · **Status:** pre-build · **Date:** 2026-07-14
+> **Version:** 1.0.1 · **Status:** built (Phase 1) · **Date:** 2026-07-14
+>
+> **v1.0.1 — Phase-1 build amendments**, from the paper-parity check against the reference (G2). Three
+> findings, all mechanism the 5-role model couldn't hold: (1) an optional **synthesis** type role — an
+> intermediate note between a rich bounded source and its atomic evidence — added to the conventions,
+> the knowledge-graph template, and interview block 2; (2) the **entity** role's "lookup-only" describes
+> retrieval mode, not thinness — entity notes may accumulate curated context and interaction logs; (3)
+> source tiers may declare a **conditional pre-step** (formatting raw material) and **entity-level
+> batching** for transactional sources, and hand-fed tiers (no glob) prompt for input rather than being
+> queued. Recorded here; implemented in the templates.
 >
 > **Design history.** This is a fresh start. Three earlier iterations (a private v0.2, and v0.3–v0.6.1 in
 > this repo) converged on the right generator model but accumulated a validation apparatus — an executable
