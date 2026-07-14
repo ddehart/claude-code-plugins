@@ -82,29 +82,32 @@ block.
 **Block 3 — Sources.**
 10. What arrives on its own, without being asked for — a chronicle directory and glob, pasted URLs,
    something else? Name every tier.
-11. For each tier: how does an input resolve to the canonical `source:` identity the ledger keys on,
+11. Are there on-demand sources too — articles, docs, reference material you'd point the pipeline at
+   when they come up, rather than anything arriving on a schedule? These get a resolve-and-preserve
+   pipeline (fetched material can vanish; keep a source note) but no queue.
+12. For each tier: how does an input resolve to the canonical `source:` identity the ledger keys on,
     and is there a resolver skill, or is it already local content?
-12. What signal classes should inspection look for in this source — the categories of thing worth
+13. What signal classes should inspection look for in this source — the categories of thing worth
     turning into a note?
 
 **Block 4 — Sinks.**
-13. Where do non-graph outputs go — tasks, tracker rows, anything that isn't a note? Name every sink
+14. Where do non-graph outputs go — tasks, tracker rows, anything that isn't a note? Name every sink
     and which skill handles it.
-14. What's the approval mode per sink — per-item (the sink confirms itself), batch (one combined
+15. What's the approval mode per sink — per-item (the sink confirms itself), batch (one combined
     confirmation), or silent?
 
 **Block 5 — Procedure.**
-15. Walk one source through, start to finish: what gets created, in what order, and what else has to
+16. Walk one source through, start to finish: what gets created, in what order, and what else has to
     update alongside it — attractor evidence sections, entity notes, map entries?
-16. What's durable here versus operational — the line between what earns a note and what belongs in
+17. What's durable here versus operational — the line between what earns a note and what belongs in
     an operational system?
-17. What must never be captured in this graph — sensitive personal data, anything with a legal or
+18. What must never be captured in this graph — sensitive personal data, anything with a legal or
     safety sensitivity specific to this domain?
 
 **Block 6 — Judgment.**
-18. When it's unclear whether something clears the bar, capture or skip — and which error costs more
+19. When it's unclear whether something clears the bar, capture or skip — and which error costs more
     here, a thin note or a missed one?
-19. What tends to generalize out of this domain, and what must never leave it?
+20. What tends to generalize out of this domain, and what must never leave it?
 
 ### 3. Find or create the commons
 

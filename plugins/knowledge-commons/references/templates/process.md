@@ -31,8 +31,11 @@ through.
 
 `/process` with no argument enumerates the queue instead of processing anything: for each source tier
 configured below that declares a `path:`/`glob:`, list every matching file that has no source note in
-the graph carrying its canonical `source:`. Show the queue and stop — running the queue is a separate,
-explicit invocation per item (or "process all of these"), not implied by listing them. For tiers that
+the graph carrying its canonical `source:`. List queue entries human-readably — a date and a short
+preview (the first heading, the opening line, or the initial prompt), never a bare identifier: a queue
+of UUIDs tells the reader nothing about what they're approving. Show the queue and stop — running the
+queue is a separate, explicit invocation per item (or "process all of these"), not implied by listing
+them. For tiers that
 arrive by hand (a pasted URL, an attached document — nothing to glob), there is no queue: ask the user
 to paste or attach the input instead.
 
@@ -51,7 +54,11 @@ Two tier properties worth stating when the interview surfaces them: a conditiona
 material that needs formatting before extraction — name the skill or agent and when it's skipped), and
 batching granularity (a transactional tier may process at the entity level, batching several thin inputs
 into one pass, rather than one input at a time — say so, and note that batch passes are treated as new
-each time, with the human in the loop to catch re-proposals). -->
+each time, with the human in the loop to catch re-proposals). If two tiers cover the SAME underlying
+events (a session transcript and a chronicle entry describing that session), name which tier is primary
+and state the guard: before extracting from the secondary, check the graph for what the primary already
+captured from that event, and extract only what's new — the same observation arriving twice through two
+tiers is the double-counting failure this line exists to prevent. -->
     Example (orchard has one tier, chronicle):
     **Chronicle.** Input is a path under `docs/chronicle/` matching `20*.md`, or bare text that names a
     date the queue can resolve to that path. Canonical `source:` is the repo-relative path
