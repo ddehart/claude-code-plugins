@@ -141,7 +141,9 @@ Create, under `graph.root`:
   exception past initialization — once the graph is running, new maps still wait for the ~5-note
   threshold.
 - One directory per declared type (`{evidence-dir}`, each attractor's `dir:`, entity dir if any,
-  `{reference-dir}` if any, and a `sources/` directory if this graph has sources).
+  `{reference-dir}` if any, and a `sources/` directory if this graph has sources). In a git repo, drop
+  a `.gitkeep` in each still-empty type directory — git doesn't track empty directories, and a scaffold
+  that vanishes on first commit is a confusing first impression.
 - An empty `changelog.md` at the graph root.
 
 ### 6. Generate the skills
@@ -152,7 +154,8 @@ and `<project>/.claude/skills/knowledge-graph/SKILL.md`. Skip `process/SKILL.md`
 with no sources (the commons).
 
 For each template:
-- Replace every `{brace}` value with the concrete config value it names.
+- Replace every `{brace}` value with the concrete config value it names, rendered as natural prose
+  where a literal paste would read oddly (`root: .` becomes "the project root", not a bare `.`).
 - Write prose into every `<!-- SLOT: ... -->` block from the matching interview answers — the
   comment names which block. The example under each SLOT shows the *kind* of prose expected, not
   content to reuse; write this domain's own.
@@ -161,6 +164,12 @@ For each template:
   the generator — it has no business in a file a session will read as its own skill).
 - In `process.md`, include section 11 (the promotion tail) only if this graph's `promotes-to:` is
   set; omit the whole section, not just its content, when there's nothing to promote to.
+- For a graph with no sources (the commons), the knowledge-graph template's extraction-workflow
+  section has no pipeline to describe: replace it with a short "How notes arrive" section — claims
+  arrive via the plugin's `promote` skill carrying `domain:`, nothing is authored directly, and the
+  association step (existing principle / open question / new question) is where new material meets the
+  graph. Narrow the awareness protocol accordingly: structural noticing (drift, duplicates, a question
+  ready to graduate), not new-evidence capture.
 
 The file you write must contain no braces, no SLOT comments, and no orchard or shopcraft examples —
 those exist in the templates to teach *this* generation step, not to ship. If you finish and a brace
