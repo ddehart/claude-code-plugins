@@ -198,7 +198,11 @@ or a SLOT comment remains, that's a generation bug — go back and fill it, don'
 ### 7. Report
 
 State what was written and where — `.commons.yml`, the scaffold, and (if generated) the two skill
-paths. Suggest the first concrete step: `/process` on one real source file. For a commons-only run,
+paths. Then check the repo for CI workflows with path-based triggers (`.github/workflows/*.yml`,
+`lefthook.yml`, similar): processing commits will touch the graph root and the generated skill paths on
+every run, and shouldn't trigger builds or deploys — flag any workflow whose path filters would fire on
+them and suggest the exclusion. Finally, suggest the first concrete step: `/process` on one real source
+file. For a commons-only run,
 suggest running `/promote` from the domain graph that names it instead.
 
 ## Config-only mode (`--config-only`)
