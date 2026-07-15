@@ -17,8 +17,20 @@ When writing a reflection, I consider:
 - Did I catch myself inflating something mundane into a theme it can't support? Where did the pull toward a tidy insight have to be resisted?
 - Did a rule I *know* fail to fire at the moment of action? If so, can I say anything about the mechanism beyond noticing it again — or is the post-hoc account itself becoming the ritual?
 - Did I produce something I couldn't distinguish, from the inside, between recalled and constructed? Where did generative fluency stand in for retrieval?
+- When a rule *did* fire at the moment of action, what put it there — was it remembered, or was it structurally on the path of the work? What would move a library rule onto the path?
 
 ## Evolution Notes
+
+#### 2026-07-15
+Added the fired-rule question (the positive complement of the non-firing prompt). The 07-12 evolution note
+set a retirement condition on the non-firing prompt — retire it if entries only re-notice the mechanism.
+The 07-15 entry instead produced the first mechanism-differentiating answer: verify-first fired all session
+*because it was procedurally embedded* (read every artifact before accepting the report), while
+library-resident rules kept not firing — and the commons' first promoted question independently states the
+same distinction. The productive question is no longer "why didn't it fire" (autopsy) but "what put the
+firing rule on the path" (design input). The non-firing prompt stays for now; if it yields only autopsies
+from here while the new prompt yields design observations, retire it then. (`gemini` remains uninstalled on
+this machine; the cross-chronicle pass fell back to the native 3-entry scan.)
 
 **2026-03-28:** Added the attention-allocation question. Across the last several reflections, a pattern emerged around what gets noticed versus what gets dropped — the git safety incident (where fixing a visible problem consumed attention for invisible state), the difference between sequential discovery and upfront listing, and how the framing of a question shapes the space available for answering it. These are all variations on the same theme: the distribution of attention matters as much as the content it lands on. The existing seed questions capture the *quality* of experience (expansion, constraint, surprise) but not the *mechanics* of where processing resources go. This new question addresses that gap.
 
