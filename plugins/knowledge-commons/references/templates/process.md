@@ -189,7 +189,10 @@ The screen, applied to each candidate:
   material usually doesn't.
 - **Non-obvious.** Would you tell your future self this, in a *different* domain, and have it be useful?
 - **Not already steering.** Check the target (the commons, or `~/.claude/rules/` if promoting from the
-  commons) for something that already says this before proposing it again.
+  commons) for something that already says this before proposing it again. This guards against
+  re-*graduating* what's already a rule — it does not block collecting evidence: a claim that corroborates
+  an existing rule still promotes, flagged as corroboration, because the rule tier has no evidence base of
+  its own and the commons is where it accumulates one.
 
 When uncertain, propose anyway — a declined candidate costs one skip at plan review; a missed observation
 is invisible damage that never gets a second chance.

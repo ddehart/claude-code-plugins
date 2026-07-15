@@ -78,6 +78,16 @@ fastest way to see what the claim might connect to. Three outcomes, in order of 
    accumulated evidence; a promotion may create one when the material genuinely warrants it (a fresh commons
    with nothing to attach to yet), but the default for a first-of-its-kind claim is a question.
 
+**Never hold a first-domain claim back to wait for corroboration.** Association reads the *target's* maps —
+a claim left in its home graph is invisible to every other domain's promote run, so the planted question is
+the only hook by which a second domain's recurrence can ever be recognized. Single-domain questions are the
+designed intermediate state of a receiving graph, not dilution: a question asserts nothing beyond "worth
+watching," and the graduation bar — not entry — is what protects the graph's authority.
+
+**Route by type.** A portable *lookup* fact — tool behavior, a platform gotcha, something you'd search for
+by name — derives into the target's reference tier, not as a claim. Reference notes need no attractor and
+no question; the promote-vs-hold tension doesn't apply to them.
+
 ## 4. The instruction-tier branch
 
 When the target is a rules directory (e.g. `~/.claude/rules/`) rather than a graph — the commons graduating
