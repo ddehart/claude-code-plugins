@@ -217,6 +217,16 @@ needs `.commons.yml` so `/promote` can read it. Interview only:
 Write `.commons.yml` and stop. Touch no notes, no maps, no skills. Say explicitly that this wires an
 existing hand-built graph into promotion — the graph's actual skills stay exactly as they are.
 
+**Then check that promotion can actually fire.** The graph's existing pipeline was written before this
+config existed, so if `promotes-to:` was set, grep its processing/orchestrator skills for an in-band
+promotion step ("promote", "generalize"). If none exists, say so plainly: *with `promotes-to:` set but
+no promotion tail in the pipeline, promotions will only ever happen manually via `/promote` — the
+byproduct-of-work path this config exists for won't fire.* Offer the promotion-tail section of
+`${CLAUDE_PLUGIN_ROOT}/references/templates/process.md` as the model for a hand-added tail (screen the
+run's findings, candidates in the same plan, `promote` invoked last, once per approved candidate) — but
+don't edit the existing skills yourself; surfacing the gap is this mode's job, closing it is the
+owner's.
+
 ## Never
 
 - Never copy this plugin's own `graph-init` or `promote` skills into a project. Only the *templates*
