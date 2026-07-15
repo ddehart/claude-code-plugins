@@ -106,7 +106,13 @@ Wait for explicit approval before writing anything. "Skip," "edit," and "not yet
 ## 6. Write
 
 On approval: write the note (or rule file) per the target's conventions, enter it in its map at the correct
-alphabetical position (genitor, D3), and append one line to the target's `changelog.md` recording the
+alphabetical position (genitor), and append one line to the target's `changelog.md` recording the
 promotion — what came in, from where, and what it now supports.
+
+**Then commit.** If the target graph is a git repository, commit the promotion (the note, map updates,
+changelog line — name the paths, don't blanket-stage) and push if a remote exists. An uncommitted
+promotion is invisible to every other machine and session — the cross-domain chain this skill exists for
+dies in a working tree. If the push is blocked (no network, permission rule), say so plainly so the
+human knows the promotion hasn't left this clone.
 
 A promoted note must stand alone. That's the whole test, at every step of this flow.
