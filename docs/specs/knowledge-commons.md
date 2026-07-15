@@ -1,6 +1,10 @@
 # Knowledge Commons Plugin — Specification
 
-> **Version:** 1.0.1 · **Status:** built (Phase 1) · **Date:** 2026-07-14
+> **Version:** 1.0.1 · **Status:** live — Phases 1–2 complete, Phase 3 mechanism proven · **Date:** 2026-07-15
+>
+> Plugin at 0.1.7 (every bump from a real defect in real use). Commons live with claims from two domains
+> (wellstead ×7, aiwyn ×1) and five open questions. Phase 3's gate — a principle held on two-domain
+> evidence — pends organic accumulation. Phase 4 (devbox) pends convenience.
 >
 > **v1.0.1 — Phase-1 build amendments**, from the paper-parity check against the reference (G2). Three
 > findings, all mechanism the 5-role model couldn't hold: (1) an optional **synthesis** type role — an
