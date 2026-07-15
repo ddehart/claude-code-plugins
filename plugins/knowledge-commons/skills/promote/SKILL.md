@@ -50,8 +50,10 @@ A few things that trip this up:
   promoted (rare — usually it's a single evidence note), its title and evidence entries are artifacts of the
   source graph and can themselves be domain-specific. Rebuild the evidence section from what is actually
   being promoted in this operation, not by copying the source's list.
-- **A promoted note is dated by its promotion**, not by whatever date the source material carried. Use
-  today's date if the target's conventions call for one on this note type.
+- **A promoted note is dated by its promotion**, not by whatever date the source material carried. Check
+  the target's frontmatter contract for this note type (the generated knowledge-graph skill states it;
+  the commons requires `date:` on claims) and set the promotion date — don't skip the field because the
+  source note happened not to show one.
 - **All wikilinks must resolve inside the target graph.** A promoted note that still links back into its
   source graph hasn't generalized — cut the link or replace it with a target-side equivalent.
 - **`domain:` is a plain string, never a link or a path.** It's `orchard`, not `[[orchard]]` and not
