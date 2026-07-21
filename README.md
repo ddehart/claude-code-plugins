@@ -60,7 +60,7 @@ Product management workflow skills for writing and evaluating PRDs and product o
 
 ### knowledge-commons
 
-Generator for per-project knowledge graphs with cross-domain promotion. Scaffolds a graph (atlas, maps, type directories), a ledgered `/process` pipeline, and project-owned skills from a config-driven interview; portable claims promote into a personal commons, and steering-grade principles graduate into always-loaded rules. No validators or enforcement machinery — plan approval is the gate.
+Generator for per-project knowledge graphs with cross-domain promotion. Scaffolds a graph (atlas, maps, type directories), a ledgered `/process` pipeline, and project-owned skills from a config-driven interview; portable claims promote into a personal commons, and steering-grade principles graduate into always-loaded rules. Generated skills are owned by their project and expected to diverge, so template fixes reach them by semantic patch rather than regeneration. No validators or enforcement machinery — plan approval is the gate.
 
 **Skills included:**
 
@@ -68,6 +68,7 @@ Generator for per-project knowledge graphs with cross-domain promotion. Scaffold
 |-------|-------------|
 | `graph-init` | Interview → `.commons.yml` + graph scaffold + generated project-owned `process` and `knowledge-graph` skills; `--config-only` wires an existing hand-built graph into promotion |
 | `promote` | Derive a portable claim into a target graph (or a rule into the instruction tier) with association against the target's maps and per-promotion approval |
+| `graph-patch` | Propagate template fixes into a project's already-generated, hand-sharpened skills without regenerating them — applies each pending change by judgment, verifies it landed, and records what was applied |
 
 ## Usage
 
@@ -94,6 +95,13 @@ Once installed, the agents and skills are automatically available. Claude will p
 - Ask to create a one-pager or kick-off doc
 - Ask to define product requirements
 - Ask to evaluate, review, or critique a PRD
+
+**knowledge-commons:**
+- Ask to set up a knowledge graph in a project, or wire an existing one into promotion
+- Ask to process a chronicle entry, transcript, or other source into the graph
+- Ask whether something generalizes, or to promote a claim into the commons
+- Ask to graduate a principle into an always-loaded rule
+- Ask what template fixes a project's generated skills are still missing
 
 ## Updating
 
