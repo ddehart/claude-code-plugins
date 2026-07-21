@@ -187,4 +187,40 @@ Entries are append-only and ordered by version.
     applicable and the section is correct as it stands. If it does: does the plan present entity
     recommendations as explicit, separately-approvable line items carrying the mention count,
     rather than as a consequence of the observations being written?
+
+- id: step10-pending-patches
+  file: process
+  anchor: "## 10. Report"
+  version: 0.4.0
+  instruction: >
+    Make the run report the place an unpropagated template fix stops being silent: have it suggest
+    the plugin's /graph-patch skill, which reads the current delta log and answers authoritatively
+    whether anything applies. The generated skill must not read the delta log itself and must not
+    assert that patches are pending — it lives in the project and has no path to the plugin, and any
+    plugin path written into it was resolved at generation time, so it names the generating version
+    rather than the installed one. Suggest, never auto-run: /graph-patch edits hand-written prose
+    under per-delta approval. Gate the suggestion on a stated cadence rather than raising it on every
+    run — raise it unconditionally while this project's .commons.yml has no generated: block, since
+    nothing has ever been propagated here and the condition extinguishes itself on the first patch
+    run; raise it only periodically once a block exists, recording that it was raised in the
+    changelog entry this step already writes so a later run can see when it last happened; and raise
+    it whenever the cadence cannot be determined.
+  rationale: >
+    The mechanism's stated goal is to make an unpropagated fix visible rather than silent, and manual
+    invocation was its only discovery path — a maintenance mechanism nobody is ever reminded to run
+    reproduces the failure it was built to prevent. This step already suggests out-of-plan skills
+    rather than auto-running them, so a pending-patch line fits the idiom exactly. The constraint on
+    where the log is read is not incidental. graph-init stamps resolved plugin paths into generated
+    skills, and those are already stale in the wild: two live graphs point at knowledge-commons 0.1.7
+    and 0.1.8 while the plugin is at 0.4.0, resolving today only because those cache directories
+    happen to survive. A discovery hook reading a stale log would report "nothing pending" from it,
+    which is worse than no hook at all — it converts an unnoticed gap into a confirmed clean bill of
+    health. The cadence is part of the fix rather than polish on it: a notice that fires on every run
+    carries no information and gets tuned out, which is the same silence by another route.
+  satisfied-test: >
+    Does the section direct the report to surface pending template patches by suggesting the
+    plugin's /graph-patch skill — rather than by reading the delta log or any other plugin-side file
+    itself, and without claiming to know whether patches are actually pending — and does it state a
+    cadence under which the suggestion is sometimes withheld, rather than raising it unconditionally
+    on every run?
 ```

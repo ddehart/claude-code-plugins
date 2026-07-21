@@ -211,10 +211,46 @@ entity and synthesis tiers (when the interview declared them) follow the referen
 and `sinks:` entirely for a graph that has none — don't write empty lists. Do not invent top-level keys
 the spec doesn't name (there is no `feeders:` or similar registry in this design).
 
-One exception matters when you're writing over a config that already exists — the re-run path from step
-1. `generated:` is a legal sixth key owned by `/graph-patch`, holding applied-delta state. It isn't part
-of the interview and won't come from any answer, so a rewrite assembled purely from interview output
-will silently drop it. If the existing file has a `generated:` block, carry it across untouched.
+**Then write a `generated:` block** — the legal sixth key, holding applied-delta state. It records which
+template deltas this project's generated skills already contain, and `/graph-patch` reads it to decide
+what is still pending. Writing it here is what keeps a freshly generated graph out of `/graph-patch`'s
+bootstrap path: the skills you are about to write in step 6 are rendered from the *current* templates, so
+every delta in the log at this version is already baked into them, and recording those ids as applied is
+exactly what stops the patcher from proposing edits the prose already contains. Shape:
+
+```yaml
+generated:
+  process:
+    template-version: <this plugin's version>
+    applied: [<every delta id in the log whose file is process>]
+  knowledge-graph:
+    template-version: <this plugin's version>
+    applied: [<every delta id whose file is knowledge-graph>]
+```
+
+Build it by reading two plugin files at generation time — both resolve for *you*, the generator:
+`${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` for `version`, and
+`${CLAUDE_PLUGIN_ROOT}/references/deltas.md` for the ids, taking every entry whose `file:` matches, in log
+order.
+
+**Read the log; never write the ids from memory.** A list hardcoded into this skill is correct only until
+the next delta is written, and then it is wrong in the direction that doesn't announce itself: the new
+delta gets recorded as already applied in a skill that was generated before it existed, so `/graph-patch`
+treats it as done and never offers it again. That is the silent-loss failure this whole mechanism exists to
+end, reproduced by the generator that feeds it. If the log is missing, or has no entries for a file, write
+`applied: []` — an empty list is a true statement (nothing to apply yet), not a gap.
+
+Write a sub-key only for a skill you actually generate. A graph with no sources gets no `process` skill at
+all (step 6), so the commons carries `knowledge-graph` alone; a `process` sub-key there would claim state
+for a file that doesn't exist. By the same test, `--config-only` writes no `generated:` block whatsoever:
+it generates nothing, and the hand-written skills it wires up never came from these templates, so no delta
+describes a change they are missing.
+
+One exception matters when you're writing over a config that already exists — the re-run path from step 1.
+There, `generated:` is not yours to compute: it reflects patches `/graph-patch` has applied to prose you
+are not regenerating. It isn't part of the interview and won't come from any answer, so a rewrite assembled
+purely from interview output will silently drop it. If the existing file has a `generated:` block, carry it
+across untouched rather than rebuilding it from the log.
 
 ### 5. Scaffold
 
