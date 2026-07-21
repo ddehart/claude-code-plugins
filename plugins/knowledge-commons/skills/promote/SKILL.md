@@ -27,29 +27,38 @@ three enter the same flow below.
 Read the **source** graph's `.commons.yml` for exactly one value: `graph.name`. That string becomes the
 `domain:` field on the note you write. Nothing else about the source config matters here.
 
-Read the **target**'s `.commons.yml` for everything else: type names, directories, where the atlas and maps
-live. The target is named by the source's `promotes-to:` field, unless the caller named a different target
+The target is named by the source's `promotes-to:` field, unless the caller named a different target
 explicitly (e.g. promoting from the commons into `~/.claude/rules/`, which is a directory, not a graph — see
 §4).
 
-Getting these backwards is the first way this goes wrong. You are about to write into the **target**'s
-world, using the target's type names and the target's directory layout. The source config exists only to
-answer "whose domain is this."
+**Refresh the target before reading any of it.** Once you know which target, and before you read its
+config, its maps, or its notes: if it's a git repository with a remote, fetch and fast-forward — then say
+plainly what came in, including new attractors, new claims, new questions, and which domains they arrived
+from. The order is the substance here, not tidiness. §3 associates against the target's maps and checks
+redundancy against its existing claims, and both read whatever happens to be on disk; a refresh that runs
+after those reads changes nothing, because nothing re-reads. A clone a few commits behind can have gained
+principles, graduated the very question you were about to attach to, and already hold a near-duplicate of
+the claim you're deriving — none of which surfaces until the push in §6 is rejected, by which point the
+note is written and the association is already wrong.
 
-**Refresh the target before reading any of it.** If the target is a git repository with a remote, fetch
-and fast-forward before you read its config, its maps, or its notes — then say plainly what came in: new
-attractors, new claims, new questions, and which domains they arrived from. This is not housekeeping.
-§3 associates against the target's maps and checks redundancy against its existing claims, and both read
-whatever happens to be on disk. A clone a few commits behind can have gained principles, graduated the
-very question you were about to attach to, and already hold a near-duplicate of the claim you're
-deriving — none of which surfaces until the push in §6 is rejected, by which point the note is written
-and the association is already wrong.
+**A fetch that succeeds is not the same as a target that is current.** Treat it as a failed refresh
+whenever the local copy did not actually end up at the remote's tip: no remote, no network, no git, a
+fetch error — and also a fetch that returns cleanly while the fast-forward is refused, because the local
+copy has diverged or the tree is dirty. That last case is the dangerous one: `git fetch` exits 0, `HEAD`
+doesn't move, and "refreshed, nothing new" is exactly what a clone missing nine commits looks like. Check
+that the fast-forward actually happened, not merely that the fetch returned.
 
-If the fetch fails, or there is no remote, or git isn't available here, continue — but say so. A skipped
-or failed refresh must never read as "the target is current." State that the association and the
-redundancy check ran against a possibly-stale copy, so the human weighing the proposal knows what it was
-weighed against. An unreported gap that looks exactly like a clean result is the failure this whole flow
-is built to avoid.
+On any of those, continue — but say so. A skipped, failed, or refused refresh must never read as "the
+target is current." State that the association and the redundancy check ran against a possibly-stale
+copy, so the human weighing the proposal knows what it was weighed against. An unreported gap that looks
+exactly like a clean result is the failure this whole flow is built to avoid.
+
+Then read the **target**'s `.commons.yml` for everything else: type names, directories, where the atlas
+and maps live.
+
+Getting the two configs backwards is the other way this goes wrong. You are about to write into the
+**target**'s world, using the target's type names and the target's directory layout. The source config
+exists only to answer "whose domain is this."
 
 ## 2. Derive the candidate
 

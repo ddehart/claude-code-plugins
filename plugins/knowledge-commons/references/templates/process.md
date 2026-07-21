@@ -100,6 +100,13 @@ Neither is an empty message, nor a reader that simply stopped. Chase it — foll
 class's findings, and ask again if the second reply is no better. If it still won't report, the class
 has failed, not come back empty; route it into step 8.
 
+<!-- SLOT: entity-inspection — CONDITIONAL. Include the paragraph below only if .commons.yml declares an
+entity type. Block 2's entity question is answerable with "none," and a graph that answered so has no
+entity type, no scaffolded entity directory, and no map to enter one in — so there is nothing for this
+paragraph to write into. Omit it entirely rather than leaving it to hunt for notes that have nowhere to
+go. It travels with the entity-recommendation slot in step 5: keep both or drop both, they are one
+feature. -->
+
 Inspection also looks for **entities** — the named nouns this graph keeps returning to that don't have an
 entity note yet. Treat this as a finding in its own right rather than a side effect of writing something
 else: a noun the input names repeatedly earns a note whether or not any observation in this run happens
@@ -110,10 +117,13 @@ to make the case.
 ("what signal classes should inspection look for"). Name each class plainly (what it is, what a finding
 in that class looks like) so both the inline-read path and the subagent-fanout path use the same
 vocabulary. Keep it to what this domain actually has classes for — don't invent classes to fill space.
-One class is standing rather than domain-derived: unnamed entities. Include it, phrased in this domain's
-own vocabulary for the nouns it tracks (this graph's entity type from .commons.yml), so the fanout has a
-reader assigned to it like any other class. -->
-    Example (orchard, chronicle tier — three domain classes plus the standing entity class):
+One further class is standing rather than domain-derived, and CONDITIONAL on the same test as the
+entity-inspection slot above: if .commons.yml declares an entity type, add an unnamed-entities class,
+phrased in this domain's own vocabulary for the nouns it tracks, so the fanout has a reader assigned to
+it like any other class. If the interview answered "none" to entities, omit that class — there is no
+entity tier for its findings to land in. -->
+    Example (orchard, chronicle tier — three domain classes, plus the entity class because orchard
+    declares an entity type):
     - **Decisions.** A choice was made and a reason given — becomes a `decision` attractor or evidence
       for an existing one.
     - **Recurring friction.** The same kind of problem shows up again, named or not — becomes a
@@ -130,6 +140,11 @@ Lay out, per skill/note, what will be created and what will be updated — and j
 being skipped and why (already captured, too operational, not durable — see the sibling
 `knowledge-graph` skill's conventions). Present it as `[y / edit / explain]`. One approval gates the
 entire run; there is no per-note confirmation after this point except the re-pause condition in step 6.
+
+<!-- SLOT: entity-recommendation — CONDITIONAL, on the same test as step 4's entity-inspection slot:
+include the paragraph below only if .commons.yml declares an entity type. Keep both or drop both — a plan
+that recommends entities for a graph with no entity tier proposes writes into a directory that was never
+scaffolded. -->
 
 **Entity recommendations get their own line items**, naming the noun, how many times this run named it,
 and that it has no entity note yet — not folded into the notes that happen to mention it. An entity that
@@ -196,8 +211,10 @@ Write or update the `processed:` stamp on the source note — a YAML list entry 
 overwritten.
 
 **Don't stamp over a gap.** The stamp is what makes re-runs resume instead of redo, so writing one marks
-this source handled for good. Before writing it, confirm that every signal class either returned findings
-or explicitly reported none. A class that did neither means part of this input was never inspected, and
+this source handled for good. Before writing it, confirm that every signal class handed to a subagent
+either returned findings or explicitly reported none. (This gate is about the fanout — on the inline path
+there are no readers to hear from, and a run that read the input in this conversation has already
+inspected every class.) A class that did neither means part of this input was never inspected, and
 stamping now discards it silently and permanently — the next run reads the stamp and moves on. Withhold
 the stamp, name the unaccounted-for classes, and offer the re-read. An unstamped partial run is
 recoverable; a complete-looking stamp over an uninspected class is not.
@@ -227,8 +244,13 @@ disk. If the target is a git repository with a remote, fetch and fast-forward it
 in: new claims in the target are precisely what the screen is looking for, so they change its answer. A
 clone a few commits behind cannot see recent claims, which means duplicates read as novel — and since
 redundancy detection is the screen's whole job, stale makes it decorative while it still reports clean.
-If there is no remote, no network, or no git, the screen still runs — but say plainly that it ran against
-a possibly-stale copy, rather than letting the silence stand in for "the target is current."
+
+Treat the refresh as failed whenever the copy didn't actually end up at the remote's tip: no remote, no
+network, no git, a fetch error — and also a fetch that returns cleanly while the fast-forward is refused,
+because the local copy has diverged or the tree is dirty. Check that the fast-forward happened, not just
+that the fetch returned; a clean fetch with an unmoved `HEAD` looks identical to being up to date. In any
+of those cases the screen still runs — but say plainly that it ran against a possibly-stale copy, rather
+than letting the silence stand in for "the target is current."
 
 The screen, applied to each candidate:
 

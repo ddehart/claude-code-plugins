@@ -92,8 +92,10 @@ Entries are append-only and ordered by version.
   version: 0.2.0
   instruction: >
     Gate the processed: stamp on inspection coverage. Refuse to write it while any signal class
-    has neither returned findings nor explicitly reported none. Instead, withhold the stamp, name
-    the unaccounted-for classes, and offer the re-read.
+    handed to a subagent has neither returned findings nor explicitly reported none. Instead,
+    withhold the stamp, name the unaccounted-for classes, and offer the re-read. Scope the gate to
+    the fanout path explicitly: on an inline read there are no readers to hear from and every class
+    was inspected in-conversation, so an unscoped gate would withhold the stamp on a complete run.
   rationale: >
     The stamp is what makes re-runs resume instead of redo, so writing one marks the source
     handled for good — the next run reads it and moves on. Stamping over a class that was never
@@ -102,8 +104,9 @@ Entries are append-only and ordered by version.
     be re-run, a complete-looking stamp over an uninspected class cannot be distinguished from a
     finished one afterward.
   satisfied-test: >
-    Does the section make writing the stamp conditional on every signal class having either
-    reported findings or explicitly reported none, and say what to do instead when one has not?
+    Does the section make writing the stamp conditional on every fanned-out signal class having
+    either reported findings or explicitly reported none, and say what to do instead when one has
+    not — while leaving an inline read, where no subagent was involved, free to stamp normally?
 
 - id: step11-pull-target
   file: process
@@ -113,8 +116,10 @@ Entries are append-only and ordered by version.
     Refresh the promotion target before the screen runs — not after candidates are derived. If
     the target is a git repo with a remote, fetch and fast-forward, and say what came in, since
     new claims in the target change the screen's answer. Degrade explicitly: with no remote, no
-    network, or no git, the screen still runs, but state that it ran against a possibly-stale
-    copy rather than letting silence imply the target is current.
+    network, no git, a fetch error, or a fetch that returns cleanly while the fast-forward is
+    refused (diverged local copy, dirty tree), the screen still runs, but state that it ran
+    against a possibly-stale copy rather than letting silence imply the target is current. The
+    check is that the fast-forward happened, not that the fetch returned.
   rationale: >
     Found while promoting five claims into the personal commons. The "not already steering"
     screen reads the target graph from the local working copy without fetching; against a stale
@@ -125,18 +130,24 @@ Entries are append-only and ordered by version.
     screened against.
   satisfied-test: >
     Does the section require refreshing the target graph from its remote before the redundancy
-    screen runs, and require saying so explicitly when the refresh is skipped or fails?
+    screen runs, and require saying so explicitly whenever the copy did not reach the remote's
+    tip — including when a fetch succeeds but the fast-forward is refused?
 
 - id: step4-entity-signal-class
   file: process
   anchor: "## 4. Inspect"
   version: 0.2.0
   instruction: >
-    Make entity recognition a first-class inspection concern: named nouns this graph tracks that
-    have no entity note yet are a finding in their own right, not a side effect of writing an
-    observation that mentions one. Both the inline-read path and the subagent-fanout path look
-    for them, and both carry the mention count forward to the plan. Add the entity class to this
-    graph's signal-class list, phrased in the domain's own vocabulary for the nouns it tracks.
+    APPLIES ONLY IF this graph declares an entity type in .commons.yml. The entity tier is
+    optional — a graph whose interview answered "none" has no entity type, no scaffolded entity
+    directory, and no map to enter one in. For such a graph this delta does not apply: report it
+    as not applicable and propose no edit.
+    Where it does apply: make entity recognition a first-class inspection concern: named nouns
+    this graph tracks that have no entity note yet are a finding in their own right, not a side
+    effect of writing an observation that mentions one. Both the inline-read path and the
+    subagent-fanout path look for them, and both carry the mention count forward to the plan. Add
+    an unnamed-entities class to this graph's signal-class list, phrased in the domain's own
+    vocabulary for the nouns it tracks.
   rationale: >
     Entity creation was reactive and conditional — the only rule anywhere was "if the entry names
     a plugin or skill not yet in entities/, add a lookup-only entity note," buried as one step of
@@ -146,19 +157,25 @@ Entries are append-only and ordered by version.
     so an entity clearly worth a note but with nothing attaching to it was invisible to the run.
     The mention count is what lets the plan make the case at step 5.
   satisfied-test: >
-    Does inspection treat unnamed entities — nouns the graph tracks with no entity note yet — as
-    a signal class of their own, found on both the inline and fanout paths, independently of
-    whether any observation in the run attaches to them?
+    First, does this graph declare an entity type in .commons.yml? If not, the delta is not
+    applicable and the section is correct as it stands. If it does: does inspection treat unnamed
+    entities — nouns the graph tracks with no entity note yet — as a signal class of their own,
+    found on both the inline and fanout paths, independently of whether any observation in the
+    run attaches to them?
 
 - id: step5-entity-recommend
   file: process
   anchor: "## 5. Propose the plan"
   version: 0.2.0
   instruction: >
-    The plan surfaces entity recommendations as their own line items — naming the noun, its
-    mention count for this run, and that it has no entity note yet — rather than folding them
-    into the notes that mention them. Shape: "this run named X and Y four times each; neither has
-    an entity note; create them?"
+    APPLIES ONLY IF this graph declares an entity type in .commons.yml — same applicability test
+    as step4-entity-signal-class, and the two travel together: apply both or neither. For a graph
+    with no entity tier, report not applicable and propose no edit; a plan that recommends
+    entities there proposes writes into a directory that was never scaffolded.
+    Where it applies: the plan surfaces entity recommendations as their own line items — naming
+    the noun, its mention count for this run, and that it has no entity note yet — rather than
+    folding them into the notes that mention them. Shape: "this run named X and Y four times
+    each; neither has an entity note; create them?"
   rationale: >
     Companion to step4-entity-signal-class: step 4 finds the entity, step 5 is where the human
     gets to approve it. Without an explicit line item, an entity that plainly warrants a note but
@@ -166,6 +183,8 @@ Entries are append-only and ordered by version.
     discarded at exactly the point it was supposed to become actionable. The count is what makes
     the case reviewable — the reader judges from the evidence rather than from an assertion.
   satisfied-test: >
-    Does the plan present entity recommendations as explicit, separately-approvable line items
-    carrying the mention count, rather than as a consequence of the observations being written?
+    First, does this graph declare an entity type in .commons.yml? If not, the delta is not
+    applicable and the section is correct as it stands. If it does: does the plan present entity
+    recommendations as explicit, separately-approvable line items carrying the mention count,
+    rather than as a consequence of the observations being written?
 ```
