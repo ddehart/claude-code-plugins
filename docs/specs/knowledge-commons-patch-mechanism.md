@@ -194,6 +194,32 @@ a delta that can't find its target does nothing, loudly, instead of landing some
 That case has a population of zero: the only sourceless graph is the commons, which gets no `process`
 skill at all. The rule stands; that illustration didn't.)*
 
+### Resolved during implementation (PR #66)
+
+The spec was silent on these five; they were settled while building `/graph-patch` and are recorded here
+so they aren't re-derived.
+
+**D18. An ambiguous anchor is treated exactly like a missing one** — skip, report loudly, never stamp.
+D16 covered *missing* only, but multi-match is live for `knowledge-graph` (wellstead has three
+`## Extraction Workflow: …` headings). Same rationale: a patcher that picks among candidates is guessing.
+
+**D19. `template-version` on a partial run** is set to the highest `version` among deltas actually
+stamped *for that file*, and left untouched if nothing stamped. `applied:` is the source of truth;
+`template-version` is a convenience. Because selection is set-membership on `id` (D15), legitimate holes
+below the version number can exist — the skill states this explicitly so a reader doesn't treat the
+version as a completeness claim.
+
+**D20. A missing target file is not an error.** A commons graph has no `process` skill at all, so its
+`process` deltas are simply out of scope for that project. Report it, don't stamp it, don't treat it as
+failure.
+
+**D21. A reader-modified `edit` still runs the D14 post-condition.** A hand-edited weave is at least as
+likely to miss the satisfied-test as a generated one.
+
+**D22. The bootstrap stamp is written to disk before the first edit.** D6 said "writes the stamp, then
+applies" without pinning ordering; making it explicit means a crashed or interrupted run still leaves
+honest state rather than edits with no record.
+
 ### Keeping the log honest
 
 **D17. A template edit is incomplete without its delta entry.** Stated as a rule in the plugin README and
@@ -299,4 +325,6 @@ Low risk at current scale; worth a thought if the log grows past a few dozen ent
 
 **Q3. What happens when a project has deliberately removed a section?** D16 says skip-and-report, and
 never stamp. That means the same delta is reported as unapplied on every subsequent run, forever. A
-"declined permanently" state may be worth adding if this proves noisy.
+"declined permanently" state may be worth adding if this proves noisy. **Still open, and now live** —
+`/graph-patch` (PR #66) reports this correctly but has no declined state. The three-graph rollout is the
+trigger: if it proves noisy there, add one.
