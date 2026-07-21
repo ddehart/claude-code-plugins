@@ -58,10 +58,10 @@ State lives in a `generated:` block in `.commons.yml`:
 ```yaml
 generated:
   process:
-    template-version: 0.1.10
+    template-version: 0.2.0
     applied: [step4-explicit-negative, step9-stamp-gate, step11-pull-target]
   knowledge-graph:
-    template-version: 0.1.10
+    template-version: 0.2.0
     applied: [entity-proactive-recommend]
 ```
 
