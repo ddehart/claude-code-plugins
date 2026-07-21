@@ -211,6 +211,11 @@ entity and synthesis tiers (when the interview declared them) follow the referen
 and `sinks:` entirely for a graph that has none — don't write empty lists. Do not invent top-level keys
 the spec doesn't name (there is no `feeders:` or similar registry in this design).
 
+One exception matters when you're writing over a config that already exists — the re-run path from step
+1. `generated:` is a legal sixth key owned by `/graph-patch`, holding applied-delta state. It isn't part
+of the interview and won't come from any answer, so a rewrite assembled purely from interview output
+will silently drop it. If the existing file has a `generated:` block, carry it across untouched.
+
 ### 5. Scaffold
 
 Create, under `graph.root`:
@@ -325,5 +330,10 @@ owner's.
 - Never write anything into a commons root you recorded but couldn't verify. An empty directory that
   later receives the user's real commons is the intended outcome; scaffolding it is the second-commons
   bug on a delay.
-- Never invent `.commons.yml` keys beyond `graph:`, `types:`, `sources:`, `sinks:`, `promotes-to:`.
-  If a future need surfaces a gap, that's a spec question, not a generator improvisation.
+- Never invent `.commons.yml` keys beyond `graph:`, `types:`, `sources:`, `sinks:`, `promotes-to:`,
+  and `generated:`. That last one is sanctioned but not yours: `/graph-patch` owns it, and it records
+  which template deltas have already been applied to this project's generated skills. Write it only at
+  generation time; never rewrite or prune it afterward, and leave it untouched when re-running over an
+  existing graph. Dropping it doesn't look like data loss — it looks like `/graph-patch` re-proposing
+  deltas the prose already contains, and the bug appears to be in the wrong skill. If some *other*
+  future need surfaces a gap, that's still a spec question, not a generator improvisation.
