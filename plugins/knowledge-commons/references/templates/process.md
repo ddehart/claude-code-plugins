@@ -228,36 +228,28 @@ rather than auto-running it. (Generated skills reference each other directly by 
 available here, because this skill lives in the project, not in the plugin.)
 
 **Pending template patches belong here too.** This skill was generated from a plugin template and has
-since diverged — you own this file. When the plugin fixes a defect in that template, nothing about the
-fix reaches this file on its own; the plugin's `/graph-patch` skill is what propagates it, and it only
-runs when someone invokes it. This report is where an unpropagated fix stops being silent.
+since diverged — you own it — so a fix to that template reaches this file only when someone runs the
+plugin's `/graph-patch`. Suggest it here. Never auto-run it, and never claim to know whether patches are
+pending: what has been applied here is recorded in this project's `.commons.yml` under `generated:`, but
+what *exists* to apply lives in the plugin's delta log, which this skill has no path to and must not go
+looking for — any plugin path written into this file was resolved at generation time and names a version
+that has since moved on. `/graph-patch` always reads the current log; let it answer.
 
-You cannot answer whether anything is actually pending, and must not pretend to. What has been applied
-here is recorded in this project's `.commons.yml` under `generated:`, but what *exists* to apply lives in
-the plugin's delta log — and this skill has no path to the plugin, per the note above. That is
-deliberate, not an oversight to work around: any plugin path written into this file was resolved when
-this file was generated, so it points at the plugin version that generated it, not the one installed now.
-Reading a stale delta log and reporting "nothing pending" from it is worse than reporting nothing at all,
-because it turns an unnoticed gap into a confirmed clean bill of health. `/graph-patch` ships with the
-plugin, always reads the current log, and answers authoritatively. Suggest it; let it answer.
+Cadence, because a line on every run carries no information and gets tuned out:
 
-Cadence matters, because a line that appears on every single run carries no information and gets tuned
-out — which fails the same way silence does:
+- **`.commons.yml` has no `generated:` block** — nothing here records any delta as applied to this file.
+  Raise it every run until a block appears.
+- **A `generated:` block exists** — raise it about monthly. Scan `changelog.md` *and* the most recent
+  `changelog/YYYY-MM.md` archive for the literal marker `[patch-check-suggested]`, and stay quiet if one
+  falls within the last month; when you do raise it, put that exact marker in the changelog entry you are
+  already writing. Both halves are load-bearing: the changelog rotates monthly, so scanning only the
+  current file would re-raise at every month boundary, and a free-form note is not reliably recognizable
+  to the run that has to find it.
+- **Can't tell** — raise it. A redundant line is cheap; the other error is the defect being fixed.
 
-- **No `generated:` block in `.commons.yml`** — `/graph-patch` has never run against this graph, so
-  nothing has ever been propagated into this file. Raise it every run until that changes; the condition
-  extinguishes itself on the first patch run.
-- **A `generated:` block exists** — this graph has been checked at least once, and you have no local
-  evidence either way about since. Raise it roughly monthly: scan the recent changelog for an entry
-  already carrying this note and stay quiet if one falls inside that window, and when you do raise it,
-  say so in the changelog entry you are already writing so the next run can see when it last happened.
-- **Can't tell** — no readable `.commons.yml`, ambiguous changelog — raise it. A redundant suggestion
-  costs a line; the other error is the defect being fixed.
-
-Keep it to a line, and keep it honest — it is a suggestion to check, not a claim that patches are
-waiting: *"This graph hasn't been checked for template patches; `/graph-patch` reads the plugin's current
-delta log and will say whether any apply."* Never auto-run it. It edits prose this project wrote by hand,
-and its approval is per-delta by design.
+Keep it to a line, and keep it a suggestion to check rather than a claim that anything is waiting:
+*"This graph may have template patches pending; `/graph-patch` reads the plugin's current delta log and
+will say whether any apply."*
 
 <!-- SLOT: promotion-tail — CONDITIONAL. Include this entire "## 11" section only if .commons.yml sets
 promotes-to: for this graph. If the graph has no promotes-to:, omit section 11 entirely — do not leave a

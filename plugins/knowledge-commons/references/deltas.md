@@ -200,11 +200,14 @@ Entries are append-only and ordered by version.
     plugin path written into it was resolved at generation time, so it names the generating version
     rather than the installed one. Suggest, never auto-run: /graph-patch edits hand-written prose
     under per-delta approval. Gate the suggestion on a stated cadence rather than raising it on every
-    run — raise it unconditionally while this project's .commons.yml has no generated: block, since
-    nothing has ever been propagated here and the condition extinguishes itself on the first patch
-    run; raise it only periodically once a block exists, recording that it was raised in the
-    changelog entry this step already writes so a later run can see when it last happened; and raise
-    it whenever the cadence cannot be determined.
+    run, keyed on what is locally observable rather than on what it implies: raise it every run while
+    this project's .commons.yml has no generated: block; raise it about monthly once a block exists;
+    and raise it whenever the cadence cannot be determined. Make the monthly arm durable — have it
+    write a literal, fixed marker string into the changelog entry this step already writes, and have
+    it scan both the live changelog and the most recent monthly archive for that marker. Both halves
+    matter: a free-form note is not reliably recognizable to the run that has to find it, and this
+    graph's changelog rotates monthly, so scanning only the current file re-raises at every month
+    boundary.
   rationale: >
     The mechanism's stated goal is to make an unpropagated fix visible rather than silent, and manual
     invocation was its only discovery path — a maintenance mechanism nobody is ever reminded to run
@@ -222,5 +225,8 @@ Entries are append-only and ordered by version.
     plugin's /graph-patch skill — rather than by reading the delta log or any other plugin-side file
     itself, and without claiming to know whether patches are actually pending — and does it state a
     cadence under which the suggestion is sometimes withheld, rather than raising it unconditionally
-    on every run?
+    on every run? And where that cadence has a periodic arm that suppresses the suggestion based on
+    having raised it before, does the section name a fixed marker string to write and to look for,
+    and require looking in the archived changelog as well as the live one — so the suppression
+    survives the changelog's monthly rotation?
 ```
