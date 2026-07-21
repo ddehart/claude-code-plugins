@@ -36,6 +36,21 @@ Getting these backwards is the first way this goes wrong. You are about to write
 world, using the target's type names and the target's directory layout. The source config exists only to
 answer "whose domain is this."
 
+**Refresh the target before reading any of it.** If the target is a git repository with a remote, fetch
+and fast-forward before you read its config, its maps, or its notes — then say plainly what came in: new
+attractors, new claims, new questions, and which domains they arrived from. This is not housekeeping.
+§3 associates against the target's maps and checks redundancy against its existing claims, and both read
+whatever happens to be on disk. A clone a few commits behind can have gained principles, graduated the
+very question you were about to attach to, and already hold a near-duplicate of the claim you're
+deriving — none of which surfaces until the push in §6 is rejected, by which point the note is written
+and the association is already wrong.
+
+If the fetch fails, or there is no remote, or git isn't available here, continue — but say so. A skipped
+or failed refresh must never read as "the target is current." State that the association and the
+redundancy check ran against a possibly-stale copy, so the human weighing the proposal knows what it was
+weighed against. An unreported gap that looks exactly like a clean result is the failure this whole flow
+is built to avoid.
+
 ## 2. Derive the candidate
 
 Write the note you would write if you were authoring fresh in the target graph — never move or modify the
@@ -73,7 +88,11 @@ fastest way to see what the claim might connect to. Three outcomes, in order of 
    evidence from a second domain, say so explicitly in the proposal — under the commons' convention that's
    the line between a provisional stance and a held one, and it's worth the reader's attention.
 2. **Attaches to an open question.** No forcing required — questions exist to absorb claims that don't yet
-   support a principle.
+   support a principle. **Confirm the question is still open before attaching to it.** A question that has
+   already graduated is not a valid target: the claim belongs under the attractor it became, as evidence,
+   which is outcome 1. Check this by reading the note itself — whether it still carries `## question` or
+   now carries `## so what` — never by where a map happens to list it. Questions graduate in place, so a
+   map can still file one under a "questions" heading long after it stopped being one.
 3. **Nothing fits.** Propose a new question, not a new attractor. Attractors earn their name from
    accumulated evidence; a promotion may create one when the material genuinely warrants it (a fresh commons
    with nothing to attach to yet), but the default for a first-of-its-kind claim is a question.
@@ -126,5 +145,14 @@ changelog line — name the paths, don't blanket-stage) and push if a remote exi
 promotion is invisible to every other machine and session — the cross-domain chain this skill exists for
 dies in a working tree. If the push is blocked (no network, permission rule), say so plainly so the
 human knows the promotion hasn't left this clone.
+
+**A rejected push means the target moved while you were writing.** Pull and rebase, then push again — but
+read what came in before resolving anything. If the incoming commits touch what the association rests on
+— the question you attached to, the attractor you added evidence to, the map line you inserted — stop and
+re-derive rather than resolving mechanically. A conflict in a map is rarely a merge chore; it usually
+means the association is now wrong: the question graduated, an attractor absorbed the claim, or someone
+else's promotion already said this. Take it back through §3 and re-propose. Resolving by hand and pushing
+produces a promotion that is well-formed and pointed at the wrong thing, which is far harder to find
+later than the conflict was.
 
 A promoted note must stand alone. That's the whole test, at every step of this flow.
