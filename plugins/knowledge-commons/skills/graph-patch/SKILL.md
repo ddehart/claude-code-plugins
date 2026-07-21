@@ -11,7 +11,6 @@ description: >
 argument-hint: "[delta id to apply, or blank for all pending]"
 allowed-tools:
   - Read
-  - Write
   - Edit
   - Glob
   - Grep
@@ -34,6 +33,10 @@ voice, not to paste the template's words into it.
 Run this from inside the target project — the project that owns the graph, not the plugin repo.
 That is where the domain context lives, which is where the approval judgment belongs.
 
+**Every write in this skill is a surgical `Edit`.** `Write` is deliberately absent from this
+skill's tools: it is the one tool that makes whole-file replacement reachable, and whole-file
+replacement is this skill's first prohibition. You never create a file and you never replace one.
+
 ## 1. Orient
 
 Read `.commons.yml` at the project root. If there isn't one, this project has no
@@ -46,7 +49,8 @@ Locate the two patchable files:
 
 Either may legitimately be absent. A graph with no `sources:` (the commons) gets no `process`
 skill at all. A missing file is not an error — it means every delta targeting that file is
-out of scope for this project. Note it and move on.
+**out of scope** for this project. Note which file is missing and carry it to the report (step 7);
+those deltas are neither applied nor pending, so nothing else will surface them.
 
 Read the delta log at `${CLAUDE_PLUGIN_ROOT}/references/deltas.md`. If it is missing or empty,
 report that and stop.
@@ -66,13 +70,36 @@ generated:
 ```
 
 **If the block is absent, bootstrap it.** Every graph generated before this mechanism existed came
-from templates at plugin version `0.1.8` — assume that, write the block with
+from templates at plugin version `0.1.8` — assume that, add the block with
 `template-version: 0.1.8` and an empty `applied: []` for each generated file that actually exists,
 and proceed. Do not probe file contents to guess a version; the population of graphs older than
 0.1.8 is zero. Say plainly in the report that you bootstrapped.
 
-Write the bootstrap block before applying anything, so a run that fails partway still leaves the
+Add the bootstrap block before applying anything, so a run that fails partway still leaves the
 project with honest state.
+
+**If the block exists but a file's sub-key is missing, treat that sub-key as empty** — every delta
+targeting that file is pending. This is reachable in normal operation: bootstrap writes a sub-key
+only for each generated file that existed *at bootstrap time*, so any project that gains its second
+generated skill afterward lands here. A missing sub-key means "nothing applied yet," never "skip
+this file."
+
+### Amend `.commons.yml` surgically — never re-serialize it
+
+`.commons.yml` is a file the project wrote by hand, and it carries hand-written comments — the
+reference config has six comment-bearing lines explaining what `domain:` means, which attractors are
+open versus settled, which sources have no queue.
+
+**Use `Edit` to append or replace the `generated:` block, and nothing else.** Every other key, its
+values, its ordering, its inline comments, and the file's whitespace must survive **byte-identical**.
+
+Specifically: do **not** parse the YAML into a data structure, insert a key, and re-emit the file. A
+round-trip through any YAML serializer strips every comment and reflows the formatting — destroying
+hand-written explanation on a config the project owns, in a single silent step. That is the same
+failure this whole skill exists to prevent, committed against a different file. It also violates the
+`Never` below: a re-serialization touches every key's formatting even when the values survive.
+
+Append `generated:` at the end of the file if it isn't there. If it is, edit within it.
 
 ## 3. Select what's pending
 
@@ -83,10 +110,24 @@ This matters: D15 stamps only what actually applied, so `applied:` can legitimat
 below `template-version`. Comparing versions would silently skip a delta that failed on a previous
 run — which is precisely the silent-loss shape this mechanism exists to prevent.
 
-Filter out deltas whose `file` doesn't exist in this project (step 1). If an argument named a
-specific delta id, apply only that one; otherwise take every pending delta, in log order.
+Filter out deltas whose `file` doesn't exist in this project (step 1) — those are **out of scope**
+for this project, not pending. Track them for the report; they are neither applied nor pending, and
+must not silently vanish.
 
-If nothing is pending, say so and stop. That is a clean, common outcome.
+**If an argument named a specific delta id**, resolve it against the **whole log**, not the pending
+set, and report which of three cases it hit:
+
+- **Found and pending** → apply only that one.
+- **Found but already in `applied:`** → say so and stop. Nothing to do; do not re-apply.
+- **Not in the log at all** → say *"no delta with that id exists"* and stop. **Never fall through to
+  "nothing pending" and report a clean run** — a typo'd or newer-than-this-plugin id would then look
+  like a patch that was considered and found unnecessary, when it was never found at all. Name the
+  id you looked for, and suggest the plugin may need updating if the id came from a newer version.
+
+**With no argument**, take every pending delta, in log order.
+
+If nothing is pending, say so and stop. That is a clean, common outcome — but state it as "no
+pending deltas," and still report anything out of scope.
 
 ## 4. Apply each delta
 
@@ -114,8 +155,9 @@ behavior in every one of those cases, not a failure to work around.
 
 Read the anchored section in full, then answer the `satisfied-test` against what is actually
 written there. **If the test already passes, propose no edit.** The project hand-fixed this
-defect already, or wrote it correctly from the start. Report *already satisfied*, record the delta
-as applied, and move to the next one.
+defect already, or wrote it correctly from the start. Report *already satisfied*, **note it for
+stamping in step 5**, and move to the next one. Don't write to `.commons.yml` here — step 5 is the
+single point where state reaches disk.
 
 Do not propose a cosmetic rewrite to make the section resemble the template. The test is the
 contract; matching prose is not.
@@ -201,6 +243,10 @@ State, plainly:
 - Which were **already satisfied** (stamped, no edit made).
 - Which were **skipped by the reader**, and which **failed** — for each failure, the id, the
   anchor, the file, and why, in enough detail to retry.
+- Which were **out of scope** because their target file doesn't exist in this project — name them
+  and name the missing file. These are neither applied nor pending, and without their own line they
+  disappear from the report entirely. A commons graph has no `process` skill, so every `process`
+  delta lands here on every run; say so rather than leaving the reader to wonder where they went.
 - Whether the `generated:` block was **bootstrapped** this run.
 - Any **coherence concerns** from step 6.
 - What remains **pending** after this run.
@@ -235,6 +281,9 @@ with the human — say so in the report so they know the commit is sitting local
   type directories, and scaffold structure are entirely out of scope. The `.commons.yml`
   `generated:` block is bookkeeping you write — it is not itself a patch target, and no other key
   in that file gets edited.
+- **Never re-serialize `.commons.yml`.** Amend the `generated:` block with `Edit`; every other key,
+  its ordering, its whitespace, and its hand-written comments survive byte-identical. A YAML
+  round-trip silently destroys all of them.
 - **Never write an edit without showing the concrete before-and-after first** and getting explicit
   per-delta approval. Batch approval hides exactly what needs judgment.
 - **Never stamp a delta that didn't verify.** Skipped, missing-anchor, ambiguous-anchor, and

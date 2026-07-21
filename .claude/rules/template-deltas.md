@@ -1,5 +1,5 @@
 ---
-paths: plugins/knowledge-commons/references/templates/*.md
+paths: plugins/knowledge-commons/references/templates/**/*.md
 ---
 
 # Template Delta Rule
