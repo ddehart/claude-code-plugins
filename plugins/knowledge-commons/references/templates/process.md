@@ -227,6 +227,30 @@ format. If the run surfaced something a skill *outside* the plan could act on, s
 rather than auto-running it. (Generated skills reference each other directly by name; there is no `${CLAUDE_PLUGIN_ROOT}`
 available here, because this skill lives in the project, not in the plugin.)
 
+**Pending template patches belong here too.** This skill was generated from a plugin template and has
+since diverged — you own it — so a fix to that template reaches this file only when someone runs the
+plugin's `/graph-patch`. Suggest it here. Never auto-run it, and never claim to know whether patches are
+pending: what has been applied here is recorded in this project's `.commons.yml` under `generated:`, but
+what *exists* to apply lives in the plugin's delta log, which this skill has no path to and must not go
+looking for — any plugin path written into this file was resolved at generation time and names a version
+that has since moved on. `/graph-patch` always reads the current log; let it answer.
+
+Cadence, because a line on every run carries no information and gets tuned out:
+
+- **`.commons.yml` has no `generated:` block** — nothing here records any delta as applied to this file.
+  Raise it every run until a block appears.
+- **A `generated:` block exists** — raise it about monthly. Scan `changelog.md` *and* the most recent
+  `changelog/YYYY-MM.md` archive for the literal marker `[patch-check-suggested]`, and stay quiet if one
+  falls within the last month; when you do raise it, put that exact marker in the changelog entry you are
+  already writing. Both halves are load-bearing: the changelog rotates monthly, so scanning only the
+  current file would re-raise at every month boundary, and a free-form note is not reliably recognizable
+  to the run that has to find it.
+- **Can't tell** — raise it. A redundant line is cheap; the other error is the defect being fixed.
+
+Keep it to a line, and keep it a suggestion to check rather than a claim that anything is waiting:
+*"This graph may have template patches pending; `/graph-patch` reads the plugin's current delta log and
+will say whether any apply."*
+
 <!-- SLOT: promotion-tail — CONDITIONAL. Include this entire "## 11" section only if .commons.yml sets
 promotes-to: for this graph. If the graph has no promotes-to:, omit section 11 entirely — do not leave a
 placeholder or an empty header. When included, fill the generalization guidance from interview block 6

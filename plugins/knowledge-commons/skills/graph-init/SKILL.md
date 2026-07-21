@@ -196,11 +196,21 @@ types:
     - { name: question,  dir: questions/ }
   reference:  { name: reference, dir: reference/ }
 promotes-to: ~/.claude/rules/
+generated:
+  knowledge-graph:
+    template-version: <this plugin's version>
+    applied: [<every delta id in the log whose file is knowledge-graph>]
 ```
 
 No `sources:` and no `sinks:` — the commons never processes anything; everything in it arrives
 by promotion. Scaffold it per step 5 and generate its `knowledge-graph` skill per step 6 — but **not**
 a `process` skill: a graph with no sources has nothing to orchestrate.
+
+`generated:` is the one part of that preset that isn't literal. This path writes the commons config here
+and never enters step 4, so build the block by step 4's rules rather than pasting those two placeholder
+lines: read the version and the delta log, and write the `knowledge-graph` sub-key alone. There is no
+`process` sub-key, because there is about to be no `process` skill — claiming state for a file you are
+deliberately not generating is a lie the patcher would later act on.
 
 ### 4. Write `.commons.yml`
 
@@ -211,10 +221,75 @@ entity and synthesis tiers (when the interview declared them) follow the referen
 and `sinks:` entirely for a graph that has none — don't write empty lists. Do not invent top-level keys
 the spec doesn't name (there is no `feeders:` or similar registry in this design).
 
-One exception matters when you're writing over a config that already exists — the re-run path from step
-1. `generated:` is a legal sixth key owned by `/graph-patch`, holding applied-delta state. It isn't part
-of the interview and won't come from any answer, so a rewrite assembled purely from interview output
-will silently drop it. If the existing file has a `generated:` block, carry it across untouched.
+**On a fresh write — and only on a fresh write — also write a `generated:` block**, the legal sixth key
+holding applied-delta state. The re-run path is different and is handled at the end of this step; read that
+before writing the block over a config that already exists.
+
+The block records which template deltas this project's generated skills already contain, and
+`/graph-patch` reads it to decide what is still pending. Writing it here is what keeps a freshly
+generated graph out of `/graph-patch`'s bootstrap path: the skills you are about to write in step 6 are rendered from the *current* templates, so
+every delta in the log at this version is already baked into them, and recording those ids as applied is
+exactly what stops the patcher from proposing edits the prose already contains. Shape:
+
+```yaml
+generated:
+  process:
+    template-version: <this plugin's version>
+    applied: [<every delta id in the log whose file is process>]
+  knowledge-graph:
+    template-version: <this plugin's version>
+    applied: [<every delta id whose file is knowledge-graph>]
+```
+
+Build it by reading two plugin files at generation time — both resolve for *you*, the generator:
+`${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json` for `version`, and
+`${CLAUDE_PLUGIN_ROOT}/references/deltas.md` for the ids, taking every entry whose `file:` matches, in log
+order.
+
+**Read the log; never write the ids from memory.** A list hardcoded into this skill is correct only until
+the next delta is written, and then it is wrong in the direction that doesn't announce itself: the new
+delta gets recorded as already applied in a skill that was generated before it existed, so `/graph-patch`
+treats it as done and never offers it again. That is the silent-loss failure this whole mechanism exists to
+end, reproduced by the generator that feeds it. If the log is missing, or has no entries for a file, write
+`applied: []` — an empty list is a true statement (nothing to apply yet), not a gap.
+
+`template-version` means *generated at* when you write it. When `/graph-patch` later updates it, it means
+*patched through* — the highest delta version it actually stamped. Those two coincide today and will
+diverge the first time the plugin bumps a version carrying no new deltas. That's harmless and worth
+knowing rather than fixing: `applied:` is the source of truth in both directions, and the patcher selects
+by set membership on ids, never by comparing version numbers.
+
+Order: this block is written here, in step 4, before step 6 writes the skills it describes. That is the
+opposite of the ordering `/graph-patch` uses (it stamps only what verifiably landed), and the divergence
+is deliberate. A run that dies between step 4 and step 6 leaves a config claiming state for skills that
+don't exist — loud, and repaired by re-running the generator. Writing the block after step 6 instead would
+mean a run that dies mid-generation leaves generated skills with no record at all, which looks exactly
+like a pre-mechanism graph and lands in `/graph-patch`'s 0.1.8 bootstrap at the wrong version. Prefer the
+failure that shows.
+
+Write a sub-key only for a skill you actually generate — a sub-key for a file you don't write claims state
+the patcher will later act on. In practice this step generates both, so both appear here; the sourceless
+case is the commons, whose config is written on step 3's own path with a `knowledge-graph` sub-key alone.
+By the same test, `--config-only` writes no `generated:` block whatsoever: it generates nothing, and the
+hand-written skills it wires up never came from these templates, so no delta describes a change they are
+missing.
+
+**The re-run path is the exception** — writing over a config that already exists, from step 1. A re-run
+does **not** regenerate the skills, so the premise that justifies the block above is false here: nothing is
+being rendered from current templates, and the state of the existing skills is not something this run
+knows. `generated:` is not yours to compute on this path, in either of its two cases:
+
+- **The existing file has a `generated:` block** — carry it across **untouched**. It records patches
+  `/graph-patch` applied to prose you are not regenerating. It isn't part of the interview and won't come
+  from any answer, so a rewrite assembled purely from interview output silently drops it.
+- **The existing file has no `generated:` block** — write **none**. Do not fall back to the fresh-write
+  instruction above. This is the live case, not a hypothetical: every graph generated before this
+  mechanism existed has no block, so a re-run there would read the log and stamp every delta in it as
+  applied to skills that contain not one of them. `/graph-patch` would then report nothing pending,
+  permanently. That is the same silent loss the "never write the ids from memory" paragraph warns about,
+  reached by a different route — and it is worse, because it is written against skills the run never
+  looked at. Leave those graphs to `/graph-patch`'s bootstrap, which assumes `0.1.8` and is correct for
+  them by construction.
 
 ### 5. Scaffold
 
