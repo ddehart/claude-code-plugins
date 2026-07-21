@@ -89,11 +89,41 @@ Read the resolved input and decide what it contains, sized to the input:
   of findings for its class. Synthesize the returned lists yourself before moving to the plan — don't
   forward subagent output verbatim.
 
+**A silent reader is an error to chase, not an empty class.** A subagent that finishes its read and goes
+idle without volunteering findings has told you nothing. Reading that silence as "nothing found" is the
+one failure this run cannot catch on its own, because it looks exactly like a clean pass: a plan
+assembled from zero findings still writes a source note, still stamps it `processed:`, and still reports
+a sweep — while the stamp permanently marks the source handled and everything the readers actually found
+is gone. So before recording any class as empty, require the reader to say so in words: an explicit
+"nothing in this class" statement, from that reader, about that class. Silence is not that statement.
+Neither is an empty message, nor a reader that simply stopped. Chase it — follow up asking for the
+class's findings, and ask again if the second reply is no better. If it still won't report, the class
+has failed, not come back empty; route it into step 8.
+
+<!-- SLOT: entity-inspection — CONDITIONAL. Include the paragraph below only if .commons.yml declares an
+entity type. Block 2's entity question is answerable with "none," and a graph that answered so has no
+entity type, no scaffolded entity directory, and no map to enter one in — so there is nothing for this
+paragraph to write into. Omit it entirely rather than leaving it to hunt for notes that have nowhere to
+go. It travels with the entity-recommendation slot in step 5: keep both or drop both, they are one
+feature. -->
+
+Inspection also looks for **entities** — the named nouns this graph keeps returning to that don't have an
+entity note yet. Treat this as a finding in its own right rather than a side effect of writing something
+else: a noun the input names repeatedly earns a note whether or not any observation in this run happens
+to attach to it. Both paths look for them, and both carry the count of mentions forward — step 5 needs it
+to make the case.
+
 <!-- SLOT: signal-classes — the signal classes inspection looks for, per tier, from interview block 3
 ("what signal classes should inspection look for"). Name each class plainly (what it is, what a finding
 in that class looks like) so both the inline-read path and the subagent-fanout path use the same
-vocabulary. Keep it to what this domain actually has classes for — don't invent classes to fill space. -->
-    Example (orchard, chronicle tier — three classes):
+vocabulary. Keep it to what this domain actually has classes for — don't invent classes to fill space.
+One further class is standing rather than domain-derived, and CONDITIONAL on the same test as the
+entity-inspection slot above: if .commons.yml declares an entity type, add an unnamed-entities class,
+phrased in this domain's own vocabulary for the nouns it tracks, so the fanout has a reader assigned to
+it like any other class. If the interview answered "none" to entities, omit that class — there is no
+entity tier for its findings to land in. -->
+    Example (orchard, chronicle tier — three domain classes, plus the entity class because orchard
+    declares an entity type):
     - **Decisions.** A choice was made and a reason given — becomes a `decision` attractor or evidence
       for an existing one.
     - **Recurring friction.** The same kind of problem shows up again, named or not — becomes a
@@ -101,6 +131,8 @@ vocabulary. Keep it to what this domain actually has classes for — don't inven
     - **Standalone observations.** True and useful on their own, not yet clustering with anything —
       becomes an `observation` with no attractor yet; note it as unattached in the plan rather than
       forcing a link.
+    - **Unnamed entities.** A grove, cultivar, or tool the entry keeps returning to that has no note
+      under `entities/` — becomes a lookup-only entity note, on the strength of the mentions alone.
 
 ## 5. Propose the plan
 
@@ -108,6 +140,17 @@ Lay out, per skill/note, what will be created and what will be updated — and j
 being skipped and why (already captured, too operational, not durable — see the sibling
 `knowledge-graph` skill's conventions). Present it as `[y / edit / explain]`. One approval gates the
 entire run; there is no per-note confirmation after this point except the re-pause condition in step 6.
+
+<!-- SLOT: entity-recommendation — CONDITIONAL, on the same test as step 4's entity-inspection slot:
+include the paragraph below only if .commons.yml declares an entity type. Keep both or drop both — a plan
+that recommends entities for a graph with no entity tier proposes writes into a directory that was never
+scaffolded. -->
+
+**Entity recommendations get their own line items**, naming the noun, how many times this run named it,
+and that it has no entity note yet — not folded into the notes that happen to mention it. An entity that
+plainly warrants a note but has no observation attaching to it surfaces no other way, so if it isn't a
+line in the plan you never get the chance to approve it. Give the count and let the reader judge; a
+declined entity costs one skip at review.
 
 ## 6. Run to completion
 
@@ -155,12 +198,26 @@ If a step in the approved plan fails, skip it and continue with the remaining in
 than aborting the run. Collect every failure and report them together at the end, with enough detail to
 retry (what was attempted, what error came back), and offer to retry the failed steps now.
 
+A signal-class reader that never reported (step 4) belongs here too, even though it failed before the
+plan existed. Collect it under its class name, say plainly that the class was never inspected, and offer
+the re-read alongside the other retries. It is the one failure with no error message attached to it, so
+if this step doesn't name it, the run's report says nothing went wrong.
+
 ## 9. Stamp
 
 Write or update the `processed:` stamp on the source note — a YAML list entry with `date:`, `ran:`
 (what was actually written), `skipped:` (what was deliberately not written, and why), and `errored:`
 (what failed, per step 8). It's a list so history accumulates across augment-mode runs rather than being
 overwritten.
+
+**Don't stamp over a gap.** The stamp is what makes re-runs resume instead of redo, so writing one marks
+this source handled for good. Before writing it, confirm that every signal class handed to a subagent
+either returned findings or explicitly reported none. (This gate is about the fanout — on the inline path
+there are no readers to hear from, and a run that read the input in this conversation has already
+inspected every class.) A class that did neither means part of this input was never inspected, and
+stamping now discards it silently and permanently — the next run reads the stamp and moves on. Withhold
+the stamp, name the unaccounted-for classes, and offer the re-read. An unstamped partial run is
+recoverable; a complete-looking stamp over an uninspected class is not.
 
 ## 10. Report
 
@@ -180,6 +237,20 @@ placeholder or an empty header. When included, fill the generalization guidance 
 After the plan in step 5 is assembled — before presenting it — ask one more question of the run's
 findings: does any of this generalize beyond `{graph.name}`? Candidates go **into the same plan**,
 clearly marked as promotions, not into a separate pass someone has to remember to run.
+
+**Refresh the target first — before the screen runs, not after the candidates are derived.** The "not
+already steering" check below reads the target's own notes, so it is worth exactly as much as the copy on
+disk. If the target is a git repository with a remote, fetch and fast-forward it now, and say what came
+in: new claims in the target are precisely what the screen is looking for, so they change its answer. A
+clone a few commits behind cannot see recent claims, which means duplicates read as novel — and since
+redundancy detection is the screen's whole job, stale makes it decorative while it still reports clean.
+
+Treat the refresh as failed whenever the copy didn't actually end up at the remote's tip: no remote, no
+network, no git, a fetch error — and also a fetch that returns cleanly while the fast-forward is refused,
+because the local copy has diverged or the tree is dirty. Check that the fast-forward happened, not just
+that the fetch returned; a clean fetch with an unmoved `HEAD` looks identical to being up to date. In any
+of those cases the screen still runs — but say plainly that it ran against a possibly-stale copy, rather
+than letting the silence stand in for "the target is current."
 
 The screen, applied to each candidate:
 

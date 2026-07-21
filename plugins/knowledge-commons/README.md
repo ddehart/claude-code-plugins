@@ -138,6 +138,7 @@ plugins/knowledge-commons/
     promote/SKILL.md                  # the cross-domain derivation mechanism
   references/
     graph-conventions.md              # the shared note/map/frontmatter contract
+    deltas.md                         # template fixes to propagate into generated skills
     templates/
       process.md                      # → generated <project>/.claude/skills/process
       knowledge-graph.md              # → generated <project>/.claude/skills/knowledge-graph

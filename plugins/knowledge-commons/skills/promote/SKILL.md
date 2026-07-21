@@ -27,14 +27,38 @@ three enter the same flow below.
 Read the **source** graph's `.commons.yml` for exactly one value: `graph.name`. That string becomes the
 `domain:` field on the note you write. Nothing else about the source config matters here.
 
-Read the **target**'s `.commons.yml` for everything else: type names, directories, where the atlas and maps
-live. The target is named by the source's `promotes-to:` field, unless the caller named a different target
+The target is named by the source's `promotes-to:` field, unless the caller named a different target
 explicitly (e.g. promoting from the commons into `~/.claude/rules/`, which is a directory, not a graph — see
 §4).
 
-Getting these backwards is the first way this goes wrong. You are about to write into the **target**'s
-world, using the target's type names and the target's directory layout. The source config exists only to
-answer "whose domain is this."
+**Refresh the target before reading any of it.** Once you know which target, and before you read its
+config, its maps, or its notes: if it's a git repository with a remote, fetch and fast-forward — then say
+plainly what came in, including new attractors, new claims, new questions, and which domains they arrived
+from. The order is the substance here, not tidiness. §3 associates against the target's maps and checks
+redundancy against its existing claims, and both read whatever happens to be on disk; a refresh that runs
+after those reads changes nothing, because nothing re-reads. A clone a few commits behind can have gained
+principles, graduated the very question you were about to attach to, and already hold a near-duplicate of
+the claim you're deriving — none of which surfaces until the push in §6 is rejected, by which point the
+note is written and the association is already wrong.
+
+**A fetch that succeeds is not the same as a target that is current.** Treat it as a failed refresh
+whenever the local copy did not actually end up at the remote's tip: no remote, no network, no git, a
+fetch error — and also a fetch that returns cleanly while the fast-forward is refused, because the local
+copy has diverged or the tree is dirty. That last case is the dangerous one: `git fetch` exits 0, `HEAD`
+doesn't move, and "refreshed, nothing new" is exactly what a clone missing nine commits looks like. Check
+that the fast-forward actually happened, not merely that the fetch returned.
+
+On any of those, continue — but say so. A skipped, failed, or refused refresh must never read as "the
+target is current." State that the association and the redundancy check ran against a possibly-stale
+copy, so the human weighing the proposal knows what it was weighed against. An unreported gap that looks
+exactly like a clean result is the failure this whole flow is built to avoid.
+
+Then read the **target**'s `.commons.yml` for everything else: type names, directories, where the atlas
+and maps live.
+
+Getting the two configs backwards is the other way this goes wrong. You are about to write into the
+**target**'s world, using the target's type names and the target's directory layout. The source config
+exists only to answer "whose domain is this."
 
 ## 2. Derive the candidate
 
@@ -73,7 +97,11 @@ fastest way to see what the claim might connect to. Three outcomes, in order of 
    evidence from a second domain, say so explicitly in the proposal — under the commons' convention that's
    the line between a provisional stance and a held one, and it's worth the reader's attention.
 2. **Attaches to an open question.** No forcing required — questions exist to absorb claims that don't yet
-   support a principle.
+   support a principle. **Confirm the question is still open before attaching to it.** A question that has
+   already graduated is not a valid target: the claim belongs under the attractor it became, as evidence,
+   which is outcome 1. Check this by reading the note itself — whether it still carries `## question` or
+   now carries `## so what` — never by where a map happens to list it. Questions graduate in place, so a
+   map can still file one under a "questions" heading long after it stopped being one.
 3. **Nothing fits.** Propose a new question, not a new attractor. Attractors earn their name from
    accumulated evidence; a promotion may create one when the material genuinely warrants it (a fresh commons
    with nothing to attach to yet), but the default for a first-of-its-kind claim is a question.
@@ -126,5 +154,14 @@ changelog line — name the paths, don't blanket-stage) and push if a remote exi
 promotion is invisible to every other machine and session — the cross-domain chain this skill exists for
 dies in a working tree. If the push is blocked (no network, permission rule), say so plainly so the
 human knows the promotion hasn't left this clone.
+
+**A rejected push means the target moved while you were writing.** Pull and rebase, then push again — but
+read what came in before resolving anything. If the incoming commits touch what the association rests on
+— the question you attached to, the attractor you added evidence to, the map line you inserted — stop and
+re-derive rather than resolving mechanically. A conflict in a map is rarely a merge chore; it usually
+means the association is now wrong: the question graduated, an attractor absorbed the claim, or someone
+else's promotion already said this. Take it back through §3 and re-propose. Resolving by hand and pushing
+produces a promotion that is well-formed and pointed at the wrong thing, which is far harder to find
+later than the conflict was.
 
 A promoted note must stand alone. That's the whole test, at every step of this flow.
