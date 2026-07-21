@@ -46,10 +46,13 @@ directory scaffolds cleanly; a populated one means this is probably a hand-built
 ### 2. Interview
 
 Run these six blocks in order, using `AskUserQuestion`. Batch the questions within a block into as
-few calls as the tool allows; don't skip a question because a similar one was asked earlier — each is
-here for a reason. Don't improvise additional questions beyond this list; if something later turns
-out to need a decision this list doesn't cover, ask it inline when it comes up, not as a seventh
-block.
+few calls as the tool allows — but completeness beats round-trip economy: **no question may be
+dropped to make a block fit one call.** `AskUserQuestion` takes at most four questions per call, so a
+block of five takes two calls, not one truncated one. Ask every question in the block before moving
+on, and don't skip a question because a similar one was asked earlier — each is here for a reason.
+Don't improvise additional questions beyond this list, and never answer one yourself on the user's
+behalf; if something later turns out to need a decision this list doesn't cover, ask it inline when
+it comes up, not as a seventh block.
 
 **Block 1 — Graph.**
 1. What's this graph's name? It becomes `domain:` on every note this graph promotes — name it for the
@@ -59,14 +62,30 @@ block.
    (`principium.md`, `atlas.md`, `index.md`); it's recorded as `graph.atlas` and every map's genitor
    points at it. Don't assume a default without asking.
 4. What does it promote to — a path to an existing commons, "none" for a leaf graph, or "I don't have
-   one yet"? If a path is given (or you're about to suggest one), **verify it before relying on it**:
-   check for a `.commons.yml` there. If the expected location has none, don't conclude the commons
-   doesn't exist — search likely roots first (`ls -d ~/commons ~/Developer/commons 2>/dev/null`; then a
-   shallow scan such as `ls ~/*/.commons.yml ~/Developer/*/.commons.yml 2>/dev/null`) and confirm any
-   candidate whose `graph.name` is `commons` with the user. Only after the search comes up empty do you
-   offer to create one.
+   one yet"? Before you act on any answer here, understand what a commons *is*: one person's single
+   cross-domain graph, shared by every domain graph they own, on every machine they work from. It is
+   normally a git repo, and it is normally not new. A local filesystem search tells you whether it is
+   checked out *here*; it tells you nothing about whether it exists. Those are different questions, and
+   conflating them is how a machine ends up with a second empty graph also named `commons`, diverging
+   silently from the real one — the failure surfaces months later as "why can't this domain see the
+   other domain's claims".
 
-**Block 2 — Types.**
+   So resolve provenance in this order, and don't skip to the end:
+   - **Is it checked out here?** If a path was given, verify it — check for a `.commons.yml` there. If
+     that misses, search likely roots (`ls -d ~/commons ~/Developer/commons 2>/dev/null`, then a shallow
+     scan such as `ls ~/*/.commons.yml ~/Developer/*/.commons.yml 2>/dev/null`) and confirm any candidate
+     whose `graph.name` is `commons` with the user.
+   - **Does it exist somewhere else?** A local miss means "not on this machine", nothing more. Check for
+     a remote — `gh repo list --limit 100 2>/dev/null | grep -i commons` — and regardless of what that
+     returns, **ask outright**: do you already have a commons repo somewhere I should clone, on another
+     machine or in a remote I can't see? The commons is often private, sometimes under an org, sometimes
+     named something else; the question is cheaper and more reliable than the search. If a repo turns up,
+     you are adopting, not creating — go to step 3's adopt path.
+   - **Only if both come up empty**, offer to create one. Creating is the last branch, never the default.
+
+**Block 2 — Types.** This block has five questions and so needs **two** `AskUserQuestion` calls —
+questions 5 through 7, then 8 and 9. Don't try to fit it into one; question 9 is the one that gets
+lost, and its answer shapes both the source tiers and whether a synthesis tier exists at all.
 5. What does this domain call its evidence type — the atomic, provenanced note (e.g. `observation`,
    `claim`)?
 6. What attractor types does it need? For each, is it *open* (accumulates evidence, no verdict —
@@ -109,13 +128,35 @@ block.
     here, a thin note or a missed one?
 20. What tends to generalize out of this domain, and what must never leave it?
 
-### 3. Find or create the commons
+### 3. Adopt or create the commons
 
-If block 1's answer to "promotes to" names a commons whose `.commons.yml` doesn't exist yet — after
-the search in block 1 question 4 has actually come up empty, not merely after one default path missed —
-offer to instantiate it before touching the project graph. The commons is a fixed preset, not a fresh
-interview — confirm only its root path (default `~/commons`) and its atlas name (same question as
-block 1 question 3), then write it directly:
+Block 1 question 4 ends in one of three states, and they are not interchangeable. **Already checked out
+here** — nothing to do; use the confirmed path. **Exists but isn't on this machine** — adopt it. **Doesn't
+exist at all** — create it. Reaching the create branch without having genuinely ruled out the other two
+is the one mistake in this skill that quietly costs the most, so don't arrive here by default.
+
+**Where it lives, and why that isn't a free choice.** Every domain graph on every machine writes the
+literal string `promotes-to: <commons root>` into its `.commons.yml`, and those configs are committed and
+shared. The path has to resolve to the same graph everywhere. `~/commons` is the default for exactly that
+reason — it is machine-independent and it is what the other machines already wrote. A different root
+(`~/dev/commons`, a repo-relative path) is fine only if it is chosen once and used on every machine; choose
+it here alone and the breakage is silent, deferred, and lands on a *different* machine than the one where
+the choice was made. So when confirming the root, say why it matters rather than presenting it as bare
+preference — and if the user has an existing commons, its path is already decided, not up for discussion.
+
+**Adopting an existing commons.** Clone it to the agreed root (`gh repo clone <repo> <root>`), then verify
+rather than assume: read the checkout's `.commons.yml` and confirm `graph.name` is `commons`. If it is,
+you're done — an existing commons already carries its own config, its own atlas, and its own claims.
+**Write nothing.** No `.commons.yml`, no scaffold, no `knowledge-graph` skill; that graph has all of them,
+sharpened by real runs, and regenerating them would overwrite work. Just record its root as this project's
+`promotes-to:` and move on to step 4. If `graph.name` is something other than `commons`, stop and ask —
+you've cloned the wrong repo, or this person's commons is named differently and the rest of the setup
+needs to know.
+
+**Creating a new commons.** Only from a genuine empty result on both the local search and the direct
+question. Offer to instantiate it before touching the project graph. The commons is a fixed preset, not a
+fresh interview — confirm only its root path (default `~/commons`, per the reasoning above) and its atlas
+name (same question as block 1 question 3), then write it directly:
 
 ```yaml
 graph:
@@ -134,6 +175,11 @@ promotes-to: ~/.claude/rules/
 No `sources:` and no `sinks:` — the commons never processes anything; everything in it arrives
 by promotion. Scaffold it per step 5 and generate its `knowledge-graph` skill per step 6 — but **not**
 a `process` skill: a graph with no sources has nothing to orchestrate.
+
+Then make it findable from the next machine: `git init` it and offer to push it to a remote. A commons
+that lives only on the machine that created it will be re-created from scratch the next time this skill
+runs somewhere else, which is the exact failure the search above exists to prevent — and the second run
+has no way to know it happened.
 
 ### 4. Write `.commons.yml`
 
@@ -233,5 +279,10 @@ owner's.
   get instantiated, as project-owned files.
 - Never generate into a graph whose `.claude/skills/process` or `knowledge-graph` already exist
   without asking first — a silent overwrite can destroy hand-sharpened prose.
+- Never create a commons on a local search coming up empty alone. A local miss means "not cloned here",
+  not "doesn't exist" — check for a remote and ask the user directly first. Two graphs named `commons`
+  diverge silently and nothing in this design will ever tell anyone.
+- Never regenerate config, scaffold, or skills into a commons you just cloned. It arrives complete;
+  writing into it overwrites work done on another machine.
 - Never invent `.commons.yml` keys beyond `graph:`, `types:`, `sources:`, `sinks:`, `promotes-to:`.
   If a future need surfaces a gap, that's a spec question, not a generator improvisation.
