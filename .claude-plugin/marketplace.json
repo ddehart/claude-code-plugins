@@ -25,8 +25,8 @@
     {
       "name": "knowledge-commons",
       "source": "./plugins/knowledge-commons",
-      "description": "Generator for per-project knowledge graphs with cross-domain promotion: scaffolds a graph, a /process pipeline, and project-owned skills from a config-driven interview; promotes portable claims into a personal commons",
-      "version": "0.2.0"
+      "description": "Generator for per-project knowledge graphs with cross-domain promotion: scaffolds a graph, a /process pipeline, and project-owned skills from a config-driven interview; promotes portable claims into a personal commons; propagates template fixes into already-generated skills",
+      "version": "0.3.0"
     }
   ]
 }

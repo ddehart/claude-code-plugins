@@ -43,9 +43,11 @@ deliberately omits.
 |-------|--------|--------------|
 | `graph-init` | `/graph-init` | Scaffold a new graph in the current project, or wire an existing hand-built graph into promotion (`--config-only`). Interviews, writes `.commons.yml`, scaffolds the atlas/maps/type directories, and generates the project-owned `process` and `knowledge-graph` skills. |
 | `promote` | `/promote` | Derive a portable claim from a source graph into a target graph or the instruction tier, with association and human approval. |
+| `graph-patch` | `/graph-patch` | Propagate template fixes into a project's already-generated, hand-sharpened skills — without regenerating them. Reads the delta log, applies each pending semantic change by judgment, verifies it landed, records what was applied. |
 
-Both auto-trigger from natural phrasing too — "set up a knowledge graph", "does this
-generalize?", "promote this to the commons" — not just the slash commands.
+All three auto-trigger from natural phrasing too — "set up a knowledge graph", "does this
+generalize?", "promote this to the commons", "what template fixes am I missing?" — not just the
+slash commands.
 
 ## How it works
 
@@ -128,6 +130,29 @@ wrapper around this plugin's skills. Only the *templates* in
 **The commons itself** is a fixed preset (no sources, no sinks — everything arrives by
 promotion), scaffolded the first time a domain graph names a commons that doesn't exist yet.
 
+## Keeping generated skills current
+
+Because generated skills are project-owned and get sharpened by hand, a template fix in this
+plugin reaches nothing that was already generated. Across three live graphs, section headings
+survive generation byte-identical while bodies diverge by up to 78% — so `graph-patch` anchors on
+exact heading text and applies **semantic instructions by judgment**, never a textual diff and
+never a regeneration.
+
+Each patchable change is recorded as a **delta** in
+[`references/deltas.md`](references/deltas.md), carrying an `anchor`, an `instruction`, a
+`rationale`, and a `satisfied-test`. Running `/graph-patch` inside a project applies every delta
+that project hasn't seen, one at a time, showing the concrete diff against that project's own
+prose and waiting for approval on each. Applied ids are recorded in the `generated:` block of the
+project's `.commons.yml`.
+
+> **Maintainer rules — both non-optional.** Editing any plugin component requires bumping the
+> version in `.claude-plugin/plugin.json` *and* the matching marketplace entry. Editing any file
+> under `references/templates/` additionally requires writing its delta entry in
+> `references/deltas.md`, in the same commit. A forgotten delta leaves the plugin looking correct
+> while every downstream graph stays silently broken — the exact failure `graph-patch` exists to
+> prevent. See [`.claude/rules/plugin-updates.md`](../../.claude/rules/plugin-updates.md) and
+> [`.claude/rules/template-deltas.md`](../../.claude/rules/template-deltas.md).
+
 ## Layout
 
 ```
@@ -136,9 +161,10 @@ plugins/knowledge-commons/
   skills/
     graph-init/SKILL.md               # the generator
     promote/SKILL.md                  # the cross-domain derivation mechanism
+    graph-patch/SKILL.md              # the maintainer — propagates template fixes
   references/
     graph-conventions.md              # the shared note/map/frontmatter contract
-    deltas.md                         # template fixes to propagate into generated skills
+    deltas.md                         # the append-only delta log /graph-patch reads
     templates/
       process.md                      # → generated <project>/.claude/skills/process
       knowledge-graph.md              # → generated <project>/.claude/skills/knowledge-graph
