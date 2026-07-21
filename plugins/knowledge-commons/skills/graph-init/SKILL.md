@@ -62,7 +62,9 @@ it comes up, not as a seventh block.
    (`principium.md`, `atlas.md`, `index.md`); it's recorded as `graph.atlas` and every map's genitor
    points at it. Don't assume a default without asking.
 4. What does it promote to — a path to an existing commons, "none" for a leaf graph, or "I don't have
-   one yet"? Before you act on any answer here, understand what a commons *is*: one person's single
+   one yet"? If the answer is "none" — a leaf graph that promotes nowhere — record that and move on;
+   the rest of this question doesn't apply and there is nothing to go looking for. For either of the
+   other two answers, read on. Before you act on them, understand what a commons *is*: one person's single
    cross-domain graph, shared by every domain graph they own, on every machine they work from. However
    they move it between machines — a git remote, a synced folder, a copy carried across by hand — it is
    normally not new. A local filesystem search tells you whether it is present *here*; it tells you
@@ -77,17 +79,22 @@ it comes up, not as a seventh block.
      whose `graph.name` is `commons` with the user.
    - **Does it exist somewhere else?** A local miss means "not on this machine", nothing more — so
      **ask outright**: do you already have a commons somewhere I should copy in, on another machine or
-     somewhere I can't see from here? Ask this every time the local search misses. It is the whole check,
-     not a fallback for when some other check fails, and it's the only one that works regardless of how
-     this person stores things. If they use a git host you can reach, a search there
+     somewhere I can't see from here? Ask this every time the local search fails to produce a *confirmed*
+     commons — that includes finding a candidate the user then rejects, which is a miss for this purpose
+     even though the search returned something. It is the whole check, not a fallback for when some other
+     check fails, and it's the only one that works regardless of how this person stores things. If they
+     use a git host you can reach, a search there
      (`gh repo list --limit 100 2>/dev/null | grep -i commons`) can *accelerate* the question by giving
      you a candidate to confirm — but treat it as a hint only. It proves nothing when it comes back
      empty: `gh` may be absent, unauthenticated, or pointed at the wrong account, and the commons may
      live somewhere it can't see or under a name this grep won't match. **A silent tool is not a
      negative answer** — that is the same mistake as reading a local miss as "doesn't exist". If a
-     commons turns up by either route, you are adopting, not creating — go to step 3's adopt path.
+     commons turns up by either route, you are adopting, not creating: in full mode that's step 3's adopt
+     path; in config-only mode adoption is out of scope, so follow that mode's own handling below instead
+     of coming here.
    - **Only once the user has confirmed there is no existing commons**, offer to create one. Creating is
-     the last branch, and it needs an actual answer to get there, never merely an empty search.
+     the last branch, and it needs an actual answer to get there, never merely an empty search. In
+     config-only mode there is nothing to create — see that mode's handling.
 
 **Block 2 — Types.** This block has five questions and so needs **two** `AskUserQuestion` calls —
 questions 5 through 7, then 8 and 9. Don't try to fit it into one; question 9 is the one that gets
@@ -161,6 +168,16 @@ scaffold, no `knowledge-graph` skill; that graph has all of them, sharpened by r
 them would overwrite work. Just record its root as this project's `promotes-to:` and move on to step 4.
 If `graph.name` is something other than `commons`, stop and ask — you've got the wrong directory, or this
 person's commons is named differently and the rest of the setup needs to know.
+
+**When the copy can't be obtained now.** Often it can't — the commons is on a machine you can't reach,
+or the user syncs it by hand and won't do that mid-session. That is a normal outcome of the motivating
+case, not an error, and it must not collapse back into creating one. Agree the root with the user,
+record it as this project's `promotes-to:` **unverified**, and move on to step 4. Then say plainly what
+that means: the commons isn't on this machine yet, you couldn't check its `graph.name`, and promotion
+won't fire until the user puts it at that root — at which point it starts working with no further setup.
+**Write nothing into that root** — not a `.commons.yml`, not a scaffold, not a `.gitkeep`. An empty
+directory that later receives the real commons is fine; a scaffolded one is the second-commons bug
+arriving by a slower path, and the user's own copy is what has to land there.
 
 **Creating a new commons.** Only once the user has confirmed no existing commons — an empty local search
 is not that confirmation. Offer to instantiate it before touching the project graph. The commons is a
@@ -259,10 +276,22 @@ suggest running `/promote` from the domain graph that names it instead.
 
 For an existing, working graph — the reference implementation is the motivating case — that just
 needs `.commons.yml` so `/promote` can read it. Interview only:
-- Block 1 in full (name, root, promotes-to).
+- Block 1 in full — all four questions: name, root, atlas, promotes-to. The atlas is easy to skip here
+  because this mode writes no files, but `graph.atlas` is still recorded in the config and still must be
+  asked rather than assumed; an existing graph already has a navigation root and only its owner knows
+  what it's called.
 - From block 2, type **names only** — evidence name, attractor names, entity/reference names if
   present. Skip directories, sources, sinks, procedure, and judgment entirely; this mode reads an
   already-working graph, it doesn't shape one.
+
+**This mode never adopts and never creates a commons.** Question 4's provenance procedure still runs —
+you still need to know which of the three states you're in — but where full mode would branch into step
+3, config-only stops at recording the path. Concretely: if the commons is present here, verify it and
+record it. If it exists elsewhere, agree the root with the user and record it **unverified**, saying that
+promotion won't fire until they put it there. If it doesn't exist at all, record the agreed root, and say
+that the commons has to exist before `/promote` can do anything — offer a full `/graph-init` run as the
+way to create it, but don't create it here. In all three cases the deliverable is identical — the
+config, and nothing else. Step 3 is full mode's; don't enter it from this mode.
 
 Write `.commons.yml` and stop. Touch no notes, no maps, no skills. Say explicitly that this wires an
 existing hand-built graph into promotion — the graph's actual skills stay exactly as they are.
@@ -291,5 +320,10 @@ owner's.
   writing into it overwrites work done on another machine.
 - Never assume the user keeps the commons in git, or in any particular tool. Ask how they move it
   between machines rather than reaching for a clone command.
+- Never enter full mode's step 3 from `--config-only`. That mode records a path; it never adopts,
+  creates, or scaffolds a commons, whichever of the three states question 4 lands in.
+- Never write anything into a commons root you recorded but couldn't verify. An empty directory that
+  later receives the user's real commons is the intended outcome; scaffolding it is the second-commons
+  bug on a delay.
 - Never invent `.commons.yml` keys beyond `graph:`, `types:`, `sources:`, `sinks:`, `promotes-to:`.
   If a future need surfaces a gap, that's a spec question, not a generator improvisation.
