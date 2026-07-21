@@ -96,9 +96,15 @@ it comes up, not as a seventh block.
      the last branch, and it needs an actual answer to get there, never merely an empty search. In
      config-only mode there is nothing to create — see that mode's handling.
 
-**Block 2 — Types.** This block has five questions and so needs **two** `AskUserQuestion` calls —
-questions 5 through 7, then 8 and 9. Don't try to fit it into one; question 9 is the one that gets
-lost, and its answer shapes both the source tiers and whether a synthesis tier exists at all.
+**Block 2 — Types.** This block has six questions and so needs **two** `AskUserQuestion` calls —
+questions 5 through 7, then 8, 9, and 9b. Don't try to fit it into one; the tail of this block is what
+gets lost, and 9 and 9b shape the source tiers and whether a synthesis tier exists at all.
+
+**9 and 9b are deliberately separate questions.** They were one question joined by "and" until a real
+run showed why that fails: the tool returns one answer per question, so a reader who answers the first
+half leaves the second unanswered, and the generator fills the silence with an assumption. That is the
+same silent-loss shape as dropping the question outright, just harder to notice — the answer looks
+present. Never recombine them to save a slot; both calls have room.
 5. What does this domain call its evidence type — the atomic, provenanced note (e.g. `observation`,
    `claim`)?
 6. What attractor types does it need? For each, is it *open* (accumulates evidence, no verdict —
@@ -107,9 +113,11 @@ lost, and its answer shapes both the source tiers and whether a synthesis tier e
    say none.
 8. Does this graph need a reference tier for unbounded lookup facts that are never an association
    surface?
-9. Are there source tiers whose raw material must be preserved verbatim, distinct from the types
-   above? And do any rich bounded sources (a call, a meeting) warrant an intermediate *synthesis* note
-   between the source and its evidence — one note distilling the event before atomic extraction?
+9. Are there source tiers whose raw material must be preserved verbatim, distinct from the types above?
+   A transcript, a recording, an original document — material where the distillation is not a substitute
+   for the thing itself.
+9b. Do any rich bounded sources — a call, a meeting, a session — warrant an intermediate *synthesis*
+   note between the source and its evidence: one note distilling the event before atomic extraction?
 
 **Block 3 — Sources.**
 10. What arrives on its own, without being asked for — a chronicle directory and glob, pasted URLs,
