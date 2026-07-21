@@ -284,17 +284,40 @@ designed; Q1 is where it stops being true.
 
 ## Execution plan
 
-1. **PR 2** — template fixes for issues 3 and 4, plus `promote` changes. Deltas 1–4 written in the same
-   PR per D17.
-2. **PR 3** — entity proactivity template change. Deltas 5–6 written in the same PR.
-3. **PR 4** — the `/graph-patch` skill itself, the delta log file, D7's `graph-init` change (including
-   the Never-section amendment), delta 7's `process` step 10 edit, and the D17 rules in README and
-   CLAUDE.md.
-4. **Apply** — run `/graph-patch` in `claude-code-plugins`, `wellstead`, and
+*Revised 2026-07-21 to match what actually shipped. The original plan put the delta log **file** in PR 4
+while assigning its **entries** to PRs 2 and 3 — those can't both be true, since an entry needs a file to
+live in. Execution resolved it by creating `deltas.md` in the PR that authored the first entries. Also:
+PRs 2 and 3 merged into one, because both edit `templates/process.md` step 4 and splitting them across
+parallel agents guaranteed a collision.*
+
+1. **PR #65** (0.1.9, patch) — `graph-init` fixes: commons discovery and the Q9 drop. No deltas —
+   `graph-init` is a plugin skill and propagates on plugin update. Also carries D7's one-line Never-section
+   amendment sanctioning the `generated:` key, pulled forward because leaving it out ships a plugin whose
+   `graph-init` forbids the key `/graph-patch` writes.
+2. **PR #67** (0.2.0, minor) — template fixes for issues 3 and 4, `promote` changes, the entity
+   proactivity behavior, **and `references/deltas.md` itself** carrying deltas 1–6. Minor rather than
+   patch because the entity change is new behavior.
+3. **PR #66** (0.3.0, minor) — the `/graph-patch` skill, `.claude/rules/template-deltas.md`, README.
+   **Blocked on #67**: the skill reads `deltas.md`, which doesn't exist until #67 lands.
+4. **Follow-up PR** — the rest of D7 (`graph-init` writes the `generated:` block at generation time) and
+   delta 7 (`process` step 10 discovery hook, per D11). Deferred because both touch files that were in
+   flight; **currently owned by no open PR**, so D11 — the spec's own answer to "make an unpropagated fix
+   visible rather than silent" — is unimplemented until this lands.
+5. **Apply** — run `/graph-patch` in `claude-code-plugins`, `wellstead`, and
    `osu-builder-in-residence`. This is also the mechanism's first real test.
 
-PRs 2 and 3 are inert until PR 4 ships. That ordering is deliberate: it means the patcher is designed
-against six real deltas rather than a speculative one.
+Merge order is **#65 → #67 → #66**, matching the version sequence. Nothing enforces it mechanically, so
+merging #66 early would ship an inert skill with dead README links and make #67's 0.2.0 a version
+regression.
+
+#67 is inert until #66 ships. That ordering is deliberate: it means the patcher was designed against six
+real deltas rather than a speculative one.
+
+**D17 placement diverged from the spec.** D17 said the rule goes in the plugin README and the repo's
+`CLAUDE.md`. It shipped in the README and a new `.claude/rules/template-deltas.md` instead, with
+`CLAUDE.md` untouched — the rules directory is the better home given the sibling `plugin-updates.md`, and
+per the documentation taxonomy behavioral steering belongs in rules rather than in an index file.
+Recorded here rather than silently absorbed.
 
 ## Risks and open questions
 
