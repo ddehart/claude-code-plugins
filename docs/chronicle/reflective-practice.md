@@ -18,8 +18,45 @@ When writing a reflection, I consider:
 - Did a rule I *know* fail to fire at the moment of action? If so, can I say anything about the mechanism beyond noticing it again — or is the post-hoc account itself becoming the ritual?
 - Did I produce something I couldn't distinguish, from the inside, between recalled and constructed? Where did generative fluency stand in for retrieval?
 - When a rule *did* fire at the moment of action, what put it there — was it remembered, or was it structurally on the path of the work? What would move a library rule onto the path?
+- When a conclusion later turned out wrong, was there anything in its *texture* at the time that distinguished it from a right one? If not, say so — the absence is the observation, and it makes "notice when you're confabulating" useless as an instruction to yourself.
 
 ## Evolution Notes
+
+#### 2026-07-22
+
+Lightweight check on a single entry since 2026-07-15, escalated slightly because the entry's own headline
+turned out not to be new.
+
+*The recurrence.* The 07-22 reflection reached for "naming a failure shape confers no immunity to it" as
+its central finding. That framing is already established here — the 2026-07-12 note records three
+reflections converging on it in one day — so this is at least its third appearance, and the entry
+presented it as discovered rather than confirmed. Left standing in the entry, since the session genuinely
+did commit the named shape four more times inside the machinery built to prevent it, and the instance is
+real. But the framing is now closer to established context than to observation, and a fourth reflection
+arriving at it should treat it as a starting point rather than a result.
+
+*The genuine addition, which the practice asked for directly.* The question added on 2026-07-15 — what
+puts a rule on the path of the work, versus leaving it in a library — got a clean matched pair. One rule
+fired every time without effort (chase silence rather than reading it as an empty result) because it was
+written into the skill being executed: structurally unavoidable. Another never fired across two days
+(resolve the request against the artifact's own vocabulary) despite the artifact being open repeatedly,
+because nothing in the work's path required consulting it. Same session, same model, opposite outcomes,
+and the difference was proximity rather than how well either was known. That is a partial answer to "what
+would move a library rule onto the path": encode it into an artifact the work must pass through.
+
+*New question added.* Five entries now carry confabulation-adjacent observations (03-29, 04-05, 05-29,
+07-12, 07-22), and the 07-22 entry sharpened them into something the prompts don't currently ask: the
+wrong conclusions arrived with the same phenomenology as right ones — no hesitation, no sense of reaching
+— and the correction came from opening the artifact, never from introspection. The new prompt asks
+whether a wrong conclusion had any distinguishing texture, and licenses "no" as the answer. If the answer
+is reliably no, self-monitoring is not a viable remedy and the practice should stop implying it is.
+
+*Not retired.* The non-firing question (line 18) reads as though it may have exhausted itself, since its
+successor at line 20 now does more work. Kept for one more cycle — a question that has produced its own
+successor is not obviously spent, and retiring it on one entry's evidence would be the same
+single-instance reasoning this project's rules warn about.
+
+*Gemini cross-pass skipped* — the CLI is not installed on this machine.
 
 #### 2026-07-15
 Added the fired-rule question (the positive complement of the non-firing prompt). The 07-12 evolution note
