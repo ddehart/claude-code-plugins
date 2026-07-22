@@ -133,61 +133,6 @@ Entries are append-only and ordered by version.
     screen runs, and require saying so explicitly whenever the copy did not reach the remote's
     tip — including when a fetch succeeds but the fast-forward is refused?
 
-- id: step4-entity-signal-class
-  file: process
-  anchor: "## 4. Inspect"
-  version: 0.2.0
-  instruction: >
-    APPLIES ONLY IF this graph declares an entity type in .commons.yml. The entity tier is
-    optional — a graph whose interview answered "none" has no entity type, no scaffolded entity
-    directory, and no map to enter one in. For such a graph this delta does not apply: report it
-    as not applicable and propose no edit.
-    Where it does apply: make entity recognition a first-class inspection concern: named nouns
-    this graph tracks that have no entity note yet are a finding in their own right, not a side
-    effect of writing an observation that mentions one. Both the inline-read path and the
-    subagent-fanout path look for them, and both carry the mention count forward to the plan. Add
-    an unnamed-entities class to this graph's signal-class list, phrased in the domain's own
-    vocabulary for the nouns it tracks.
-  rationale: >
-    Entity creation was reactive and conditional — the only rule anywhere was "if the entry names
-    a plugin or skill not yet in entities/, add a lookup-only entity note," buried as one step of
-    the sibling knowledge-graph skill's per-observation workflow. It fired only as a side effect
-    of writing an observation that happened to mention a noun. With no entity signal class,
-    inspection had no way to treat a named noun the graph keeps returning to as a finding at all,
-    so an entity clearly worth a note but with nothing attaching to it was invisible to the run.
-    The mention count is what lets the plan make the case at step 5.
-  satisfied-test: >
-    First, does this graph declare an entity type in .commons.yml? If not, the delta is not
-    applicable and the section is correct as it stands. If it does: does inspection treat unnamed
-    entities — nouns the graph tracks with no entity note yet — as a signal class of their own,
-    found on both the inline and fanout paths, independently of whether any observation in the
-    run attaches to them?
-
-- id: step5-entity-recommend
-  file: process
-  anchor: "## 5. Propose the plan"
-  version: 0.2.0
-  instruction: >
-    APPLIES ONLY IF this graph declares an entity type in .commons.yml — same applicability test
-    as step4-entity-signal-class, and the two travel together: apply both or neither. For a graph
-    with no entity tier, report not applicable and propose no edit; a plan that recommends
-    entities there proposes writes into a directory that was never scaffolded.
-    Where it applies: the plan surfaces entity recommendations as their own line items — naming
-    the noun, its mention count for this run, and that it has no entity note yet — rather than
-    folding them into the notes that mention them. Shape: "this run named X and Y four times
-    each; neither has an entity note; create them?"
-  rationale: >
-    Companion to step4-entity-signal-class: step 4 finds the entity, step 5 is where the human
-    gets to approve it. Without an explicit line item, an entity that plainly warrants a note but
-    has no observation attaching to it never reaches the approval gate, so the finding is
-    discarded at exactly the point it was supposed to become actionable. The count is what makes
-    the case reviewable — the reader judges from the evidence rather than from an assertion.
-  satisfied-test: >
-    First, does this graph declare an entity type in .commons.yml? If not, the delta is not
-    applicable and the section is correct as it stands. If it does: does the plan present entity
-    recommendations as explicit, separately-approvable line items carrying the mention count,
-    rather than as a consequence of the observations being written?
-
 - id: step10-pending-patches
   file: process
   anchor: "## 10. Report"
@@ -229,4 +174,57 @@ Entries are append-only and ordered by version.
     having raised it before, does the section name a fixed marker string to write and to look for,
     and require looking in the archived changelog as well as the live one — so the suppression
     survives the changelog's monthly rotation?
+
+- id: step10-entity-type-gap
+  file: process
+  anchor: "## 10. Report"
+  version: 0.5.0
+  instruction: >
+    Have the run report recommend a new entity *type* — a new entry in .commons.yml's entity:
+    list — when the run keeps naming a category of thing the graph has no declared type for.
+    This is about the schema, not about missing notes for nouns of a type that already exists.
+    Four properties are the substance of it. (a) It is NOT conditional on the graph already
+    declaring an entity type: a graph whose interview answered "none" is exactly the graph that
+    may need its first one, so gating on an existing entity tier disables the check where it
+    matters most. (b) The bar is recurrence, not a single sighting: several distinct instances of
+    one category, named as things a reader would look up, none covered by a declared type; the
+    graph's existing notes may supply corroborating instances where one run is thin. (c) The
+    report names the category and the instances evidencing it, so the reader judges from evidence
+    rather than assertion. (d) Recommending is not doing: point at the work — a .commons.yml
+    entry, a directory, a map, backfill — and name re-interviewing graph-init's block 2 as the
+    sanctioned route for changing declared types. This step must never edit .commons.yml itself;
+    that file belongs to graph-init and /graph-patch, and a schema change must not ride a per-run
+    plan approval, which is why this lives in the report and not in the plan.
+    Gate it on a cadence rather than raising it every run, in the same shape this section already
+    uses for pending template patches: write a literal marker naming the category into the
+    changelog entry this step already writes, and before raising a category scan both the live
+    changelog and the most recent monthly changelog archive for that marker with that category.
+    Suppression is per-category so a different gap still surfaces, and it expires when the marker
+    rotates out of both files, letting a still-recurring category be raised again.
+  rationale: >
+    The requested capability was "proactively identify and recommend new entities where they are
+    relevant to the graph." It was first built at the instance level — noticing individual nouns
+    that lacked an entity note and proposing notes for them — and shipped at 0.2.0 as the deltas
+    step4-entity-signal-class and step5-entity-recommend. That was the wrong layer of abstraction.
+    The entity: list in .commons.yml holds *types* (plugin, skill), and graph-init's block 2
+    question asks the user to name types, not instances. So "recommend new entities" means noticing
+    that the material keeps naming a *kind* of thing the graph has no type for — a schema gap, not
+    a missing note. The two instance-level deltas were removed rather than superseded: no graph had
+    applied them in any durable state (no live .commons.yml carried a generated: block), so nothing
+    downstream had recorded them, and the append-only convention exists to protect what a graph has
+    already recorded as applied. This entry is the corrected one, and the run report is the surface
+    because a schema recommendation is an observation for a human to act on later rather than a
+    write for this run to approve.
+  satisfied-test: >
+    Does the section have the run report recommend adding a new entity TYPE to .commons.yml — as
+    distinct from recommending notes for individual nouns of an existing type — when the run
+    repeatedly names a category that no declared type covers? The recommendation must be
+    unconditional on the graph already having an entity type (a section that applies this only
+    when an entity tier exists, or that proposes lookup notes for un-noted nouns, does NOT satisfy
+    this test); it must set a recurrence bar over multiple distinct instances rather than firing on
+    a single mention; it must name the category and its evidencing instances; it must stop at
+    recommending, pointing at the .commons.yml / directory / map work and at graph-init's block-2
+    re-interview rather than editing the config; and it must state a cadence that suppresses a
+    category already raised, using a fixed marker looked for in both the live and the archived
+    changelog.
 ```

@@ -279,6 +279,15 @@ delta. It ships in PR 4 alongside the mechanism.
 Deltas 5 and 6 may also warrant a `knowledge-graph` counterpart — to be settled when that template change
 is written (see Q1).
 
+> **Superseded 2026-07-22 (plugin 0.5.0).** Deltas 5 and 6 were built at the wrong layer of abstraction:
+> they recommended entity *notes* for individual un-noted nouns, where the request was for new entity
+> *types* — entries in `.commons.yml`'s `entity:` list. Both were removed from the log rather than
+> superseded within it, which the append-only convention permits here only because no graph had recorded
+> them as applied (no live `.commons.yml` carried a `generated:` block, so nothing downstream was stamped).
+> They are replaced by a single entry, `step10-entity-type-gap` (`## 10. Report`, version 0.5.0), which is
+> deliberately *not* conditional on the graph already declaring an entity type. The table above is left as
+> the record of the initial batch as it shipped.
+
 All seven target `process`, which is the file with fully stable anchors. That is fortunate rather than
 designed; Q1 is where it stops being true.
 
