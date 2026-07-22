@@ -1,2 +1,5 @@
 # Transient workflow state
 .claude/cache/
+
+# Derived session-transcript exports (process skill, session tier) — never committed
+.claude/session-exports/

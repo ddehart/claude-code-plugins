@@ -12,7 +12,27 @@ types:
     - { name: skill,  dir: entities/ }       # lookup notes for named skills
   reference:  { name: reference, dir: reference/ }
 sources:
-  - { type: chronicle, path: docs/chronicle/, glob: "20*.md" }
+  # Work sessions. The transcript is primary; the chronicle is the lossy fallback for sessions
+  # whose transcripts have been pruned. See the overlapping-tier guard in
+  # .claude/skills/process/SKILL.md section 3.
+  - type: session
+    description: Full session transcript. Primary tier for work sessions.
+    # Glob, not a single directory: worktree sessions land in a sibling project directory whose
+    # slug carries the worktree suffix, and they must be queued too.
+    path: ~/.claude/projects/*claude-code-plugins*/
+    # Top-level only. Subagent transcripts nest one level down, in a directory named for the
+    # parent session's UUID, and are not sessions in their own right.
+    glob: "*.jsonl"
+    # Keyed on the UUID, not the path: a transcript moves between those directories when a
+    # worktree is created or removed, and a path key would make a second note for one session.
+    identity: "session:{uuid}"
+    resolver: meta-claude:session-export
+    export-to: .claude/session-exports/             # gitignored; derived artifact, never committed
+  - type: chronicle
+    description: Post-hoc session journal. Lossy by construction. Fallback when the transcript is gone.
+    path: docs/chronicle/
+    glob: "20*.md"
+    identity: repo-relative path
   - { type: claude-code-docs, resolve: url }        # on-demand, hand-fed — no queue
 sinks:
   - { name: tasks, tool: td, project: "claude code marketplace", approval: batch }
