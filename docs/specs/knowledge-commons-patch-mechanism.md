@@ -279,6 +279,23 @@ delta. It ships in PR 4 alongside the mechanism.
 Deltas 5 and 6 may also warrant a `knowledge-graph` counterpart — to be settled when that template change
 is written (see Q1).
 
+> **Superseded 2026-07-22 (plugin 0.5.0).** Deltas 5 and 6 were built at the wrong layer of abstraction:
+> they recommended entity *notes* for individual un-noted nouns, where the request was for new entity
+> *types* — entries in `.commons.yml`'s `entity:` list. Both were removed from the log rather than
+> superseded within it, which the append-only convention permits here only because no graph had recorded
+> them as applied (no live `.commons.yml` carried a `generated:` block, so nothing downstream was stamped).
+> They are replaced by a single entry, `step10-entity-type-gap` (`## 10. Report`, version 0.5.0), which is
+> deliberately *not* conditional on the graph already declaring an entity type. The table above is left as
+> the record of the initial batch as it shipped.
+>
+> **One generation window is worth noting.** A graph generated while the template carried the entity slots
+> — plugin versions 0.2.0 through 0.4.1 — keeps that instance-level prose in its steps 4 and 5 permanently,
+> since removing a slot from the template does not reach an already-generated skill, and it would also
+> receive `step10-entity-type-gap`, ending up carrying both layers. None of the three known graphs is
+> affected: none was generated in that window. The plugin is published, so an unknown graph could exist;
+> the remedy there is a hand edit to steps 4 and 5, not a delta, since a delta that removes prose is
+> outside what the log expresses.
+
 All seven target `process`, which is the file with fully stable anchors. That is fortunate rather than
 designed; Q1 is where it stops being true.
 
@@ -342,6 +359,14 @@ workflow). Settle when writing PR 3 — and note the constraint: the natural anc
 targeting it would resolve in `claude-code-plugins`, miss in `osu` (renamed to bare `## Extraction
 Workflow`), and be ambiguous in `wellstead` (three such headings). If PR 3 needs that anchor, the
 mechanism needs a story for multi-match and near-match before it can carry it.
+
+> **Moot as posed, 2026-07-22 (plugin 0.5.0).** "The entity change" here means deltas 5 and 6, which were
+> the wrong layer and have been removed (see the superseded note under the initial-batch table). Their
+> replacement, `step10-entity-type-gap`, recommends a *type* rather than a note, targets `## 10. Report`
+> — a stable anchor — and touches `knowledge-graph` not at all, so it raises no counterpart question. The
+> unstable-anchor constraint below is unaffected and still the live concern: it is a fact about
+> `## Extraction Workflow: {source-type}` across the three graphs, not about the entity change, and the
+> first delta that needs that anchor will still need a multi-match and near-match story.
 
 **Q2. Delta ids are hand-authored and must be globally unique forever.** No collision check is proposed.
 Low risk at current scale; worth a thought if the log grows past a few dozen entries.

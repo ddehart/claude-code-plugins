@@ -100,30 +100,11 @@ Neither is an empty message, nor a reader that simply stopped. Chase it — foll
 class's findings, and ask again if the second reply is no better. If it still won't report, the class
 has failed, not come back empty; route it into step 8.
 
-<!-- SLOT: entity-inspection — CONDITIONAL. Include the paragraph below only if .commons.yml declares an
-entity type. Block 2's entity question is answerable with "none," and a graph that answered so has no
-entity type, no scaffolded entity directory, and no map to enter one in — so there is nothing for this
-paragraph to write into. Omit it entirely rather than leaving it to hunt for notes that have nowhere to
-go. It travels with the entity-recommendation slot in step 5: keep both or drop both, they are one
-feature. -->
-
-Inspection also looks for **entities** — the named nouns this graph keeps returning to that don't have an
-entity note yet. Treat this as a finding in its own right rather than a side effect of writing something
-else: a noun the input names repeatedly earns a note whether or not any observation in this run happens
-to attach to it. Both paths look for them, and both carry the count of mentions forward — step 5 needs it
-to make the case.
-
 <!-- SLOT: signal-classes — the signal classes inspection looks for, per tier, from interview block 3
 ("what signal classes should inspection look for"). Name each class plainly (what it is, what a finding
 in that class looks like) so both the inline-read path and the subagent-fanout path use the same
-vocabulary. Keep it to what this domain actually has classes for — don't invent classes to fill space.
-One further class is standing rather than domain-derived, and CONDITIONAL on the same test as the
-entity-inspection slot above: if .commons.yml declares an entity type, add an unnamed-entities class,
-phrased in this domain's own vocabulary for the nouns it tracks, so the fanout has a reader assigned to
-it like any other class. If the interview answered "none" to entities, omit that class — there is no
-entity tier for its findings to land in. -->
-    Example (orchard, chronicle tier — three domain classes, plus the entity class because orchard
-    declares an entity type):
+vocabulary. Keep it to what this domain actually has classes for — don't invent classes to fill space. -->
+    Example (orchard, chronicle tier — three domain classes):
     - **Decisions.** A choice was made and a reason given — becomes a `decision` attractor or evidence
       for an existing one.
     - **Recurring friction.** The same kind of problem shows up again, named or not — becomes a
@@ -131,8 +112,6 @@ entity tier for its findings to land in. -->
     - **Standalone observations.** True and useful on their own, not yet clustering with anything —
       becomes an `observation` with no attractor yet; note it as unattached in the plan rather than
       forcing a link.
-    - **Unnamed entities.** A grove, cultivar, or tool the entry keeps returning to that has no note
-      under `entities/` — becomes a lookup-only entity note, on the strength of the mentions alone.
 
 ## 5. Propose the plan
 
@@ -140,17 +119,6 @@ Lay out, per skill/note, what will be created and what will be updated — and j
 being skipped and why (already captured, too operational, not durable — see the sibling
 `knowledge-graph` skill's conventions). Present it as `[y / edit / explain]`. One approval gates the
 entire run; there is no per-note confirmation after this point except the re-pause condition in step 6.
-
-<!-- SLOT: entity-recommendation — CONDITIONAL, on the same test as step 4's entity-inspection slot:
-include the paragraph below only if .commons.yml declares an entity type. Keep both or drop both — a plan
-that recommends entities for a graph with no entity tier proposes writes into a directory that was never
-scaffolded. -->
-
-**Entity recommendations get their own line items**, naming the noun, how many times this run named it,
-and that it has no entity note yet — not folded into the notes that happen to mention it. An entity that
-plainly warrants a note but has no observation attaching to it surfaces no other way, so if it isn't a
-line in the plan you never get the chance to approve it. Give the count and let the reader judge; a
-declined entity costs one skip at review.
 
 ## 6. Run to completion
 
@@ -250,6 +218,47 @@ Cadence, because a line on every run carries no information and gets tuned out:
 Keep it to a line, and keep it a suggestion to check rather than a claim that anything is waiting:
 *"This graph may have template patches pending; `/graph-patch` reads the plugin's current delta log and
 will say whether any apply."*
+
+**A missing entity *type* belongs here too.** Not a missing note — a missing *kind*. If this run kept
+naming a category of thing that this graph has no declared type for, say so here. It surfaces in the
+report rather than in the plan because it is a schema change, not a note: `.commons.yml`'s `entity:`
+list belongs to `graph-init`, never to this skill, and a change to the graph's shape should not ride a
+per-run plan approval meant for the notes this run is writing.
+
+**This is not conditional on the graph already declaring an entity type.** A graph whose interview
+answered "none" is precisely the graph that may discover it needs its first one — gating the check on an
+entity tier already existing would make the check unable to find the case it matters most for.
+
+**The bar is recurrence, not a single sighting.** What earns a type is several *distinct* instances of
+one category — named things a reader would plausibly look up — with no declared type covering any of
+them. One passing mention of one noun is not a schema gap. Where a single run is thin evidence, the
+graph's own record counts: earlier notes naming the same category strengthen the case.
+
+Name the category and the instances that evidence it, so the reader can judge rather than take the
+recommendation on trust — *"this run named three MCP servers by name; no declared type covers them."*
+Then point at the work instead of doing any of it. Where this graph already has an `entity:` list in
+`.commons.yml`, the work is a new entry in it, a directory for it, a map, and whatever backfill the
+existing notes want. Where there is no `entity:` list at all — the graph answered "none" when it was
+set up — the recommendation is to *establish* the tier rather than add to it, which is the larger of
+the two asks and worth saying plainly. Either way the route is the same: `graph-init`'s sanctioned way
+to change declared types is re-interviewing block 2 of its interview, so name that as the path. This
+step recommends; it does not edit `.commons.yml`, does not add the entry, and does not create the tier.
+
+Cadence, on the same reasoning as the patch suggestion above — a recommendation that repeats every run
+stops being read. When you raise a category, write a marker of the form `[entity-type-gap: <category>]`
+into the changelog entry you are already writing, using the category name you used in the report.
+Before raising one, scan `changelog.md` *and* the most recent `changelog/YYYY-MM.md` archive for the
+literal prefix `[entity-type-gap:`, read the category names already recorded there, and stay quiet if
+any of them is *the same category* as the one you are about to raise. Judge that by meaning, not by
+string match: nothing constrains how a given run words a category, so "MCP servers" one month and "MCP
+server integrations" the next are one gap already raised, and matching literally would re-raise it
+every run while each run looked locally correct. The fixed prefix is what makes the record findable;
+recognizing the category is judgment, of the same kind this skill exercises everywhere else.
+
+Suppression is per-category, so a second, genuinely different gap still surfaces while the first is
+suppressed. It also expires on its own: once the marker rotates out of both files the category may be
+raised again — which is the behavior you want, because a category still recurring months after it was
+first raised has earned a second mention, and one that stopped recurring never clears the bar again.
 
 <!-- SLOT: promotion-tail — CONDITIONAL. Include this entire "## 11" section only if .commons.yml sets
 promotes-to: for this graph. If the graph has no promotes-to:, omit section 11 entirely — do not leave a
