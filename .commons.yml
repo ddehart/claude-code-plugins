@@ -17,3 +17,11 @@ sources:
 sinks:
   - { name: tasks, tool: td, project: "claude code marketplace", approval: batch }
 promotes-to: ~/Developer/commons
+generated:                                 # owned by /graph-patch — applied-delta state
+  process:
+    template-version: 0.5.0
+    applied: [step4-explicit-negative, step8-collect-nonreporting, step9-stamp-gate,
+              step11-pull-target, step10-pending-patches, step10-entity-type-gap]
+  knowledge-graph:
+    template-version: 0.1.8
+    applied: []

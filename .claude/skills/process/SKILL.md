@@ -83,6 +83,16 @@ Read the resolved input and decide what it contains, sized to the input:
   of findings for its class. Synthesize the returned lists yourself before moving to the plan — don't
   forward subagent output verbatim.
 
+**A reader that returns nothing has not reported an empty class.** Expect to have to ask: readers
+routinely finish their read and go idle without volunteering findings, so silence, an empty message, and
+a reader that simply stopped are all the same thing — no report yet. Follow up and get the findings. Only
+an explicit "nothing in this class" from that reader about that class lets you record it as empty. If a
+reader still won't report after a follow-up, the class **failed** — route it to step 8 rather than
+carrying it into the plan as zero findings. A run that reads silence as "nothing found" builds its plan
+from an empty set, stamps the chronicle processed in step 9, and reports a clean sweep; since the stamp is
+what makes a re-run resume instead of redo, that chronicle is marked handled for good. The failure looks
+exactly like success.
+
 The signal classes this graph looks for in a chronicle:
 
 - **Design decisions + rationale.** A choice was made and a reason given — becomes a `decision` attractor
@@ -141,12 +151,26 @@ If a step in the approved plan fails, skip it and continue with the remaining in
 than aborting the run. Collect every failure and report them together at the end, with enough detail to
 retry (what was attempted, what error came back), and offer to retry the failed steps now.
 
+**A signal class whose reader never reported belongs here too**, even though it failed before the plan
+existed — that is the one failure with no error message attached, so a step that only collects throws
+will miss it. Name the class, say plainly that it was never inspected, and offer its re-read alongside
+the other retries. A class that drops out quietly between step 4 and this report is indistinguishable
+from a class that genuinely had nothing in it.
+
 ## 9. Stamp
 
 Write or update the `processed:` stamp on the source note — a YAML list entry with `date:`, `ran:`
 (what was actually written), `skipped:` (what was deliberately not written, and why), and `errored:`
 (what failed, per step 8). It's a list so history accumulates across augment-mode runs rather than being
 overwritten.
+
+**Don't write the stamp while a fanned-out class is unaccounted for.** If step 4 handed classes to
+subagents, every one must have either returned findings or explicitly reported none before this stamp
+goes on. While any is outstanding, withhold it, name the classes you never heard from, and offer the
+re-read. The stamp is what makes a re-run resume instead of redo, so stamping over an uninspected class
+doesn't lose it temporarily — it closes the chronicle for good. This gate is about the fanout only: an
+inline read has no readers to hear from and inspected every class in this conversation, so it stamps
+normally.
 
 ## 10. Report
 
@@ -155,11 +179,73 @@ following this graph's own conventions — see the "Session Protocol" section of
 `knowledge-graph` skill for the format. If the run surfaced something a skill *outside* the plan could
 act on, suggest it in the report rather than auto-running it.
 
+**Pending template patches belong in this report.** This skill was generated from a plugin template and
+has diverged since — you own it. When the plugin fixes a defect in that template, nothing about the fix
+reaches this file on its own; the plugin's `/graph-patch` skill is what propagates it, and it only runs
+when someone invokes it.
+
+You cannot tell whether anything is actually pending, and must not imply you can. What has already been
+applied here is recorded in `.commons.yml` under `generated:`, but what *exists* to apply lives in the
+plugin's delta log — and this skill has no path to the plugin. Any plugin path written into this file was
+resolved when the file was generated, so it names the version that generated it, not the one installed
+now. Suggest `/graph-patch` and let it answer; never read the log yourself, and never auto-run it, since
+it edits this prose under per-delta approval.
+
+Withhold the suggestion on a cadence rather than raising it every run — a line that always appears carries
+no information:
+
+- **No `generated:` block in `.commons.yml`** — nothing has ever been propagated here. Raise it every run;
+  the condition ends the first time `/graph-patch` runs.
+- **A block exists** — raise it about monthly. When you do, write the literal marker
+  `[patch-check-suggested]` into this run's changelog entry, and before raising it again scan both
+  `knowledge/changelog.md` and the most recent `knowledge/changelog/YYYY-MM.md` for that marker. Both
+  halves matter: free-form prose isn't reliably recognizable to the run that has to find it, and this
+  graph rotates its changelog monthly, so scanning only the live file would re-raise at every month
+  boundary.
+- **Can't tell** — raise it. A redundant line costs a glance; a silent gap is what this exists to end.
+
+**A category with no type is a schema gap — report it.** Separately from the notes this run wrote: did
+the chronicle keep naming a *kind* of thing this graph has no entity type for? This graph declares
+`plugin` and `skill`. If a run keeps naming agents, hooks, or MCP servers as things a reader would look
+up, that isn't a missing note — it's a missing type, and no amount of note-writing fixes it. Ask this
+whether or not the graph already has an entity type: one that declared none is exactly the graph most
+likely to need its first.
+
+The bar is recurrence, not one sighting. Several distinct instances of one category, each named as
+something you'd look up, none covered by `plugin` or `skill` — and existing notes in the graph can supply
+corroborating instances when a single run is thin. Name the category and list the instances evidencing
+it, so the reader judges from evidence rather than from your assertion.
+
+**Recommend; don't do.** Where an `entity:` list already exists, the work is a new entry in
+`.commons.yml`, a directory, a map, and backfilling notes for the instances you found. Where there is
+none, the work is *establishing* the tier — the larger ask, and worth saying rather than folding in.
+Either way the sanctioned route is re-interviewing `graph-init`'s block 2; `.commons.yml` belongs to
+`graph-init`, never to this skill.
+
+Gate it the same way as pending patches. When you raise a category, write `[entity-type-gap: <category>]`
+into this run's changelog entry. Before raising one, scan both `knowledge/changelog.md` and the most
+recent `knowledge/changelog/YYYY-MM.md` for the literal prefix `[entity-type-gap:`, read the category
+names already recorded under it, and judge whether yours is the same gap **by meaning** — not by string
+match. Nothing holds the wording stable between runs: "MCP servers" one month and "MCP server
+integrations" the next are one gap already raised, and matching the whole marker literally would re-raise
+it every run while each run looked locally correct. Suppression is per-category, so a genuinely different
+gap still surfaces; it expires when the marker rotates out of both files, letting a still-recurring
+category earn a second mention.
+
 ## 11. The promotion tail
 
 After the plan in step 5 is assembled — before presenting it — ask one more question of the run's
 findings: does any of this generalize beyond `claude-code-plugins`? Candidates go **into the same plan**,
 clearly marked as promotions, not into a separate pass someone has to remember to run.
+
+**Refresh the target before the screen runs.** `~/Developer/commons` is a shared graph other machines push
+to, and the screen below reads whatever this clone last saw. If it's a git repo with a remote, fetch and
+fast-forward first, then say what came in — new claims and graduated questions change the screen's answer,
+and a stale copy makes "not already steering" decorative. The check is that the fast-forward actually
+happened, not that the fetch returned: a fetch can exit cleanly while the fast-forward is refused because
+the local copy diverged or the tree is dirty, and that reads exactly like "already current." With no
+remote, no network, no git, a fetch error, or a refused fast-forward, run the screen anyway — but say
+plainly it ran against a possibly-stale copy, rather than letting silence imply the target is current.
 
 The screen, applied to each candidate:
 
