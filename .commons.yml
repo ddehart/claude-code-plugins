@@ -3,10 +3,11 @@ graph:
   root: knowledge/
   atlas: principium.md
 types:
-  evidence:   { name: observation, dir: observations/, supports: patterns-or-decisions }
+  evidence:   { name: observation, dir: observations/, supports: patterns-decisions-or-questions }
   attractors:
-    - { name: pattern,  dir: patterns/ }     # open — accumulates evidence, no verdict
+    - { name: pattern,  dir: patterns/ }     # open — a recurring shape, accumulating evidence, no verdict
     - { name: decision, dir: decisions/ }    # settled — a design choice with its reasoning
+    - { name: question, dir: questions/ }    # open — something unresolved; holds material until it graduates
   entity:
     - { name: plugin, dir: entities/ }       # lookup notes for named plugins
     - { name: skill,  dir: entities/ }       # lookup notes for named skills

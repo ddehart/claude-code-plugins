@@ -97,8 +97,12 @@ deliberate, flagged exception for a future run to cluster, not license to skip t
   straight from the source; there is no intermediate synthesis tier in this graph.
 - **Evidence** — `observation`, stored in `observations/`. Atomic, provenanced notes; each one supports at
   least one attractor.
-- **Attractors** — `pattern` (open — accumulates evidence about how plugins & skills should be built, no
-  verdict) and `decision` (settled — a design choice with its reasoning). Each carries a "so what."
+- **Attractors** — `pattern` (open — a recurring shape, accumulating evidence about how plugins & skills
+  should be built, no verdict), `decision` (settled — a design choice with its reasoning), and `question`
+  (open — something this graph doesn't yet know, holding evidence until it graduates). Each carries a "so
+  what." A question differs from a pattern in what it claims: a pattern asserts a shape recurs and needs
+  evidence to say so; a question asserts nothing beyond "worth watching" and may have no evidence yet.
+  A question graduates into a `decision` when it settles, or a `pattern` when what it reveals recurs.
 - **Entities** — `plugin` and `skill`, stored in `entities/`. Notes for the named nouns worth a name in
   this graph. Retrieved by lookup, never by association — but they may accumulate curated context and a
   dated interaction log; "lookup" describes how they're found, not how thin they must stay.

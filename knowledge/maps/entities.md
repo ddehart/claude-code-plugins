@@ -24,3 +24,5 @@ accumulate curated context and a dated interaction log.
 ## Concepts
 
 - [[the commons]] — the single cross-domain graph at `~/Developer/commons`; receive-only via `/promote`, the evidence tier beneath the rules.
+- [[graph-patch skill]] — propagates template fixes into diverged project-owned skills without regenerating them.
+- [[session-export skill]] — renders a session transcript to readable text; resolver for the session source tier.

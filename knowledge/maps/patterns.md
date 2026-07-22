@@ -17,3 +17,7 @@ evidence and carries a one-clause "so what"; none reaches a verdict. Entries are
 - [[build enforcement against demonstrated need, not anticipated failure]] — machinery earns its place only against silent, compounding, or frequent errors; defer the rest to an evidence trigger.
 - [[execution against real data catches what authoring and review miss]] — run a just-authored mechanism end-to-end on real input; verify guards with a planted failure, never a happy-path pass.
 - [[prose conventions plus human approval can replace a validator]] — when a human approves every write, a validator mostly guards an implementer who doesn't exist; conventions carry the structure.
+- [[naming a failure shape confers no immunity to it]] — the shape survived being named, specified against, and built around; fluency is not application.
+- [[a check inherits the frame of whoever briefed it]] — a different reviewer buys independence from execution, never from the author's intent or scope.
+- [[a plausible story arrests the investigation before the mechanism is found]] — a fitting explanation stops the search as effectively as a fitting answer would.
+- [[justifying prose drifts from the thing it justifies]] — the instruction stays sound while its stated reason rots, and rationale travels further than the instruction.

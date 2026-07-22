@@ -33,3 +33,30 @@ transcript of the knowledge-commons design work, processed at Derek's direction 
   notes (cross-linked from the source) rather than duplicate them.
 - Patterns are one-witness — do future sessions corroborate build-against-demonstrated-need and
   execution-catches-what-review-misses, or are they artifacts of this one build?
+
+### 2026-07-22 — first transcript-tier /process run (session:5912a7cc)
+
+Processed the two-day knowledge-commons session directly from its transcript — the first run under the new
+`session` source tier, which is now primary with the chronicle demoted to lossy fallback. Exported via
+`meta-claude:session-export` (534 KB / 76k words), inspected by four subagent readers, one per signal class.
+
+Added a third attractor type, `question`, with its directory and map. This graph was the only one of four
+without somewhere to hold an unresolved matter — osu and the commons declare `question`, wellstead declares
+`hypothesis` and `constraint`. Surfaced because a finding from this very run had no home.
+
+Written: 4 patterns, 2 questions, 5 decisions, 7 observations, 2 entities. Updated
+`break the self-review chain with a different agent` with two evidence entries and a qualifier — a
+different agent buys independence from execution, never from the author's intent or scope.
+
+72 findings returned; 23 notes written. ~50 were instances of shapes already represented. Two proposed
+evidence links to existing patterns were dropped rather than forced: manufacturing corroboration is the
+failure the promote screen exists to prevent, and it applies inside a graph as much as across graphs.
+
+All four readers completed their reads and reported nothing until chased. The cause was a briefing error —
+they were told to reply in a channel that could not reach the orchestrator — not the fanout property the
+pipeline's own delta asserts. That discrepancy is now an open question and a task.
+
+Coverage is partial by construction: the session was still live when processed, so the export ends
+mid-conversation. Recorded in the source note's stamp rather than implied away.
+
+[patch-check-suggested] — `/graph-patch` ran today; all six deltas applied and stamped at 0.5.0.

@@ -18,7 +18,14 @@ against the spec and check load-bearing factual claims directly — trust nothin
 ## evidence
 - [[a neutral build-it cold read measured the spec where an adversarial loop inflated it]]
 - [[subagent findings and delegated artifacts were verified against the spec, not trusted on report]]
+- [[the anti-silent-loss machinery shipped four instances of the shape it was built to eliminate]] (2026-07-22)
+- [[a satisfied-test asserted a property its own template did not have]] (2026-07-22)
+
+*Qualified 2026-07-22: a different agent is necessary but not sufficient — see
+[[a check inherits the frame of whoever briefed it]]. Where the author writes the reviewer's brief, the
+review inherits the author's intent and scope, and cannot check either.*
 
 ## related
+- [[a check inherits the frame of whoever briefed it]]
 - [[execution against real data catches what authoring and review miss]]
 - [[added complexity generates its own defect supply]]
