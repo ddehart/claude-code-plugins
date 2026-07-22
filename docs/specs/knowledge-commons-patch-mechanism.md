@@ -1,9 +1,21 @@
 # Spec: knowledge-commons patch mechanism (`/graph-patch`)
 
-**Status:** Draft — not yet implemented
-**Date:** 2026-07-21
-**Plugin:** `knowledge-commons` (currently v0.1.8 on `main`; 0.1.9 pending in PR #65)
+**Status:** Implemented and in use — shipped across PRs #65, #66, #67, #68, #70
+**Date:** 2026-07-21 (drafted) · 2026-07-22 (status updated)
+**Plugin:** `knowledge-commons` v0.5.0
 **Related:** [`knowledge-commons.md`](./knowledge-commons.md) (the plugin's founding spec)
+
+> **What actually shipped.** `/graph-patch` exists, the delta log at
+> `references/deltas.md` carries six entries, and `graph-init` writes the `generated:` block at
+> generation time. The mechanism has been run for real once, against this repo's own graph: bootstrapped
+> at `0.1.8`, six deltas applied, each verified by re-running its `satisfied-test`, stamped to `0.5.0`
+> (commit `58687c4`). `wellstead` and `osu-builder-in-residence` remain unpatched at zero applied.
+>
+> One decision below was corrected after shipping. The entity feature was first built at the **instance**
+> level — recommending notes for individual nouns — and that was the wrong layer; the ask was new entity
+> **types** for `.commons.yml`'s `entity:` list. Deltas `step4-entity-signal-class` and
+> `step5-entity-recommend` were removed and replaced by `step10-entity-type-gap` in v0.5.0 (PR #70). The
+> superseded note under "Initial batch" carries the detail. D1–D22 are otherwise as-built.
 
 ## Problem
 
