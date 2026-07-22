@@ -190,17 +190,26 @@ Entries are append-only and ordered by version.
     one category, named as things a reader would look up, none covered by a declared type; the
     graph's existing notes may supply corroborating instances where one run is thin. (c) The
     report names the category and the instances evidencing it, so the reader judges from evidence
-    rather than assertion. (d) Recommending is not doing: point at the work — a .commons.yml
-    entry, a directory, a map, backfill — and name re-interviewing graph-init's block 2 as the
-    sanctioned route for changing declared types. This step must never edit .commons.yml itself;
-    that file belongs to graph-init and /graph-patch, and a schema change must not ride a per-run
-    plan approval, which is why this lives in the report and not in the plan.
+    rather than assertion. (d) Recommending is not doing: point at the work and name re-interviewing
+    graph-init's block 2 as the sanctioned route for changing declared types. Describe that work for
+    both cases the inversion in (a) creates — where an entity: list already exists it is a new entry
+    plus a directory, a map, and backfill; where there is none it is *establishing* the tier, which
+    is the larger ask and must be said rather than assumed away. This step must never edit
+    .commons.yml itself. Attribute that file to graph-init only: /graph-patch amends the generated:
+    block and guarantees every other key survives byte-identical, so naming it as an owner of the
+    entity: list sends a reader to a skill that will correctly refuse.
     Gate it on a cadence rather than raising it every run, in the same shape this section already
-    uses for pending template patches: write a literal marker naming the category into the
-    changelog entry this step already writes, and before raising a category scan both the live
-    changelog and the most recent monthly changelog archive for that marker with that category.
-    Suppression is per-category so a different gap still surfaces, and it expires when the marker
-    rotates out of both files, letting a still-recurring category be raised again.
+    uses for pending template patches: write a marker naming the category into the changelog entry
+    this step already writes, and before raising a category scan both the live changelog and the most
+    recent monthly changelog archive for it. The marker's *prefix* is the fixed, literal part — the
+    category name inside it is prose the raising run chooses — so the scan matches the prefix, reads
+    the categories already recorded, and decides sameness by meaning rather than by string equality.
+    That distinction is the substance of the cadence, not a refinement of it: nothing constrains how
+    successive runs word a category, so a literal whole-marker match lets "MCP servers" and "MCP
+    server integrations" read as different gaps and re-raises the same one every run, with each run
+    looking locally correct. Suppression is per-category so a genuinely different gap still surfaces,
+    and it expires when the marker rotates out of both files, letting a still-recurring category be
+    raised again.
   rationale: >
     The requested capability was "proactively identify and recommend new entities where they are
     relevant to the graph." It was first built at the instance level — noticing individual nouns
@@ -222,9 +231,14 @@ Entries are append-only and ordered by version.
     unconditional on the graph already having an entity type (a section that applies this only
     when an entity tier exists, or that proposes lookup notes for un-noted nouns, does NOT satisfy
     this test); it must set a recurrence bar over multiple distinct instances rather than firing on
-    a single mention; it must name the category and its evidencing instances; it must stop at
-    recommending, pointing at the .commons.yml / directory / map work and at graph-init's block-2
-    re-interview rather than editing the config; and it must state a cadence that suppresses a
-    category already raised, using a fixed marker looked for in both the live and the archived
-    changelog.
+    a single mention; it must name the category and its evidencing instances; and it must stop at
+    recommending, pointing at graph-init's block-2 re-interview rather than editing the config, and
+    describing the work for a graph with no entity: list (establish the tier) as well as for one that
+    has it (add an entry). Two further things it must NOT say: that /graph-patch owns or may change
+    the entity: list, and that the suppression marker is matched literally in whole — the test for
+    the cadence is whether the section fixes only the marker's *prefix*, has the scan read the
+    categories already recorded under it in both the live and the archived changelog, and decide
+    whether the category is the same one by meaning rather than by string equality. A section that
+    scans for the whole marker including a free-form category name fails this test, because nothing
+    holds that name stable between runs.
 ```

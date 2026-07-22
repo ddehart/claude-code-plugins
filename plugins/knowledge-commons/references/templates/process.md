@@ -222,8 +222,8 @@ will say whether any apply."*
 **A missing entity *type* belongs here too.** Not a missing note — a missing *kind*. If this run kept
 naming a category of thing that this graph has no declared type for, say so here. It surfaces in the
 report rather than in the plan because it is a schema change, not a note: `.commons.yml`'s `entity:`
-list belongs to `graph-init` and `/graph-patch`, never to this skill, and a change to the graph's shape
-should not ride a per-run plan approval meant for the notes this run is writing.
+list belongs to `graph-init`, never to this skill, and a change to the graph's shape should not ride a
+per-run plan approval meant for the notes this run is writing.
 
 **This is not conditional on the graph already declaring an entity type.** A graph whose interview
 answered "none" is precisely the graph that may discover it needs its first one — gating the check on an
@@ -236,20 +236,29 @@ graph's own record counts: earlier notes naming the same category strengthen the
 
 Name the category and the instances that evidence it, so the reader can judge rather than take the
 recommendation on trust — *"this run named three MCP servers by name; no declared type covers them."*
-Then point at the work instead of doing any of it: a new entry in `.commons.yml`'s `entity:` list, a
-directory for it, a map, and whatever backfill the existing notes want. `graph-init`'s sanctioned route
-for changing declared types is re-interviewing block 2 of its interview; name that as the path. This
-step recommends; it does not edit `.commons.yml` and does not create the tier.
+Then point at the work instead of doing any of it. Where this graph already has an `entity:` list in
+`.commons.yml`, the work is a new entry in it, a directory for it, a map, and whatever backfill the
+existing notes want. Where there is no `entity:` list at all — the graph answered "none" when it was
+set up — the recommendation is to *establish* the tier rather than add to it, which is the larger of
+the two asks and worth saying plainly. Either way the route is the same: `graph-init`'s sanctioned way
+to change declared types is re-interviewing block 2 of its interview, so name that as the path. This
+step recommends; it does not edit `.commons.yml`, does not add the entry, and does not create the tier.
 
 Cadence, on the same reasoning as the patch suggestion above — a recommendation that repeats every run
-stops being read. When you raise a category, write the literal marker `[entity-type-gap: <category>]`
-into the changelog entry you are already writing, using the same category name you used in the report.
-Before raising one, scan `changelog.md` *and* the most recent `changelog/YYYY-MM.md` archive for that
-marker with that category, and stay quiet if it is there. Suppression is per-category, so a second,
-different gap still surfaces while the first is suppressed. It also expires on its own: once the marker
-rotates out of both files the category may be raised again — which is the behavior you want, because a
-category still recurring months after it was first raised has earned a second mention, and one that
-stopped recurring never clears the bar again.
+stops being read. When you raise a category, write a marker of the form `[entity-type-gap: <category>]`
+into the changelog entry you are already writing, using the category name you used in the report.
+Before raising one, scan `changelog.md` *and* the most recent `changelog/YYYY-MM.md` archive for the
+literal prefix `[entity-type-gap:`, read the category names already recorded there, and stay quiet if
+any of them is *the same category* as the one you are about to raise. Judge that by meaning, not by
+string match: nothing constrains how a given run words a category, so "MCP servers" one month and "MCP
+server integrations" the next are one gap already raised, and matching literally would re-raise it
+every run while each run looked locally correct. The fixed prefix is what makes the record findable;
+recognizing the category is judgment, of the same kind this skill exercises everywhere else.
+
+Suppression is per-category, so a second, genuinely different gap still surfaces while the first is
+suppressed. It also expires on its own: once the marker rotates out of both files the category may be
+raised again — which is the behavior you want, because a category still recurring months after it was
+first raised has earned a second mention, and one that stopped recurring never clears the bar again.
 
 <!-- SLOT: promotion-tail — CONDITIONAL. Include this entire "## 11" section only if .commons.yml sets
 promotes-to: for this graph. If the graph has no promotes-to:, omit section 11 entirely — do not leave a
