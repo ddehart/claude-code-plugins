@@ -1,6 +1,6 @@
 # Knowledge Commons — The `/process` Pipeline Correction
 
-> **Version:** 1.0 · **Status:** draft, pending implementation · **Date:** 2026-07-26
+> **Version:** 1.1 · **Status:** draft, cold-read clean, pending implementation · **Date:** 2026-07-26
 > **Parent spec:** [`knowledge-commons.md`](./knowledge-commons.md) (v1.0.1)
 > **Plugin version at draft:** knowledge-commons 0.5.0 → ships as 0.6.0
 
