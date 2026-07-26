@@ -6,6 +6,15 @@
 > (wellstead ×7, aiwyn ×1) and five open questions. Phase 3's gate — a principle held on two-domain
 > evidence — pends organic accumulation. Phase 4 (devbox) pends convenience.
 >
+> **Sub-spec — the `/process` pipeline correction.**
+> [`knowledge-commons-process-pipeline.md`](./knowledge-commons-process-pipeline.md) (2026-07-26) corrects
+> two stages missing from the process template since v1.0.1: raw preservation was never instructed, and
+> the synthesis role below was added to the conventions, the knowledge-graph template, and interview block
+> 2 but *not* to the pipeline that would produce one — so no graph could ever write a synthesis note. It
+> also corrects the role's definition: a synthesis is a **sibling output** of the raw material for a human
+> reader, not an intermediate the evidence is extracted through. Read that sub-spec alongside the v1.0.1
+> note below, which records the incomplete change.
+>
 > **v1.0.1 — Phase-1 build amendments**, from the paper-parity check against the reference (G2). Three
 > findings, all mechanism the 5-role model couldn't hold: (1) an optional **synthesis** type role — an
 > intermediate note between a rich bounded source and its atomic evidence — added to the conventions,
