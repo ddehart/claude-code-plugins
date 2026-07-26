@@ -325,7 +325,7 @@ role got specified into four artifacts and implemented in none.
 
 | File | Change |
 |---|---|
-| `references/templates/process.md` | Add the preserve stage after `## 2. Resolve`; add the synthesis stage (conditional SLOT, like §11) after inspection; state in `## 4. Inspect` that extraction reads raw, never the synthesis, and add the orphaned-synthesis path to `## 2. Resolve`. |
+| `references/templates/process.md` | Add the preserve stage after `## 2. Resolve`; add the synthesis stage (conditional SLOT, like §11) after inspection; state in `## 4. Inspect` that extraction reads raw, never the synthesis, and add the orphaned-synthesis path to `## 2. Resolve`. **Also correct the `source-tiers` SLOT instruction**, which currently tells the generator that when two tiers cover the same underlying events it must "name which tier is primary and state the guard." The corrected model removes that case — a synthesis is not a tier — so the instruction would generate the inversion into every new graph. |
 | `references/templates/knowledge-graph.md` | Correct the synthesis type description under `## Types in This Graph` from intermediate to sibling output (D3). |
 | `references/graph-conventions.md` | Same correction in the "Entity and synthesis notes" section; add that a synthesis note may be an adopted project artifact outside the graph root (D8). |
 | `references/deltas.md` | Five new entries (§5.4). |
@@ -404,18 +404,31 @@ push.
 
 ### 5.5 Deltas
 
-Five entries, all anchored on headings that exist in already-generated prose (D11):
+Six entries, all anchored on headings that exist in already-generated prose (D11). Every anchor below was
+verified to resolve exactly once in both the template and this project's generated skill:
 
 | `id` | `file` | `anchor` | Substance |
 |---|---|---|---|
 | `preserve-stage` | process | `## 2. Resolve` | A stage that writes the source note and durably preserves the raw material, with the small/large form split (D1, D2) and the gate when the destination is public/shared (D5–D7). |
-| `resolve-orphaned-synthesis` | process | `## 2. Resolve` | The orphaned-synthesis path: extract from the synthesis only when raw is verifiably absent; mark the source note `raw: unavailable` (D10). |
+| `resolve-orphaned-synthesis` | process | `## 2. Resolve` | The orphaned-synthesis path: extract from the synthesis only when raw is verifiably absent; mark the source note `raw: unavailable` (D10). Also removes any primary/fallback ordering between tiers covering the same events. |
 | `extract-from-raw` | process | `## 4. Inspect` | Where both exist, inspection reads the raw material; the synthesis may orient but never sources a finding (D4). |
-| `synthesis-stage` | process | `## 6. Run to completion` | Produce the human-facing synthesis as a sibling of extraction: link an existing one, invoke the configured producer when absent (D9). Conditional on the graph declaring a synthesis tier. |
+| `synthesis-in-plan` | process | `## 5. Propose the plan` | The plan names what the synthesis stage will do — link the existing synthesis, or invoke the configured producer — so it is covered by the single approval (D9). Conditional on the graph declaring a synthesis tier. |
+| `synthesis-write` | process | `## 6. Run to completion` | Write the synthesis as a **sibling** of evidence extraction, neither upstream nor downstream of it, and link it from the source note (D3, D9). Conditional on the graph declaring a synthesis tier. |
 | `synthesis-is-sibling` | knowledge-graph | `## Types in This Graph` | Correct the synthesis role from extraction intermediate to sibling output (D3). |
+
+**Why the synthesis stage is two deltas.** Its substance straddles the approval gate: the plan must name it
+(step 5) and the run must write it (step 6/8). A single delta anchored on run-to-completion would edit only
+the write side, leaving a step 6 that requires something step 5 never produces — the patcher edits one
+section per anchor and cannot reach backward. Two deltas on adjacent anchors is the idiom the log already
+uses (`## 10. Report` carries two).
 
 Each needs all seven fields. Write the `satisfied-test` for `extract-from-raw` sharply — a section that
 merely *mentions* the synthesis passes a vague test while still routing extraction through it.
+
+**One hand edit falls outside the deltas.** The "A guard on overlapping tiers" subsection sits under
+`## 3. Find the ledger`, which no delta anchors on. `/graph-patch` must not touch unanchored prose, so its
+removal is a manual edit — and it has to land in the same unit as the patch run, or the patched skill
+contradicts itself.
 
 ---
 
@@ -448,11 +461,18 @@ Per `spec-fresh-session-audit.md`, the preserve stage is partly unattended-shape
 commits them — so textual review is insufficient for it.
 
 1. **Planted-secret test (blocking).** Write a file containing a fake `sk-ant-` key, a fake private-key
-   block, and a `DATABASE_URL` with a password. Run the floor scan against it. It must flag all three. Then
-   break the scan deliberately (rename its script, empty its pattern list) and confirm the preserve stage
-   **stops** rather than proceeding ungated.
+   block, and a `DATABASE_URL` with a password. Run the floor scan against it. It must exit non-zero and
+   report all three as distinct findings. Add a negative fixture — `API_KEY=<your-key-here>` and prose
+   mentioning `sk-` — and confirm it exits zero.
+
+   Then break the scan deliberately (`chmod -x` it, or empty its pattern list) and run the preserve stage.
+   **Pass criterion, declared before running:** the run reports the scan as unavailable *and* writes no file
+   under `knowledge/sources/raw/`. Stating it in advance matters — the break-it half judges an agent's
+   behavior rather than a process's exit code, and a criterion invented after seeing the output will be
+   satisfied by whatever happened.
 2. **False-positive path.** Run the gate against a real session export and confirm hits are presented with
-   context and individually resolvable (D7).
+   context and individually resolvable (D7). `.claude/session-exports/` is empty and being retired, so
+   export a session to a scratch path for this test rather than expecting one to be there.
 3. **End-to-end run.** `/process` this session. It must: write a source note, archive the transcript through
    the gate, link or write the chronicle as synthesis, extract evidence from the transcript, and stamp. Each
    of the four stages must be individually observable in the run's output.
@@ -500,3 +520,4 @@ Their owners run `/graph-patch` on their own cadence; nothing here reaches them 
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-07-26 | Initial draft, from an interview settling twelve decisions. |
+| 1.1 | 2026-07-26 | Independent cold read (implementer brief, no context). Four changes: the template's `source-tiers` SLOT instruction added to §5.1 &mdash; it would have generated the inversion into every new graph; `synthesis-stage` split into `synthesis-in-plan` + `synthesis-write` because its substance straddles the approval gate; the unanchored hand edit under `## 3. Find the ledger` called out; §7.1 given a pass criterion declared in advance. Cold read returned no blocking items. |
