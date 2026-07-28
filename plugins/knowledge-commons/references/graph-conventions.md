@@ -73,6 +73,9 @@ Every note has `genitor` and `tags`. Everything past that depends on the note's 
 | `source` | source notes | the canonical pointer this note is keyed on (see below) |
 | `supports` | evidence notes | one or more `"[[attractor-title]]"` links — the structural rule, see below |
 | `processed` | source notes | a YAML list of stamps; see Source note |
+| `archive` | source notes whose raw material was too large to inline | a repo-relative path to the archived raw material, committed with the graph — never a pointer into a gitignored or scratch directory |
+| `raw` | source notes whose raw material is gone | `unavailable`, with the reason; set when a source is processed through its synthesis because the raw material is verifiably absent |
+| `synthesis` | source notes that have one | `"[[synthesis-note]]"` — the link direction that matters, since an adopted synthesis may not carry graph frontmatter of its own |
 | `domain` | promoted notes only, in the receiving graph | the source graph's `graph.name`, plain text, never a link |
 
 **Tags: 2–5 per note, and always a genuine hierarchy candidate.** A tag is worth having only if it
@@ -121,6 +124,14 @@ year's rows, which were thinned about a week later. Didn't get to the cider bloc
 A later re-run against a grown version of the same chronicle file appends a second entry to
 `processed` (with its own `date:` and `ran:` list) rather than replacing the first — the stamp is a
 history, not a status.
+
+**Material too large to inline is archived, not summarized away.** A transcript or a recording cannot
+live in a note body, so the source note carries identity, date, a one-line description, the stamp, and
+an `archive:` pointer, while the material itself is written to a committed directory under the graph.
+The pointer must name something version-controlled: a source note pointing into a scratch or gitignored
+directory is a dangling pointer waiting to happen, and when the material is pruned nothing announces it
+— the note still looks complete. Preservation is a stage `/process` performs, not a side effect of
+extraction; a graph whose pipeline never writes a source note has no preservation at all.
 
 ### Evidence note
 
@@ -213,10 +224,23 @@ Two type roles some graphs declare and some don't, so their shapes are set per d
 - **Entity notes** name the nouns a graph keeps returning to. They're retrieved by lookup (you know the
   name you want), never by association — but they may accumulate curated context sections and a dated
   interaction log where the domain calls for it. Entities never promote across graphs.
-- **Synthesis notes** are an optional intermediate between a rich bounded source (a call, a meeting) and
-  the atomic evidence extracted from it: one note distilling the event, carrying `source:` provenance as
-  a wikilink to the source note, and listing what was extracted. Thin transactional sources skip this
-  tier entirely.
+- **Synthesis notes** distil one rich bounded source (a call, a meeting, a session) into a document
+  written **for a human reader**. Each carries `source:` provenance as a wikilink to its source note and
+  lists what was extracted alongside it. Thin transactional sources skip this tier entirely.
+
+  **A synthesis is a sibling of the atomic evidence, not an intermediate on the way to it.** Both are
+  made from the same raw material, and neither is upstream of the other. Evidence is extracted from the
+  raw material and never from the synthesis, precisely *because* a document written for a reader
+  compresses away the corrections, dead ends, and exact wording that atomic evidence is made of. The one
+  exception is a source whose raw material is verifiably gone; there the synthesis is what remains, and
+  the source note records `raw: unavailable` so the graph shows the degradation instead of hiding it.
+
+  **A synthesis note may be an existing project artifact adopted into the tier**, rather than a note the
+  graph authored — a journal or chronicle a project already keeps, at the path it already occupies, which
+  may sit outside `graph.root`. An adopted note won't carry this graph's frontmatter conventions
+  (`genitor:`, `tags:`), and the tier tolerates that: the link direction that matters is source note →
+  synthesis, and it lives on the source note's side. Adopting beats authoring a second note whose only
+  content is a link to the first.
 
 ### Reference note
 

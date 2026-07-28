@@ -241,4 +241,216 @@ Entries are append-only and ordered by version.
     whether the category is the same one by meaning rather than by string equality. A section that
     scans for the whole marker including a free-form category name fails this test, because nothing
     holds that name stable between runs.
+
+- id: preserve-stage
+  file: process
+  anchor: "## 2. Resolve"
+  version: 0.6.0
+  instruction: >
+    Add a preservation stage immediately after the resolve section: a named step that writes the
+    source note and puts the raw material somewhere durable. Two forms, chosen by the size of the
+    source, and the form varies while the presence does not. A small self-contained source (a
+    journal entry, a fetched page) is carried verbatim in the source note's body with no separate
+    archive. A large one (a transcript, a recording) is written to a committed archive directory
+    under the project, with the source note carrying identity, date, a one-line description, the
+    processed: stamp, and a pointer to the archived file. State that the archive is version
+    controlled and never a scratch or gitignored path. State that this stage writes before the
+    plan-approval gate — deliberately, because a run abandoned at plan review should still have
+    kept the material — and that what it writes is the source note and the archived file only,
+    never evidence and never the stamp. State that preserving twice must not overwrite: an
+    existing source note is left alone but for anything genuinely missing, its processed: history
+    is never touched, and an existing archive file is left as it is.
+    Where the archive's destination is public or shared, the stage carries a redaction gate that
+    runs BEFORE the file is written: a deterministic scan for credential shapes that fails closed
+    on a hit AND on its own failure (a scan that could not run is not a scan that passed), plus a
+    subagent read-through for what patterns cannot catch — third-party names, personal details,
+    unreleased plans. Both must pass. Each hit is resolved individually as redact, withhold, or
+    accept, with every redaction and withholding recorded on the source note so a degraded archive
+    says so. Where the hits cannot be put to a human — a non-interactive or unattended run — the
+    stage withholds rather than archiving.
+  rationale: >
+    The pipeline had no step that wrote a source note. One step searched for one and another
+    stamped one; nothing created one. For a small source the gap is invisible, because an
+    implementer fills in the obvious. For a large one it fails silently: in the graph where this
+    was found, preservation had degraded to a pointer into a gitignored exports directory, and
+    that graph's founding source note already points at a transcript that no longer exists. The
+    material a source note exists to keep was destroyed by the absence of the stage that keeps it.
+    The gate is scoped to publication rather than to archival because the hazard is publication;
+    a private destination pays nothing. It is deliberately two halves: the floor is dumb and
+    verifiable against a planted secret, the read-through covers the majority of a transcript's
+    sensitive surface, which is not credential-shaped. Neither is adequate alone — patterns miss
+    meaning, and an agent read is judgment that varies run to run and cannot be proven to work.
+  satisfied-test: >
+    Does the skill have a named stage, before the ledger lookup, that WRITES the source note and
+    durably preserves the raw material — as opposed to searching for a source note, stamping one,
+    or describing what a source note contains? It must give both forms (inline for small sources,
+    committed archive plus pointer for large ones), require the archive to be version controlled
+    rather than a scratch or gitignored path, and say that re-preserving does not overwrite an
+    existing source note or its processed: history. Where any source tier archives to a public or
+    shared destination, it must also gate that write on both a deterministic credential scan that
+    fails closed on its own failure as well as on a hit, and a semantic read-through — with hits
+    resolved one at a time and withholding as the behavior when no human can resolve them. A
+    section that merely says raw material is important, or that describes the source note's shape
+    without instructing the run to write one, does NOT satisfy this test.
+
+- id: resolve-orphaned-synthesis
+  file: process
+  anchor: "## 2. Resolve"
+  version: 0.6.0
+  instruction: >
+    Give the resolve section a named, permanent path for a source whose raw material is gone —
+    a pruned transcript, a dead URL. Where the graph has a synthesis for that source, extraction
+    reads the synthesis instead, and the source note records raw: unavailable with the reason and
+    the date the absence was observed. Constrain it sharply: it fires only when the raw material
+    is VERIFIABLY absent, never because the material is large, slow to fetch, or inconvenient to
+    read. Where neither the raw material nor a synthesis exists, there is nothing to process.
+    Remove any primary/secondary ordering between source tiers that cover the same underlying
+    events, and any guard about double-counting between them: this path replaces both. A
+    distillation of an event is not a second source tier for that event.
+  rationale: >
+    "The transcript is usually there, and when it isn't the write-up is what remains" is a real
+    case, and the pipeline that lacked a preservation stage handled it by registering the write-up
+    as a second, lower-ranked source tier. That inverted the model — a distillation written for a
+    human reader is the pipeline's own OUTPUT, not an input — and everything downstream was
+    machinery built to contain the inversion: a primary/fallback ordering, an overlapping-tiers
+    guard, a survival check run before processing, and a decision note elevating the workaround to
+    design. Naming the genuine case honestly, as a degraded path with an explicit marker, costs
+    one branch and removes all of it. The verifiably-absent constraint is what stops the path
+    becoming a convenient way around extracting from the raw material.
+  satisfied-test: >
+    Does the section name a specific path for the case where the raw material is gone — extract
+    from the synthesis, mark the source note as having no raw material available, with the reason
+    — and restrict that path to raw material that is verifiably absent rather than merely large or
+    inconvenient? And is the skill free of any primary/secondary ranking between two source tiers
+    describing the same events, and of any accompanying guard about the same evidence arriving
+    twice through two tiers? A skill that still ranks a distillation as a fallback source tier,
+    or that still tells the run to check one tier before extracting from another covering the same
+    events, does NOT satisfy this test.
+
+- id: extract-from-raw
+  file: process
+  anchor: "## 4. Inspect"
+  version: 0.6.0
+  instruction: >
+    State in the inspection step that findings are extracted from the RAW material, and that where
+    a synthesis of the same source also exists it may be read for orientation but never sources or
+    supplies the wording of a finding. Give the reason, because the reason is what makes the rule
+    survive a rewrite: a document written for a human reader has already compressed away the
+    corrections, the dead ends, and the exact wording that atomic evidence is made of, and an
+    extraction that runs on it inherits every omission without being able to detect any of them.
+    Name the single exception — the orphaned path where the raw material is verifiably gone — so
+    the rule reads as absolute everywhere else.
+  rationale: >
+    This is the specific thing the four-stage model exists to protect, and it is the one that gets
+    lost first, because reading the synthesis is easier and looks equivalent. It is not: the first
+    real run of this pipeline on a session transcript found three divergences between the session's
+    own account of itself and what the transcript showed, and every one of them is invisible to a
+    reader of the account alone. A synthesis on the input side is how a graph ends up recording
+    what an agent remembered rather than what happened.
+  satisfied-test: >
+    Does the inspection step direct extraction at the raw material and explicitly forbid the
+    synthesis as the source of a finding, while allowing it to be read for orientation? The test is
+    the direction of the constraint, not the presence of the word: a section that merely MENTIONS
+    the synthesis, describes it as available, or says evidence "comes from the source" without
+    ruling out the synthesis does NOT satisfy this test. It must be readable as an instruction that
+    a finding is sourced and quoted from the raw material — with the verifiably-absent-raw case as
+    the stated exception, if it names an exception at all.
+
+- id: synthesis-in-plan
+  file: process
+  anchor: "## 5. Propose the plan"
+  version: 0.6.0
+  instruction: >
+    CONDITIONAL — applies only to a graph that declares a synthesis tier; where none is declared,
+    this delta is satisfied vacuously and no edit is needed. Have the proposed plan name what the
+    synthesis stage will do: link the synthesis that already exists for this source, or invoke the
+    graph's configured producer to write one. Both cases are ordinary — a source distilled at the
+    time and processed later arrives with its synthesis written; a source processed fresh does not.
+    Have the plan also name what the preservation stage already wrote before this gate, so the
+    reader can see what landed and what the approval is actually deciding.
+  rationale: >
+    The synthesis stage's substance straddles the approval gate: the plan has to name it and the
+    run has to write it. A single delta anchored on the run step would edit only the write side and
+    leave a run that writes something the plan never proposed — which is a write escaping the one
+    approval this pipeline rests on. The patcher edits one section per anchor and cannot reach
+    backward, so the two halves are two deltas on adjacent anchors. The preservation line is here
+    for the same reason from the other direction: preservation writes BEFORE this gate, so a plan
+    that doesn't mention it leaves the reader unable to tell what has already happened.
+  satisfied-test: >
+    For a graph declaring a synthesis tier: does the plan step state that the plan names the
+    synthesis work — either linking an existing one or invoking the configured producer — so it
+    falls under the single approval rather than happening outside it? A plan step that describes
+    only notes created and updated, with no mention of the synthesis, does NOT satisfy this test.
+    For a graph with no synthesis tier, this test is satisfied by construction.
+
+- id: synthesis-write
+  file: process
+  anchor: "## 6. Run to completion"
+  version: 0.6.0
+  instruction: >
+    CONDITIONAL — applies only to a graph that declares a synthesis tier; vacuously satisfied
+    otherwise. Have the run write the synthesis as a SIBLING of evidence extraction: both are made
+    from the same raw material, neither is upstream of the other, and the run does not wait for one
+    before doing the other. Link the synthesis from the source note when it lands. State plainly
+    that the run does not extract from the synthesis once it exists. Where the producer is a
+    separate skill, it is invoked, never reimplemented or reordered from out here — it has its own
+    rules about how it writes and in what order.
+  rationale: >
+    The synthesis role had been defined as an "intermediate" between a rich source and the evidence
+    extracted from it, which places a lossy distillation inside the extraction path — the opposite
+    of the model. Defined that way the type had no clear place in a pipeline whose extraction step
+    already reads the source directly, which is the likeliest reason it was specified into four
+    artifacts and implemented in none. Naming it a sibling output is what gives the stage somewhere
+    to sit. The invoke-never-reimplement constraint keeps the coupling to two skills at
+    invoke-and-link, rather than this pipeline acquiring opinions about how the other one works.
+  satisfied-test: >
+    For a graph declaring a synthesis tier: does the run step write the synthesis as a sibling of
+    evidence extraction — explicitly neither upstream nor downstream of it, both from the raw
+    material — and link it from the source note? A section that writes the synthesis first and then
+    extracts from it, or that writes it after extraction as a summary OF the extracted notes, fails
+    this test: both make it an intermediate, in opposite directions. Where a separate skill produces
+    it, the section must invoke that skill rather than restating what it should write.
+
+- id: synthesis-is-sibling
+  file: knowledge-graph
+  anchor: "## Types in This Graph"
+  version: 0.6.0
+  instruction: >
+    Correct the synthesis type's description from an intermediate between a source and the evidence
+    extracted from it, to a sibling output of the raw material: one note distilling a bounded source
+    for a HUMAN reader, produced alongside the atomic evidence rather than in between. State that
+    evidence is extracted from the raw material and not from the synthesis, that the synthesis links
+    back to its source note and lists what was extracted alongside it, and that a synthesis note may
+    be an existing project artifact adopted into the tier at the path it already occupies rather
+    than one the graph authored. Where the graph currently declares no synthesis tier BECAUSE its
+    stated reasoning is that its source is already a distillation of some event, that reasoning
+    identifies a synthesis tier rather than the absence of one — correct it to name the real tier.
+  rationale: >
+    The intermediate framing was in the conventions, this template, and the plugin README, and it is
+    what made the type unimplementable: an intermediate has no place in a pipeline whose extraction
+    step already reads the source directly. The framing also produces a specific wrong answer in
+    graphs whose sources include a write-up of an event — they reason, correctly, that the write-up
+    is already a synthesis, and then conclude, incorrectly, that they therefore have no synthesis
+    tier. The first clause is right and the conclusion inverts it: being a synthesis of the event is
+    what makes it output rather than input.
+  satisfied-test: >
+    Does the synthesis entry describe the note as a sibling output of the raw material, produced for
+    a human reader alongside atomic extraction, with evidence extracted from the raw rather than
+    through it? An entry calling it an intermediate, or describing evidence as extracted FROM the
+    synthesis, fails. So does an entry stating the graph has no synthesis tier on the grounds that
+    its source is already a session- or event-level synthesis — that reasoning names a synthesis
+    tier and must be corrected to declare it rather than to deny it.
 ```
+
+## A numbering divergence these six introduce
+
+The six entries above add two stages to the `process` template, so a freshly generated skill numbers
+its sections differently from a patched one: the template renumbers freely, while the deltas anchor on
+headings that already exist in generated prose and instruct insertion *relative* to them (never a
+renumber, which would invalidate all six pre-0.6.0 anchors at once).
+
+**Future deltas targeting the preserve or synthesize stages must anchor on the pre-existing heading,
+not on the new stage's own heading** — `## 2. Resolve` rather than `## 3. Preserve` — until this log
+records that every live graph has been patched through 0.6.0. A delta anchored on `## 3. Preserve`
+resolves in a freshly generated graph and silently fails to resolve in every patched one, which is the
+failure this log's skip-loudly rule exists to make visible rather than to rely on.
