@@ -90,11 +90,22 @@ deliberate, flagged exception for a future run to cluster, not license to skip t
 
 ## Types in This Graph
 
-- **Source** — chronicle entries (and, on demand, Claude Code docs pages), stored in `sources/`. Preserves
-  what mattered from the raw material, keyed on a canonical `source:` (a chronicle file's repo-relative
-  path, a URL). Carries the `processed:` stamp that makes `/process` re-runs resume instead of redoing.
-- **Synthesis** — none. A chronicle entry is already a session-level synthesis, so evidence is extracted
-  straight from the source; there is no intermediate synthesis tier in this graph.
+- **Source** — session transcripts (and, on demand, Claude Code docs pages), stored in `sources/`, keyed
+  on a canonical `source:` (`session:{uuid}`, a URL). A transcript is too large to sit in a note, so its
+  source note carries an `archive:` pointer into `knowledge/sources/raw/`, where the rendered transcript
+  is committed; a docs page is small enough to inline verbatim. Carries the `processed:` stamp that makes
+  `/process` re-runs resume instead of redoing, and `raw: unavailable` where a transcript has been pruned.
+- **Synthesis** — `chronicle`, the dated entries in `docs/chronicle/`, written by
+  `meta-claude:session-chronicle`. A chronicle entry distils one session for a **human reader**. That
+  first clause used to be the reason this graph declared *no* synthesis tier — "a chronicle entry is
+  already a session-level synthesis, so evidence comes straight from the source" — and it inverts itself:
+  being a synthesis of the session is exactly what makes it this pipeline's **output**, not its input.
+  It is a **sibling** of the atomic evidence, not an intermediate the evidence passes through: `/process`
+  makes the chronicle and the observations from the same transcript, side by side, and observations are
+  extracted from the transcript rather than through the entry. The entry links back to its source note
+  and the source note links to it. These are pre-existing project artifacts adopted into the tier at the
+  path they already occupy — outside `knowledge/`, and without this graph's `genitor:`/`tags:`
+  frontmatter, which the tier tolerates because the link direction that matters lives on the source note.
 - **Evidence** — `observation`, stored in `observations/`. Atomic, provenanced notes; each one supports at
   least one attractor.
 - **Attractors** — `pattern` (open — a recurring shape, accumulating evidence about how plugins & skills
