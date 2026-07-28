@@ -1,13 +1,13 @@
 ---
 name: process
 description: >
-  Process work sessions and chronicle entries into the claude-code-plugins knowledge graph — turns a
-  session transcript (primary) or its chronicle entry (fallback) into observations, updates the patterns
-  and decisions they support, folds in named plugins and skills, and proposes promotions to the personal
-  commons. Also resolves-and-preserves an on-demand Claude Code docs URL when one comes up. Use when the
-  user says "process this session", "process the chronicle", "run /process", names a session transcript or
-  UUID, names a chronicle file under docs/chronicle/ that hasn't been folded into the graph yet, asks
-  what's in the processing queue, or points at a Claude Code release-notes / docs page to capture.
+  Process work sessions into the claude-code-plugins knowledge graph — preserves the session transcript,
+  writes or links its chronicle entry as the session's synthesis, turns the transcript into observations,
+  updates the patterns and decisions they support, folds in named plugins and skills, and proposes
+  promotions to the personal commons. Also resolves-and-preserves an on-demand Claude Code docs URL when
+  one comes up. Use when the user says "process this session", "run /process", names a session transcript
+  or UUID, names a chronicle entry whose session should be processed, asks what's in the processing
+  queue, or points at a Claude Code release-notes / docs page to capture.
 allowed-tools:
   - Skill
   - Agent
@@ -32,20 +32,19 @@ names, directories, and sinks.
 
 ## 1. Entry
 
-`/process <input>` takes a session (a transcript path, a UUID, or "this session"), a file path (a
-chronicle entry), a URL (a Claude Code docs page), or pasted text naming one piece of raw material.
+`/process <input>` takes a session (a transcript path, a UUID, or "this session"), a URL (a Claude Code
+docs page), or pasted text naming one piece of raw material. A chronicle entry is not an input: it is
+this pipeline's own output, and naming one means processing the session it describes.
 
-`/process` with no argument enumerates the queue instead of processing anything. Two tiers have queues:
+`/process` with no argument enumerates the queue instead of processing anything. One tier has a queue:
 
 - **Session** — every `*.jsonl` directly inside a directory matching `~/.claude/projects/*claude-code-plugins*/`
   with no source note carrying its `session:{uuid}`. Preview each by date and size; a bare UUID tells the
   reader nothing.
-- **Chronicle** — every file matching `docs/chronicle/20*.md` with no source note carrying its
-  repo-relative path. Preview by date and opening line.
 
-**The ledger test is the recorded `source:` value, not a filename mention.** A chronicle path can appear
-in the *prose* of some other source note without having been processed; grepping for the filename rather
-than for `source: <path>` reports it as done when it isn't.
+**The ledger test is the recorded `source:` value, not a filename mention.** An identifier can appear in
+the *prose* of some other source note without having been processed; grepping for it rather than for
+`source: <value>` reports it as done when it isn't.
 
 List entries human-readably, never as bare identifiers. Show the queue and stop — running it is a
 separate, explicit invocation per item (or "process all of these"), not implied by listing. The
@@ -57,7 +56,7 @@ user to paste or name the docs page instead.
 Match the input to one of this graph's source tiers and normalize it to a canonical `source:` identity —
 the value the ledger will key on.
 
-**Session (primary for work sessions).** Input is a transcript path, a session UUID, or a request to
+**Session.** Input is a transcript path, a session UUID, or a request to
 process a session by date — including "this session". Transcripts live directly inside
 `~/.claude/projects/-Users-derek-personal-Developer-claude-code-plugins/` as `<uuid>.jsonl`, with
 worktree sessions in sibling directories whose slug carries the worktree suffix. Check all of them.
@@ -142,12 +141,27 @@ over one false positive; blanket-accepting is not a gate.
 Do not archive on the assumption that someone will review it later. This repo is public and the failure
 is irreversible: git history, GitHub's caches, and forks all outlive a later deletion.
 
-**Chronicle (fallback).** Input is a path under `docs/chronicle/` matching `20*.md`, or bare text naming
-a date the queue can resolve to that path. Canonical `source:` is the repo-relative path
-(`docs/chronicle/2026-07-15.md`). No resolver skill — chronicle files are already local markdown, written
-by `meta-claude:session-chronicle`; read them directly with the Read tool. Note that
-`docs/chronicle/reflective-practice.md` is not a dated entry and is not a source; the `20*.md` glob
-already excludes it. Before processing one, apply the overlapping-tier guard in step 3.
+**The chronicle is not a source tier.** A chronicle entry is the session-level synthesis — this
+pipeline's own output, written for a human reader — so it lives in `types.synthesis`, not in `sources:`.
+It used to be registered as a second, lower-ranked source tier, with an ordering between the two and a
+guard against double-counting the same session through both. All of that existed to contain one
+inversion: a distillation sitting on the input side. There is one raw source for a session, and it is
+the transcript.
+
+**When the transcript is gone.** Transcripts get pruned, and this is the genuine case the fallback tier
+was invented for. Where a session's transcript no longer exists but its chronicle entry does, the run
+continues from the chronicle: extraction reads it instead of the transcript, and the source note records
+`raw: unavailable` with the reason and the date the absence was observed — so the graph shows a
+degraded note rather than leaving a reader to wonder later why it is thin. This is a permanent path.
+Transcripts will keep being pruned, and it is also the only route by which a pre-existing chronicle entry
+whose session is gone can be processed at all.
+
+It fires **only when the transcript is verifiably absent** — you looked in every
+`~/.claude/projects/*claude-code-plugins*/` directory and it is not there. Never because a transcript is
+merely large, and never because the chronicle is an easier read. Extracting from the chronicle while the
+transcript is alive is exactly the failure step 4 exists to prevent, and this path must not become the
+loophole for it. Where neither the transcript nor a chronicle entry exists, there is nothing to process:
+say so and stop.
 
 **Claude Code docs (on-demand).** Input is a URL to a Claude Code release-notes or feature-docs page,
 handed in when a session references one. Canonical `source:` is the URL itself, normalized (strip
@@ -166,35 +180,9 @@ this.
   already captured — never by hashing or diffing the raw file. Tell the user plainly what already exists
   rather than re-proposing it.
 - **Not found:** this is a first pass. Proceed to inspection.
-- **Fuzzy match** (a source note with a similar but not identical `source:`, e.g. a renamed chronicle
-  file): stop and ask which is correct. Never guess at ledger identity — a wrong guess either duplicates
-  history or silently merges two distinct inputs.
-
-### A guard on overlapping tiers
-
-The session and chronicle tiers describe the same underlying events, and processing two views of one
-event is the fastest way to turn a single incident into three pieces of "corroborating" evidence — which
-then reads as a pattern the graph never actually saw twice.
-
-**Transcript over chronicle.** A chronicle entry is a post-hoc account of a session whose transcript
-usually still exists. The transcript is primary: it holds what actually happened, including the
-corrections and dead ends a chronicle compresses away, and it wasn't written by the agent whose blind
-spots the graph exists to catch. The chronicle is the lossy fallback. It earns processing on its own only
-when the transcript has been pruned, or when the entry's **Reflection** section says something the
-transcript couldn't — a reflection is authored, not recorded.
-
-Before processing a chronicle entry, check whether its session's transcript survives:
-
-```bash
-grep -l '"timestamp":"2026-07-15' ~/.claude/projects/*claude-code-plugins*/*.jsonl
-```
-
-If a transcript matches the entry's date, process the transcript instead and say so in the plan. If you
-process the chronicle anyway because its Reflection carries something distinct, extract **only** from the
-Reflection and state that constraint in the plan.
-
-Run this in the other direction too: when processing a session whose chronicle entry has already been
-processed, read what that entry's notes captured and extract only what's new.
+- **Fuzzy match** (a source note with a similar but not identical `source:`): stop and ask which is
+  correct. Never guess at ledger identity — a wrong guess either duplicates history or silently merges
+  two distinct inputs.
 
 ## 4. Inspect
 
