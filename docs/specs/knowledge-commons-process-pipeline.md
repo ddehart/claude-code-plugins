@@ -1,6 +1,8 @@
 # Knowledge Commons — The `/process` Pipeline Correction
 
-> **Version:** 1.2 · **Status:** cold-read clean, ready for a fresh implementing session · **Date:** 2026-07-26
+> **Version:** 1.2 · **Status:** cold-read clean, ready for a fresh implementing session · **Date:** 2026-07-28
+> **Parent spec:** [`knowledge-commons.md`](./knowledge-commons.md) (v1.0.1)
+> **Plugin version at draft:** knowledge-commons 0.5.0 → ships as 0.6.0
 >
 > **Implementation is for a fresh session, not the authoring one.** A session implementing its own spec
 > implements its intent rather than the document, so thin or misstated passages get papered over silently
@@ -9,8 +11,6 @@
 >
 > The authoring session is `session:f64160a1-e82b-4015-bd19-08331d49a995`. It is the subject of §6 step 6
 > and §7.3, and is not the session that will implement this.
-> **Parent spec:** [`knowledge-commons.md`](./knowledge-commons.md) (v1.0.1)
-> **Plugin version at draft:** knowledge-commons 0.5.0 → ships as 0.6.0
 
 ---
 
