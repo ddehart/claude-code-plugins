@@ -237,6 +237,17 @@ skill's conventions). Present it as `[y / edit / explain]`. One approval gates t
 no per-note confirmation after this point except the re-pause condition in step 6. The Todoist sink
 (step 7) and the promotion candidates (step 11) ride in this same plan, clearly marked.
 
+**The plan names the synthesis work.** Say which it will be: linking the chronicle entry that already
+exists for this session, or invoking `meta-claude:session-chronicle` to write one. Both are ordinary — a
+session chronicled at the time and processed later arrives with its synthesis written; a session
+processed fresh does not. It belongs here because what the chronicle covers is one of the things being
+approved, and because a write that never appears in the plan is a write escaping the one gate this
+pipeline rests on.
+
+**The plan also names what step 2 already wrote** — the source note, and the archived transcript or the
+inlined page. Preservation runs before this gate by design, so a plan that doesn't mention it leaves the
+reader unable to tell what has already landed and what this approval is actually deciding.
+
 ## 6. Run to completion
 
 Execute the approved plan in dependency order — notes that other notes will link to get written first
