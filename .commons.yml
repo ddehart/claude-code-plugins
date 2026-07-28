@@ -12,12 +12,18 @@ types:
     - { name: plugin, dir: entities/ }       # lookup notes for named plugins
     - { name: skill,  dir: entities/ }       # lookup notes for named skills
   reference:  { name: reference, dir: reference/ }
+  # The chronicle IS the session-level synthesis, so it sits on the output side of the pipeline,
+  # not the input side. dir: is outside graph.root on purpose: these entries already exist at
+  # this path and are adopted into the tier rather than re-authored inside knowledge/.
+  synthesis:
+    name: chronicle
+    dir: docs/chronicle/
+    produced-by: meta-claude:session-chronicle
 sources:
-  # Work sessions. The transcript is primary; the chronicle is the lossy fallback for sessions
-  # whose transcripts have been pruned. See the overlapping-tier guard in
-  # .claude/skills/process/SKILL.md section 3.
+  # Work sessions. One tier, because there is only one raw source for a session — the transcript.
+  # The chronicle entry describing that session is this pipeline's own output; see types.synthesis.
   - type: session
-    description: Full session transcript. Primary tier for work sessions.
+    description: Full session transcript. The raw material for work sessions.
     # Glob, not a single directory: worktree sessions land in a sibling project directory whose
     # slug carries the worktree suffix, and they must be queued too.
     path: ~/.claude/projects/*claude-code-plugins*/
@@ -28,21 +34,21 @@ sources:
     # worktree is created or removed, and a path key would make a second note for one session.
     identity: "session:{uuid}"
     resolver: meta-claude:session-export
-    export-to: .claude/session-exports/             # gitignored; derived artifact, never committed
-  - type: chronicle
-    description: Post-hoc session journal. Lossy by construction. Fallback when the transcript is gone.
-    path: docs/chronicle/
-    glob: "20*.md"
-    identity: repo-relative path
+    # Committed, not a scratch path. The predecessor here was a gitignored exports directory, and
+    # this graph's founding source note already points at a transcript that went with it.
+    archive: knowledge/sources/raw/
+    gate: public                                    # this repo is public — the preserve stage gates
   - { type: claude-code-docs, resolve: url }        # on-demand, hand-fed — no queue
 sinks:
   - { name: tasks, tool: td, project: "claude code marketplace", approval: batch }
 promotes-to: ~/Developer/commons
 generated:                                 # owned by /graph-patch — applied-delta state
   process:
-    template-version: 0.5.0
+    template-version: 0.6.0
     applied: [step4-explicit-negative, step8-collect-nonreporting, step9-stamp-gate,
-              step11-pull-target, step10-pending-patches, step10-entity-type-gap]
+              step11-pull-target, step10-pending-patches, step10-entity-type-gap,
+              preserve-stage, resolve-orphaned-synthesis, extract-from-raw,
+              synthesis-in-plan, synthesis-write]
   knowledge-graph:
-    template-version: 0.1.8
-    applied: []
+    template-version: 0.6.0
+    applied: [synthesis-is-sibling]
