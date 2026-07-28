@@ -256,6 +256,15 @@ genuine ambiguity or a conflict with the existing record (the plan said one thin
 write, turns out to already say something incompatible). Creating a new entity, attractor, or note that
 simply doesn't exist yet is not ambiguity — proceed without pausing.
 
+**The chronicle is written here, as a sibling of extraction.** Whatever step 5 proposed — linking the
+existing entry, or invoking `meta-claude:session-chronicle` to write one — happens now, alongside the
+observations rather than before or after them. Neither feeds the other: both are made from the same
+transcript. Link it from the source note when it lands, and do not extract from it once it exists.
+
+Invoke `meta-claude:session-chronicle`; never reimplement it. It has its own rules about how it writes,
+what it asks, and in what order — including a reflection-ordering constraint that is its to enforce, not
+this skill's to second-guess. Call it and link what comes back.
+
 For each finding from step 4: if it supports an existing `pattern` or `decision`, follow the sibling
 `knowledge-graph` skill's **Capture** workflow and its **Extraction Workflow: chronicle** — write the
 `observation` under `observations/`, add it to the attractor's `## evidence` section, and update that
