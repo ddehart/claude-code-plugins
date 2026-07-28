@@ -101,3 +101,11 @@ reader does not mistake it for a post-fix artifact. The spec's §6 step 6 calls 
 over this same session once the fix lands; that run, not this one, is the first exercise of all four stages.
 
 [entity-type-gap: template deltas]
+
+**Correction, same day.** The entry above recorded `does a shared brief explain the original fanout symptom`
+as answered and ready to graduate, on a spawn-shape mechanism. Retracted while promoting: a claim reaching
+the commons from osu-builders-studio the same day reports 43 of 44 delegated workers silent across four
+briefs and two task shapes, which that mechanism cannot explain unless all of them were named teammates. The
+question is open again with two competing mechanisms and a stated discriminator. The evidence here was n=1
+named against n=5 unnamed inside one session, written up as settled — the same shape as three of the
+observations this very run recorded. Caught only because `/promote` re-fetches the target before writing.

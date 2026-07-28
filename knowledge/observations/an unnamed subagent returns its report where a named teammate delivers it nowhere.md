@@ -10,9 +10,12 @@ deliverable" — is true for the second and false for the first. A named cold-re
 ignored two follow-ups and an explicit stand-down, and was invisible to `TaskList` while `TaskStop`
 resolved it by name immediately. An unnamed re-spawn with the same brief returned a full report in about
 two minutes; four unnamed inspection readers later reported unprompted, the first fanout in this graph to
-do so. This is the mechanism behind the earlier four-silent-readers episode, which was already diagnosed as
-a briefing error: the brief was wrong only for one spawn shape, and the parameter that selects the shape
-looks like a label. Talking to the stalled agent never worked; terminating it did.
+do so. This looked like the mechanism behind the earlier four-silent-readers episode — the brief wrong only for
+one spawn shape, with the parameter that selects the shape looking like a label. It is not established.
+A claim promoted into the commons from osu-builders-studio the same day reports 43 of 44 delegated workers
+silent across four briefs and two task shapes, which the spawn-shape account cannot explain unless those
+workers were all named. Recorded here as one of two competing mechanisms; see the question for the
+discriminator. Talking to the stalled agent never worked; terminating it did.
 
 ## source
 - [[session f64160a1 — the process pipeline correction, specced not built]]

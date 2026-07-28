@@ -28,21 +28,30 @@ delta.
 
 *Opened 2026-07-22. No evidence either way; the deciding artifact was not part of this session's record.*
 
-## answer (2026-07-28) — ready to graduate
+## still open (2026-07-28) — two competing mechanisms, one discriminator
 
-Yes, and the mechanism is sharper than "a shared brief." The brief was not wrong in general; it was wrong
-for **one spawn shape**. `name:` on the Agent tool produces an in-process teammate that delivers through a
-mailbox, so "your final message is the deliverable" reaches nobody. Without `name:`, the final message *is*
-the return value and the same sentence is correct.
+**This section was first written as an answer and retracted the same day.** It claimed the cause is the
+*spawn shape*: `name:` on the Agent tool produces an in-process teammate delivering through a mailbox, so
+"your final message is the deliverable" reaches nobody, while an unnamed subagent's final message *is* the
+return value. Evidence from `session:f64160a1`, same instruction throughout — one named agent idle four
+times through two follow-ups and a stand-down; an unnamed re-spawn reporting in ~2 minutes; four unnamed
+readers all reporting unprompted.
 
-A near-controlled comparison ran in `session:f64160a1`, same instruction throughout: one named agent went
-idle four times and ignored two follow-ups and a stand-down; an unnamed re-spawn returned a full report in
-~2 minutes; four unnamed readers then all reported unprompted — the first fanout in this graph to do so.
+Retracted on reading the commons, where a claim promoted from **osu-builders-studio** the same day reports
+the opposite base rate: *"forty-three of forty-four workers finished holding findings and volunteered none
+of them, under four different briefs and two task shapes."* If a meaningful share of those 44 were plain
+unnamed subagents, the spawn-shape mechanism is wrong — and n=1 named against n=5 unnamed, inside one
+session, was never enough to settle it. The retracted answer is itself an instance of
+[[a plausible story arrests the investigation before the mechanism is found]], written by the same run that
+recorded three others.
 
-So the delta's rationale names the wrong mechanism: the fanout is not the cause, and the count of four was
-never the evidence it was read as. Per the note below, correcting it requires a superseding delta, since
-`step4-explicit-negative` is stamped here and pending in two other graphs. The instruction stands
-regardless.
+**The discriminator:** were osu-builders-studio's 43 silent workers named teammates or plain subagents?
+That is checkable in that project's transcripts and settles between the two mechanisms. Until it is
+checked, neither the delta's fanout rationale nor the spawn-shape account is established.
+
+The instruction stands under either — requiring an explicit negative is right regardless of why silence
+occurs. Only the stated reason is in question, and a correction still requires a superseding delta rather
+than an in-place rewrite.
 
 ## evidence
 - [[an unnamed subagent returns its report where a named teammate delivers it nowhere]]

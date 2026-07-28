@@ -14,5 +14,5 @@ Distinct from [[patterns]]: a pattern is a shape that recurs and has evidence; a
 unresolved matter that may have none yet. A question that accumulates enough evidence graduates — into a
 `decision` if it settles, or a `pattern` if what it reveals is a recurring shape.
 
-- [[does a shared brief explain the original fanout symptom]] — **answered 2026-07-28, ready to graduate**; the brief was wrong only for the named-teammate spawn shape, so the shipped rationale names the wrong mechanism and needs a superseding delta.
+- [[does a shared brief explain the original fanout symptom]] — **still open**; a spawn-shape answer was written and retracted the same day against contrary cross-domain evidence. Discriminator: were osu-builders-studio's 43 silent workers named teammates or plain subagents?
 - [[should the type-gap check cover attractor types, not just entity types]] — settled by whether a second graph hits the same wall in an uncovered tier.
