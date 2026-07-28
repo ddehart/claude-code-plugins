@@ -69,22 +69,78 @@ directories when a worktree is created or removed, and a path key would resolve 
 source note for the same session.
 
 Resolve by invoking `meta-claude:session-export` to render the JSONL into readable text — raw JSONL is
-unreadable at this size and burns context for nothing. Export to `.claude/session-exports/`, gitignored,
-named `YYYY-MM-DDThhmm-<short-description>.txt`; state that location when invoking the skill so it
-doesn't have to ask. The export is a derived artifact — the transcript under `~/.claude/projects/` is the
-real source. Transcripts are always large, so this tier always takes the subagent-fanout path in step 4.
+unreadable at this size and burns context for nothing. Name the rendered file
+`YYYY-MM-DDThhmm-<short-description>.txt` and state its destination when invoking the skill so it doesn't
+have to ask. Transcripts are always large, so this tier always takes the subagent-fanout path in step 4.
 
-This is the one place a source note deviates from "preserve the raw material": a multi-megabyte
-transcript can't live in a note, so a session's source note holds its identity, date, a one-line
-description, the `processed:` stamp, and a pointer to the transcript path — not the body.
+### Preserve — write the source note, keep the raw material
 
-**That pointer can dangle, and already has.** Transcripts get pruned; when one goes, the material a
-normal source note would have preserved goes with it. This graph's founding source note,
-`session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f`, already points at a transcript that no longer exists.
-Two things follow. Capture a little more than feels necessary from a session, since there may be no
-second look. And when a transcript is gone, the chronicle entry for that date is the recourse — which is
-the whole reason the chronicle tier survives as a fallback rather than being dropped in favor of
-transcripts.
+Before anything is inspected, write the source note and put the raw material somewhere it will still be
+there in a year. This pipeline used to have no such step — step 3 searched for a source note and step 9
+stamped one, and nothing created one. For the docs tier the gap is invisible, because a fetched page is
+small enough to inline and an implementer fills in the obvious. For a session it is not.
+
+**Sessions archive; docs pages inline.**
+
+- **Session.** A multi-megabyte transcript cannot live inside a note. The rendered export is written to
+  `knowledge/sources/raw/`, **committed with the repo**, and the source note carries identity, date, a
+  one-line description, the `processed:` stamp, and an `archive:` pointer to that file.
+- **Claude Code docs.** Small and self-contained: what mattered from the fetched page goes verbatim into
+  the body of the source note under `sources/`, with no separate archive.
+
+**The archive is committed, and that is the whole fix.** Its predecessor was `.claude/session-exports/`,
+gitignored as a derived artifact — and a directory outside version control is precisely how a source
+note's pointer comes to dangle. This graph's founding source note,
+`session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f`, points at a transcript that no longer exists; everything
+a source note is supposed to preserve went with it, and nothing announced the loss. An archive under
+`knowledge/` is versioned and backed up wherever this repo is.
+
+**This stage writes before the step-5 plan is approved, deliberately.** Every other write in the run
+waits for that gate. Preservation does not, because it is the one stage whose omission destroys
+something: a run abandoned at plan review should still have kept the transcript. It writes the source
+note and the archived file — never observations, never attractors, never the stamp. The `processed:`
+stamp goes on at step 9, so an abandoned run leaves an unstamped source note, which is the recoverable
+state.
+
+It writes; it does not stage or commit. The archived file lands in the working tree and this repo's
+normal flow commits it, so the raw material rides in the same commit as the notes the run produced.
+
+**Preserving twice must not overwrite.** A re-run resolves to the same `session:{uuid}` and arrives back
+here. If a source note already carries this `source:`, leave it alone but for anything genuinely missing
+(an `archive:` pointer it lacks); never replace its body, and never touch its `processed:` history. If
+the archived file already exists, leave it. Step 3 reads that history and decides what this run has left
+to do.
+
+### The gate before anything is archived
+
+**This repository is public.** That is the assumption this gate was written under, stated here rather
+than left to be inferred — a repo that is private today can be opened later and no run would notice. Two
+checks run over the rendered export, and **both must pass** before the file is written into
+`knowledge/sources/raw/`.
+
+1. **The floor.** Run `plugins/knowledge-commons/scripts/scan-secrets.sh` over the rendered export. (The
+   repo-relative path is deliberate: this project *is* the plugin's source, so the working copy is always
+   the current scan, where a path into the installed plugin cache would name whatever version happened to
+   be installed.) It is a fixed scan for credential shapes — private-key blocks, known token prefixes,
+   credential assignments carrying a real value, connection strings with a password, `Authorization:`
+   headers with a bearer value. It exits non-zero on a hit **and** non-zero on its own failure, and here
+   those mean the same thing: **stop.** No archive file, no `archive:` pointer, nothing written. A scan
+   that could not run is not a scan that passed.
+2. **The read-through.** Hand the rendered export to a subagent to read for what patterns cannot catch:
+   third-party and client names, personal details about anyone who did not consent to appearing in a
+   public repo, unreleased plans, anything whose sensitivity is semantic rather than shaped. Patterns
+   miss meaning; an agent read is judgment that varies run to run and cannot be proven to work. Neither
+   half is sufficient alone, which is why there are two.
+
+**Resolve each hit on its own**, with its surrounding context shown, as **redact** (replace the value
+with a marker and archive the rest), **withhold** (this transcript is not archived at all), or **accept**
+(a false positive). Record every redaction and every withholding on the source note, so a degraded
+archive says so in the graph instead of looking complete. Blanket-withholding throws away a whole session
+over one false positive; blanket-accepting is not a gate.
+
+**If the hits cannot be put to a human — a non-interactive invocation, an unattended run — withhold.**
+Do not archive on the assumption that someone will review it later. This repo is public and the failure
+is irreversible: git history, GitHub's caches, and forks all outlive a later deletion.
 
 **Chronicle (fallback).** Input is a path under `docs/chronicle/` matching `20*.md`, or bare text naming
 a date the queue can resolve to that path. Canonical `source:` is the repo-relative path
