@@ -28,6 +28,25 @@ delta.
 
 *Opened 2026-07-22. No evidence either way; the deciding artifact was not part of this session's record.*
 
+## answer (2026-07-28) — ready to graduate
+
+Yes, and the mechanism is sharper than "a shared brief." The brief was not wrong in general; it was wrong
+for **one spawn shape**. `name:` on the Agent tool produces an in-process teammate that delivers through a
+mailbox, so "your final message is the deliverable" reaches nobody. Without `name:`, the final message *is*
+the return value and the same sentence is correct.
+
+A near-controlled comparison ran in `session:f64160a1`, same instruction throughout: one named agent went
+idle four times and ignored two follow-ups and a stand-down; an unnamed re-spawn returned a full report in
+~2 minutes; four unnamed readers then all reported unprompted — the first fanout in this graph to do so.
+
+So the delta's rationale names the wrong mechanism: the fanout is not the cause, and the count of four was
+never the evidence it was read as. Per the note below, correcting it requires a superseding delta, since
+`step4-explicit-negative` is stamped here and pending in two other graphs. The instruction stands
+regardless.
+
+## evidence
+- [[an unnamed subagent returns its report where a named teammate delivers it nowhere]]
+
 ## related
 - [[justifying prose drifts from the thing it justifies]]
 - [[a plausible story arrests the investigation before the mechanism is found]]

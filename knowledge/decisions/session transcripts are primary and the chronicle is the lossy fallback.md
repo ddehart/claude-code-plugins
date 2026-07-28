@@ -5,6 +5,17 @@ tags: [knowledge-commons, process, sources]
 
 # session transcripts are primary and the chronicle is the lossy fallback
 
+> **Superseded 2026-07-28** by
+> [[processing preserves the raw and synthesizes for a human, and extracts from the raw]].
+>
+> The premises below hold; the framing does not. A chronicle is not a *source tier* at all — it is the
+> synthesis a run produces, and treating it as a competing input is what required the primary/fallback
+> ordering and the overlapping-tier guard this note argues for. The pipeline could not produce a synthesis,
+> so the synthesis was placed on the input side and this note wrote the arrangement up as intentional.
+>
+> Kept as design history, unedited below. It is the clearest instance of
+> [[a workaround written up as a decision stops reading as a workaround]] this graph has.
+
 A chronicle entry is a post-hoc account written by the agent whose blind spots the graph exists to catch,
 and it compresses away exactly the corrections and dead ends that turn out to matter. The transcript holds
 what happened; the chronicle holds what was remembered about it.

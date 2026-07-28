@@ -12,10 +12,11 @@ there, not only in the instance. In this session a conventions doc showed map fi
 fix corrected the example and made the scaffold step state the requirement explicitly, rather than
 patching only the generated file.
 
-*One witness (2026-07-15). Open.*
+*Two witnesses (2026-07-15, 2026-07-26). Open.*
 
 ## evidence
 - [[the instantiator faithfully reproduced a bare-heading example from its own conventions doc]]
+- [[the generator's own instruction would have regenerated the defect just fixed]]
 
 ## related
 - [[ambiguous prose in an LLM-executed skill is a correctness bug]]

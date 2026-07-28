@@ -60,3 +60,44 @@ Coverage is partial by construction: the session was still live when processed, 
 mid-conversation. Recorded in the source note's stamp rather than implied away.
 
 [patch-check-suggested] — `/graph-patch` ran today; all six deltas applied and stamped at 0.5.0.
+
+## 2026-07-28 — session f64160a1: the pipeline correction, specced not built
+
+Processed the three-day session that diagnosed why this graph's `/process` pipeline was inverted. Exported
+via `meta-claude:session-export` (98 KB / 13,964 words), inspected by four subagent readers, one per signal
+class.
+
+**All four reported explicitly and unprompted — the first fanout in this graph to do so.** The difference
+was the spawn shape: they were created without `name:`, so their final message is the return value. Earlier
+in the same session a *named* cold-read agent went idle four times, ignored two follow-ups and a stand-down,
+and was invisible to `TaskList` while `TaskStop` resolved it by name at once. That answers the open question
+`does a shared brief explain the original fanout symptom`: yes, but the mechanism is narrower than "a shared
+brief" — the brief was wrong only for one spawn shape. The question is marked ready to graduate, and the
+correction needs a superseding delta rather than an in-place rewrite, since `step4-explicit-negative` is
+stamped here and pending in two other graphs. Task filed.
+
+Written: 1 decision, 1 supersession, 1 pattern, 8 observations. Evidence added to five existing patterns and
+one open question. The superseded decision — `session transcripts are primary and the chronicle is the lossy
+fallback` — is kept unedited under a banner; it is the clearest instance this graph has of the new pattern
+`a workaround written up as a decision stops reading as a workaround`.
+
+Witness counts on all five updated patterns went from one to **two**, not more. Every new instance came from
+this single session, and instances within one session are correlated evidence, not independent witnesses.
+`a plausible story arrests the investigation` contributed three instances from this one session and is
+annotated to say so.
+
+Three of the eight observations record failures in the session's own output, found by the readers and
+verified against the repo before recording: a spec revision log left out of order by a scripted
+string-insert (fixed in this run); a scoped `find` whose empty result was reported to the user as "no
+transcript exists" when the file sat one directory up; and the reference model the whole spec corrects
+toward, never opened despite being on disk throughout. That last one is a task, not just a note — the
+spec's central premise depends on it.
+
+`maps/sources.md` was missing the previous run's source note as well as this one; both backfilled.
+
+This run used the **pre-fix pipeline** on the session that diagnosed it — no preservation stage, export to
+the gitignored directory the spec retires. The source note carries `pre-fix-pipeline: true` so a later
+reader does not mistake it for a post-fix artifact. The spec's §6 step 6 calls for a second `/process` run
+over this same session once the fix lands; that run, not this one, is the first exercise of all four stages.
+
+[entity-type-gap: template deltas]

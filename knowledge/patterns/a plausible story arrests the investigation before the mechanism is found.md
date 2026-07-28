@@ -22,10 +22,14 @@ The counter-practice is visible in the same record: several times a matching sto
 artifact opened instead. So the pattern is not that the check never fires — it is that **whether it fires
 is unforced**, and fluency at having just described the failure does not force it.
 
-*One witness (2026-07-22). Open.*
+*Two witnesses (2026-07-22, 2026-07-28) — the second contributing three distinct instances in one
+session, which is correlated evidence, not three witnesses. Open.*
 
 ## evidence
 - [[a plausible diagnosis of the entity gap was overturned by opening the file]]
+- [[a search scoped to one path returned nothing and was reported as absence]]
+- [[the reference model the spec corrects toward was never opened]]
+- [[a single-root-cause story explained every downstream artifact and was never checked against history]]
 
 ## related
 - [[naming a failure shape confers no immunity to it]]

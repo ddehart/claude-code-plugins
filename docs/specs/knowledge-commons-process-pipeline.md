@@ -417,6 +417,9 @@ verified to resolve exactly once in both the template and this project's generat
 
 | `id` | `file` | `anchor` | Substance |
 |---|---|---|---|
+| 1.2 | 2026-07-28 | Pinned the authoring session's UUID in §6 step 6, §7.3, and §5.3, and stated in the header that implementation is for a fresh session. "This session" meant the authoring session when written; an implementing session would have read all three as its own and processed the wrong transcript. |
+| 1.1 | 2026-07-26 | Independent cold read (implementer brief, no context). Four changes: the template's `source-tiers` SLOT instruction added to §5.1 &mdash; it would have generated the inversion into every new graph; `synthesis-stage` split into `synthesis-in-plan` + `synthesis-write` because its substance straddles the approval gate; the unanchored hand edit under `## 3. Find the ledger` called out; §7.1 given a pass criterion declared in advance. Cold read returned no blocking items. |
+| 1.0 | 2026-07-26 | Initial draft, from an interview settling twelve decisions. |
 | `preserve-stage` | process | `## 2. Resolve` | A stage that writes the source note and durably preserves the raw material, with the small/large form split (D1, D2) and the gate when the destination is public/shared (D5–D7). |
 | `resolve-orphaned-synthesis` | process | `## 2. Resolve` | The orphaned-synthesis path: extract from the synthesis only when raw is verifiably absent; mark the source note `raw: unavailable` (D10). Also removes any primary/fallback ordering between tiers covering the same events. |
 | `extract-from-raw` | process | `## 4. Inspect` | Where both exist, inspection reads the raw material; the synthesis may orient but never sources a finding (D4). |
@@ -531,6 +534,3 @@ Their owners run `/graph-patch` on their own cadence; nothing here reaches them 
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-07-26 | Initial draft, from an interview settling twelve decisions. |
-| 1.2 | 2026-07-28 | Pinned the authoring session's UUID in §6 step 6, §7.3, and §5.3, and stated in the header that implementation is for a fresh session. "This session" meant the authoring session when written; an implementing session would have read all three as its own and processed the wrong transcript. |
-| 1.1 | 2026-07-26 | Independent cold read (implementer brief, no context). Four changes: the template's `source-tiers` SLOT instruction added to §5.1 &mdash; it would have generated the inversion into every new graph; `synthesis-stage` split into `synthesis-in-plan` + `synthesis-write` because its substance straddles the approval gate; the unanchored hand edit under `## 3. Find the ledger` called out; §7.1 given a pass criterion declared in advance. Cold read returned no blocking items. |
