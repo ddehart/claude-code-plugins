@@ -1,6 +1,14 @@
 # Knowledge Commons — The `/process` Pipeline Correction
 
-> **Version:** 1.1 · **Status:** draft, cold-read clean, pending implementation · **Date:** 2026-07-26
+> **Version:** 1.2 · **Status:** cold-read clean, ready for a fresh implementing session · **Date:** 2026-07-26
+>
+> **Implementation is for a fresh session, not the authoring one.** A session implementing its own spec
+> implements its intent rather than the document, so thin or misstated passages get papered over silently
+> and stay wrong for the next reader. The §7.5 cold read simulated a fresh reader; executing §6 is the
+> real test. Everything needed is in this document and the files it names — start at §6 step 1.
+>
+> The authoring session is `session:f64160a1-e82b-4015-bd19-08331d49a995`. It is the subject of §6 step 6
+> and §7.3, and is not the session that will implement this.
 > **Parent spec:** [`knowledge-commons.md`](./knowledge-commons.md) (v1.0.1)
 > **Plugin version at draft:** knowledge-commons 0.5.0 → ships as 0.6.0
 
@@ -349,7 +357,7 @@ role got specified into four artifacts and implemented in none.
 |---|---|
 | `decisions/session transcripts are primary and the chronicle is the lossy fallback.md` | Mark superseded with a pointer (D12). Content unedited. |
 | `decisions/processing preserves the raw and synthesizes for a human, and extracts from the raw.md` | **New.** The four-stage model and why extraction reads raw. |
-| `observations/…` | New observations from this session's findings, written by the `/process` run over this session — not hand-authored here. |
+| `observations/…` | New observations from the authoring session's findings, written by the `/process` run over it (§6 step 6) — not hand-authored here. |
 | `maps/decisions.md` | Entry for the new decision; annotation on the superseded one. |
 
 ### 5.4 Concrete shapes
@@ -441,7 +449,10 @@ Order matters; each step depends on the one before.
 3. **`.commons.yml` and `.gitignore`** (§5.2).
 4. **`/graph-patch`** to apply the five deltas to this project's generated skills, under per-delta approval.
 5. **Graph notes** (§5.3): supersede the old decision, write the new one, update the map.
-6. **A real `/process` run** on this session, which is both the verification (§7) and the first exercise of
+6. **A real `/process` run** on **the authoring session,
+   `session:f64160a1-e82b-4015-bd19-08331d49a995`** — not on whatever session performs the
+   implementation. That transcript holds the diagnosis this spec came from; an implementing session's own
+   transcript holds only the implementation. This is both the verification (§7) and the first exercise of
    all four stages.
 
 **Already-processed sources are not reprocessed** (N3). The two existing source notes keep their stamps.
@@ -473,7 +484,8 @@ commits them — so textual review is insufficient for it.
 2. **False-positive path.** Run the gate against a real session export and confirm hits are presented with
    context and individually resolvable (D7). `.claude/session-exports/` is empty and being retired, so
    export a session to a scratch path for this test rather than expecting one to be there.
-3. **End-to-end run.** `/process` this session. It must: write a source note, archive the transcript through
+3. **End-to-end run.** `/process session:f64160a1-e82b-4015-bd19-08331d49a995` (the authoring session, per
+   §6 step 6 — not the implementing one). It must: write a source note, archive the transcript through
    the gate, link or write the chronicle as synthesis, extract evidence from the transcript, and stamp. Each
    of the four stages must be individually observable in the run's output.
 4. **Delta resolution.** After `/graph-patch`, confirm all six pre-existing deltas still resolve against the
@@ -520,4 +532,5 @@ Their owners run `/graph-patch` on their own cadence; nothing here reaches them 
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-07-26 | Initial draft, from an interview settling twelve decisions. |
+| 1.2 | 2026-07-28 | Pinned the authoring session's UUID in §6 step 6, §7.3, and §5.3, and stated in the header that implementation is for a fresh session. "This session" meant the authoring session when written; an implementing session would have read all three as its own and processed the wrong transcript. |
 | 1.1 | 2026-07-26 | Independent cold read (implementer brief, no context). Four changes: the template's `source-tiers` SLOT instruction added to §5.1 &mdash; it would have generated the inversion into every new graph; `synthesis-stage` split into `synthesis-in-plan` + `synthesis-write` because its substance straddles the approval gate; the unanchored hand edit under `## 3. Find the ledger` called out; §7.1 given a pass criterion declared in advance. Cold read returned no blocking items. |
