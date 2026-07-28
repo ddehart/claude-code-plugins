@@ -2,6 +2,7 @@
 genitor: "[[sources]]"
 source: "session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f"
 tags: [source, knowledge-commons]
+raw: "unavailable — transcript pruned before this graph had a preserve stage that archived one. Recorded 2026-07-28."
 processed:
   - date: 2026-07-15
     ran: [5 decisions, 8 patterns, 15 observations, 7 entities, 1 reference]
