@@ -471,8 +471,10 @@ Order matters; each step depends on the one before.
    all four stages.
 
 **Already-processed sources are not reprocessed** (N3). The two existing source notes keep their stamps.
-The founding session's transcript is gone and stays gone; its source note gains `raw: unavailable`
-retroactively so the record is honest.
+The founding session's transcript **is not gone** (§1.1) — it is archived at
+`~/Developer/session-archive/`, and its source note should gain that pointer rather than a
+`raw: unavailable` marker. Migrating it into the graph's own raw archive is a first, well-understood
+exercise of the preserve stage, on material whose provenance is already known.
 
 **The nine existing chronicle entries** stop being queued as sources. Those whose transcripts survive are
 reachable by processing the transcript, which will find and link the chronicle as its synthesis. Those whose
