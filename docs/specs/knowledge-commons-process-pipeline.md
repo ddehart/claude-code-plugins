@@ -1,6 +1,6 @@
 # Knowledge Commons — The `/process` Pipeline Correction
 
-> **Version:** 1.2 · **Status:** cold-read clean, ready for a fresh implementing session · **Date:** 2026-07-28
+> **Version:** 1.3 · **Status:** implementation in flight on `feat/process-pipeline-correction` · **Date:** 2026-07-28
 > **Parent spec:** [`knowledge-commons.md`](./knowledge-commons.md) (v1.0.1)
 > **Plugin version at draft:** knowledge-commons 0.5.0 → ships as 0.6.0
 >
@@ -434,6 +434,7 @@ verified to resolve exactly once in both the template and this project's generat
 
 | `id` | `file` | `anchor` | Substance |
 |---|---|---|---|
+| 1.3 | 2026-07-28 | Corrected a factual claim that had become load-bearing: the founding transcript was never lost. §1.1's "already destroyed material" is withdrawn, and **§6's instruction to mark its source note `raw: unavailable` is reversed** — it is archived and now reachable, and migrating it through the gate is the recommended first exercise of the preserve stage. Also records a third defect as out of scope: the resolver globs a project slug, which assumes a session belongs to one project, and a cross-project session's transcript lands under whichever slug it happens to. |
 | 1.2 | 2026-07-28 | Pinned the authoring session's UUID in §6 step 6, §7.3, and §5.3, and stated in the header that implementation is for a fresh session. "This session" meant the authoring session when written; an implementing session would have read all three as its own and processed the wrong transcript. |
 | 1.1 | 2026-07-26 | Independent cold read (implementer brief, no context). Four changes: the template's `source-tiers` SLOT instruction added to §5.1 &mdash; it would have generated the inversion into every new graph; `synthesis-stage` split into `synthesis-in-plan` + `synthesis-write` because its substance straddles the approval gate; the unanchored hand edit under `## 3. Find the ledger` called out; §7.1 given a pass criterion declared in advance. Cold read returned no blocking items. |
 | 1.0 | 2026-07-26 | Initial draft, from an interview settling twelve decisions. |
