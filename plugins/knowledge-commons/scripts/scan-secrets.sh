@@ -14,10 +14,12 @@
 # Exit codes:
 #   0  clean — no credential shapes found
 #   1  hits  — at least one finding, listed on stdout
-#   2  the scan could not run (bad usage, unreadable file, missing grep)
+#   2  the scan could not run (bad usage, unreadable file, missing grep, bad pattern)
 #
 # Exit 1 and exit 2 mean the same thing to the caller: do not archive. The preserve
-# stage fails closed on any non-zero exit. A scan that cannot run is not a pass.
+# stage fails closed on any non-zero exit. A scan that cannot run is not a pass, and
+# that has to hold for a failure discovered *during* scanning, not only for one caught
+# before it starts — see "Failing closed" below.
 
 set -uo pipefail
 
@@ -45,36 +47,57 @@ for f in "$@"; do
   [ -r "$f" ] || die "cannot read: $f"
 done
 
+# --- what counts as a placeholder ------------------------------------------------
+#
+# A bracketed value (<your-key-here>), a shell or template reference ($VAR, ${VAR},
+# {{var}}), or a well-known dummy word is not a credential, and a gate that stops on
+# those trains its reader to click through.
+#
+# Quote characters are deliberately NOT in this list. They were, and it inverted the
+# gate: the value extracted from KEY="realsecret" begins with a quote, matched the
+# placeholder test, and was dropped — so quoting a credential made it invisible, which
+# is how most secrets are actually written in .env, YAML, JSON, and source. Quotes are
+# stripped from the value before this test instead.
+
+readonly PLACEHOLDER='([<{$[:space:]]|x{3,}|X{3,}|\*{3,}|\.\.\.|your[-_]|my[-_]|some[-_]|placeholder|example|changeme|change[-_]me|redacted|dummy|fake|sample|insert[-_]|todo|fixme|none|null|nil|true|false)'
+
 # --- patterns --------------------------------------------------------------------
 #
-# Each entry is "<label>|<ERE>". The label names the credential shape so a reader can
-# judge the finding without reverse-engineering the regex.
+# Three parallel arrays rather than a delimited string: every regex here contains "|"
+# as alternation, so any single-character field delimiter collides with the data.
 #
-# Placeholder rejection lives inside the assignment and Authorization patterns rather
-# than in a second pass: a value that is bracketed (<your-key-here>), a shell or
-# template reference ($VAR, ${VAR}, {{var}}), or one of the well-known dummy words is
-# not a credential, and a gate that stops on those trains its reader to click through.
+# Ordered most-specific first. A line already reported is not reported again by a
+# later pattern (see report()), so the label a reader sees is the most informative one.
 
-readonly PLACEHOLDER='([<{$"'"'"'[:space:]]|x{3,}|X{3,}|\*{3,}|\.\.\.|your[-_]|my[-_]|some[-_]|placeholder|example|changeme|change[-_]me|redacted|dummy|fake|sample|insert[-_]|todo|fixme|none|null|nil|true|false)'
+LABELS=()
+FLAGS=()
+REGEXES=()
 
-PATTERNS=(
-  "private key block|-----BEGIN( [A-Z0-9]+)* PRIVATE KEY-----"
-  "Anthropic API key (sk-ant-)|sk-ant-[A-Za-z0-9_-]{16,}"
-  "OpenAI-style API key (sk-)|(^|[^A-Za-z0-9_-])sk-[A-Za-z0-9]{20,}"
-  "GitHub personal access token (ghp_)|ghp_[A-Za-z0-9]{20,}"
-  "GitHub OAuth token (gho_)|gho_[A-Za-z0-9]{20,}"
-  "GitHub fine-grained PAT (github_pat_)|github_pat_[A-Za-z0-9_]{20,}"
-  "Slack token (xox*)|xox[baprs]-[A-Za-z0-9-]{10,}"
-  "AWS access key id (AKIA)|AKIA[0-9A-Z]{16}"
-  "connection string carrying a password|[a-zA-Z][a-zA-Z0-9+.-]*://[^[:space:]/:@]+:[^[:space:]/:@]+@[^[:space:]/]+"
-  "Authorization header with a bearer value|[Aa]uthorization[[:space:]]*:[[:space:]]*(Bearer|Basic|Token|token)[[:space:]]+[^[:space:]\"']{8,}"
-)
+add_pattern() { LABELS+=("$1"); FLAGS+=("$2"); REGEXES+=("$3"); }
 
-# Credential assignments are scanned separately from the table above, because "not a
-# placeholder" cannot be expressed in a POSIX ERE: the match is made here and the
-# captured value is then rejected against PLACEHOLDER.
+add_pattern "private key block"                 ""  '-----BEGIN( [A-Z0-9]+)* PRIVATE KEY-----'
+add_pattern "Anthropic API key (sk-ant-)"       ""  'sk-ant-[A-Za-z0-9_-]{16,}'
+add_pattern "GitHub token (ghp_/gho_/ghs_/ghu_)" "" 'gh[pousr]_[A-Za-z0-9]{20,}'
+add_pattern "GitHub fine-grained PAT"           ""  'github_pat_[A-Za-z0-9_]{20,}'
+add_pattern "Slack token (xox*)"                ""  'xox[baprs]-[A-Za-z0-9-]{10,}'
+add_pattern "AWS access key id (AKIA)"          ""  'AKIA[0-9A-Z]{16}'
+add_pattern "Google API key (AIza)"             ""  'AIza[A-Za-z0-9_-]{35}'
+add_pattern "Stripe key (sk_live/rk_live)"      ""  '[sr]k_(live|test)_[A-Za-z0-9]{16,}'
+# Hyphens allowed after sk-: current OpenAI keys are sk-proj-… and sk-svcacct-….
+add_pattern "OpenAI-style API key (sk-)"        ""  '(^|[^A-Za-z0-9_-])sk-[A-Za-z0-9_-]{20,}'
+add_pattern "JWT"                               ""  'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'
+add_pattern "connection string carrying a password" "" '[a-zA-Z][a-zA-Z0-9+.-]*://[^[:space:]/:@"]+:[^[:space:]/:@"]+@[^[:space:]/"]+'
+
+# These two carry a value that has to be checked against PLACEHOLDER, so they are
+# scanned separately below rather than from the arrays above.
+#
+# Both are case-insensitive and both tolerate a quote between the name and the
+# separator, because the material being scanned is rendered from JSON: a credential
+# appears as "ANTHROPIC_API_KEY": "…" far more often than as ANTHROPIC_API_KEY=….
 readonly ASSIGN_LABEL="credential assignment with a real value"
-readonly ASSIGN_RE='[A-Za-z_]*(KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL)[A-Za-z_]*[[:space:]]*[:=][[:space:]]*[^[:space:]]+'
+readonly ASSIGN_RE='[A-Za-z0-9_.-]*(KEY|TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|CREDENTIAL)[A-Za-z0-9_.-]*["'"'"']?[[:space:]]*[:=][[:space:]]*["'"'"']?[^[:space:],;}]+'
+readonly AUTH_LABEL="Authorization header with a bearer value"
+readonly AUTH_RE='authorization["'"'"']?[[:space:]]*[:=][[:space:]]*["'"'"']?(bearer|basic|token)[[:space:]]+[^[:space:]"'"'"',;}]{8,}'
 
 # --- scan ------------------------------------------------------------------------
 
@@ -82,22 +105,6 @@ findings=0
 # Lines already reported, as "|<file>:<lineno>|" segments. Bash 3.2 (the macOS system
 # shell) has no associative arrays, so membership is a substring test on one string.
 reported_lines="|"
-
-# Run one pattern over one file. grep exits 0 on a match, 1 on no match, and >1 on its
-# own failure — a bad regex, an unreadable file, a pattern eaten as an option. That
-# third case must stop the scan: a grep error that is discarded reads exactly like a
-# clean file, which is the failure this gate exists to prevent. (Found by the planted
-# secret in the §7.1 test: a pattern beginning with "-" was parsed as options, grep
-# exited 2, stderr was discarded, and a planted private key silently did not appear.)
-grep_lines() {
-  local re="$1" file="$2" out rc
-  out="$(grep -a -n -E -e "$re" -- "$file")"
-  rc=$?
-  if [ "$rc" -gt 1 ]; then
-    die "grep failed (exit $rc) while scanning $file for: $re"
-  fi
-  printf '%s' "$out"
-}
 
 already_reported() {
   case "$reported_lines" in
@@ -110,6 +117,7 @@ already_reported() {
 # flood the report; the file:line reference is what a reader follows to see the rest.
 report() {
   local label="$1" file="$2" lineno="$3" text="$4"
+  already_reported "$file" "$lineno" && return 0
   findings=$((findings + 1))
   reported_lines="${reported_lines}${file}:${lineno}|"
   printf '\n[%d] %s\n' "$findings" "$label"
@@ -117,14 +125,47 @@ report() {
   printf '    > %.200s\n' "$text"
 }
 
+# Strip the assignment's name and separator, then one leading quote, leaving the value.
+extract_value() {
+  printf '%s' "$1" | sed -E 's/^[^:=]*[:=][[:space:]]*//; s/^["'"'"']//'
+}
+
+is_placeholder() {
+  printf '%s' "$1" | grep -q -a -i -E -e "^$PLACEHOLDER"
+}
+
+# --- Failing closed --------------------------------------------------------------
+#
+# grep exits 0 on a match, 1 on no match, and >1 on its own failure — a malformed
+# regex, an unreadable file, a pattern eaten as an option.
+#
+# That third case MUST stop the scan, and making it do so is subtler than it looks.
+# The obvious factoring — a grep_lines() helper called as out="$(grep_lines …)" — is
+# broken: the helper runs inside a command substitution, so its `exit 2` terminates
+# only that subshell. The caller keeps going with an empty result, reads it as "no
+# match", and a pattern that never ran degrades to a clean pass with the secret still
+# in the file. That is the precise failure this gate exists to prevent, so the grep
+# and its status check are inlined in the main shell below, where die() can actually
+# stop the process. Do not refactor them into a function invoked via $( ).
+
 scan_file() {
-  local file="$1" entry label re out line lineno text value
+  local file="$1" i label re flags out rc line lineno text value
 
-  for entry in "${PATTERNS[@]}"; do
-    label="${entry%%|*}"
-    re="${entry#*|}"
+  i=0
+  while [ "$i" -lt "${#REGEXES[@]}" ]; do
+    label="${LABELS[$i]}"
+    flags="${FLAGS[$i]}"
+    re="${REGEXES[$i]}"
+    i=$((i + 1))
 
-    out="$(grep_lines "$re" "$file")"
+    if [ "$flags" = "i" ]; then
+      out="$(grep -a -n -i -E -e "$re" -- "$file")"
+    else
+      out="$(grep -a -n -E -e "$re" -- "$file")"
+    fi
+    rc=$?
+    [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $label"
+
     [ -z "$out" ] && continue
     while IFS= read -r line; do
       [ -z "$line" ] && continue
@@ -136,30 +177,49 @@ $out
 EOF
   done
 
-  # Credential assignments, with placeholder values rejected. This pattern is the
-  # catch-all, so a line one of the specific patterns above already flagged is skipped
-  # rather than reported twice — a duplicate inflates the finding count and gives a
-  # reader two things to resolve where there is one secret. Two *specific* shapes on one
-  # line still earn two findings; only the generic pattern defers.
-  out="$(grep_lines "$ASSIGN_RE" "$file")"
-  [ -z "$out" ] && return 0
-  while IFS= read -r line; do
-    [ -z "$line" ] && continue
-    lineno="${line%%:*}"
-    text="${line#*:}"
-    already_reported "$file" "$lineno" && continue
-    # Value = everything after the first : or = in the matched assignment.
-    value="$(printf '%s' "$text" | grep -a -o -E -e "$ASSIGN_RE" | head -1 | sed -E 's/^[^:=]*[:=][[:space:]]*//')"
-    [ -z "$value" ] && continue
-    if printf '%s' "$value" | grep -q -a -i -E -e "^$PLACEHOLDER"; then
-      continue
-    fi
-    # A value shorter than 8 characters is not a credential worth stopping a run over.
-    [ "${#value}" -lt 8 ] && continue
-    report "$ASSIGN_LABEL" "$file" "$lineno" "$text"
-  done <<EOF
+  # Credential assignments, with placeholder values rejected.
+  out="$(grep -a -n -i -E -e "$ASSIGN_RE" -- "$file")"
+  rc=$?
+  [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $ASSIGN_LABEL"
+  if [ -n "$out" ]; then
+    while IFS= read -r line; do
+      [ -z "$line" ] && continue
+      lineno="${line%%:*}"
+      text="${line#*:}"
+      already_reported "$file" "$lineno" && continue
+      value="$(printf '%s' "$text" | grep -a -o -i -E -e "$ASSIGN_RE" | head -1)"
+      value="$(extract_value "$value")"
+      [ -z "$value" ] && continue
+      is_placeholder "$value" && continue
+      # A value shorter than 8 characters is not a credential worth stopping a run over.
+      [ "${#value}" -lt 8 ] && continue
+      report "$ASSIGN_LABEL" "$file" "$lineno" "$text"
+    done <<EOF
 $out
 EOF
+  fi
+
+  # Authorization headers, same placeholder rejection.
+  out="$(grep -a -n -i -E -e "$AUTH_RE" -- "$file")"
+  rc=$?
+  [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $AUTH_LABEL"
+  if [ -n "$out" ]; then
+    while IFS= read -r line; do
+      [ -z "$line" ] && continue
+      lineno="${line%%:*}"
+      text="${line#*:}"
+      already_reported "$file" "$lineno" && continue
+      value="$(printf '%s' "$text" | grep -a -o -i -E -e "$AUTH_RE" | head -1 \
+               | sed -E 's/.*(bearer|basic|token)[[:space:]]+//I; s/^["'"'"']//')"
+      [ -z "$value" ] && continue
+      is_placeholder "$value" && continue
+      report "$AUTH_LABEL" "$file" "$lineno" "$text"
+    done <<EOF
+$out
+EOF
+  fi
+
+  return 0
 }
 
 printf 'scan-secrets: scanning %d file(s)\n' "$#"

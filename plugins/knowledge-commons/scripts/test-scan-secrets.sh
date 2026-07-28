@@ -9,12 +9,33 @@
 #
 # Exits 0 if every case passes, 1 otherwise.
 #
-# Why this exists as a file rather than a paragraph in a spec: the floor's whole claim
-# is that it is dumb, deterministic, and verifiable against a planted secret. On its
-# first run the scanner reported three findings and silently missed a planted private
-# key — a pattern beginning with "-" was parsed by grep as options, grep exited 2, and
-# the error was discarded, so the miss looked exactly like a clean pass. A preflight
-# that passes while the thing it guards is broken manufactures confidence.
+# ---------------------------------------------------------------------------------
+# Why this file is shaped the way it is
+#
+# Its first version had nine assertions and all nine stayed green while the scanner
+# was badly broken. Three defects survived it, each found by a review that executed
+# the scanner instead of reading it:
+#
+#   1. Quoting a credential made it invisible. KEY="realsecret" passed clean, because
+#      the extracted value began with a quote and the placeholder test treated a
+#      leading quote as a placeholder marker. Most secrets are written quoted.
+#   2. A pattern that failed to compile produced "clean" and exit 0. The failure
+#      handler ran inside a command substitution, so its exit killed only the subshell.
+#   3. Deleting the entire credential-assignment scan — one of the advertised shapes —
+#      left every assertion green.
+#
+# (3) is the one that permitted the other two, and it had a specific cause: all three
+# planted secrets in the positive fixture were ALSO caught by prefix patterns, so
+# "exactly 3 findings" held with the assignment path gone entirely. The suite proved
+# three regexes existed. It did not test the gate.
+#
+# Two rules follow, and they are why the cases below look the way they do:
+#
+#   - Every distinct code path needs a plant that ONLY that path can catch. A case
+#     that a second pattern also catches cannot fail when its path breaks.
+#   - Assert per-shape, never on the finding count alone. A count is satisfied by any
+#     three findings, including three from one pattern and none from the others.
+# ---------------------------------------------------------------------------------
 
 set -uo pipefail
 
@@ -30,57 +51,79 @@ fail() { printf '  FAIL  — %s\n' "$1"; failures=$((failures + 1)); }
 
 [ -x "$SCAN" ] || { printf 'scan-secrets.sh is not executable at %s\n' "$SCAN" >&2; exit 1; }
 
-# --- fixtures ---------------------------------------------------------------------
+# Assert that scanning a one-line file exits with the expected code.
+# $1 = description, $2 = expected exit code, $3 = file content
+expect_exit() {
+  local desc="$1" want="$2" content="$3" out rc
+  printf '%s\n' "$content" > "$TMP/case.txt"
+  out="$("$SCAN" "$TMP/case.txt" 2>&1)"; rc=$?
+  if [ "$rc" -eq "$want" ]; then
+    pass "$desc"
+  else
+    fail "$desc (wanted exit $want, got $rc)"
+  fi
+}
 
-cat > "$TMP/positive.txt" <<'FIXTURE'
-Session notes.
+# ---------------------------------------------------------------------------------
+# On the odd-looking "xox""b-…" splits below
+#
+# Fixture tokens are written as two adjacent quoted strings, which bash joins into one
+# word at runtime. The value the scanner sees is a complete, realistic token; the value
+# sitting in this file is not.
+#
+# This is not cosmetic. The first version used whole literals, and GitHub's push
+# protection rejected the branch — it read the fixtures as a live Slack token and a live
+# Stripe key. It was right to: they are exactly the shapes it exists to catch, which is
+# also why they make good fixtures. Do not "tidy" these back into single literals, and do
+# not resolve a future block by allowlisting the secret; split the literal instead.
+# ---------------------------------------------------------------------------------
 
-  ANTHROPIC_API_KEY=sk-ant-api03-Zx9QmTb7Lk2Wv4Rn8Ha1Cd6Ye0Uf3Ij5Ko7Pl9Qs2Tw4Xz6Ab8Cd
+# --- 1. Each shape, planted so ONLY its own path can catch it ---------------------
 
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
------END OPENSSH PRIVATE KEY-----
+printf 'each advertised shape, planted in isolation (spec §7.1)\n'
 
-  DATABASE_URL=postgres://appuser:hunter2correctbattery@db.internal.example.com:5432/app
-FIXTURE
+expect_exit "private key block"                1 '-----BEGIN OPENSSH PRIVATE KEY-----'
+expect_exit "Anthropic key in prose"           1 "pasted sk-""ant-api03-Zx9QmTb7Lk2Wv4Rn8Ha1Cd6Ye0Uf3"
+expect_exit "GitHub token in prose"            1 "token gh""p_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"
+expect_exit "AWS access key id in prose"       1 'id AKIAIOSFODNN7EXAMPLE'
+expect_exit "Slack token in prose"             1 "xox""b-123456789012-abcdefghijklmno"
+expect_exit "Stripe key in prose"              1 "pasted sk""_live_abcdefghijklmnopqrstuvwxyz012345"
+expect_exit "OpenAI sk-proj- key in prose"     1 "pasted sk-""proj-abcdefghijklmnopqrstuvwxyz012345"
+expect_exit "JWT in prose"                     1 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dBjftJeZ4CVPmB92K27uhbUJU1p1r'
+expect_exit "connection string with password"  1 'DATABASE_URL=postgres://appuser:hunter2correct@db.example.com:5432/app'
 
-cat > "$TMP/negative.txt" <<'FIXTURE'
-The docs example uses a placeholder, as they should:
-  API_KEY=<your-key-here>
+# The credential-assignment path. Each of these has NO recognized prefix, so nothing
+# else in the scanner can catch them — delete that path and these go red, which is
+# exactly what the first version of this suite failed to do.
+printf '\ncredential assignment — the path with no prefix to fall back on\n'
 
-We discussed how OpenAI keys start with the sk- prefix and Anthropic's with sk-ant-.
-  TOKEN=${GITHUB_TOKEN}
-  SECRET=changeme
-FIXTURE
+expect_exit "bare assignment"                  1 'DB_PASSWORD=Tr0ub4dor3notaplaceholder'
+expect_exit "double-quoted value"              1 'DB_PASSWORD="Tr0ub4dor3notaplaceholder"'
+expect_exit "single-quoted value"              1 "DB_PASSWORD='Tr0ub4dor3notaplaceholder'"
+expect_exit "shell export, quoted"             1 'export API_SECRET="Tr0ub4dor3notaplaceholder"'
+expect_exit "JSON key/value"                   1 '  "SERVICE_PASSWORD": "abcdefghijklmnopqrstuvwxyz"'
+expect_exit "YAML, lowercase key"              1 'password: hunter2correcthorsebattery'
+expect_exit "lowercase with spaces"            1 "db_password = 'sup3rs3cr3tvaluehere'"
 
-# --- cases ------------------------------------------------------------------------
+printf '\nAuthorization header\n'
 
-printf 'planted-secret test (spec §7.1)\n'
+expect_exit "bearer with a real value"         1 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz'
+expect_exit "JSON-shaped authorization"        1 '{"authorization":"Bearer abcdefghijklmnopqrstuvwx"}'
+expect_exit "bearer with a placeholder"        0 'Authorization: Bearer <your-token-here>'
 
-out="$("$SCAN" "$TMP/positive.txt" 2>&1)"; rc=$?
-[ "$rc" -ne 0 ] && pass "positive fixture exits non-zero (got $rc)" \
-                || fail "positive fixture must exit non-zero, got $rc"
+# --- 2. Things that must NOT trip it ---------------------------------------------
 
-# Each planted secret must surface as its own finding. Counting findings alone is not
-# enough — three findings can be two secrets and a duplicate, which is what the first
-# broken version produced.
-for shape in "private key block" "Anthropic API key" "connection string carrying a password"; do
-  printf '%s' "$out" | grep -q "$shape" \
-    && pass "reports: $shape" \
-    || fail "did not report: $shape"
-done
+printf '\nnegative cases — placeholders and prose are not credentials\n'
 
-count="$(printf '%s' "$out" | grep -c '^\[[0-9]*\]')"
-[ "$count" -eq 3 ] \
-  && pass "exactly 3 distinct findings, no duplicates" \
-  || fail "expected 3 distinct findings, got $count"
+expect_exit "bracketed placeholder"            0 'API_KEY=<your-key-here>'
+expect_exit "template reference"               0 'TOKEN=${GITHUB_TOKEN}'
+expect_exit "dummy word"                       0 'SECRET=changeme'
+expect_exit "prose naming key prefixes"        0 'OpenAI keys start with sk- and Anthropic keys with sk-ant-.'
+expect_exit "short value"                      0 'KEY=abc'
 
-out="$("$SCAN" "$TMP/negative.txt" 2>&1)"; rc=$?
-[ "$rc" -eq 0 ] \
-  && pass "negative fixture exits zero (placeholders and prose are not credentials)" \
-  || fail "negative fixture must exit zero, got $rc: $out"
+# --- 3. Fail-closed -------------------------------------------------------------
 
-printf '\nfail-closed test\n'
+printf '\nfail-closed — a scan that cannot run is not a scan that passed\n'
 
 "$SCAN" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "no arguments exits 2" || fail "no arguments must exit 2, got $rc"
@@ -90,6 +133,21 @@ printf '\nfail-closed test\n'
 
 "$SCAN" "$TMP" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "directory argument exits 2" || fail "directory must exit 2, got $rc"
+
+# The regression test for defect (2) above. A maintainer adding a pattern typos the
+# regex; grep exits 2 on it. The scan must stop, NOT report clean — even though the
+# only secret in the file is one that the broken pattern was the one to catch.
+BROKEN="$TMP/broken-scan.sh"
+sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" \"\" 'sk_live_[A-Za-z0-9(]{20,'|" \
+  "$SCAN" > "$BROKEN"
+chmod +x "$BROKEN"
+printf 'pasted from the dashboard: %s\n' "sk""_live_abcdefghijklmnopqrstuvwxyz012345" > "$TMP/bare-secret.txt"
+"$BROKEN" "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
+if [ "$rc" -eq 2 ]; then
+  pass "a pattern that fails to compile exits 2, with the secret still unreported"
+else
+  fail "a broken pattern must exit 2, got $rc — a failed scan is reporting clean"
+fi
 
 # --- result -----------------------------------------------------------------------
 

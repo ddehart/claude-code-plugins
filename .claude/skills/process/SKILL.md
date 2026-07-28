@@ -81,8 +81,9 @@ source note for the same session.
 
 Resolve by invoking `meta-claude:session-export` to render the JSONL into readable text — raw JSONL is
 unreadable at this size and burns context for nothing. Name the rendered file
-`YYYY-MM-DDThhmm-<short-description>.txt` and state its destination when invoking the skill so it doesn't
-have to ask. Transcripts are always large, so this tier always takes the subagent-fanout path in step 4.
+`YYYY-MM-DDThhmm-<short-description>.txt` and send it to a **scratch directory outside the repo**, not
+to `knowledge/sources/raw/` — the gate below runs on it there, and only a passing export is moved into
+the archive. State that destination when invoking the skill so it doesn't have to ask. Transcripts are always large, so this tier always takes the subagent-fanout path in step 4.
 
 **The chronicle is not a source tier.** A chronicle entry is the session-level synthesis — this
 pipeline's own output, written for a human reader — so it lives in `types.synthesis`, not in `sources:`.
@@ -156,6 +157,12 @@ to do.
 than left to be inferred — a repo that is private today can be opened later and no run would notice. Two
 checks run over the rendered export, and **both must pass** before the file is written into
 `knowledge/sources/raw/`.
+
+**Export to a scratch path first, never straight into `knowledge/sources/raw/`.** Tell
+`meta-claude:session-export` to write outside the repo — a temp directory — and scan it there. A
+transcript exported directly into the archive is already in the committed tree before the gate has run,
+and "withhold" then means deleting a file rather than never writing one. It moves into
+`knowledge/sources/raw/` only once both checks pass.
 
 1. **The floor.** Run `plugins/knowledge-commons/scripts/scan-secrets.sh` over the rendered export. (The
    repo-relative path is deliberate: this project *is* the plugin's source, so the working copy is always

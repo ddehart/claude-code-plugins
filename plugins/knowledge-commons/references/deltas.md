@@ -454,3 +454,17 @@ not on the new stage's own heading** — `## 2. Resolve` rather than `## 3. Pres
 records that every live graph has been patched through 0.6.0. A delta anchored on `## 3. Preserve`
 resolves in a freshly generated graph and silently fails to resolve in every patched one, which is the
 failure this log's skip-loudly rule exists to make visible rather than to rely on.
+
+**The divergence runs in both directions, and the reverse arm is the easier one to forget.** Nine of the
+twelve anchors above — every pre-0.6.0 `process` entry, plus the three new ones anchored on
+`## 4. Inspect`, `## 5. Propose the plan` and `## 6. Run to completion` — name headings the 0.6.0
+template no longer has, because inserting two stages renumbered everything after `## 2. Resolve`. They
+still resolve in every *already-generated* graph, which is the population they exist to patch, so this
+is not a defect in them.
+
+What it means in practice: **`applied:` is what protects a freshly generated graph, not anchor
+resolution.** `graph-init` stamps every current delta id as applied at generation time precisely because
+the prose is rendered from current templates, so those deltas are never selected for it. Two paths can
+still reach an anchor that will not resolve — `/graph-patch`'s 0.1.8 bootstrap, and a retry after a
+delta failed and stayed unstamped. Both skip loudly and neither misapplies, but a reader seeing
+`anchor not found` on a 0.6.0-generated graph should recognize it as this, not as a corrupted skill.

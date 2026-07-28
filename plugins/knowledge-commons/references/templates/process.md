@@ -86,7 +86,12 @@ write-up of that recording, a transcript and a journal entry about that session 
 primary/secondary ordering and a double-counting guard between them. That arrangement is the specific
 defect this template was corrected for: it puts a lossy distillation on the input side, where evidence
 gets extracted from it. Say plainly that the distillation belongs in types.synthesis, and generate one
-source tier for the raw material. -->
+source tier for the raw material.
+Note that the orchard example below has a chronicle as its SOURCE tier, and that is correct rather than
+the inversion: an orchard logbook is the primary record of the work, with nothing underneath it to be a
+distillation OF. What makes a document a synthesis is that some other artifact recorded the same event
+first — a transcript, a recording. Ask which one the material is before placing the tier; "it's a
+chronicle" does not answer it. -->
     Example (orchard has one tier, chronicle):
     **Chronicle.** Input is a path under `docs/chronicle/` matching `20*.md`, or bare text that names a
     date the queue can resolve to that path. Canonical `source:` is the repo-relative path
@@ -152,6 +157,12 @@ This graph's archive was generated on the assumption that its destination is **{
 stated here rather than left to be inferred, because it is the assumption that put this gate in the
 pipeline, and a repository that is private today can be opened later with no run noticing. Two checks
 run over the rendered material, and **both must pass** before the archive file is written.
+
+**Render to a scratch path first, never straight into the archive.** The material is scanned where it
+lands, and it must not land inside the archive directory until it has passed — a transcript written
+there and scanned afterwards is already in the committed tree, and "withhold" then means deleting a
+file rather than never writing one. Render outside the graph (a temp directory), scan there, and move
+it into the archive only once both checks pass.
 
 1. **The floor.** Run `{scan-secrets-path}` over the rendered material. It is a fixed scan for
    credential shapes — private-key blocks, known token prefixes, credential assignments with a real
@@ -286,6 +297,15 @@ run step.
 The plan also names what the preserve stage already wrote — the source note, and the archived file or
 the inlined material — so the reader can see what landed before this gate, and what the gate is
 actually deciding.
+
+<!-- SLOT: synthesis-in-plan — CONDITIONAL, on the same condition as the synthesize section: include
+this paragraph only if .commons.yml declares types.synthesis. Generate it together with that section
+and its write paragraph — all three or none. -->
+
+**The plan names the synthesis work too.** Say which it will be: linking the `{synthesis-type}` that
+already exists for this source, or invoking `{synthesis-producer}` to write one. It belongs in the plan
+because what the synthesis covers is one of the things being approved, and because a write that never
+appears in the plan is a write escaping the one gate this pipeline rests on.
 
 ## 8. Run to completion
 
