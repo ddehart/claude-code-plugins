@@ -91,7 +91,11 @@ Note that the orchard example below has a chronicle as its SOURCE tier, and that
 the inversion: an orchard logbook is the primary record of the work, with nothing underneath it to be a
 distillation OF. What makes a document a synthesis is that some other artifact recorded the same event
 first — a transcript, a recording. Ask which one the material is before placing the tier; "it's a
-chronicle" does not answer it. -->
+chronicle" does not answer it.
+Ask it about the world, not about the config: whether anything else recorded the same event, whether or
+not the interview declared it as a tier. A project keeping a journal of sessions whose transcripts exist
+but were never mentioned satisfies "nothing underneath it" on paper while it is false in fact, and
+generates the inversion anyway. -->
     Example (orchard has one tier, chronicle):
     **Chronicle.** Input is a path under `docs/chronicle/` matching `20*.md`, or bare text that names a
     date the queue can resolve to that path. Canonical `source:` is the repo-relative path
@@ -117,7 +121,8 @@ inline, which are exactly the ones worth keeping.
 the two forms it takes and where its raw archive is (the tier's archive: path from .commons.yml), or
 state plainly that this tier inlines and has no archive. Name the concrete directory, not "the archive".
 If a tier's material needs rendering before it can be archived (a JSONL transcript through an export
-skill, say), name the skill and say that the rendered form is what gets archived and scanned. -->
+skill, say), name the skill, and say that the rendered form is what gets scanned and then archived — in
+that order, and to a scratch path first, never rendered into the archive directory and scanned there. -->
     Example (orchard, one tier, chronicle): Chronicle entries are a few hundred words, so they inline —
     the source note under `sources/` carries the entry's text verbatim and there is no archive directory.
 

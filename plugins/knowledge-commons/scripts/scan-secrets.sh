@@ -58,6 +58,9 @@ done
 # placeholder test, and was dropped — so quoting a credential made it invisible, which
 # is how most secrets are actually written in .env, YAML, JSON, and source. Quotes are
 # stripped from the value before this test instead.
+#
+# Both halves are load-bearing on purpose and either one alone prevents the defect, so
+# removing the "redundant" one looks safe and passes the suite. Keep both.
 
 readonly PLACEHOLDER='([<{$[:space:]]|x{3,}|X{3,}|\*{3,}|\.\.\.|your[-_]|my[-_]|some[-_]|placeholder|example|changeme|change[-_]me|redacted|dummy|fake|sample|insert[-_]|todo|fixme|none|null|nil|true|false)'
 
@@ -66,8 +69,8 @@ readonly PLACEHOLDER='([<{$[:space:]]|x{3,}|X{3,}|\*{3,}|\.\.\.|your[-_]|my[-_]|
 # Three parallel arrays rather than a delimited string: every regex here contains "|"
 # as alternation, so any single-character field delimiter collides with the data.
 #
-# Ordered most-specific first. A line already reported is not reported again by a
-# later pattern (see report()), so the label a reader sees is the most informative one.
+# Ordered most-specific first, which is the order labels appear in a finding when one
+# line carries more than one shape (see report()).
 
 LABELS=()
 FLAGS=()
@@ -95,39 +98,58 @@ add_pattern "connection string carrying a password" "" '[a-zA-Z][a-zA-Z0-9+.-]*:
 # separator, because the material being scanned is rendered from JSON: a credential
 # appears as "ANTHROPIC_API_KEY": "…" far more often than as ANTHROPIC_API_KEY=….
 readonly ASSIGN_LABEL="credential assignment with a real value"
-readonly ASSIGN_RE='[A-Za-z0-9_.-]*(KEY|TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|CREDENTIAL)[A-Za-z0-9_.-]*["'"'"']?[[:space:]]*[:=][[:space:]]*["'"'"']?[^[:space:],;}]+'
+readonly ASSIGN_RE='[A-Za-z0-9_.-]*(KEY|TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|CREDENTIAL)[A-Za-z0-9_.-]*["'"'"']?[[:space:]]*[:=][[:space:]]*("[^"]*"|'"'"'[^'"'"']*'"'"'|[^[:space:],;}]+)'
 readonly AUTH_LABEL="Authorization header with a bearer value"
 readonly AUTH_RE='authorization["'"'"']?[[:space:]]*[:=][[:space:]]*["'"'"']?(bearer|basic|token)[[:space:]]+[^[:space:]"'"'"',;}]{8,}'
 
 # --- scan ------------------------------------------------------------------------
 
-findings=0
-# Lines already reported, as "|<file>:<lineno>|" segments. Bash 3.2 (the macOS system
-# shell) has no associative arrays, so membership is a substring test on one string.
-reported_lines="|"
+# Findings accumulate as three parallel arrays keyed on "<file>:<lineno>" — bash 3.2
+# (the macOS system shell) has no associative arrays.
+#
+# One finding per LINE, carrying EVERY shape found on it. Reporting one line once keeps
+# the report resolvable under D7, since a reader redacts or withholds a line as a unit.
+# Carrying every label is the other half, and it is not cosmetic: a line holding a
+# GitHub token and a Slack token reported under one label, with a context window that
+# may not even show the labelled one, cannot be resolved correctly from the report —
+# you redact what you can see and leave the reported secret in place.
+F_KEYS=()
+F_LABELS=()
+F_TEXTS=()
 
-already_reported() {
-  case "$reported_lines" in
-    *"|$1:$2|"*) return 0 ;;
-    *) return 1 ;;
-  esac
+# Index of an already-recorded line, printed on stdout; non-zero if absent.
+find_finding() {
+  local key="$1" i=0
+  while [ "$i" -lt "${#F_KEYS[@]}" ]; do
+    if [ "${F_KEYS[$i]}" = "$key" ]; then printf '%s' "$i"; return 0; fi
+    i=$((i + 1))
+  done
+  return 1
 }
 
-# Print one finding. Truncates the context line so a long transcript line does not
-# flood the report; the file:line reference is what a reader follows to see the rest.
 report() {
-  local label="$1" file="$2" lineno="$3" text="$4"
-  already_reported "$file" "$lineno" && return 0
-  findings=$((findings + 1))
-  reported_lines="${reported_lines}${file}:${lineno}|"
-  printf '\n[%d] %s\n' "$findings" "$label"
-  printf '    %s:%s\n' "$file" "$lineno"
-  printf '    > %.200s\n' "$text"
+  local label="$1" file="$2" lineno="$3" text="$4" key idx
+  key="${file}:${lineno}"
+  if idx="$(find_finding "$key")"; then
+    case "; ${F_LABELS[$idx]}; " in
+      *"; $label; "*) ;;                                    # already noted on this line
+      *) F_LABELS[$idx]="${F_LABELS[$idx]}; $label" ;;
+    esac
+  else
+    F_KEYS+=("$key")
+    F_LABELS+=("$label")
+    F_TEXTS+=("$text")
+  fi
 }
 
-# Strip the assignment's name and separator, then one leading quote, leaving the value.
+# Strip the assignment's name and separator, then the surrounding quotes, leaving the
+# value. A QUOTED value is captured whole by ASSIGN_RE, delimiters and spaces included:
+# truncating at the first comma or space and then applying the 8-character floor below
+# discarded real credentials — PASSPHRASE="correct horse battery staple" measured as
+# "correct" and was dropped, while the keyword list advertises a shape that by
+# definition contains spaces.
 extract_value() {
-  printf '%s' "$1" | sed -E 's/^[^:=]*[:=][[:space:]]*//; s/^["'"'"']//'
+  printf '%s' "$1" | sed -E 's/^[^:=]*[:=][[:space:]]*//; s/^["'"'"']//; s/["'"'"']$//'
 }
 
 is_placeholder() {
@@ -186,7 +208,6 @@ EOF
       [ -z "$line" ] && continue
       lineno="${line%%:*}"
       text="${line#*:}"
-      already_reported "$file" "$lineno" && continue
       value="$(printf '%s' "$text" | grep -a -o -i -E -e "$ASSIGN_RE" | head -1)"
       value="$(extract_value "$value")"
       [ -z "$value" ] && continue
@@ -208,7 +229,6 @@ EOF
       [ -z "$line" ] && continue
       lineno="${line%%:*}"
       text="${line#*:}"
-      already_reported "$file" "$lineno" && continue
       value="$(printf '%s' "$text" | grep -a -o -i -E -e "$AUTH_RE" | head -1 \
                | sed -E 's/.*(bearer|basic|token)[[:space:]]+//I; s/^["'"'"']//')"
       [ -z "$value" ] && continue
@@ -228,10 +248,20 @@ for f in "$@"; do
   scan_file "$f"
 done
 
-if [ "$findings" -eq 0 ]; then
+if [ "${#F_KEYS[@]}" -eq 0 ]; then
   printf '\nscan-secrets: clean — no credential shapes found.\n'
   exit "$EXIT_CLEAN"
 fi
 
-printf '\nscan-secrets: %d finding(s). Resolve each one individually — redact, withhold, or accept as a false positive — before anything is archived.\n' "$findings"
+i=0
+while [ "$i" -lt "${#F_KEYS[@]}" ]; do
+  printf '\n[%d] %s\n' "$((i + 1))" "${F_LABELS[$i]}"
+  printf '    %s\n' "${F_KEYS[$i]}"
+  # Truncated so one long transcript line does not flood the report; the file:line
+  # reference is what a reader follows to see the rest.
+  printf '    > %.200s\n' "${F_TEXTS[$i]}"
+  i=$((i + 1))
+done
+
+printf '\nscan-secrets: %d finding(s). Resolve each one individually — redact, withhold, or accept as a false positive — before anything is archived.\n' "${#F_KEYS[@]}"
 exit "$EXIT_HITS"

@@ -400,11 +400,18 @@ For each template:
   to `${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh` the same way you stamp the resolved path to
   `references/graph-conventions.md` — the generated skill lives in the project and has no other way to
   find it.
-- **The synthesize section and its write paragraph are conditional on `types.synthesis`,** and they are
-  conditional *together*. Generate both or neither: a run step that writes a synthesis the plan never
-  proposed skips the approval gate, and a plan that proposes one the run never writes is a promise
-  nothing keeps. When generating them, fill in the synthesis type's name, its directory, and the
-  `produced-by:` skill. When omitting them, renumber the sections that follow rather than leaving a gap.
+- **Three pieces are conditional on `types.synthesis`, and they are conditional *together*.** Generate
+  all three or none:
+  1. the **synthesize section**, which checks for an existing synthesis and decides what to do,
+  2. the **paragraph in the plan step** naming which of those two it will be, and
+  3. the **write paragraph** in the run step, making it a sibling of extraction.
+
+  Count them before you generate. Omitting (2) is the easy mistake — it is one paragraph in a section
+  that is mostly about something else — and it is the one that breaks the pipeline's single invariant:
+  a run that writes a synthesis the plan never proposed has put a write outside the one approval gate.
+  Omitting (3) leaves a plan promising something nothing does. When generating, fill in the synthesis
+  type's name, its directory, and the `produced-by:` skill. When omitting all three, renumber the
+  sections that follow rather than leaving a gap.
 - For a graph with no sources (the commons), the knowledge-graph template's extraction-workflow
   section has no pipeline to describe: replace it with a short "How notes arrive" section — claims
   arrive via the plugin's `promote` skill carrying `domain:`, nothing is authored directly, and the

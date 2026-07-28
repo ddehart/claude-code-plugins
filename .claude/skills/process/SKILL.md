@@ -122,9 +122,10 @@ small enough to inline and an implementer fills in the obvious. For a session it
 
 **Sessions archive; docs pages inline.**
 
-- **Session.** A multi-megabyte transcript cannot live inside a note. The rendered export is written to
-  `knowledge/sources/raw/`, **committed with the repo**, and the source note carries identity, date, a
-  one-line description, the `processed:` stamp, and an `archive:` pointer to that file.
+- **Session.** A multi-megabyte transcript cannot live inside a note. The rendered export ends up in
+  `knowledge/sources/raw/`, **committed with the repo** — by way of a scratch path and the gate below,
+  never written there directly — and the source note carries identity, date, a one-line description,
+  the `processed:` stamp, and an `archive:` pointer to that file.
 - **Claude Code docs.** Small and self-contained: what mattered from the fetched page goes verbatim into
   the body of the source note under `sources/`, with no separate archive.
 

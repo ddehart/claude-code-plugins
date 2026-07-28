@@ -111,6 +111,39 @@ expect_exit "bearer with a real value"         1 'Authorization: Bearer abcdefgh
 expect_exit "JSON-shaped authorization"        1 '{"authorization":"Bearer abcdefghijklmnopqrstuvwx"}'
 expect_exit "bearer with a placeholder"        0 'Authorization: Bearer <your-token-here>'
 
+# A quoted value is captured whole, delimiters and spaces included. Truncating it at the
+# first comma or space and then applying the 8-character floor discarded real credentials.
+printf '\nquoted values spanning delimiters\n'
+
+expect_exit "passphrase with spaces"            1 'PASSPHRASE="correct horse battery staple"'
+expect_exit "comma inside the first 8 chars"    1 'PASSWORD="abcdefg,hijklmnop"'
+expect_exit "semicolon inside a JSON value"     1 '{"db_password":"a;bcdefghijklmnop"}'
+
+# One line, several shapes: one finding carrying every label. Reporting only the first
+# leaves a reader redacting what the context window happens to show while the labelled
+# secret stays in the file.
+printf '\nseveral shapes on one line\n'
+
+multi="curl -H \"Authorization: Bearer gh""p_AAAABBBBCCCCDDDDEEEEFFFFGGGG\" -d \"slack=xox""b-1234567890-abcdefghijklmno\""
+printf '%s\n' "$multi" > "$TMP/multi.txt"
+out="$("$SCAN" "$TMP/multi.txt" 2>&1)"
+n="$(printf '%s' "$out" | grep -c '^\[')"
+[ "$n" -eq 1 ] && pass "one line yields one finding" || fail "expected 1 finding for one line, got $n"
+if printf '%s' "$out" | grep -q 'GitHub token' && printf '%s' "$out" | grep -q 'Slack token'; then
+  pass "that finding names every shape on the line"
+else
+  fail "a shape on the line went unlabelled: $(printf '%s' "$out" | grep '^\[')"
+fi
+
+printf '\nmultiple files\n'
+
+printf 'nothing here\n' > "$TMP/clean.txt"
+printf 'DB_PASSWORD=Tr0ub4dor3notaplaceholder\n' > "$TMP/dirty.txt"
+"$SCAN" "$TMP/clean.txt" "$TMP/dirty.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a secret in the second file is found" || fail "multi-file scan must exit 1, got $rc"
+"$SCAN" "$TMP/clean.txt" "$TMP/gone.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "one missing file fails the whole scan closed" || fail "missing second file must exit 2, got $rc"
+
 # --- 2. Things that must NOT trip it ---------------------------------------------
 
 printf '\nnegative cases — placeholders and prose are not credentials\n'
@@ -135,8 +168,13 @@ printf '\nfail-closed — a scan that cannot run is not a scan that passed\n'
 [ "$rc" -eq 2 ] && pass "directory argument exits 2" || fail "directory must exit 2, got $rc"
 
 # The regression test for defect (2) above. A maintainer adding a pattern typos the
-# regex; grep exits 2 on it. The scan must stop, NOT report clean — even though the
-# only secret in the file is one that the broken pattern was the one to catch.
+# regex; grep exits 2 on it. The scan must stop rather than continue.
+#
+# The broken pattern is injected AHEAD of the real Stripe pattern, which is what makes
+# this assertion sharp: if the fail-closed check regressed, the scan would carry on,
+# reach the real pattern, report the secret and exit 1 — so the test wants 2, and 1 is
+# a failure rather than an acceptable near-miss. (The file's secret is caught by the
+# real pattern too; the ordering, not the secret's uniqueness, is what this pins.)
 BROKEN="$TMP/broken-scan.sh"
 sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" \"\" 'sk_live_[A-Za-z0-9(]{20,'|" \
   "$SCAN" > "$BROKEN"
