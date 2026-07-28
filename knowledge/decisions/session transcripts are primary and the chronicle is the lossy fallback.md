@@ -15,6 +15,14 @@ tags: [knowledge-commons, process, sources]
 >
 > Kept as design history, unedited below. It is the clearest instance of
 > [[a workaround written up as a decision stops reading as a workaround]] this graph has.
+>
+> **One factual correction, since the claim travelled.** The text below says this graph's founding source
+> note "already points at one that is gone." It does not. Checked 2026-07-28: the transcript exists (2.8 MB,
+> 1,311 lines) and the founding source note records no pointer at all. The session ran in a
+> `commons-scaffold` worktree, so its transcript sits under a *commons* project slug that the resolver's
+> `*claude-code-plugins*` glob cannot match — a scoped search returning nothing, read as absence. The
+> transcript is now archived at `~/Developer/session-archive/`. The reasoning below does not depend on the
+> claim, but it had been repeated into a spec before anyone checked.
 
 A chronicle entry is a post-hoc account written by the agent whose blind spots the graph exists to catch,
 and it compresses away exactly the corrections and dead ends that turn out to matter. The transcript holds

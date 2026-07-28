@@ -78,13 +78,20 @@ This is the one place a source note deviates from "preserve the raw material": a
 transcript can't live in a note, so a session's source note holds its identity, date, a one-line
 description, the `processed:` stamp, and a pointer to the transcript path — not the body.
 
-**That pointer can dangle, and already has.** Transcripts get pruned; when one goes, the material a
-normal source note would have preserved goes with it. This graph's founding source note,
-`session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f`, already points at a transcript that no longer exists.
-Two things follow. Capture a little more than feels necessary from a session, since there may be no
-second look. And when a transcript is gone, the chronicle entry for that date is the recourse — which is
-the whole reason the chronicle tier survives as a fallback rather than being dropped in favor of
+**That pointer can dangle.** Transcripts get pruned; when one goes, the material a normal source note
+would have preserved goes with it. Capture a little more than feels necessary from a session, since there
+may be no second look. And when a transcript is genuinely gone, the chronicle entry for that date is the
+recourse — the reason the chronicle tier survives as a fallback rather than being dropped in favor of
 transcripts.
+
+**This section used to say the founding transcript was already lost. It is not** — checked 2026-07-28,
+2.8 MB, 1,311 lines, and the founding source note records no pointer to dangle in the first place. The
+session ran in a `commons-scaffold` worktree, so its transcript lives under a *commons* project slug, which
+the glob above can never match. **Treat that as a live defect in this step, not an anecdote:** a session
+doing this project's work can live under an entirely different project's slug, and it will be invisible to
+both the queue and the resolver. Before concluding any transcript is gone, search
+`~/.claude/projects/*/` by UUID rather than by project glob. An empty result from the narrow pattern is
+evidence about the pattern.
 
 **Chronicle (fallback).** Input is a path under `docs/chronicle/` matching `20*.md`, or bare text naming
 a date the queue can resolve to that path. Canonical `source:` is the repo-relative path

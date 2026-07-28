@@ -37,14 +37,26 @@ stage that produces it.
 For a small chronicle file the gap is invisible: the source note can hold the whole input, and an
 implementer fills in the obvious. For anything large it fails silently. In `claude-code-plugins` it
 degraded to a pointer into `.claude/session-exports/`, which is **gitignored**. The generated skill records
-the consequence in its own prose:
+what it takes to be the consequence:
 
-> That pointer can dangle, and already has. Transcripts get pruned; when one goes, the material a normal
-> source note would have preserved goes with it. This graph's founding source note,
+> That pointer can dangle, and already has. [...] This graph's founding source note,
 > `session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f`, already points at a transcript that no longer exists.
 
-Stage 2 is not merely missing from the template. Its absence has already destroyed material this graph was
-built to keep.
+**That claim is false, and its falsity sharpens the argument rather than weakening it.** Checked
+2026-07-28: the founding transcript exists — 2.8 MB, 1,311 lines. The founding source note records no
+pointer at all, so it cannot be dangling. What actually happened is that the session ran in a
+`commons-scaffold` worktree, so its transcript sits under a *commons* project slug, and the resolve step
+globs `~/.claude/projects/*claude-code-plugins*/` — a pattern that can never match it. A scoped search
+returned nothing and was written up as loss. (Same error shape recurred twice more while drafting this
+spec; see `knowledge/observations/a search scoped to one path returned nothing and was reported as
+absence.md`.)
+
+So stage 2's absence has not destroyed anything **yet**. What it has done is leave the material
+undefended: at the time of writing the founding transcript was in no repository, backed up by nothing, its
+originating worktree already deleted, and unreachable by the pipeline's own queue — recoverable only
+because someone happened to look outside the glob. It has since been copied to
+`~/Developer/session-archive/`. A preservation stage is what converts "not yet lost, and findable only by
+luck" into "preserved." The urgency is real; the past-tense loss was not.
 
 ### 1.2 Synthesis is never produced
 
