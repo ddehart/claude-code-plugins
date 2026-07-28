@@ -84,14 +84,19 @@ may be no second look. And when a transcript is genuinely gone, the chronicle en
 recourse — the reason the chronicle tier survives as a fallback rather than being dropped in favor of
 transcripts.
 
-**This section used to say the founding transcript was already lost. It is not** — checked 2026-07-28,
-2.8 MB, 1,311 lines, and the founding source note records no pointer to dangle in the first place. The
-session ran in a `commons-scaffold` worktree, so its transcript lives under a *commons* project slug, which
-the glob above can never match. **Treat that as a live defect in this step, not an anecdote:** a session
-doing this project's work can live under an entirely different project's slug, and it will be invisible to
-both the queue and the resolver. Before concluding any transcript is gone, search
-`~/.claude/projects/*/` by UUID rather than by project glob. An empty result from the narrow pattern is
-evidence about the pattern.
+**A session is a conversation, not a project's property, and the glob above assumes otherwise.** A single
+session can span several repositories — the founding one ran 590 turns in `commons` and 190 in
+`claude-code-plugins`, across four working directories and three branches. Its transcript gets exactly one
+home regardless, and which one is close to arbitrary. That one landed under a `commons` worktree slug,
+where the `*claude-code-plugins*` pattern could never see it, and the graph concluded from the empty result
+that the transcript had been pruned — a claim that reached the process skill, a decision note, and a spec
+before anyone checked. It was intact the whole time; it has since been moved here and archived at
+`~/Developer/session-archive/`.
+
+So: **before concluding any transcript is gone, search `~/.claude/projects/*/` by UUID**, not by project
+glob. An empty result from the narrow pattern is evidence about the pattern. When a cross-project session
+turns out to live elsewhere, moving it under the slug of the project that was its primary subject makes it
+reachable — but that is a repair, not a rule, and the next such session will land wherever it lands.
 
 **Chronicle (fallback).** Input is a path under `docs/chronicle/` matching `20*.md`, or bare text naming
 a date the queue can resolve to that path. Canonical `source:` is the repo-relative path

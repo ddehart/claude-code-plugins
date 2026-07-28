@@ -18,11 +18,12 @@ tags: [knowledge-commons, process, sources]
 >
 > **One factual correction, since the claim travelled.** The text below says this graph's founding source
 > note "already points at one that is gone." It does not. Checked 2026-07-28: the transcript exists (2.8 MB,
-> 1,311 lines) and the founding source note records no pointer at all. The session ran in a
-> `commons-scaffold` worktree, so its transcript sits under a *commons* project slug that the resolver's
-> `*claude-code-plugins*` glob cannot match — a scoped search returning nothing, read as absence. The
-> transcript is now archived at `~/Developer/session-archive/`. The reasoning below does not depend on the
-> claim, but it had been repeated into a spec before anyone checked.
+> 1,311 lines) and the source note recorded no pointer at all. That session spanned two repositories — 590
+> turns in `commons`, 190 in `claude-code-plugins` — and a transcript gets one home however many projects a
+> session touches; it landed under a `commons` worktree slug the resolver's `*claude-code-plugins*` glob
+> cannot match. A scoped search returned nothing and was read as absence. It has since been archived at
+> `~/Developer/session-archive/` and moved under this project's slug, which was its primary subject. The
+> reasoning below does not depend on the claim, but it had been repeated into a spec before anyone checked.
 
 A chronicle entry is a post-hoc account written by the agent whose blind spots the graph exists to catch,
 and it compresses away exactly the corrections and dead ends that turn out to matter. The transcript holds

@@ -43,20 +43,25 @@ what it takes to be the consequence:
 > `session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f`, already points at a transcript that no longer exists.
 
 **That claim is false, and its falsity sharpens the argument rather than weakening it.** Checked
-2026-07-28: the founding transcript exists — 2.8 MB, 1,311 lines. The founding source note records no
-pointer at all, so it cannot be dangling. What actually happened is that the session ran in a
-`commons-scaffold` worktree, so its transcript sits under a *commons* project slug, and the resolve step
-globs `~/.claude/projects/*claude-code-plugins*/` — a pattern that can never match it. A scoped search
-returned nothing and was written up as loss. (Same error shape recurred twice more while drafting this
-spec; see `knowledge/observations/a search scoped to one path returned nothing and was reported as
-absence.md`.)
+2026-07-28: the founding transcript exists — 2.8 MB, 1,311 lines — and the founding source note recorded no
+pointer at all, so nothing could have been dangling. The session spanned two repositories (590 turns in
+`commons`, 190 in `claude-code-plugins`, four working directories, three branches). A transcript gets one
+home however many projects a session touches; that one landed under a `commons` worktree slug, which the
+resolve step's `~/.claude/projects/*claude-code-plugins*/` glob can never match. A scoped search returned
+nothing and was written up as loss. (The same error shape recurred twice more while drafting this spec; see
+`knowledge/observations/a search scoped to one path returned nothing and was reported as absence.md`.)
 
-So stage 2's absence has not destroyed anything **yet**. What it has done is leave the material
-undefended: at the time of writing the founding transcript was in no repository, backed up by nothing, its
-originating worktree already deleted, and unreachable by the pipeline's own queue — recoverable only
-because someone happened to look outside the glob. It has since been copied to
-`~/Developer/session-archive/`. A preservation stage is what converts "not yet lost, and findable only by
-luck" into "preserved." The urgency is real; the past-tense loss was not.
+So stage 2's absence had not destroyed anything. What it had done is leave the material undefended: in no
+repository, backed up by nothing, its originating worktree already deleted, unreachable by the pipeline's
+own queue, and recoverable only because someone happened to look outside the glob. It has since been
+archived at `~/Developer/session-archive/` and moved under this project's slug, where the resolver can see
+it. A preservation stage is what converts "not yet lost, and findable only by luck" into "preserved." The
+urgency is real; the past-tense loss was not.
+
+**A third defect, out of scope here but worth recording.** The resolver identifies a project's sessions by
+globbing that project's slug, which assumes a session belongs to one project. It does not — a session is a
+conversation, and a cross-project one lands under whichever slug it happens to land under. Relocating a
+transcript repairs an instance; the assumption stays. Not addressed by this spec.
 
 ### 1.2 Synthesis is never produced
 

@@ -25,3 +25,14 @@ are open, not settled.
 **Off-tier source.** This is a raw session transcript, not a chronicle path or docs URL, so it is keyed on
 the session UUID. `docs/chronicle/2026-07-15.md` is the curated write-up of the same arc and is still in
 the processing queue — a later chronicle run should augment these notes rather than duplicate them.
+
+**Transcript:** `~/.claude/projects/-Users-derek-personal-Developer-claude-code-plugins/284b79f5-c34f-4ad3-b97d-9c78cdc9c46f.jsonl`
+(2.8 MB / 1,311 lines), with its 14 subagent transcripts alongside it. Archived copy plus a readable
+export at `~/Developer/session-archive/`.
+
+**This note recorded no pointer at all until 2026-07-28**, and the graph had come to believe the transcript
+was lost — a claim repeated into the process skill, a decision note, and a spec before anyone checked. It
+was never lost. The session spanned two repositories (590 turns in `commons`, 190 in `claude-code-plugins`,
+across four working directories and three branches), and a transcript gets one home however many projects
+it touches; this one landed under a `commons` worktree slug, which the resolver's `*claude-code-plugins*`
+glob cannot match. Moved here on 2026-07-28 because this project was its primary subject.
