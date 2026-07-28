@@ -278,7 +278,7 @@ what it asks, and in what order — including a reflection-ordering constraint t
 this skill's to second-guess. Call it and link what comes back.
 
 For each finding from step 4: if it supports an existing `pattern` or `decision`, follow the sibling
-`knowledge-graph` skill's **Capture** workflow and its **Extraction Workflow: chronicle** — write the
+`knowledge-graph` skill's **Capture** workflow and its **Extraction Workflow: session** — write the
 `observation` under `observations/`, add it to the attractor's `## evidence` section, and update that
 attractor's map-entry annotation in `maps/patterns.md` or `maps/decisions.md` if the "so what" shifted.
 If a finding names a plugin or skill not yet in `entities/`, add a lookup-only entity note and list it
@@ -324,7 +324,7 @@ overwritten.
 subagents, every one must have either returned findings or explicitly reported none before this stamp
 goes on. While any is outstanding, withhold it, name the classes you never heard from, and offer the
 re-read. The stamp is what makes a re-run resume instead of redo, so stamping over an uninspected class
-doesn't lose it temporarily — it closes the chronicle for good. This gate is about the fanout only: an
+doesn't lose it temporarily — it closes the source for good. This gate is about the fanout only: an
 inline read has no readers to hear from and inspected every class in this conversation, so it stamps
 normally.
 
@@ -361,7 +361,7 @@ no information:
 - **Can't tell** — raise it. A redundant line costs a glance; a silent gap is what this exists to end.
 
 **A category with no type is a schema gap — report it.** Separately from the notes this run wrote: did
-the chronicle keep naming a *kind* of thing this graph has no entity type for? This graph declares
+the session keep naming a *kind* of thing this graph has no entity type for? This graph declares
 `plugin` and `skill`. If a run keeps naming agents, hooks, or MCP servers as things a reader would look
 up, that isn't a missing note — it's a missing type, and no amount of note-writing fixes it. Ask this
 whether or not the graph already has an entity type: one that declared none is exactly the graph most
