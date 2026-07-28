@@ -186,6 +186,20 @@ this.
 
 ## 4. Inspect
 
+**Findings come from the transcript, never from the chronicle.** Where a session has a chronicle entry,
+read it for orientation if it helps — it is a serviceable map of a long transcript and will tell you
+where to look — but every finding is sourced from, and quoted from, the transcript itself. The reason is
+the whole point of the constraint, so it survives a rewrite: the chronicle is written for a human reader
+by the agent whose blind spots this graph exists to catch, and it has already compressed away the
+corrections, the dead ends, and the exact wording that an `observation` is made of. Extraction that runs
+on it inherits every one of those omissions and has no way to notice. The first real run of this pipeline
+found three divergences between a session's own account of itself and what its transcript showed; a
+reader of the account alone would have found none of them.
+
+The one exception is the path named in step 2, where the transcript is verifiably gone. There the
+chronicle is what remains, extraction reads it, and the source note carries `raw: unavailable` so the
+graph shows it.
+
 Read the resolved input and decide what it contains, sized to the input:
 
 - **Under ~1,500 words:** read it inline, in this conversation.
@@ -199,11 +213,11 @@ a reader that simply stopped are all the same thing — no report yet. Follow up
 an explicit "nothing in this class" from that reader about that class lets you record it as empty. If a
 reader still won't report after a follow-up, the class **failed** — route it to step 8 rather than
 carrying it into the plan as zero findings. A run that reads silence as "nothing found" builds its plan
-from an empty set, stamps the chronicle processed in step 9, and reports a clean sweep; since the stamp is
-what makes a re-run resume instead of redo, that chronicle is marked handled for good. The failure looks
+from an empty set, stamps the source processed in step 9, and reports a clean sweep; since the stamp is
+what makes a re-run resume instead of redo, that session is marked handled for good. The failure looks
 exactly like success.
 
-The signal classes this graph looks for in a chronicle:
+The signal classes this graph looks for in a session:
 
 - **Design decisions + rationale.** A choice was made and a reason given — becomes a `decision` attractor
   or evidence for an existing one. ("Reverted the validator; graph health rests on approval +
