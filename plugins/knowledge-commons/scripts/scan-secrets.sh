@@ -22,6 +22,7 @@
 # before it starts — see "Failing closed" below.
 
 set -uo pipefail
+shopt -s nocasematch
 
 readonly EXIT_CLEAN=0
 readonly EXIT_HITS=1
@@ -164,15 +165,30 @@ report() {
 # discarded real credentials — PASSPHRASE="correct horse battery staple" measured as
 # "correct" and was dropped, while the keyword list advertises a shape that by
 # definition contains spaces.
+# Sets EXTRACTED rather than printing, and uses parameter expansion rather than sed.
+# Both are for speed, and the speed is not cosmetic: this runs once per match, and a
+# rendered transcript is one enormous JSON line after another. The printf|sed form cost
+# three subshells per match and took nine minutes on a 4.5 MB transcript — long enough
+# that a preserve stage would start looking hung.
+EXTRACTED=""
 extract_value() {
-  printf '%s' "$1" | sed -E 's/^[^:=]*[:=][[:space:]]*//; s/^["'"'"']//; s/["'"'"']$//'
+  local v="$1"
+  v="${v#*[:=]}"
+  while [ "$v" != "${v#[[:space:]]}" ]; do v="${v#[[:space:]]}"; done
+  v="${v#[\"\']}"
+  v="${v%[\"\']}"
+  EXTRACTED="$v"
 }
 
+# Bash's own =~ instead of a grep subshell, for the same reason as extract_value.
+# nocasematch is set once at the top; the case statements elsewhere compare fixed
+# label and path strings, which case-insensitivity does not affect.
 is_placeholder() {
-  printf '%s' "$1" | grep -q -a -i -E -e "^($PLACEHOLDER_LEAD)" && return 0
+  [[ "$1" =~ ^($PLACEHOLDER_LEAD) ]] && return 0
   # Whole value, or the word followed by a separator (changeme, change-me, your-key…) —
   # never merely a prefix of a longer alphanumeric run.
-  printf '%s' "$1" | grep -q -a -i -E -e "^($PLACEHOLDER_WORD)([^A-Za-z0-9]|\$)"
+  [[ "$1" =~ ^($PLACEHOLDER_WORD)([^A-Za-z0-9]|$) ]] && return 0
+  return 1
 }
 
 # --- Failing closed --------------------------------------------------------------
@@ -190,7 +206,7 @@ is_placeholder() {
 # stop the process. Do not refactor them into a function invoked via $( ).
 
 scan_file() {
-  local file="$1" i label re out rc line lineno text value
+  local file="$1" i label re out rc line lineno text value matches m
 
   i=0
   while [ "$i" -lt "${#REGEXES[@]}" ]; do
@@ -222,13 +238,24 @@ EOF
       [ -z "$line" ] && continue
       lineno="${line%%:*}"
       text="${line#*:}"
-      value="$(printf '%s' "$text" | grep -a -o -i -E -e "$ASSIGN_RE" | head -1)"
-      value="$(extract_value "$value")"
-      [ -z "$value" ] && continue
-      is_placeholder "$value" && continue
-      # A value shorter than 8 characters is not a credential worth stopping a run over.
-      [ "${#value}" -lt 8 ] && continue
-      report "$ASSIGN_LABEL" "$file" "$lineno" "$text"
+      # EVERY assignment on the line, not just the first. Checking only the first and
+      # skipping the line on its verdict is fail-open: `DEBUG_SECRET=todo
+      # PROD_PASSWORD=Tr0ub4dor3xyz` discarded the whole line because the leading match
+      # was a placeholder, and reported clean with a real credential still in it.
+      matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$ASSIGN_RE")"
+      [ -z "$matches" ] && continue
+      while IFS= read -r m; do
+        [ -z "$m" ] && continue
+        extract_value "$m"; value="$EXTRACTED"
+        [ -z "$value" ] && continue
+        is_placeholder "$value" && continue
+        # A value shorter than 8 characters is not a credential worth stopping a run over.
+        [ "${#value}" -lt 8 ] && continue
+        report "$ASSIGN_LABEL" "$file" "$lineno" "$text"
+        break
+      done <<INNER
+$matches
+INNER
     done <<EOF
 $out
 EOF
@@ -243,11 +270,19 @@ EOF
       [ -z "$line" ] && continue
       lineno="${line%%:*}"
       text="${line#*:}"
-      value="$(printf '%s' "$text" | grep -a -o -i -E -e "$AUTH_RE" | head -1 \
-               | sed -E 's/.*(bearer|basic|token)[[:space:]]+//I; s/^["'"'"']//')"
-      [ -z "$value" ] && continue
-      is_placeholder "$value" && continue
-      report "$AUTH_LABEL" "$file" "$lineno" "$text"
+      # Same reasoning as the assignment scan above: every match on the line.
+      matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$AUTH_RE")"
+      [ -z "$matches" ] && continue
+      while IFS= read -r m; do
+        [ -z "$m" ] && continue
+        value="$(printf '%s' "$m" | sed -E 's/.*(bearer|basic|token)[[:space:]]+//I; s/^["'"'"']//')"
+        [ -z "$value" ] && continue
+        is_placeholder "$value" && continue
+        report "$AUTH_LABEL" "$file" "$lineno" "$text"
+        break
+      done <<INNER
+$matches
+INNER
     done <<EOF
 $out
 EOF

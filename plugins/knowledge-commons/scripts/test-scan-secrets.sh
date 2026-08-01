@@ -135,6 +135,16 @@ else
   fail "a shape on the line went unlabelled: $(printf '%s' "$out" | grep '^\[')"
 fi
 
+# Two assignment-shaped values on one line, the first a placeholder. Checking only the
+# first match and skipping the line on its verdict is fail-open — the existing
+# multi-shape case above uses two DIFFERENT patterns, so it could not catch this.
+printf '\nseveral assignments on one line\n'
+
+expect_exit "placeholder first, real second"   1 'DEBUG_SECRET=todo PROD_PASSWORD=Tr0ub4dor3xyzLONGVALUE'
+expect_exit "short first, real second"         1 'KEY=abc API_PASSWORD=R3alSecretValueHere123'
+expect_exit "placeholder bearer, real token"   1 'authorization: Bearer <your-token-here> auth_token: R3alBearerValue123456'
+expect_exit "both placeholders stays clean"    0 'DEBUG_SECRET=todo OTHER_KEY=<your-key-here>'
+
 printf '\nmultiple files\n'
 
 printf 'nothing here\n' > "$TMP/clean.txt"
