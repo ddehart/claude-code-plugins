@@ -8,17 +8,22 @@ tags: [knowledge-commons, process, sources]
 > **Superseded 2026-07-28** by
 > [[processing preserves the raw and synthesizes for a human, and extracts from the raw]].
 >
-> The reasoning below is sound and its conclusion is not. Everything it says about *why* a transcript
-> beats a chronicle entry holds; what it got wrong is that the two were ever comparable. A chronicle
-> entry is the session-level synthesis — the pipeline's own output — so ranking it as a second, lossier
-> *input* tier put a distillation on the input side. The ordering, the overlapping-tier guard, and the
-> transcript-survival check were all machinery to contain that, and none of it is needed once the
-> synthesis sits where it belongs. The genuine case this note identified — a pruned transcript, where
-> the entry is all that remains — survives as a named degraded path with a `raw: unavailable` marker.
+> The premises below hold; the framing does not. A chronicle is not a *source tier* at all — it is the
+> synthesis a run produces, and treating it as a competing input is what required the primary/fallback
+> ordering and the overlapping-tier guard this note argues for. The pipeline could not produce a synthesis,
+> so the synthesis was placed on the input side and this note wrote the arrangement up as intentional.
 >
-> Kept rather than rewritten: the inversion and its correction are the most useful thing this episode
-> produced, and a graph showing only the corrected model loses the record of how a role got specified
-> into four artifacts and implemented in none.
+> Kept as design history, unedited below. It is the clearest instance of
+> [[a workaround written up as a decision stops reading as a workaround]] this graph has.
+>
+> **One factual correction, since the claim travelled.** The text below says this graph's founding source
+> note "already points at one that is gone." It does not. Checked 2026-07-28: the transcript exists (2.8 MB,
+> 1,311 lines) and the source note recorded no pointer at all. That session spanned two repositories — 590
+> turns in `commons`, 190 in `claude-code-plugins` — and a transcript gets one home however many projects a
+> session touches; it landed under a `commons` worktree slug the resolver's `*claude-code-plugins*` glob
+> cannot match. A scoped search returned nothing and was read as absence. It has since been archived at
+> `~/Developer/session-archive/` and moved under this project's slug, which was its primary subject. The
+> reasoning below does not depend on the claim, but it had been repeated into a spec before anyone checked.
 
 A chronicle entry is a post-hoc account written by the agent whose blind spots the graph exists to catch,
 and it compresses away exactly the corrections and dead ends that turn out to matter. The transcript holds

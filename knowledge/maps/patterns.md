@@ -21,3 +21,4 @@ evidence and carries a one-clause "so what"; none reaches a verdict. Entries are
 - [[a check inherits the frame of whoever briefed it]] — a different reviewer buys independence from execution, never from the author's intent or scope.
 - [[a plausible story arrests the investigation before the mechanism is found]] — a fitting explanation stops the search as effectively as a fitting answer would.
 - [[justifying prose drifts from the thing it justifies]] — the instruction stays sound while its stated reason rots, and rationale travels further than the instruction.
+- [[a workaround written up as a decision stops reading as a workaround]] — a correct premise with the opposite conclusion drawn from it; locally reasonable, so an audit finds nothing wrong.

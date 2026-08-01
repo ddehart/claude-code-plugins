@@ -11,8 +11,11 @@ Not a `/process` run. A structural correction to the pipeline itself, implemente
 - Decisions (1 new, 1 superseded): `processing preserves the raw and synthesizes for a human, and
   extracts from the raw` records the four-stage model. `session transcripts are primary and the
   chronicle is the lossy fallback` is marked superseded with a pointer; its content is unedited.
-- Source (1): the founding source note gains `raw: unavailable` — its transcript is gone, verified
-  absent rather than assumed, and the record should say so.
+- Source (1): **no change, and that is a correction.** This entry originally recorded the founding source
+  note gaining `raw: unavailable`, on a check that globbed `*claude-code-plugins*` and found nothing. The
+  glob was the wrong instrument — the session ran in a `commons-scaffold` worktree, so its transcript sat
+  under a different slug and that pattern could never have matched it. The transcript is intact (2.8 MB,
+  1,311 lines). The marker has been removed and spec v1.3 reverses the instruction to add it.
 - `maps/decisions.md`: entry for the new decision, supersession marker on the old one.
 - `.commons.yml`: the chronicle moves from `sources:` to `types.synthesis` (adopted at
   `docs/chronicle/`, outside the graph root); the session tier gains a committed
@@ -27,6 +30,10 @@ Not a `/process` run. A structural correction to the pipeline itself, implemente
   founding transcript vanish with nothing announcing the loss.
 
 **Learned**
+- Verifying a claim is not the same as verifying it against a query that could disprove it. The check
+  that "confirmed" the founding transcript was gone was scoped to the one path it could not be in, and it
+  was run precisely *because* the note's claim shouldn't be taken on trust. See
+  [[a search scoped to one path returned nothing and was reported as absence]].
 - The redaction floor's first run reported three findings and silently missed a planted private key:
   a pattern starting with `-` was eaten as grep options, grep exited 2, and stderr was discarded, so
   the miss was shaped exactly like a clean pass. The plant-a-failure test is the only reason it
@@ -100,3 +107,52 @@ Coverage is partial by construction: the session was still live when processed, 
 mid-conversation. Recorded in the source note's stamp rather than implied away.
 
 [patch-check-suggested] — `/graph-patch` ran today; all six deltas applied and stamped at 0.5.0.
+
+## 2026-07-28 — session f64160a1: the pipeline correction, specced not built
+
+Processed the three-day session that diagnosed why this graph's `/process` pipeline was inverted. Exported
+via `meta-claude:session-export` (98 KB / 13,964 words), inspected by four subagent readers, one per signal
+class.
+
+**All four reported explicitly and unprompted — the first fanout in this graph to do so.** The difference
+was the spawn shape: they were created without `name:`, so their final message is the return value. Earlier
+in the same session a *named* cold-read agent went idle four times, ignored two follow-ups and a stand-down,
+and was invisible to `TaskList` while `TaskStop` resolved it by name at once. That answers the open question
+`does a shared brief explain the original fanout symptom`: yes, but the mechanism is narrower than "a shared
+brief" — the brief was wrong only for one spawn shape. The question is marked ready to graduate, and the
+correction needs a superseding delta rather than an in-place rewrite, since `step4-explicit-negative` is
+stamped here and pending in two other graphs. Task filed.
+
+Written: 1 decision, 1 supersession, 1 pattern, 8 observations. Evidence added to five existing patterns and
+one open question. The superseded decision — `session transcripts are primary and the chronicle is the lossy
+fallback` — is kept unedited under a banner; it is the clearest instance this graph has of the new pattern
+`a workaround written up as a decision stops reading as a workaround`.
+
+Witness counts on all five updated patterns went from one to **two**, not more. Every new instance came from
+this single session, and instances within one session are correlated evidence, not independent witnesses.
+`a plausible story arrests the investigation` contributed three instances from this one session and is
+annotated to say so.
+
+Three of the eight observations record failures in the session's own output, found by the readers and
+verified against the repo before recording: a spec revision log left out of order by a scripted
+string-insert (fixed in this run); a scoped `find` whose empty result was reported to the user as "no
+transcript exists" when the file sat one directory up; and the reference model the whole spec corrects
+toward, never opened despite being on disk throughout. That last one is a task, not just a note — the
+spec's central premise depends on it.
+
+`maps/sources.md` was missing the previous run's source note as well as this one; both backfilled.
+
+This run used the **pre-fix pipeline** on the session that diagnosed it — no preservation stage, export to
+the gitignored directory the spec retires. The source note carries `pre-fix-pipeline: true` so a later
+reader does not mistake it for a post-fix artifact. The spec's §6 step 6 calls for a second `/process` run
+over this same session once the fix lands; that run, not this one, is the first exercise of all four stages.
+
+[entity-type-gap: template deltas]
+
+**Correction, same day.** The entry above recorded `does a shared brief explain the original fanout symptom`
+as answered and ready to graduate, on a spawn-shape mechanism. Retracted while promoting: a claim reaching
+the commons from osu-builders-studio the same day reports 43 of 44 delegated workers silent across four
+briefs and two task shapes, which that mechanism cannot explain unless all of them were named teammates. The
+question is open again with two competing mechanisms and a stated discriminator. The evidence here was n=1
+named against n=5 unnamed inside one session, written up as settled — the same shape as three of the
+observations this very run recorded. Caught only because `/promote` re-fetches the target before writing.

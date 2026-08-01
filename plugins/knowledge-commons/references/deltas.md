@@ -272,9 +272,15 @@ Entries are append-only and ordered by version.
     The pipeline had no step that wrote a source note. One step searched for one and another
     stamped one; nothing created one. For a small source the gap is invisible, because an
     implementer fills in the obvious. For a large one it fails silently: in the graph where this
-    was found, preservation had degraded to a pointer into a gitignored exports directory, and
-    that graph's founding source note already points at a transcript that no longer exists. The
-    material a source note exists to keep was destroyed by the absence of the stage that keeps it.
+    was found, preservation had degraded to a pointer into a gitignored exports directory. That
+    graph's founding transcript was in no repository, backed up by nothing, its originating
+    worktree already deleted, and unreachable by the pipeline's own queue — recoverable only
+    because someone looked outside the resolver's glob. Nothing had been destroyed yet; the
+    material was simply undefended, which is the condition a preservation stage converts into a
+    committed artifact. (An earlier version of this rationale said the transcript was already
+    lost. It was not — 2.8 MB, intact, under another project's slug — and the claim came from a
+    scoped search read as absence. The corrected fact is the stronger argument: the stage is
+    justified by material being one prune away from gone, not by a loss anyone can point to.)
     The gate is scoped to publication rather than to archival because the hazard is publication;
     a private destination pays nothing. It is deliberately two halves: the floor is dumb and
     verifiable against a planted secret, the read-through covers the majority of a transcript's

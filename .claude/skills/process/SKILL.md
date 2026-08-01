@@ -92,20 +92,42 @@ guard against double-counting the same session through both. All of that existed
 inversion: a distillation sitting on the input side. There is one raw source for a session, and it is
 the transcript.
 
-**When the transcript is gone.** Transcripts get pruned, and this is the genuine case the fallback tier
-was invented for. Where a session's transcript no longer exists but its chronicle entry does, the run
-continues from the chronicle: extraction reads it instead of the transcript, and the source note records
-`raw: unavailable` with the reason and the date the absence was observed — so the graph shows a
-degraded note rather than leaving a reader to wonder later why it is thin. This is a permanent path.
-Transcripts will keep being pruned, and it is also the only route by which a pre-existing chronicle entry
-whose session is gone can be processed at all.
+**A session is a conversation, not a project's property, and the glob above assumes otherwise.** A single
+session can span several repositories — the founding one ran 590 turns in `commons` and 190 in
+`claude-code-plugins`, across four working directories and three branches. Its transcript gets exactly one
+home regardless, and which one is close to arbitrary. That one landed under a `commons` worktree slug,
+where the `*claude-code-plugins*` pattern could never see it, and the graph concluded from the empty result
+that the transcript had been pruned — a claim that reached this skill, a decision note, and a spec before
+anyone checked. It was intact the whole time; it has since been moved here and archived at
+`~/Developer/session-archive/`.
 
-It fires **only when the transcript is verifiably absent** — you looked in every
-`~/.claude/projects/*claude-code-plugins*/` directory and it is not there. Never because a transcript is
-merely large, and never because the chronicle is an easier read. Extracting from the chronicle while the
-transcript is alive is exactly the failure step 4 exists to prevent, and this path must not become the
-loophole for it. Where neither the transcript nor a chronicle entry exists, there is nothing to process:
-say so and stop.
+So: **before concluding any transcript is gone, search `~/.claude/projects/*/` by UUID**, not by project
+glob. An empty result from the narrow pattern is evidence about the pattern. When a cross-project session
+turns out to live elsewhere, moving it under the slug of the project that was its primary subject makes it
+reachable — but that is a repair, not a rule, and the next such session will land wherever it lands.
+
+**The chronicle is not a source tier.** A chronicle entry is the session-level synthesis — this
+pipeline's own output, written for a human reader — so it lives in `types.synthesis`, not in `sources:`.
+It used to be registered as a second, lower-ranked source tier, with an ordering between the two and a
+guard against double-counting the same session through both. All of that existed to contain one
+inversion: a distillation sitting on the input side. There is one raw source for a session, and it is
+the transcript.
+
+**When the transcript is genuinely gone.** Transcripts do get pruned, and this is the real case the
+fallback tier was invented for. Where a session's transcript no longer exists but its chronicle entry
+does, the run continues from the chronicle: extraction reads it instead of the transcript, and the source
+note records `raw: unavailable` with the reason and the date the absence was observed — so the graph shows
+a degraded note rather than leaving a reader to wonder later why it is thin. This is a permanent path, and
+it is the only route by which a pre-existing chronicle entry whose session is gone can be processed at all.
+
+It fires **only when the transcript is verifiably absent**, and "verifiably" carries the whole weight —
+a UUID search across `~/.claude/projects/*/`, per the paragraph above, not a project-scoped glob that came
+back empty. That distinction is not hypothetical: this graph marked its founding source note
+`raw: unavailable` on the strength of a scoped miss, and the transcript was 2.8 MB and intact. Never fire
+this path because a transcript is merely large, or because the chronicle is an easier read. Extracting
+from the chronicle while the transcript is alive is exactly the failure step 4 exists to prevent, and this
+path must not become the loophole for it. Where neither the transcript nor a chronicle entry exists, there
+is nothing to process: say so and stop.
 
 **Claude Code docs (on-demand).** Input is a URL to a Claude Code release-notes or feature-docs page,
 handed in when a session references one. Canonical `source:` is the URL itself, normalized (strip
@@ -130,11 +152,13 @@ small enough to inline and an implementer fills in the obvious. For a session it
   the body of the source note under `sources/`, with no separate archive.
 
 **The archive is committed, and that is the whole fix.** Its predecessor was `.claude/session-exports/`,
-gitignored as a derived artifact — and a directory outside version control is precisely how a source
-note's pointer comes to dangle. This graph's founding source note,
-`session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f`, points at a transcript that no longer exists; everything
-a source note is supposed to preserve went with it, and nothing announced the loss. An archive under
-`knowledge/` is versioned and backed up wherever this repo is.
+gitignored as a derived artifact — and a directory outside version control is where a source note's
+pointer comes to dangle. This graph's founding transcript,
+`session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f`, spent months in no repository, backed up by nothing, its
+originating worktree deleted and its slug outside the resolver's glob: intact, but defended by nothing and
+reachable only by someone searching outside the pattern. An archive under `knowledge/` is versioned and
+backed up wherever this repo is, which is the difference between material that survived and material that
+is kept.
 
 **This stage writes before the step-5 plan is approved, deliberately.** Every other write in the run
 waits for that gate. Preservation does not, because it is the one stage whose omission destroys

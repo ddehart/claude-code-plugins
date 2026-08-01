@@ -1,6 +1,6 @@
 # Knowledge Commons — The `/process` Pipeline Correction
 
-> **Version:** 1.2 · **Status:** cold-read clean, ready for a fresh implementing session · **Date:** 2026-07-28
+> **Version:** 1.3 · **Status:** implementation in flight on `feat/process-pipeline-correction` · **Date:** 2026-07-28
 > **Parent spec:** [`knowledge-commons.md`](./knowledge-commons.md) (v1.0.1)
 > **Plugin version at draft:** knowledge-commons 0.5.0 → ships as 0.6.0
 >
@@ -37,14 +37,31 @@ stage that produces it.
 For a small chronicle file the gap is invisible: the source note can hold the whole input, and an
 implementer fills in the obvious. For anything large it fails silently. In `claude-code-plugins` it
 degraded to a pointer into `.claude/session-exports/`, which is **gitignored**. The generated skill records
-the consequence in its own prose:
+what it takes to be the consequence:
 
-> That pointer can dangle, and already has. Transcripts get pruned; when one goes, the material a normal
-> source note would have preserved goes with it. This graph's founding source note,
+> That pointer can dangle, and already has. [...] This graph's founding source note,
 > `session:284b79f5-c34f-4ad3-b97d-9c78cdc9c46f`, already points at a transcript that no longer exists.
 
-Stage 2 is not merely missing from the template. Its absence has already destroyed material this graph was
-built to keep.
+**That claim is false, and its falsity sharpens the argument rather than weakening it.** Checked
+2026-07-28: the founding transcript exists — 2.8 MB, 1,311 lines — and the founding source note recorded no
+pointer at all, so nothing could have been dangling. The session spanned two repositories (590 turns in
+`commons`, 190 in `claude-code-plugins`, four working directories, three branches). A transcript gets one
+home however many projects a session touches; that one landed under a `commons` worktree slug, which the
+resolve step's `~/.claude/projects/*claude-code-plugins*/` glob can never match. A scoped search returned
+nothing and was written up as loss. (The same error shape recurred twice more while drafting this spec; see
+`knowledge/observations/a search scoped to one path returned nothing and was reported as absence.md`.)
+
+So stage 2's absence had not destroyed anything. What it had done is leave the material undefended: in no
+repository, backed up by nothing, its originating worktree already deleted, unreachable by the pipeline's
+own queue, and recoverable only because someone happened to look outside the glob. It has since been
+archived at `~/Developer/session-archive/` and moved under this project's slug, where the resolver can see
+it. A preservation stage is what converts "not yet lost, and findable only by luck" into "preserved." The
+urgency is real; the past-tense loss was not.
+
+**A third defect, out of scope here but worth recording.** The resolver identifies a project's sessions by
+globbing that project's slug, which assumes a session belongs to one project. It does not — a session is a
+conversation, and a cross-project one lands under whichever slug it happens to land under. Relocating a
+transcript repairs an instance; the assumption stays. Not addressed by this spec.
 
 ### 1.2 Synthesis is never produced
 
@@ -417,6 +434,10 @@ verified to resolve exactly once in both the template and this project's generat
 
 | `id` | `file` | `anchor` | Substance |
 |---|---|---|---|
+| 1.3 | 2026-07-28 | Corrected a factual claim that had become load-bearing: the founding transcript was never lost. §1.1's "already destroyed material" is withdrawn, and **§6's instruction to mark its source note `raw: unavailable` is reversed** — it is archived and now reachable, and migrating it through the gate is the recommended first exercise of the preserve stage. Also records a third defect as out of scope: the resolver globs a project slug, which assumes a session belongs to one project, and a cross-project session's transcript lands under whichever slug it happens to. |
+| 1.2 | 2026-07-28 | Pinned the authoring session's UUID in §6 step 6, §7.3, and §5.3, and stated in the header that implementation is for a fresh session. "This session" meant the authoring session when written; an implementing session would have read all three as its own and processed the wrong transcript. |
+| 1.1 | 2026-07-26 | Independent cold read (implementer brief, no context). Four changes: the template's `source-tiers` SLOT instruction added to §5.1 &mdash; it would have generated the inversion into every new graph; `synthesis-stage` split into `synthesis-in-plan` + `synthesis-write` because its substance straddles the approval gate; the unanchored hand edit under `## 3. Find the ledger` called out; §7.1 given a pass criterion declared in advance. Cold read returned no blocking items. |
+| 1.0 | 2026-07-26 | Initial draft, from an interview settling twelve decisions. |
 | `preserve-stage` | process | `## 2. Resolve` | A stage that writes the source note and durably preserves the raw material, with the small/large form split (D1, D2) and the gate when the destination is public/shared (D5–D7). |
 | `resolve-orphaned-synthesis` | process | `## 2. Resolve` | The orphaned-synthesis path: extract from the synthesis only when raw is verifiably absent; mark the source note `raw: unavailable` (D10). Also removes any primary/fallback ordering between tiers covering the same events. |
 | `extract-from-raw` | process | `## 4. Inspect` | Where both exist, inspection reads the raw material; the synthesis may orient but never sources a finding (D4). |
@@ -456,8 +477,10 @@ Order matters; each step depends on the one before.
    all four stages.
 
 **Already-processed sources are not reprocessed** (N3). The two existing source notes keep their stamps.
-The founding session's transcript is gone and stays gone; its source note gains `raw: unavailable`
-retroactively so the record is honest.
+The founding session's transcript **is not gone** (§1.1) — it is archived at
+`~/Developer/session-archive/`, and its source note should gain that pointer rather than a
+`raw: unavailable` marker. Migrating it into the graph's own raw archive is a first, well-understood
+exercise of the preserve stage, on material whose provenance is already known.
 
 **The nine existing chronicle entries** stop being queued as sources. Those whose transcripts survive are
 reachable by processing the transcript, which will find and link the chronicle as its synthesis. Those whose
@@ -531,6 +554,3 @@ Their owners run `/graph-patch` on their own cadence; nothing here reaches them 
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-07-26 | Initial draft, from an interview settling twelve decisions. |
-| 1.2 | 2026-07-28 | Pinned the authoring session's UUID in §6 step 6, §7.3, and §5.3, and stated in the header that implementation is for a fresh session. "This session" meant the authoring session when written; an implementing session would have read all three as its own and processed the wrong transcript. |
-| 1.1 | 2026-07-26 | Independent cold read (implementer brief, no context). Four changes: the template's `source-tiers` SLOT instruction added to §5.1 &mdash; it would have generated the inversion into every new graph; `synthesis-stage` split into `synthesis-in-plan` + `synthesis-write` because its substance straddles the approval gate; the unanchored hand edit under `## 3. Find the ledger` called out; §7.1 given a pass criterion declared in advance. Cold read returned no blocking items. |

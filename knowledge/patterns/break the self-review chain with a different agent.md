@@ -13,7 +13,7 @@ wrong" pass measures the brief and will return a long list from any artifact, in
 authoring gets the same discipline: fan work out to cheaper models, then verify every returned artifact
 against the spec and check load-bearing factual claims directly — trust nothing on report alone.
 
-*One witness (2026-07-15). Open.*
+*Two witnesses (2026-07-15, 2026-07-26). Open.*
 
 ## evidence
 - [[a neutral build-it cold read measured the spec where an adversarial loop inflated it]]
@@ -24,6 +24,8 @@ against the spec and check load-bearing factual claims directly — trust nothin
 *Qualified 2026-07-22: a different agent is necessary but not sufficient — see
 [[a check inherits the frame of whoever briefed it]]. Where the author writes the reviewer's brief, the
 review inherits the author's intent and scope, and cannot check either.*
+- [[an author cold read found four gaps and missed the one that mattered]]
+- [[a planner cold read caught omissions but not a referent that misbinds only at execution]]
 
 ## related
 - [[a check inherits the frame of whoever briefed it]]
