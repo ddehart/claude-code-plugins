@@ -275,7 +275,14 @@ EOF
       [ -z "$matches" ] && continue
       while IFS= read -r m; do
         [ -z "$m" ] && continue
-        value="$(printf '%s' "$m" | sed -E 's/.*(bearer|basic|token)[[:space:]]+//I; s/^["'"'"']//')"
+        # Bash's own =~ rather than sed's s///I. The I flag is a GNU extension; it
+        # happens to work on the macOS sed this was written against, but the failure it
+        # would cause elsewhere is the shape this file exists to avoid — sed errors, the
+        # command substitution yields nothing, and the empty-value guard below drops a
+        # real finding with no error and no non-zero exit. nocasematch is already set.
+        value=""
+        [[ "$m" =~ (bearer|basic|token)[[:space:]]+(.*) ]] && value="${BASH_REMATCH[2]}"
+        value="${value#[\"\']}"
         [ -z "$value" ] && continue
         is_placeholder "$value" && continue
         report "$AUTH_LABEL" "$file" "$lineno" "$text"
