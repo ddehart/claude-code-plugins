@@ -13,7 +13,7 @@ wrong" pass measures the brief and will return a long list from any artifact, in
 authoring gets the same discipline: fan work out to cheaper models, then verify every returned artifact
 against the spec and check load-bearing factual claims directly — trust nothing on report alone.
 
-*Two witnesses (2026-07-15, 2026-07-26). Open.*
+*Three witnesses (2026-07-15, 2026-07-26, 2026-08-01). Open.*
 
 ## evidence
 - [[a neutral build-it cold read measured the spec where an adversarial loop inflated it]]
@@ -26,6 +26,7 @@ against the spec and check load-bearing factual claims directly — trust nothin
 review inherits the author's intent and scope, and cannot check either.*
 - [[an author cold read found four gaps and missed the one that mattered]]
 - [[a planner cold read caught omissions but not a referent that misbinds only at execution]]
+- [[a finding that indicted the method left no trace while findings naming artifacts were captured]]
 
 ## related
 - [[a check inherits the frame of whoever briefed it]]

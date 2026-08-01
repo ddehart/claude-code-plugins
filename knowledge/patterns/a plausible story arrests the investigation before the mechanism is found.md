@@ -23,13 +23,14 @@ artifact opened instead. So the pattern is not that the check never fires — it
 is unforced**, and fluency at having just described the failure does not force it.
 
 *Two witnesses (2026-07-22, 2026-07-28) — the second contributing three distinct instances in one
-session, which is correlated evidence, not three witnesses. Open.*
+session, which is correlated evidence, not three witnesses. A third witness 2026-08-01. Open.*
 
 ## evidence
 - [[a plausible diagnosis of the entity gap was overturned by opening the file]]
 - [[a search scoped to one path returned nothing and was reported as absence]]
 - [[the reference model the spec corrects toward was never opened]]
 - [[a single-root-cause story explained every downstream artifact and was never checked against history]]
+- [[a scoped-search error recurred a third time after two instances were written into the graph]]
 
 ## related
 - [[naming a failure shape confers no immunity to it]]

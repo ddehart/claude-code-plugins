@@ -22,3 +22,6 @@ evidence and carries a one-clause "so what"; none reaches a verdict. Entries are
 - [[a plausible story arrests the investigation before the mechanism is found]] — a fitting explanation stops the search as effectively as a fitting answer would.
 - [[justifying prose drifts from the thing it justifies]] — the instruction stays sound while its stated reason rots, and rationale travels further than the instruction.
 - [[a workaround written up as a decision stops reading as a workaround]] — a correct premise with the opposite conclusion drawn from it; locally reasonable, so an audit finds nothing wrong.
+- [[a claim restated into several artifacts starts reading as corroborated]] — copies are shaped like independent observations, so mentions get counted as witnesses; the terminus is a copy that has become an instruction.
+- [[concurrent writers are invisible until write time]] — no lock, no writer identity, and a screen minutes before a write can read a state that no longer exists.
+- [[an index omission silently disables the check that reads it]] — a screen over an incomplete index returns the same shape of answer as one over a complete index.

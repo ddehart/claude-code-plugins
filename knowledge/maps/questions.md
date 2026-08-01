@@ -16,3 +16,4 @@ unresolved matter that may have none yet. A question that accumulates enough evi
 
 - [[does a shared brief explain the original fanout symptom]] — **still open**; a spawn-shape answer was written and retracted the same day against contrary cross-domain evidence. Discriminator: were osu-builders-studio's 43 silent workers named teammates or plain subagents?
 - [[should the type-gap check cover attractor types, not just entity types]] — settled by whether a second graph hits the same wall in an uncovered tier.
+- [[what should a processed stamp record when the source is still open]] — a date says when a read happened, not how far it reached; a run over a live source necessarily stops short of itself.

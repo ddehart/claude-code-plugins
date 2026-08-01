@@ -47,6 +47,17 @@ to do so. The readers were spawned *unnamed*; see
 spec's revision log was left out of order by a scripted string-insert, and the reference model the spec
 corrects toward was never opened despite being on disk throughout.
 
+**Shared events with `session:4475b018-cfea-45cb-8db8-003bf0fb9aaf`** (the implementing session, not yet
+processed). These occurred in both conversations and are captured *here*; a run over that session should
+extract only what its own side adds, not re-record them as second witnesses:
+
+- the graph collision — both sessions independently wrote the same decision note and the same supersession
+- the reversal of the spec's §6 `raw: unavailable` instruction, and the v1.3 bump minted to signal it
+- the founding transcript being found intact, archived, and moved under this project's slug
+
+The tier guard in the process skill covers session-vs-chronicle, not two sibling sessions. This block is the
+manual substitute; see [[concurrent writers are invisible until write time]].
+
 ## processed
 - date: 2026-07-28
   ran: [1 decision, 1 supersession, 1 pattern, 7 observations, evidence updates to 5 attractors and 1 open
@@ -54,4 +65,15 @@ corrects toward was never opened despite being on disk throughout.
   skipped: [the §5.3 migration notes beyond the decision pair — they belong to the implementing session;
     ~19 findings that restate decisions already durable in the spec; commit mechanics and interview
     option-by-option reasoning]
+  errored: []
+- date: 2026-08-01
+  read-through: >
+    the augment export of 2026-08-01T14:17 (47,428 words). The prior run read a 13,964-word export cut at
+    2026-07-28T13:02; this pass covered the material after it. Like that run, this one is inside its own
+    source and stops short of itself — see [[what should a processed stamp record when the source is still
+    open]].
+  ran: [3 patterns, 11 observations, 1 question, evidence and witness updates to 3 attractors, 3 map
+    updates, 3 promotion candidates]
+  skipped: [~20 decisions already durable in the spec and generated-skill prose; commit mechanics; Todoist
+    tasks (declined at plan review)]
   errored: []
