@@ -157,6 +157,29 @@ question is open again with two competing mechanisms and a stated discriminator.
 named against n=5 unnamed inside one session, written up as settled — the same shape as three of the
 observations this very run recorded. Caught only because `/promote` re-fetches the target before writing.
 
+## 2026-08-01 — the archive's first real use
+
+Not a `/process` run. PR #71 merged (knowledge-commons 0.6.0), and the two session exports left in the
+retired `.claude/session-exports/` were passed through the new preserve stage's redaction gate and moved
+into `knowledge/sources/raw/`. That directory is now gone; the archive holds its first material.
+
+**Gate result — 4 findings, all accepted as false positives.** Three were prose in the transcripts
+*describing* the gate's own planted-secret fixture; one was a Python `key=` keyword argument. The
+read-through found no credentials and no personal data. The other-domain names it did surface (Aiwyn,
+osu-builders-studio, wellstead) are already present elsewhere in this public repo, and no employer content
+is quoted — only a four-stage shape the merged spec already describes. Nothing redacted, nothing withheld.
+
+**Learned, and it cost a round-trip:** the first read of that gate output was driven by grep counts and a
+keyword match against the Never Capture rule, and it recommended withholding. Reading what the references
+actually *said* reversed it — no quoted content, names already public, a shape already in the spec. A
+count is not a finding. The read-through half of this gate is judgment by design, and judgment exercised
+on a tally rather than on the text produces confident answers about the tally.
+
+**Also:** both exports of one session are kept rather than only the fuller one. The 07-28 export (1,295
+lines) is what the first processing pass actually read; the 08-01 export (4,078 lines) is the same session
+after it grew, identical for its first 1,290 lines. Keeping both makes that note's partial-coverage claim
+checkable instead of merely stated.
+
 ## 2026-08-01 — session f64160a1, augment pass
 
 Second pass over the same source. The 2026-07-28 run read an export cut at 13:02 while the session kept

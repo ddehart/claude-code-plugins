@@ -4,6 +4,9 @@ tags: [source, session]
 source: "session:f64160a1-e82b-4015-bd19-08331d49a995"
 date: 2026-07-26
 pre-fix-pipeline: true
+archive:
+  - knowledge/sources/raw/2026-08-01T1417-process-pipeline-correction-augment.txt
+  - knowledge/sources/raw/2026-07-28T1302-process-pipeline-correction-spec.txt
 ---
 
 # session f64160a1 — the process pipeline correction, specced not built
@@ -29,9 +32,21 @@ implementation. Spec at v1.2.
 dangle, which is the defect the spec above exists to fix.
 
 **This run used the pre-fix pipeline.** Marked in frontmatter as `pre-fix-pipeline: true`. There was no
-preservation stage, so the export went to the gitignored `.claude/session-exports/` that the spec retires,
-and this note points at a transcript nothing durably archived. A later reader should not mistake it for a
-post-fix artifact. The spec's §6 step 6 calls for a `/process` run over *this same session* after the fix
+preservation stage, so the export went to the gitignored `.claude/session-exports/` that the spec retires.
+A later reader should not mistake it for a post-fix artifact.
+
+**Archived 2026-08-01, after the fix shipped.** Both exports were moved into `knowledge/sources/raw/` and
+committed, and that directory is gone. Two exports of one session, kept deliberately rather than keeping
+only the fuller one: the 07-28 export (1,295 lines) is what the first processing pass actually read, which
+is what the partial-coverage note below refers to; the 08-01 export (4,078 lines) is the same session after
+it grew, and is identical to the first for its opening 1,290 lines. Keeping both is what makes the coverage
+claim checkable instead of merely stated.
+
+**Redaction gate, run 2026-08-01 — 4 findings, all accepted as false positives.** Three were prose in the
+transcript *describing* the gate's own planted-secret test fixture (`sk-ant-…FAKEFAKEFAKE`, a
+`BEGIN RSA PRIVATE KEY` header, a `postgres://` example); one was a Python `key=` keyword argument. The
+read-through found no credentials, no personal data, and no other-domain material beyond names already
+present elsewhere in this public repo. Nothing was redacted and nothing was withheld. The spec's §6 step 6 calls for a `/process` run over *this same session* after the fix
 lands — that run, not this one, is the first exercise of all four stages.
 
 **Coverage is partial, deliberately.** Processed while the session was still live: the export read by the

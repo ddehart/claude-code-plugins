@@ -12,9 +12,10 @@ and burns context for nothing. Since 2026-07-28 the export is rendered to a scra
 scanned by the preserve stage's redaction gate there, and moved into `knowledge/sources/raw/` — committed —
 only once it passes. It is the archived copy of the raw material, not a throwaway derivative.
 
-Until then it landed in `.claude/session-exports/`, gitignored. That is retired: a source note pointing
-into an untracked directory is a dangling pointer waiting to happen, and this graph's founding source note
-already points at a transcript that went with one.
+Until then it landed in `.claude/session-exports/`, gitignored. **That directory is gone as of
+2026-08-01** — its two exports (both of `session:f64160a1`) were passed through the redaction gate and
+moved into `knowledge/sources/raw/`, where they are committed. A source note pointing into an untracked
+directory is a dangling pointer waiting to happen, which is the whole reason the archive is in the repo.
 
 - **2026-07-22** — resolved `session:5912a7cc` for the first transcript-tier `/process` run. 2 MB JSONL to
   534 KB / 76k words of text.
