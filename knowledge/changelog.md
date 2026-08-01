@@ -157,6 +157,45 @@ question is open again with two competing mechanisms and a stated discriminator.
 named against n=5 unnamed inside one session, written up as settled — the same shape as three of the
 observations this very run recorded. Caught only because `/promote` re-fetches the target before writing.
 
+## 2026-08-01 — /process over session 4475b018: all four stages, for the first time
+
+The first `/process` run to exercise take-in, preserve, synthesize and extract in one pass. Source was
+this project's own implementing session — 4.4 MB of JSONL, 430 KB rendered.
+
+**Created**
+- Patterns (2): `a stopping rule tuned on one artifact kind measures the wrong thing on another`,
+  `each fix round manufactures the next round's defects`.
+- Question (1): `can raw material be committed in-repo when sessions span domains` — two settled
+  principles here are jointly unsatisfiable over the material actually processed.
+- Observations (9), attached across four attractors.
+- Synthesis: `docs/chronicle/2026-08-01.md`, written by `meta-claude:session-chronicle` during the run as
+  a sibling of extraction. No entry existed; the producer was invoked, not reimplemented.
+- Source note with `archive:`, `synthesis:` and the gate record.
+
+**Gate** — 131 findings, all accepted as false positives. A record, and a property of the subject rather
+than the risk: the session built a secret scanner, so its transcript is dense with planted fixtures and
+scanner output. All 131 were examined; 98 matched fixture strings the session itself coined. The
+read-through found no credentials and no personal data — three apparent hits on an address and two emails
+were the session's own grep *patterns* from an earlier read-through.
+
+**Learned**
+- Passing `name:` to the Agent tool yields an in-process teammate whose output goes to a mailbox; omitting
+  it yields a subagent whose final message is the return value. Four named readers went silent and ignored
+  follow-ups; four unnamed re-spawns with byte-identical briefs all reported. That is the discriminator
+  `does a shared brief explain the original fanout symptom` asked for, since the brief was held constant.
+- The mechanism was already recorded in this graph. Its note was read only after the third reader went
+  silent, and only because the failure was familiar — a fragile trigger for a load-bearing fact.
+- A rule on the path of the work fires reliably and can still prescribe the wrong remedy. *Chase silence*
+  fired three times and bought nothing, because chasing a mailbox cannot work.
+
+**Open**
+- The archive now holds 850 KB across three transcripts. Per-hit resolution at 131 findings is not what
+  D7 imagined; the open question records the collision it sits inside.
+
+[patch-check-suggested] — not a suggestion this run: `/graph-patch` was invoked directly today against
+the installed 0.6.0 log and reported no pending deltas, all 12 applied and stamped. Marker recorded so the
+monthly cadence suppresses correctly; the prior one is four days old.
+
 ## 2026-08-01 — the archive's first real use
 
 Not a `/process` run. PR #71 merged (knowledge-commons 0.6.0), and the two session exports left in the

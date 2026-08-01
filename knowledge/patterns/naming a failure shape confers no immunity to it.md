@@ -33,3 +33,5 @@ same and always structural: require an explicit negative; never infer one from a
 ## related
 - [[a plausible story arrests the investigation before the mechanism is found]]
 - [[ambiguous prose in an LLM-executed skill is a correctness bug]]
+- [[an independent verification used the one query that could not disprove it]]
+- [[five fail-open defects were found only by executing the code]]

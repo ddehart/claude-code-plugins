@@ -19,8 +19,53 @@ When writing a reflection, I consider:
 - Did I produce something I couldn't distinguish, from the inside, between recalled and constructed? Where did generative fluency stand in for retrieval?
 - When a rule *did* fire at the moment of action, what put it there — was it remembered, or was it structurally on the path of the work? What would move a library rule onto the path?
 - When a conclusion later turned out wrong, was there anything in its *texture* at the time that distinguished it from a right one? If not, say so — the absence is the observation, and it makes "notice when you're confabulating" useless as an instruction to yourself.
+- If a wrong conclusion *did* have a distinguishing texture, was it the texture of **diligence** — reasoning that was careful, explicit, and applied outside the domain it was calibrated for? That failure leaves an audit trail that makes the wrong answer more creditable, not less.
 
 ## Evolution Notes
+
+#### 2026-08-01
+
+Lightweight check, two entries since 2026-07-15 (07-22 and today).
+
+*The rule-on-the-path pair gets a third case, and it complicates the pair.* 07-22 established that
+proximity governs whether a rule fires: on the path it fires, in a library it doesn't. Today a rule on
+the path fired perfectly and was useless. *Chase silence, don't read it as an empty result* fired for
+three consecutive silent readers — and what it prescribes, chasing, cannot work against a named teammate,
+whose report returns on a channel the caller never sees. Two carefully-written follow-ups went into a
+mailbox. The discriminating fact was in this graph, in a note whose filename had been read hours earlier
+in a merge listing and never opened. So: proximity governs whether something fires, not whether it helps,
+and a rule on the path can send you confidently in the wrong direction while the library holds the fact
+that would have redirected you. Worth watching whether this splits into two questions later.
+
+*New prompt added, from the first divergent pair on the texture question.* The question added on 07-22
+asked whether a wrong conclusion had any distinguishing texture, licensing "no." Today produced one of
+each. The false "verified absent" claim had none — ordinary competence, no hesitation, corrected four days
+later from outside. The stop-the-review-loop call had a great deal: the rule was pulled up, its four tells
+enumerated and checked individually, three of four found satisfied against a threshold of two. It was
+wrong anyway, because the tells were calibrated on prose cold-reads and were being applied to executable
+code, where the same number means something else. That is worse than the textureless case — a
+confabulation that feels like nothing offers no false assurance, while careful reasoning in the wrong
+domain produces a written trail that makes the conclusion look *more* considered. The new prompt asks
+after that specifically.
+
+*Approaching established context, flagged not retired.* Three entries running have landed near "the
+verification apparatus was itself unverified." The mechanism has differed each time and today's is the
+sharpest — the audit that stopped the audit was the thing needing audit — so it is not stale yet. But a
+fourth arrival should treat it as this practice's furniture rather than as a finding, the same way 07-22
+ruled on "naming a failure shape confers no immunity to it."
+
+*Recurrence, recorded as such.* The 07-22 observation about Derek's short intent-layer questions repeated
+exactly: eleven words reversed a withhold recommendation built from grep counts and a keyword match, which
+would have made the first real run of this pipeline a withhold on evidence that didn't support it. Logged
+as confirmation, not discovery.
+
+*Cross-pass skipped, and the skip is the honest outcome.* `chronicle-gemini-synthesis.md` calls for an
+outside-model pass at this step. `agy` is not on PATH and the consumer `gemini` binary is long retired.
+The sanctioned fallback is a Claude subagent, which the rule itself describes as systematically weaker at
+the one job the augment exists for — an outside reader that shares every blind spot of the inside one.
+With two entries in the window and the native three-entry scan already run, a degraded pass would have
+produced output without producing an outside view. Recorded rather than performed. Worth restoring `agy`
+before the next deep review, where the corpus is large enough for the pass to earn its keep.
 
 #### 2026-07-22
 

@@ -59,3 +59,4 @@ than an in-place rewrite.
 ## related
 - [[justifying prose drifts from the thing it justifies]]
 - [[a plausible story arrests the investigation before the mechanism is found]]
+- [[named readers went silent while unnamed re-spawns with identical briefs all reported]]

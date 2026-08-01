@@ -24,3 +24,5 @@ lost, because there was nothing recorded to check against.
 
 ## related
 - [[a plausible story arrests the investigation before the mechanism is found]]
+- [[a test suite stayed green with an entire scan path deleted]]
+- [[named readers went silent while unnamed re-spawns with identical briefs all reported]]

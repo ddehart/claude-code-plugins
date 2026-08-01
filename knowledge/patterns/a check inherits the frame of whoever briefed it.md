@@ -35,3 +35,5 @@ before designing against it.
 ## related
 - [[break the self-review chain with a different agent]]
 - [[a plausible story arrests the investigation before the mechanism is found]]
+- [[a delegated judgment step ran on tallies until a question forced the read]]
+- [[an approval gate written for an operator stalls when nobody is at the prompt]]
