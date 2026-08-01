@@ -20,13 +20,15 @@ commits and briefs, then committed it repeatedly — because inference from sile
 every individual site, and nothing downstream can tell the two outcomes apart. The correction is always the
 same and always structural: require an explicit negative; never infer one from absence.
 
-*Two witnesses (2026-07-22, 2026-07-26). Open.*
+*Three witnesses (2026-07-22, 2026-07-26, 2026-08-01). Open.*
 
 ## evidence
 - [[the anti-silent-loss machinery shipped four instances of the shape it was built to eliminate]]
 - [[a completed subagent report and an absent one produce the same symptom]]
 - [[the generator's own instruction would have regenerated the defect just fixed]]
 - [[an unnamed subagent returns its report where a named teammate delivers it nowhere]]
+- [[a scoped-search error recurred a third time after two instances were written into the graph]]
+- [[the synthesis stage was deferred four times and never produced]]
 
 ## related
 - [[a plausible story arrests the investigation before the mechanism is found]]

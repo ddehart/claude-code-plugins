@@ -156,3 +156,37 @@ briefs and two task shapes, which that mechanism cannot explain unless all of th
 question is open again with two competing mechanisms and a stated discriminator. The evidence here was n=1
 named against n=5 unnamed inside one session, written up as settled — the same shape as three of the
 observations this very run recorded. Caught only because `/promote` re-fetches the target before writing.
+
+## 2026-08-01 — session f64160a1, augment pass
+
+Second pass over the same source. The 2026-07-28 run read an export cut at 13:02 while the session kept
+going; the transcript had since roughly doubled, and everything after that cut was unprocessed while the
+stamp read as complete. That is now its own open question — a date says when a read happened, not how far it
+reached, and a run over a live session is inside its own material and necessarily stops short of itself.
+
+Written: 3 patterns, 11 observations, 1 question. Evidence and witness bumps to three existing patterns.
+
+The three new patterns are all failures the graph could not see about itself. **A claim restated into
+several artifacts starts reading as corroborated** — "the founding transcript is gone" went from one scoped
+search into skill prose, a decision note, a spec's closing argument, and finally a spec *instruction* handed
+to another session; during the original diagnosis the skill's own restatement was cited as evidence for the
+claim. **Concurrent writers are invisible until write time** — the commons moved between the redundancy
+screen and the write with both fetches reporting "already up to date," and two sessions independently wrote
+the same decision note. **An index omission silently disables the check that reads it** — the commons claims
+map listed 78 of 81, and one of the three missing was the claim closest to a candidate being promoted.
+
+Three observations indict this run rather than its subject. The scoped-search error fired a **third** time
+after two instances had been written into the graph the same day, under a pattern named for exactly it —
+within-session immunization is not what the graph provides. The previous run's effort-ratio critique never
+reached `knowledge/` at all, verified by grep: findings that name a fixable artifact convert into notes and
+findings that indict the method producing them do not, and the omission leaves no trace, which is why it is
+recorded now. And the augment read a transcript containing the prior run's reader reports verbatim,
+including inference explicitly tagged as inference — tags that do not survive re-ingestion.
+
+The chronicle for this session still does not exist. It was offered four times and deferred four times, each
+with a locally good reason. The session arguing that a synthesize-for-a-human stage is a required part of
+the pipeline is the session that never produced its own.
+
+Todoist tasks were proposed and declined at plan review; no sink ran.
+
+[entity-type-gap: template deltas]
