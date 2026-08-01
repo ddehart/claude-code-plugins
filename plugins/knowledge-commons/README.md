@@ -75,7 +75,7 @@ A graph declares which type roles it needs during the interview. The vocabulary:
 | **evidence** | One atomic, provenanced observation or claim — and a `supports:` link. |
 | **attractor** | Accumulates evidence and states the payoff up front. *Open* attractors (patterns, questions) gather evidence with no verdict; *settled* ones (decisions) carry reasoning. |
 | **entity** *(optional)* | The nouns a graph keeps returning to. Retrieved by lookup, never by association; never promoted. |
-| **synthesis** *(optional)* | An intermediate note distilling a rich bounded source (a meeting, a call) before atomic extraction. |
+| **synthesis** *(optional)* | A note distilling a rich bounded source (a meeting, a call, a session) for a human reader. A *sibling* of the atomic evidence, not an intermediate the evidence passes through — both come from the raw material, and evidence is extracted from the raw. May be an existing project artifact adopted at the path it already occupies. |
 | **reference** *(optional)* | Lookup-only, unbounded facts that are never an association surface. |
 
 ### The commons and promotion
@@ -111,6 +111,7 @@ Run in the target project (not this plugin repo), `graph-init` writes real, proj
     <atlas>.md                        # the single navigation root
     maps/                             # one seeded map per type that holds notes
     <type dirs>/                      # evidence, attractors, entities, reference, sources…
+    sources/raw/                      # committed archive of raw material too large to inline
     changelog.md
   .claude/skills/
     process/SKILL.md                  # the domain's /process orchestrator
@@ -162,6 +163,9 @@ plugins/knowledge-commons/
     graph-init/SKILL.md               # the generator
     promote/SKILL.md                  # the cross-domain derivation mechanism
     graph-patch/SKILL.md              # the maintainer — propagates template fixes
+  scripts/
+    scan-secrets.sh                   # the redaction gate's deterministic floor
+    test-scan-secrets.sh              # its planted-secret test
   references/
     graph-conventions.md              # the shared note/map/frontmatter contract
     deltas.md                         # the append-only delta log /graph-patch reads

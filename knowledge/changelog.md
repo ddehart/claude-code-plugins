@@ -2,6 +2,53 @@
 
 ## 2026-07
 
+### 2026-07-28 — pipeline correction: preserve and synthesize (knowledge-commons 0.6.0)
+
+Not a `/process` run. A structural correction to the pipeline itself, implemented from
+`docs/specs/knowledge-commons-process-pipeline.md`, plus the graph notes recording it.
+
+**Changed**
+- Decisions (1 new, 1 superseded): `processing preserves the raw and synthesizes for a human, and
+  extracts from the raw` records the four-stage model. `session transcripts are primary and the
+  chronicle is the lossy fallback` is marked superseded with a pointer; its content is unedited.
+- Source (1): **no change, and that is a correction.** This entry originally recorded the founding source
+  note gaining `raw: unavailable`, on a check that globbed `*claude-code-plugins*` and found nothing. The
+  glob was the wrong instrument — the session ran in a `commons-scaffold` worktree, so its transcript sat
+  under a different slug and that pattern could never have matched it. The transcript is intact (2.8 MB,
+  1,311 lines). The marker has been removed and spec v1.3 reverses the instruction to add it.
+- `maps/decisions.md`: entry for the new decision, supersession marker on the old one.
+- `.commons.yml`: the chronicle moves from `sources:` to `types.synthesis` (adopted at
+  `docs/chronicle/`, outside the graph root); the session tier gains a committed
+  `archive: knowledge/sources/raw/` and `gate: public`.
+- Both generated skills patched through six template deltas.
+
+**Decided**
+- The chronicle is this pipeline's output, not a second input tier. Everything the old arrangement
+  needed — a primary/fallback ordering, an overlapping-tier guard, a transcript-survival check — was
+  machinery containing that one inversion, and all of it is gone.
+- Raw material is archived in-repo and committed. The gitignored-scratch predecessor is what let the
+  founding transcript vanish with nothing announcing the loss.
+
+**Learned**
+- Verifying a claim is not the same as verifying it against a query that could disprove it. The check
+  that "confirmed" the founding transcript was gone was scoped to the one path it could not be in, and it
+  was run precisely *because* the note's claim shouldn't be taken on trust. See
+  [[a search scoped to one path returned nothing and was reported as absence]].
+- The redaction floor's first run reported three findings and silently missed a planted private key:
+  a pattern starting with `-` was eaten as grep options, grep exited 2, and stderr was discarded, so
+  the miss was shaped exactly like a clean pass. The plant-a-failure test is the only reason it
+  surfaced; an exit-code-only assertion stayed green throughout. The test now ships as
+  `test-scan-secrets.sh` rather than having been performed once.
+- Run against a real session export, the gate returned three hits and all three were false positives —
+  prose describing that same test fixture. Concrete evidence for per-hit resolution over a blanket
+  policy: withholding would have discarded a 100 KB transcript over three lines of documentation.
+
+**Open**
+- The nine existing chronicle entries stop being queued as sources. Those whose transcripts survive are
+  reachable by processing the transcript, which will find and link the entry as its synthesis; those
+  whose transcripts are gone are reachable through the orphaned path. Neither was done here.
+
+
 ### 2026-07-15 — founding pass: commons-scaffold session `284b79f5`
 
 First `/process` run against the graph (previously an empty scaffold). Source was the raw session

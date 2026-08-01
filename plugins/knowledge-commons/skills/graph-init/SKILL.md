@@ -116,10 +116,17 @@ present. Never recombine them to save a slot; both calls have room.
 9. Are there source tiers whose raw material must be preserved verbatim, distinct from the types above?
    A transcript, a recording, an original document — material where the distillation is not a substitute
    for the thing itself.
-9b. Do any rich bounded sources — a call, a meeting, a session — warrant an intermediate *synthesis*
-   note between the source and its evidence: one note distilling the event before atomic extraction?
+9b. Do any rich bounded sources — a call, a meeting, a session — warrant a *synthesis*: one note
+   distilling the whole event for a **human reader**, produced alongside the atomic evidence rather than
+   in between the source and it? Ask two things here, and record both: whether this graph wants the tier
+   at all, and **what produces the note** — a skill the project already has (a journaling skill, a
+   write-up skill), or `/process` itself. If the project already keeps such a document — a chronicle, a
+   session journal — say so plainly: those existing files *are* the synthesis tier, adopted at the path
+   they already occupy, and the answer to "what produces it" is whatever writes them today.
 
-**Block 3 — Sources.**
+**Block 3 — Sources.** Five questions, so **two** `AskUserQuestion` calls — 10 through 12, then 12b and
+13. Don't drop 12b to fit one call: it is what decides whether the generated pipeline has a redaction
+gate, and a graph generated without one archives straight to its destination with nothing in the way.
 10. What arrives on its own, without being asked for — a chronicle directory and glob, pasted URLs,
    something else? Name every tier.
 11. Are there on-demand sources too — articles, docs, reference material you'd point the pipeline at
@@ -127,6 +134,13 @@ present. Never recombine them to save a slot; both calls have room.
    pipeline (fetched material can vanish; keep a source note) but no queue.
 12. For each tier: how does an input resolve to the canonical `source:` identity the ledger keys on,
     and is there a resolver skill, or is it already local content?
+12b. For each tier whose raw material is too large to sit inside a note: where does the archived copy
+    live, and **is that destination public or shared?** The path is a directory in the project, under
+    version control — the point of archiving is that the material outlives the session, which a scratch
+    or gitignored directory does not deliver. The public/shared answer is not a preference: it selects
+    whether the generated pipeline carries a redaction gate before it writes anything there. A repo
+    other people can read, now or later, is public. Ask it per tier, not once for the graph. For tiers
+    small enough to inline verbatim in the source note, there is nothing to archive — say so and move on.
 13. What signal classes should inspection look for in this source — the categories of thing worth
     turning into a note?
 
@@ -229,6 +243,31 @@ entity and synthesis tiers (when the interview declared them) follow the referen
 and `sinks:` entirely for a graph that has none — don't write empty lists. Do not invent top-level keys
 the spec doesn't name (there is no `feeders:` or similar registry in this design).
 
+Three sub-keys come from the questions added to blocks 2 and 3, and none of them is a new top-level key:
+
+```yaml
+types:
+  synthesis:
+    name: <synthesis type name>
+    dir: docs/chronicle/                 # MAY sit outside graph.root — see below
+    produced-by: <skill that writes one>  # from block 2 q9b; omit if /process writes it itself
+sources:
+  - type: <tier>
+    # ...path, glob, identity, resolver...
+    archive: knowledge/sources/raw/      # from block 3 q12b; omit for a tier that inlines
+    gate: public                         # public | shared | private — selects the redaction gate
+```
+
+- **`archive:`** names a committed directory in the project. Never a gitignored or scratch path: the
+  whole point is that the material outlives the session. Omit it for a tier whose material inlines
+  verbatim into the source note.
+- **`gate:`** is what makes the generated preserve stage carry a redaction gate (`public`, `shared`) or
+  not (`private`). Write it on every tier that has an `archive:`. When the user was unsure, write
+  `public` — the gate costs friction, and its absence costs a leak that git history outlives.
+- **`types.synthesis.dir:`** may name a path **outside** `graph.root`. That is the normal case when the
+  project already keeps the document — the existing files are the synthesis tier, adopted where they
+  are. Record the real path; do not relocate them into the graph and do not invent a parallel directory.
+
 **On a fresh write — and only on a fresh write — also write a `generated:` block**, the legal sixth key
 holding applied-delta state. The re-run path is different and is handled at the end of this step; read that
 before writing the block over a config that already exists.
@@ -315,7 +354,17 @@ Create, under `graph.root`:
   `{reference-dir}` if any, and a `sources/` directory if this graph has sources). In a git repo, drop
   a `.gitkeep` in each still-empty type directory — git doesn't track empty directories, and a scaffold
   that vanishes on first commit is a confusing first impression.
+- **The raw archive directory** named by any tier's `archive:`, with a `.gitkeep`. Create it here rather
+  than leaving the first `/process` run to create it: a preserve stage that has to invent its own
+  destination is a preserve stage that will invent a different one under pressure.
 - An empty `changelog.md` at the graph root.
+
+**Never create or overwrite a synthesis directory that sits outside `graph.root`.** When
+`types.synthesis.dir:` names an existing project path — a chronicle, a journal — those files are the
+tier, and they are not yours. Scaffolding into that path writes a stub map or a `.gitkeep` into a
+directory the project already curates; overwriting anything there destroys work the graph exists to
+read. Verify the path exists and move on. If it doesn't exist yet, say so in the report rather than
+creating it — an empty directory the project hasn't started keeping yet is the project's to open.
 
 ### 6. Generate the skills
 
@@ -337,8 +386,32 @@ For each template:
 - Delete every SLOT comment and its example after filling it, and delete the template's top
   instruction note (the blockquote in `knowledge-graph.md` explaining the brace convention to you,
   the generator — it has no business in a file a session will read as its own skill).
-- In `process.md`, include section 11 (the promotion tail) only if this graph's `promotes-to:` is
+- In `process.md`, include the promotion-tail section only if this graph's `promotes-to:` is
   set; omit the whole section, not just its content, when there's nothing to promote to.
+- **The preserve stage is generated into every `process` skill, unconditionally.** What varies is its
+  form, never its presence. Fill its `preserve-form` SLOT per tier from the `archive:` answers: an
+  inlining tier says so plainly and names no directory; an archiving tier names its concrete committed
+  path. A stage generated only when the config asks for it reproduces the defect this stage was added to
+  fix — a missing stage is one nobody notices is missing.
+- **The redaction-gate subsection is conditional on `gate:`.** Generate it when any tier archiving to a
+  destination is `public` or `shared`; omit it entirely — no header, no placeholder — when every such
+  tier is `private`. When you generate it, say in the prose which destination assumption it was written
+  under, so a later reader can see the assumption instead of reconstructing it. Stamp the resolved path
+  to `${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh` the same way you stamp the resolved path to
+  `references/graph-conventions.md` — the generated skill lives in the project and has no other way to
+  find it.
+- **Three pieces are conditional on `types.synthesis`, and they are conditional *together*.** Generate
+  all three or none:
+  1. the **synthesize section**, which checks for an existing synthesis and decides what to do,
+  2. the **paragraph in the plan step** naming which of those two it will be, and
+  3. the **write paragraph** in the run step, making it a sibling of extraction.
+
+  Count them before you generate. Omitting (2) is the easy mistake — it is one paragraph in a section
+  that is mostly about something else — and it is the one that breaks the pipeline's single invariant:
+  a run that writes a synthesis the plan never proposed has put a write outside the one approval gate.
+  Omitting (3) leaves a plan promising something nothing does. When generating, fill in the synthesis
+  type's name, its directory, and the `produced-by:` skill. When omitting all three, renumber the
+  sections that follow rather than leaving a gap.
 - For a graph with no sources (the commons), the knowledge-graph template's extraction-workflow
   section has no pipeline to describe: replace it with a short "How notes arrive" section — claims
   arrive via the plugin's `promote` skill carrying `domain:`, nothing is authored directly, and the
@@ -413,8 +486,13 @@ owner's.
 - Never write anything into a commons root you recorded but couldn't verify. An empty directory that
   later receives the user's real commons is the intended outcome; scaffolding it is the second-commons
   bug on a delay.
-- Never invent `.commons.yml` keys beyond `graph:`, `types:`, `sources:`, `sinks:`, `promotes-to:`,
-  and `generated:`. That last one is sanctioned but not yours: `/graph-patch` owns it, and it records
+- Never invent **top-level** `.commons.yml` keys beyond `graph:`, `types:`, `sources:`, `sinks:`,
+  `promotes-to:`, and `generated:`. This constrains the top level only — the sub-keys *inside* those
+  six are the config's vocabulary and grow as the design does (`archive:` and `gate:` under a source
+  tier, `produced-by:` under `types.synthesis`, and whatever a later version adds). Read as a ban on
+  all keys, this line would forbid writing the config the rest of this skill tells you to write. What it
+  actually forbids is a new registry at the top level — there is no `feeders:` in this design. That last
+  key is sanctioned but not yours: `/graph-patch` owns it, and it records
   which template deltas have already been applied to this project's generated skills. Write it only at
   generation time; never rewrite or prune it afterward, and leave it untouched when re-running over an
   existing graph. Dropping it doesn't look like data loss — it looks like `/graph-patch` re-proposing

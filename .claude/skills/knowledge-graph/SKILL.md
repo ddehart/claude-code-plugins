@@ -90,11 +90,22 @@ deliberate, flagged exception for a future run to cluster, not license to skip t
 
 ## Types in This Graph
 
-- **Source** — chronicle entries (and, on demand, Claude Code docs pages), stored in `sources/`. Preserves
-  what mattered from the raw material, keyed on a canonical `source:` (a chronicle file's repo-relative
-  path, a URL). Carries the `processed:` stamp that makes `/process` re-runs resume instead of redoing.
-- **Synthesis** — none. A chronicle entry is already a session-level synthesis, so evidence is extracted
-  straight from the source; there is no intermediate synthesis tier in this graph.
+- **Source** — session transcripts (and, on demand, Claude Code docs pages), stored in `sources/`, keyed
+  on a canonical `source:` (`session:{uuid}`, a URL). A transcript is too large to sit in a note, so its
+  source note carries an `archive:` pointer into `knowledge/sources/raw/`, where the rendered transcript
+  is committed; a docs page is small enough to inline verbatim. Carries the `processed:` stamp that makes
+  `/process` re-runs resume instead of redoing, and `raw: unavailable` where a transcript has been pruned.
+- **Synthesis** — `chronicle`, the dated entries in `docs/chronicle/`, written by
+  `meta-claude:session-chronicle`. A chronicle entry distils one session for a **human reader**. That
+  first clause used to be the reason this graph declared *no* synthesis tier — "a chronicle entry is
+  already a session-level synthesis, so evidence comes straight from the source" — and it inverts itself:
+  being a synthesis of the session is exactly what makes it this pipeline's **output**, not its input.
+  It is a **sibling** of the atomic evidence, not an intermediate the evidence passes through: `/process`
+  makes the chronicle and the observations from the same transcript, side by side, and observations are
+  extracted from the transcript rather than through the entry. The entry links back to its source note
+  and the source note links to it. These are pre-existing project artifacts adopted into the tier at the
+  path they already occupy — outside `knowledge/`, and without this graph's `genitor:`/`tags:`
+  frontmatter, which the tier tolerates because the link direction that matters lives on the source note.
 - **Evidence** — `observation`, stored in `observations/`. Atomic, provenanced notes; each one supports at
   least one attractor.
 - **Attractors** — `pattern` (open — a recurring shape, accumulating evidence about how plugins & skills
@@ -109,14 +120,17 @@ deliberate, flagged exception for a future run to cluster, not license to skip t
 - **Reference** — `reference`, stored in `reference/`. Unbounded lookup facts (Claude Code feature
   behaviors, format specs); never an association surface.
 
-## Extraction Workflow: chronicle
+## Extraction Workflow: session
 
-Working one chronicle entry (e.g. `docs/chronicle/2026-07-15.md`):
+Working one session (e.g. `session:5912a7cc-0cd3-44cb-829f-fe1130ef07c6`):
 
-1. If this entry has no source note yet, create one under `sources/` — canonical `source:` (the
-   repo-relative path) in frontmatter, a short preservation of what the entry covered — and add it to
-   `maps/sources.md`. This note is the ledger `/process` stamps.
-2. Read the entry. Note candidate observations against the four signal classes: a **design decision +
+1. The source note already exists — `/process`'s preserve step wrote it before inspection, with the
+   canonical `source:` (`session:{uuid}`, never a path) in frontmatter, an `archive:` pointer into
+   `knowledge/sources/raw/`, and an entry in `maps/sources.md`. It is the ledger `/process` stamps.
+   If you are here without one, preservation was skipped; go back rather than writing notes with no
+   provenance.
+2. Read the **transcript**, not the chronicle entry for that session. Note candidate observations
+   against the four signal classes: a **design decision +
    rationale**, a **failed approach or correction**, a **recurring lesson**, a **reflection / meta-trend**.
 3. For each candidate, check the atlas and search the graph first. If a close observation already exists,
    update that note instead of creating a new one.
@@ -126,7 +140,7 @@ Working one chronicle entry (e.g. `docs/chronicle/2026-07-15.md`):
    unattached for a future run to cluster.
 5. Update the supported attractor's `## evidence` section with the new observation, and its map entry's
    gloss in `maps/patterns.md` or `maps/decisions.md` if the new evidence changes the "so what."
-6. If the entry names a plugin or skill not yet in `entities/`, add a lookup-only entity note and list it
+6. If the session names a plugin or skill not yet in `entities/`, add a lookup-only entity note and list it
    under the right heading (Plugins / Skills) in `maps/entities.md`.
 7. Add the observation to `maps/observations.md` in alphabetical position.
 8. Scan for cross-references — does this observation relate closely enough to another recent one to link
@@ -210,7 +224,7 @@ to `knowledge/changelog/YYYY-MM.md` before appending.
 4. Scan for cross-references — does this note relate closely enough to another recent one to link them
    directly?
 
-See "Extraction Workflow: chronicle" above for how this graph turns a chronicle entry into notes end to
+See "Extraction Workflow: session" above for how this graph turns a session into notes end to
 end.
 
 **Query** — "what do we know about X":

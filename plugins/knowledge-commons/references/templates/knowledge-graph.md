@@ -93,10 +93,13 @@ an unlinked pile. Everything else on this list is a judgment call; this one is c
 - **Source** — {source-type-or-none}, stored in `{source-dir}`. Preserves raw material as received, keyed
   on a canonical `source:` (a chronicle file's repo-relative path, a URL). Carries the `processed:` stamp
   that makes `/process` re-runs resume instead of redoing.
-- **Synthesis** — {synthesis-type-or-none}. An optional intermediate for rich bounded sources (a call, a
-  meeting): one note distilling the whole event, from which atomic evidence is then extracted. It links
-  back to its source note and lists what was extracted from it. Thin transactional sources don't need
-  one — evidence comes straight from the source.
+- **Synthesis** — {synthesis-type-or-none}. For rich bounded sources (a call, a meeting, a session): one
+  note distilling the whole event **for a human reader**. It is a **sibling output of the raw material,
+  not an intermediate the evidence passes through** — `/process` makes it and the atomic evidence from
+  the same source, side by side, and evidence is extracted from the raw material rather than from this
+  note. It links back to its source note and lists what was extracted alongside it. A synthesis note may
+  be an existing project artifact adopted into the tier rather than one this graph authored, in which
+  case it lives wherever it already lives. Thin transactional sources have no synthesis at all.
 - **Evidence** — `{evidence-type}`, stored in `{evidence-dir}`. Atomic, provenanced notes; each one
   supports at least one attractor.
 - **Attractors** — {attractor-type-list}. Accumulate evidence; each carries a "so what."

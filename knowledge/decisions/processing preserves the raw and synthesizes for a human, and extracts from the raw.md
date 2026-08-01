@@ -26,8 +26,15 @@ Where a synthesis exists but its raw source is gone, extraction falls back to th
 note is marked `raw: unavailable`. That is a permanent named path, not a migration step — transcripts will
 keep being pruned.
 
-*Decided 2026-07-26. Specced in `docs/specs/knowledge-commons-process-pipeline.md` v1.2; not yet
-implemented.*
+**The bar for that path is "verifiably absent", and this graph has already failed it once.** The founding
+source note was marked `raw: unavailable` on the strength of a project-scoped glob that returned nothing;
+the transcript was 2.8 MB and intact, under another project's slug. So the path fires on a UUID search
+across every slug coming back empty — never on a scoped miss, and never because the raw material is merely
+large or the synthesis an easier read. Extracting from a synthesis whose raw source is alive is the one
+thing this model exists to prevent, and the degraded path must not become its loophole.
+
+*Decided 2026-07-26. Specced in `docs/specs/knowledge-commons-process-pipeline.md` (v1.3); implemented in
+knowledge-commons 0.6.0.*
 
 ## related
 - [[session transcripts are primary and the chronicle is the lossy fallback]] (superseded by this)
