@@ -61,38 +61,54 @@ done
 #
 # Both halves are load-bearing on purpose and either one alone prevents the defect, so
 # removing the "redundant" one looks safe and passes the suite. Keep both.
+#
+# TWO GROUPS, matched differently, and the difference is the whole point.
+#
+#   LEAD  — structural markers. A value that *begins* with one is a placeholder however
+#           it continues: <your-key-here>, ${VAR}, xxxx, ***, ….
+#   WORD  — dictionary words. These must be the WHOLE value, or be followed by a
+#           non-alphanumeric character. Matching them as a prefix is a hole: a real
+#           credential that happens to start with one is silently suppressed, and
+#           "starts with a common English word" is not rare in a random key.
+#           API_KEY=nullXk29LpQr7Wm3Zt8Vc1Bh6Ny4 read as clean under the prefix form,
+#           as did values beginning true…, nil…, fake…, none…. Same shape as the two
+#           defects already fixed here: a legitimate value defeating the heuristic
+#           because the check was looser than the thing it was checking for.
 
-readonly PLACEHOLDER='([<{$[:space:]]|x{3,}|X{3,}|\*{3,}|\.\.\.|your[-_]|my[-_]|some[-_]|placeholder|example|changeme|change[-_]me|redacted|dummy|fake|sample|insert[-_]|todo|fixme|none|null|nil|true|false)'
+readonly PLACEHOLDER_LEAD='[<{$[:space:]]|x{3,}|X{3,}|\*{3,}|\.\.\.'
+readonly PLACEHOLDER_WORD='your|my|some|insert|placeholder|example|changeme|change|redacted|dummy|fake|sample|todo|fixme|none|null|nil|true|false'
 
 # --- patterns --------------------------------------------------------------------
 #
-# Three parallel arrays rather than a delimited string: every regex here contains "|"
-# as alternation, so any single-character field delimiter collides with the data.
+# Parallel arrays rather than a delimited string: every regex here contains "|" as
+# alternation, so any single-character field delimiter collides with the data.
 #
 # Ordered most-specific first, which is the order labels appear in a finding when one
 # line carries more than one shape (see report()).
 
 LABELS=()
-FLAGS=()
 REGEXES=()
 
-add_pattern() { LABELS+=("$1"); FLAGS+=("$2"); REGEXES+=("$3"); }
+# Fixed-format patterns only; all are case-sensitive by construction (a token prefix
+# has a fixed case). The two value-checked patterns below need -i and are scanned
+# separately, so there is no per-pattern flag here to get out of step with reality.
+add_pattern() { LABELS+=("$1"); REGEXES+=("$2"); }
 
-add_pattern "private key block"                 ""  '-----BEGIN( [A-Z0-9]+)* PRIVATE KEY-----'
-add_pattern "Anthropic API key (sk-ant-)"       ""  'sk-ant-[A-Za-z0-9_-]{16,}'
-add_pattern "GitHub token (ghp_/gho_/ghs_/ghu_)" "" 'gh[pousr]_[A-Za-z0-9]{20,}'
-add_pattern "GitHub fine-grained PAT"           ""  'github_pat_[A-Za-z0-9_]{20,}'
-add_pattern "Slack token (xox*)"                ""  'xox[baprs]-[A-Za-z0-9-]{10,}'
-add_pattern "AWS access key id (AKIA)"          ""  'AKIA[0-9A-Z]{16}'
-add_pattern "Google API key (AIza)"             ""  'AIza[A-Za-z0-9_-]{35}'
-add_pattern "Stripe key (sk_live/rk_live)"      ""  '[sr]k_(live|test)_[A-Za-z0-9]{16,}'
+add_pattern "private key block" '-----BEGIN( [A-Z0-9]+)* PRIVATE KEY-----'
+add_pattern "Anthropic API key (sk-ant-)" 'sk-ant-[A-Za-z0-9_-]{16,}'
+add_pattern "GitHub token (ghp_/gho_/ghs_/ghu_)" 'gh[pousr]_[A-Za-z0-9]{20,}'
+add_pattern "GitHub fine-grained PAT" 'github_pat_[A-Za-z0-9_]{20,}'
+add_pattern "Slack token (xox*)" 'xox[baprs]-[A-Za-z0-9-]{10,}'
+add_pattern "AWS access key id (AKIA)" 'AKIA[0-9A-Z]{16}'
+add_pattern "Google API key (AIza)" 'AIza[A-Za-z0-9_-]{35}'
+add_pattern "Stripe key (sk_live/rk_live)" '[sr]k_(live|test)_[A-Za-z0-9]{16,}'
 # Hyphens allowed after sk-: current OpenAI keys are sk-proj-… and sk-svcacct-….
-add_pattern "OpenAI-style API key (sk-)"        ""  '(^|[^A-Za-z0-9_-])sk-[A-Za-z0-9_-]{20,}'
-add_pattern "JWT"                               ""  'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'
-add_pattern "connection string carrying a password" "" '[a-zA-Z][a-zA-Z0-9+.-]*://[^[:space:]/:@"]+:[^[:space:]/:@"]+@[^[:space:]/"]+'
+add_pattern "OpenAI-style API key (sk-)" '(^|[^A-Za-z0-9_-])sk-[A-Za-z0-9_-]{20,}'
+add_pattern "JWT" 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'
+add_pattern "connection string carrying a password" '[a-zA-Z][a-zA-Z0-9+.-]*://[^[:space:]/:@"]+:[^[:space:]/:@"]+@[^[:space:]/"]+'
 
-# These two carry a value that has to be checked against PLACEHOLDER, so they are
-# scanned separately below rather than from the arrays above.
+# These two carry a value that has to be checked against the placeholder groups, so
+# they are scanned separately below rather than from the arrays above.
 #
 # Both are case-insensitive and both tolerate a quote between the name and the
 # separator, because the material being scanned is rendered from JSON: a credential
@@ -153,7 +169,10 @@ extract_value() {
 }
 
 is_placeholder() {
-  printf '%s' "$1" | grep -q -a -i -E -e "^$PLACEHOLDER"
+  printf '%s' "$1" | grep -q -a -i -E -e "^($PLACEHOLDER_LEAD)" && return 0
+  # Whole value, or the word followed by a separator (changeme, change-me, your-key…) —
+  # never merely a prefix of a longer alphanumeric run.
+  printf '%s' "$1" | grep -q -a -i -E -e "^($PLACEHOLDER_WORD)([^A-Za-z0-9]|\$)"
 }
 
 # --- Failing closed --------------------------------------------------------------
@@ -171,20 +190,15 @@ is_placeholder() {
 # stop the process. Do not refactor them into a function invoked via $( ).
 
 scan_file() {
-  local file="$1" i label re flags out rc line lineno text value
+  local file="$1" i label re out rc line lineno text value
 
   i=0
   while [ "$i" -lt "${#REGEXES[@]}" ]; do
     label="${LABELS[$i]}"
-    flags="${FLAGS[$i]}"
     re="${REGEXES[$i]}"
     i=$((i + 1))
 
-    if [ "$flags" = "i" ]; then
-      out="$(grep -a -n -i -E -e "$re" -- "$file")"
-    else
-      out="$(grep -a -n -E -e "$re" -- "$file")"
-    fi
+    out="$(grep -a -n -E -e "$re" -- "$file")"
     rc=$?
     [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $label"
 

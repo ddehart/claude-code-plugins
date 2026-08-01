@@ -153,6 +153,18 @@ expect_exit "template reference"               0 'TOKEN=${GITHUB_TOKEN}'
 expect_exit "dummy word"                       0 'SECRET=changeme'
 expect_exit "prose naming key prefixes"        0 'OpenAI keys start with sk- and Anthropic keys with sk-ant-.'
 expect_exit "short value"                      0 'KEY=abc'
+expect_exit "whole-value dummy word"           0 'SECRET=redacted'
+expect_exit "dummy word with separator"        0 'KEY=change-me-please'
+
+# A dictionary word may be a placeholder as the WHOLE value; as a prefix of a longer
+# run it is just how the credential happens to start. Matching it as a prefix silently
+# suppressed real secrets — "starts with a common English word" is not rare in a key.
+printf '\nreal values that merely begin with a placeholder word\n'
+
+expect_exit "value beginning null"             1 'API_KEY=nullXk29LpQr7Wm3Zt8Vc1Bh6Ny4'
+expect_exit "value beginning true"             1 'PASSWORD=trueBl00dSecretValue99'
+expect_exit "value beginning fake"             1 'API_KEY=fakeR3alSecretValue123456'
+expect_exit "value beginning nil"              1 'SECRET=nilsHiddenPassphrase2026'
 
 # --- 3. Fail-closed -------------------------------------------------------------
 
@@ -176,7 +188,7 @@ printf '\nfail-closed — a scan that cannot run is not a scan that passed\n'
 # a failure rather than an acceptable near-miss. (The file's secret is caught by the
 # real pattern too; the ordering, not the secret's uniqueness, is what this pins.)
 BROKEN="$TMP/broken-scan.sh"
-sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" \"\" 'sk_live_[A-Za-z0-9(]{20,'|" \
+sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" 'sk_live_[A-Za-z0-9(]{20,'|" \
   "$SCAN" > "$BROKEN"
 chmod +x "$BROKEN"
 printf 'pasted from the dashboard: %s\n' "sk""_live_abcdefghijklmnopqrstuvwxyz012345" > "$TMP/bare-secret.txt"
