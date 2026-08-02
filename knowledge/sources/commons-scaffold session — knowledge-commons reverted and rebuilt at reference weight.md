@@ -27,8 +27,30 @@ the session UUID. `docs/chronicle/2026-07-15.md` is the curated write-up of the 
 the processing queue — a later chronicle run should augment these notes rather than duplicate them.
 
 **Transcript:** `~/.claude/projects/-Users-derek-personal-Developer-claude-code-plugins/284b79f5-c34f-4ad3-b97d-9c78cdc9c46f.jsonl`
-(2.8 MB / 1,311 lines), with its 14 subagent transcripts alongside it. Archived copy plus a readable
-export at `~/Developer/session-archive/`.
+(2.8 MB / 1,311 lines), with its 14 subagent transcripts alongside it.
+
+**Raw withheld from this repo's archive — 2026-08-02.** The rendered export was put through the preserve
+stage's redaction gate so it could move into `knowledge/sources/raw/`, and it **failed the read-through
+half**. It names client organisations alongside specific requests, carries an internal assessment of one
+client's stated motives, describes an unreleased platform decision as already affecting customers,
+references internal strategy artifacts, and discloses the schema and location of a private work vault. The
+deterministic floor **passed** it — its eight findings were one false-positive shape, a variable named `key`
+followed by a colon. Either half alone would have published this, which is the case for requiring both,
+made on the gate's first run against material the pipeline did not produce itself.
+
+The bar is that content, **not the employer's name**, which is not confidential and appears in this repo
+already.
+
+So the raw lives at `~/Developer/session-archive/` — a git repository with a **private** remote
+(`ddehart/session-archive`), visibility verified before and after its first push. Unscrubbed on purpose:
+substituting entities would make it a derived artifact rather than the raw material, and a scrub is only as
+good as the enumeration behind it. Private hosting gets the durability D2 wanted without needing the
+artifact to be anything other than what it is.
+
+**This is a genuine exception to D2, not a fact about one file.** D2 says raw commits in-repo and its
+rationale explicitly rejects an outside-the-repo location; D7's withhold branch says only that such material
+"is not archived at all," which reads as discarded. Neither anticipated raw that must be kept and cannot be
+published. See [[raw that cannot be published needs a home the spec does not give it]].
 
 **This note recorded no pointer at all until 2026-07-28**, and the graph had come to believe the transcript
 was lost — a claim repeated into the process skill, a decision note, and a spec before anyone checked. It

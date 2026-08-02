@@ -19,3 +19,4 @@ entry is annotated with the decision's upshot: `- [[title]] — what was chosen 
 - [[in-place rewrite of a shipped delta requires that nothing has stamped it]] — the append-only rule protects recorded state; where none exists there is nothing to protect.
 - [[processing a live session is not delegable to a subagent]] — the approval gate and the first-person reflection both require having been present.
 - [[processing preserves the raw and synthesizes for a human, and extracts from the raw]] — four stages, not two; the synthesis is a sibling output of the raw, never the thing evidence is extracted through.
+- [[raw that cannot be published needs a home the spec does not give it]] — D2 says raw commits in-repo and D7's withhold branch says it isn't archived at all; neither covers raw that must be kept and cannot be published.
