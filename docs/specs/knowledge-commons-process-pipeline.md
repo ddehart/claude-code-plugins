@@ -1,6 +1,6 @@
 # Knowledge Commons — The `/process` Pipeline Correction
 
-> **Version:** 1.3 · **Status:** implementation in flight on `feat/process-pipeline-correction` · **Date:** 2026-07-28
+> **Version:** 1.4 · **Status:** implemented and shipped in knowledge-commons 0.6.0 · **Date:** 2026-08-02
 > **Parent spec:** [`knowledge-commons.md`](./knowledge-commons.md) (v1.0.1)
 > **Plugin version at draft:** knowledge-commons 0.5.0 → ships as 0.6.0
 >
@@ -197,13 +197,23 @@ form varies because inlining a multi-megabyte transcript into a note is not poss
 The archive is a real directory in the project, committed to version control. For `claude-code-plugins`
 that is `knowledge/sources/raw/`, and `.claude/session-exports/` is removed from `.gitignore` and retired.
 
-*Rationale.* The gitignored-scratch-directory model has already lost this graph's founding transcript. A
-committed archive is versioned, backed up wherever the repo is backed up, and travels with the graph. The
-alternative — a durable location outside the repo — reintroduces the dangling pointer through a different
-door.
+*Rationale.* The gitignored-scratch-directory model leaves raw material undefended — in no repository,
+backed up by nothing, and reachable only by whoever remembers where it went. A committed archive is
+versioned, backed up wherever the repo is backed up, and travels with the graph.
+
+*This rationale used to open by asserting that the model "has already lost this graph's founding
+transcript." That was false* (§1.1) *and it survived the correction pass that fixed §1.1, §6, the process
+skill, and a decision note — because that pass enumerated where the claim appeared as prose about the
+transcript and missed where it appeared as justification for a decision. Fourth site of one unverified
+claim; see* `knowledge/patterns/a claim restated into several artifacts starts reading as corroborated.md`.
 
 *Cost, accepted:* repo size grows with every processed session, and the material is as public as the repo.
-D5 and D6 address the second.
+D5 and D6 address the second — **but not completely.** Some raw fails the gate and can never be committed,
+which D2 as written has no home for and D7 treats as discarded. That gap is real and was hit on the gate's
+first run against material the pipeline had not produced itself; see
+`knowledge/decisions/raw that cannot be published needs a home the spec does not give it.md`. A graph whose
+archive destination is public needs a **private, durable withheld-raw location** declared alongside the
+gate.
 
 ### D3 — The synthesis is a sibling output, not an extraction intermediate
 
@@ -434,6 +444,7 @@ verified to resolve exactly once in both the template and this project's generat
 
 | `id` | `file` | `anchor` | Substance |
 |---|---|---|---|
+| 1.4 | 2026-08-02 | Corrected D2's rationale, which still opened on the false claim that the founding transcript had been lost — the fourth site of it, and the one the earlier correction pass missed because there the claim was a *justification* rather than prose about the transcript. Also records what the gate's first real failure exposed: D2 has no home for raw that must be kept and cannot be published, and D7 treats withholding as discarding. A public archive destination needs a private, durable withheld-raw location declared alongside the gate. |
 | 1.3 | 2026-07-28 | Corrected a factual claim that had become load-bearing: the founding transcript was never lost. §1.1's "already destroyed material" is withdrawn, and **§6's instruction to mark its source note `raw: unavailable` is reversed** — it is archived and now reachable, and migrating it through the gate is the recommended first exercise of the preserve stage. Also records a third defect as out of scope: the resolver globs a project slug, which assumes a session belongs to one project, and a cross-project session's transcript lands under whichever slug it happens to. |
 | 1.2 | 2026-07-28 | Pinned the authoring session's UUID in §6 step 6, §7.3, and §5.3, and stated in the header that implementation is for a fresh session. "This session" meant the authoring session when written; an implementing session would have read all three as its own and processed the wrong transcript. |
 | 1.1 | 2026-07-26 | Independent cold read (implementer brief, no context). Four changes: the template's `source-tiers` SLOT instruction added to §5.1 &mdash; it would have generated the inversion into every new graph; `synthesis-stage` split into `synthesis-in-plan` + `synthesis-write` because its substance straddles the approval gate; the unanchored hand edit under `## 3. Find the ledger` called out; §7.1 given a pass criterion declared in advance. Cold read returned no blocking items. |
