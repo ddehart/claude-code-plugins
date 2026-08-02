@@ -106,13 +106,6 @@ glob. An empty result from the narrow pattern is evidence about the pattern. Whe
 turns out to live elsewhere, moving it under the slug of the project that was its primary subject makes it
 reachable — but that is a repair, not a rule, and the next such session will land wherever it lands.
 
-**The chronicle is not a source tier.** A chronicle entry is the session-level synthesis — this
-pipeline's own output, written for a human reader — so it lives in `types.synthesis`, not in `sources:`.
-It used to be registered as a second, lower-ranked source tier, with an ordering between the two and a
-guard against double-counting the same session through both. All of that existed to contain one
-inversion: a distillation sitting on the input side. There is one raw source for a session, and it is
-the transcript.
-
 **When the transcript is genuinely gone.** Transcripts do get pruned, and this is the real case the
 fallback tier was invented for. Where a session's transcript no longer exists but its chronicle entry
 does, the run continues from the chronicle: extraction reads it instead of the transcript, and the source
