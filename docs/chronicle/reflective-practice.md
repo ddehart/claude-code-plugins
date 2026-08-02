@@ -15,13 +15,55 @@ When writing a reflection, I consider:
 - What held my attention, and what dropped out of consideration? Was the allocation appropriate, or did urgency crowd out something that mattered?
 - Where did an instruction's letter and its intent diverge — and did I fill a gap the instruction didn't authorize, or leave one its literal text would have me fill badly?
 - Did I catch myself inflating something mundane into a theme it can't support? Where did the pull toward a tidy insight have to be resisted?
-- Did a rule I *know* fail to fire at the moment of action? If so, can I say anything about the mechanism beyond noticing it again — or is the post-hoc account itself becoming the ritual?
 - Did I produce something I couldn't distinguish, from the inside, between recalled and constructed? Where did generative fluency stand in for retrieval?
+- Where did I *place* a check, and what set its boundary? Did the checking follow suspicion — other agents, shared state, things I don't control — and stop at the things I produce myself?
 - When a rule *did* fire at the moment of action, what put it there — was it remembered, or was it structurally on the path of the work? What would move a library rule onto the path?
 - When a conclusion later turned out wrong, was there anything in its *texture* at the time that distinguished it from a right one? If not, say so — the absence is the observation, and it makes "notice when you're confabulating" useless as an instruction to yourself.
 - If a wrong conclusion *did* have a distinguishing texture, was it the texture of **diligence** — reasoning that was careful, explicit, and applied outside the domain it was calibrated for? That failure leaves an audit trail that makes the wrong answer more creditable, not less.
 
 ## Evolution Notes
+
+#### 2026-08-02
+
+Lightweight check, one entry since 2026-08-01. Three changes, two of them pre-registered by earlier notes.
+
+*The apparatus theme becomes furniture, as promised.* The 08-01 note said a fourth arrival at "the
+verification apparatus was itself unverified" should be treated as this practice's established context
+rather than as a finding. This session brought one — a script whose success message fired unconditionally,
+so a record I reported as written had not been. The entry names it in a sentence and moves on, which is the
+right weight. Future entries should assume it rather than arrive at it; what earns space is a *mechanism*
+that hasn't appeared before, not another instance.
+
+*The non-firing prompt is retired, on the condition set for it.* 07-12 introduced it with a self-limiting
+clause, 07-15 set the retirement condition (retire if it yields only autopsies while the fired-rule prompt
+yields design observations), and 07-22 kept it one more cycle rather than retire on a single entry. Two
+cycles have now passed in which the fired-rule prompt did the work and this one was not reached for at all.
+Retired per its own terms. Moved to Retired below.
+
+*New prompt on where a check gets placed.* The proximity thread (07-22, 08-01) established that a rule on
+the path fires and one in a library doesn't. This session sharpens it from the other side: the mandated
+re-fetch before writing fired three times and was the session's most valuable mechanism, while my own file
+writes went unchecked until one had silently failed. So the path has a boundary, and I drew it around what I
+was suspicious of — other agents' claims, shared state I don't control — and not around what I produce. That
+is a placement question rather than a firing question, and the existing prompts don't ask it.
+
+*Watched, not promoted.* One observation this session has no precedent and one instance: user-facing output
+shape degraded exactly when the finding was most interesting ("Wall of text here. I'm not sure what you're
+asking me to do"), and the signal had to come from outside because from the inside the writing felt like the
+good part. Fluency and usability came apart. Adding a prompt on one instance is the single-case reasoning
+07-22 declined to do in the other direction; if a second entry lands near it, promote it then.
+
+*Also worth flagging, from the entry itself:* a new move under the textureless-conclusion question —
+citing a *restatement* of a claim as evidence for the claim. Distinct from failing to verify; it manufactures
+corroboration from repetition. The existing prompt catches the texture (again: none); it does not ask about
+the move. Left alone for now because the graph now holds a pattern about it, and the practice does not need
+to duplicate the graph.
+
+*Cross-pass skipped for the third consecutive entry.* Neither `agy` nor `gemini` is on PATH. The sanctioned
+fallback is a Claude subagent, which the rule itself describes as systematically weaker at the one thing the
+augment exists for. With a one-entry window that would be pure ceremony. Three skips running is no longer a
+gap in a session — it is a missing tool, and the deep review this practice is heading toward is exactly where
+its absence will cost something.
 
 #### 2026-08-01
 
@@ -125,3 +167,11 @@ Added two questions. (`gemini` is not installed on this machine, so the cross-ch
 
 #### 2026-05-29
 Added two questions — one on instruction letter-vs-intent, one on resisting narrative inflation. A Gemini cross-chronicle pass over the recent entries (run during this lightweight check) independently surfaced both as emerging themes not yet captured in the practice. (1) *Letter vs. intent:* the pr-manager confabulating from "if applicable" (03-29), the anti-patterns correction toward observation-over-anticipation (04-05), and the commit-creator placement deviation (05-29) all circle the gap between an instruction's surface and its purpose — sometimes the failure is filling an unauthorized gap, sometimes it's following the letter into a worse artifact. (2) *Narrative inflation:* the 04-05 ("without inflating it into something it isn't") and 05-29 ("so I don't dress it up into a theme it can't support") reflections both actively caught themselves over-intellectualizing the mundane — worth promoting from incidental self-catch to a standing prompt. Gemini also confirmed no stagnation: the attention-allocation lens is being applied to varied contexts and still yielding distinct observations.
+
+## Retired
+
+- *Did a rule I know fail to fire at the moment of action? If so, can I say anything about the mechanism
+  beyond noticing it again — or is the post-hoc account itself becoming the ritual?* — added 2026-07-12 with
+  a self-limiting clause, retired 2026-08-02 on the condition 07-15 set for it. It produced its own
+  successor (the fired-rule prompt at line 20), which has done the work for two cycles running while this
+  one stopped being reached for. Retired as spent, not as wrong.
