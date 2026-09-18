@@ -5,6 +5,7 @@
 //   node tcx.mjs repair   <in.tcx> <out.tcx> [--window 30] [--force]
 //   node tcx.mjs verify   <original.tcx> <repaired.tcx>
 import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // ---------- parsing ----------
 const num = (b, t) => { const m = b.match(new RegExp(`<${t}>([^<]*)</${t}>`)); return m ? parseFloat(m[1]) : null; };
@@ -60,7 +61,28 @@ function pearson(xs, ys) {
 const STOP = 0.5;      // m/s below which a sample looks stationary
 const LOWSPD = 0.75;   // m/s — typical moving-time cutoff used by activity platforms
 const PAUSE_SEC = 15;  // a stationary stretch this long, going nowhere, is a real stop
-const PAUSE_M = 2;     // ...where "nowhere" means less than this much ground covered
+
+// "Going nowhere" has to be a *rate*, not a total. GPS wanders while you stand still, so a
+// fixed metre budget gets harder to satisfy the longer the stop lasts — exactly backwards,
+// because a longer stop is the one a wrong repair does most damage redistributing.
+//
+// The threshold is deliberately loose, because the two ways of being wrong are not equally
+// costly. Too tight, and real stops become invisible: the repair silently redistributes genuine
+// standing-still time into the running segments, reporting a run the athlete did not run, with
+// nothing in the output looking wrong. Too loose, and some slow honest movement is treated as a
+// stop, so the repair leaves that stretch's timing alone. The first failure fabricates a record;
+// the second merely declines to improve one. When the evidence is ambiguous, err toward calling
+// it a stop.
+//
+// 0.4 m/s is roughly half walking pace — slower than anyone travels on purpose, and loose enough
+// to absorb a few metres of wander per sample. Tolerates stationary noise to about ±3 m/sample;
+// past that a stop can still be missed, but that is signal loss rather than drift.
+const PAUSE_DRIFT = 0.4;
+
+// Brief excursions above STOP should not shatter one stop into fragments too short to detect.
+// Two seconds of noise mid-stop is still the same stop.
+const EPISODE_GAP = 3;     // s — merge stationary episodes separated by less than this
+const RATE_MIN_SEC = 5;    // s — shortest window over which a displacement rate means anything
 
 // Shared measurement pass. `pause` marks intervals belonging to a real stop:
 // sustained stretches where the athlete genuinely did not move. Those are the
@@ -75,15 +97,66 @@ function measure(pts, D) {
     if (pts[i].latS != null && pts[i].latS === pts[i - 1].latS && pts[i].lonS === pts[i - 1].lonS) dupPos++;
   }
   // Group contiguous stationary-looking intervals into episodes.
-  const episodes = [];
+  const raw = [];
   let cur = null;
   for (let i = 0; i < spd.length; i++) {
     if (spd[i] < STOP) { cur = cur || { from: i, to: i, dur: 0, dist: 0, n: 0 }; cur.to = i; cur.dur += dts[i]; cur.dist += dds[i]; cur.n++; }
-    else if (cur) { episodes.push(cur); cur = null; }
+    else if (cur) { raw.push(cur); cur = null; }
   }
-  if (cur) episodes.push(cur);
+  if (cur) raw.push(cur);
 
-  const realPauses = episodes.filter(e => e.dur >= PAUSE_SEC && e.dist < PAUSE_M);
+  // Stitch fragments back together across brief excursions, so GPS jitter during a stop does
+  // not present as dozens of episodes each too short to clear the duration test.
+  const episodes = [];
+  for (const e of raw) {
+    const last = episodes[episodes.length - 1];
+    if (last) {
+      let gapDur = 0, gapDist = 0;
+      for (let i = last.to + 1; i < e.from; i++) { gapDur += dts[i]; gapDist += dds[i]; }
+      if (gapDur < EPISODE_GAP) {
+        last.to = e.to; last.dur += gapDur + e.dur; last.dist += gapDist + e.dist; last.n += e.n;
+        continue;
+      }
+    }
+    episodes.push({ ...e });
+  }
+
+  // Real stops are found independently of the episodes above, and deliberately so. Episodes are
+  // built from per-sample speed, which GPS noise inflates: a watch wandering a metre a second
+  // while its owner stands at a crossing never looks stationary sample-to-sample, so a stop can
+  // fail to register as an episode at all. What does survive noise is *net displacement* over a
+  // window — wander cancels itself out, while genuine movement accumulates. So scan for maximal
+  // spans that go essentially nowhere, at a rate rather than within a fixed metre budget, and
+  // let the allowance grow with the length of the stop rather than shrink against it.
+  const hasPos = pts.every(p => p.lat != null);
+  const realPauses = [];
+  if (hasPos) {
+    let a = 0;
+    while (a < n - 1) {
+      let b = a + 1;
+      while (b < n) {
+        const dur = pts[b].t - pts[a].t;
+        // Below a few seconds the rate is meaningless: one sample of jitter over one second
+        // reads as metres per second and would abort every span before it began. Only judge
+        // the rate once the window is long enough for wander to cancel and travel to show.
+        if (dur >= RATE_MIN_SEC && haversine(pts[a], pts[b]) / dur >= PAUSE_DRIFT) break;
+        b++;
+      }
+      b--; // last index that still qualified
+      const dur = pts[b].t - pts[a].t;
+      if (b > a && dur >= PAUSE_SEC) {
+        let dist = 0;
+        for (let i = a + 1; i <= b; i++) dist += dds[i - 1];
+        realPauses.push({ from: a, to: b - 1, dur, dist, n: b - a });
+        a = b;
+      } else {
+        a++;
+      }
+    }
+  } else {
+    // No positions to work with: fall back to the path-length test on the episodes themselves.
+    for (const e of episodes) if (e.dur >= PAUSE_SEC && e.dist / e.dur < PAUSE_DRIFT) realPauses.push(e);
+  }
   const pause = new Array(spd.length).fill(false);
   for (const e of realPauses) for (let i = e.from; i <= e.to; i++) pause[i] = true;
 
@@ -322,28 +395,39 @@ function stops(path) {
   const m = measure(pts, D);
   const out = [
     `Stationary episodes — ${path}`,
-    `  ${m.episodes.length} episode(s); ${m.realPauses.length} classified as real stops`,
+    `  ${m.realPauses.length} real stop(s); ${m.episodes.length} stretch(es) of stationary-looking samples`,
     '',
   ];
-  if (!m.episodes.length) {
-    out.push('  none — no samples fall below the stationary threshold.');
+  // Both counts matter and they are not the same thing. Real stops are found from net
+  // displacement over a window; stationary-looking stretches come from per-sample speed, which
+  // GPS noise inflates. A noisy recording can show a real stop with no stationary-looking
+  // samples at all, so an empty episode list is not an empty answer.
+  if (!m.episodes.length && !m.realPauses.length) {
+    out.push('  none — no stationary samples, and no stretch that goes nowhere for long enough.');
     return out.join('\n');
   }
+  // Real stops are detected independently of the stationary-looking episodes, so an episode is
+  // reported as a stop when it falls inside one of the detected stop spans rather than by
+  // identity. Under GPS noise the two need not line up sample-for-sample.
+  const inStop = i => m.realPauses.some(p => i >= p.from && i <= p.to);
   out.push('     start       dur     moved   displacement   verdict');
-  for (const e of m.episodes) {
+  for (const e of [...m.episodes, ...m.realPauses.filter(p => !m.episodes.some(e2 => e2.from === p.from))]
+       .sort((x, y) => x.from - y.from)) {
     const t0 = pts[e.from].t - pts[0].t;
     const disp = haversine(pts[e.from], pts[Math.min(e.to + 1, pts.length - 1)]);
-    const real = m.realPauses.includes(e);
     out.push(
       `  ${hms(t0).padStart(8)}  ${(e.dur.toFixed(0) + 's').padStart(6)}` +
       `  ${(e.dist.toFixed(1) + 'm').padStart(7)}  ${(disp.toFixed(1) + ' m').padStart(12)}` +
-      `   ${real ? 'real stop' : 'artifact'}`);
+      `   ${inStop(e.from) ? 'real stop' : 'artifact'}`);
   }
   out.push('');
-  out.push("Displacement is straight-line distance between the episode's endpoints. Near zero means the");
-  out.push('athlete genuinely did not move, so that time is real and a repair must preserve it. Metres');
-  out.push('covered while apparently stationary means the timestamps are lying about how long those');
-  out.push('samples took, which is the defect this tool repairs.');
+  out.push("Read the last two columns together. \"Moved\" is distance along the path, which GPS wander");
+  out.push('inflates without going anywhere — a watch can book 60 m while its owner stands at a');
+  out.push("crossing. \"Displacement\" is straight-line from the episode's start to its end, which wander");
+  out.push('cannot fake. A stop is called when displacement stays under about half walking pace for the');
+  out.push('length of the episode, so the allowance grows with the stop rather than shrinking against');
+  out.push('it. Real stops keep their time in a repair. Anything else is the timestamps lying about how');
+  out.push('long those samples took, which is the defect this tool exists to correct.');
   return out.join('\n');
 }
 
@@ -390,11 +474,30 @@ const argv = process.argv.slice(2);
 const cmd = argv[0];
 const has = name => argv.includes(`--${name}`);
 const flag = (name, def) => { const i = argv.indexOf(`--${name}`); return i === -1 ? def : argv[i + 1]; };
+
+// Flags that consume the next argument. Listed once, so adding a flag cannot silently leave its
+// value to be swallowed as a file path — which is how `profile --segment 600 run.tcx` ended up
+// trying to open a file named "600".
+const VALUE_FLAGS = new Set(['--window', '--segment']);
 const positional = [];
 for (let i = 1; i < argv.length; i++) {
-  if (argv[i].startsWith('--')) { if (argv[i] === '--window') i++; continue; }
+  if (argv[i].startsWith('--')) { if (VALUE_FLAGS.has(argv[i])) i++; continue; }
   positional.push(argv[i]);
 }
+
+// A flag whose value is missing or unparseable must not fall through to a default, because the
+// defaults here are not neutral: a NaN repair window silently degrades the repair to a global
+// average, which flattens the run to one constant pace — the exact outcome the local window
+// exists to prevent — while still exiting 0 and reporting success.
+const numericFlag = (name, def) => {
+  const i = argv.indexOf(`--${name}`);
+  if (i === -1) return def;
+  const v = parseFloat(argv[i + 1]);
+  if (!Number.isFinite(v) || v <= 0) {
+    throw new Error(`--${name} needs a positive number (got ${argv[i + 1] === undefined ? 'nothing' : `"${argv[i + 1]}"`})`);
+  }
+  return v;
+};
 
 try {
   if (cmd === 'diagnose') {
@@ -404,7 +507,12 @@ try {
     process.exit(a.action === 'repair' ? 1 : 0);
   } else if (cmd === 'repair') {
     if (!positional[1]) throw new Error('repair requires <in> and <out> paths');
-    const { a, outPath, rewritten } = repair(positional[0], positional[1], parseFloat(flag('window', 30)), has('force'));
+    // Writing the repair over its own input destroys the only copy of an export that the watch
+    // will overwrite in Drive on the next activity. Refuse rather than trust the typist.
+    if (resolve(positional[0]) === resolve(positional[1])) {
+      throw new Error('refusing to write the repair over its own input — give a different output path, since the original may be the only copy');
+    }
+    const { a, outPath, rewritten } = repair(positional[0], positional[1], numericFlag('window', 30), has('force'));
     console.log(report(a));
     console.log(`\nRepaired ${rewritten} timestamps -> ${outPath}`);
   } else if (cmd === 'verify') {
@@ -418,7 +526,7 @@ try {
     console.log(stops(positional[0]));
   } else if (cmd === 'profile') {
     if (!positional[0]) throw new Error('profile requires a file path');
-    console.log(profile(positional[0], parseFloat(flag('segment', 300))));
+    console.log(profile(positional[0], numericFlag('segment', 300)));
   } else {
     console.error('Usage: node tcx.mjs diagnose <file> [--json]');
     console.error('       node tcx.mjs repair <in> <out> [--window 30] [--force]');

@@ -116,4 +116,37 @@ writeFileSync(here + 'real_pauses.tcx', tcx(walk(1800, { pauses: [{ at: 400, len
   writeFileSync(here + 'decoupled_with_pauses.tcx', tcx(out));
 }
 
+// 5. DECOUPLED + NOISY REAL PAUSES — the same city run, but with the GPS wander a real watch
+//    shows while its owner stands still. This is the case the four fixtures above cannot catch:
+//    with perfectly static positions a stop is trivial to spot, so a detector that leans on
+//    sample-to-sample stillness passes every fixture here and still deletes genuine stopped time
+//    on any real recording. Stationary noise is most of the difference between a synthetic file
+//    and one a watch produced, and it is exactly where stop detection earns its keep.
+{
+  const clean = walk(1800, { pauses: [{ at: 500, len: 60 }, { at: 1200, len: 60 }] });
+  const kept = clean.filter((_, i) => i % 5 !== 3);
+  const total = clean[clean.length - 1].t - clean[0].t;
+  let acc = 0, creep = 0;
+  const out = kept.map((p, i) => {
+    const moving = i > 0 && p.d !== kept[i - 1].d;
+    const slice = !moving ? 1.0 : (i % 7 === 0) ? 4.5 : (i % 3 === 0) ? 0.35 : 1.0;
+    const q = { ...p, t: acc };
+    if (!moving) {
+      // ±2 m of positional wander while stationary — ordinary consumer-GPS behaviour. The
+      // positions oscillate rather than walk away, so net displacement stays near zero.
+      q.lat = p.lat + (Math.sin(i * 1.7) * 2) / 111320;
+      // And the watch's own distance channel books that wander as distance travelled, which is
+      // what makes the stop invisible to anything measuring ground covered instead of position:
+      // a 60 s stop accumulates ~60 m of "movement" without going anywhere.
+      creep += 1;
+    }
+    q.d = p.d + creep;
+    acc += slice;
+    return q;
+  });
+  const scale = total / acc;
+  out.forEach(p => { p.t = Math.round(p.t * scale * 1000) / 1000; });
+  writeFileSync(here + 'decoupled_with_noisy_pauses.tcx', tcx(out));
+}
+
 console.log('fixtures written to', here);
