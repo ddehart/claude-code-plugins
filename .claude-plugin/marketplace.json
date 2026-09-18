@@ -27,6 +27,12 @@
       "source": "./plugins/knowledge-commons",
       "description": "Generator for per-project knowledge graphs with cross-domain promotion: scaffolds a graph, a /process pipeline that preserves raw material and synthesizes for a human reader, and project-owned skills from a config-driven interview; promotes portable claims into a personal commons; propagates template fixes into already-generated skills",
       "version": "0.6.0"
+    },
+    {
+      "name": "activity-data",
+      "source": "./plugins/activity-data",
+      "description": "Skills for exported fitness and wearable activity data: diagnosing and repairing TCX files whose per-sample timestamps are decoupled from their GPS positions, which makes Strava and Garmin Connect report a faster pace over a shorter moving time than was actually run",
+      "version": "0.1.0"
     }
   ]
 }

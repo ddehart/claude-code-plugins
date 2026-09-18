@@ -1,0 +1,9 @@
+{
+  "name": "activity-data",
+  "description": "Skills for exported fitness and wearable activity data: diagnosing and repairing TCX files whose per-sample timestamps are decoupled from their GPS positions, which makes Strava and Garmin Connect report a faster pace over a shorter moving time than was actually run",
+  "version": "0.1.0",
+  "author": {
+    "name": "Derek DeHart"
+  },
+  "keywords": ["fitness", "wearables", "tcx", "strava", "garmin", "pixel-watch", "gps", "activity", "data-repair", "running"]
+}
