@@ -123,8 +123,8 @@ healthy case, and the tool reports it as such rather than as unknown.
 - **`timestamps-decoupled` → repair.** The defect described above.
 - **`timestamps-decoupled-with-pauses` → repair.** Both at once — common on city runs with
   stoplights. Repair rewrites the moving segments and leaves the stops exactly as recorded.
-- **`ambiguous` / `indeterminate` → inspect.** Does not match a known pattern. Look at the raw
-  trackpoints around the low-speed samples before deciding; do not guess.
+- **`ambiguous` → inspect.** Does not match a known pattern. Look at the raw trackpoints around
+  the low-speed samples before deciding; do not guess.
 
 ### 4. Repair
 
@@ -254,18 +254,32 @@ Once they have said yes, use the `claude-in-chrome` skill and go to
 
 - **TCX only.** GPX and FIT are not parsed. The same diagnostic idea applies, but the tool does not
   read them.
-- Multi-lap files are handled; trackpoints are analysed across all laps and lap structure is
-  preserved on output.
+- Multi-lap files are analysed across all laps, and the lap elements themselves are carried
+  through unchanged — which is a real limitation, not a feature. The repair rewrites `<Time>` on
+  trackpoints only, so a lap's `StartTime` and `TotalTimeSeconds` still describe the pre-repair
+  timing and can disagree with the trackpoints inside it. Platforms that read lap splits from
+  that metadata rather than from the track will report the old, wrong splits for each lap. Totals
+  are unaffected. If you need per-lap numbers to be right on a multi-lap file, check them after
+  upload rather than assuming.
 - Files without a `<DistanceMeters>` channel fall back to distance computed from GPS positions.
 - The GPS-noise ratio is reported but not acted on. A ratio below ~0.97 means the distance is
   inflated by position jitter — a real but separate problem this tool does not fix.
 
 ## Regression fixtures
 
-`fixtures/make_fixtures.mjs` generates four synthetic files, writing them beside itself, with
-known ground truth: `healthy`, `real_pauses`, `decoupled`, and `decoupled_with_pauses`. Run it and
-diagnose all four after changing the classifier — the negative cases are the ones that matter,
-since the expensive failure mode is repairing a file that did not need it.
+`fixtures/make_fixtures.mjs` generates five synthetic files, writing them beside itself, with known
+ground truth: `healthy`, `real_pauses`, `decoupled`, `decoupled_with_pauses`, and
+`decoupled_with_noisy_pauses`. Run it and diagnose all five after changing the classifier — the
+negative cases are the ones that matter, since the expensive failure mode is repairing a file that
+did not need it.
+
+Pay particular attention to the last one. The first four have perfectly static positions during
+their stops, which no real watch produces: a stop where every sample repeats the same coordinate to
+seven decimal places is trivial to detect, so a stop detector can pass all four and still delete
+genuine stopped time on every real recording. `decoupled_with_noisy_pauses` adds the wander a watch
+actually shows while standing still, including the distance its own channel books for that wander.
+It exists because an earlier version of this tool passed the other four and failed it — silently,
+reporting that the athlete never stopped.
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/activity-file-repair/fixtures/make_fixtures.mjs"
