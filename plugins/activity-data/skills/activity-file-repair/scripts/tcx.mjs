@@ -313,6 +313,78 @@ function splits(path, unitM, unitName) {
   ].join('\n');
 }
 
+// Where the stationary episodes are, and whether the athlete truly stood still in each.
+// Printed rather than left for each caller to recompute: "artifact or real stop" is the
+// judgment the whole workflow turns on, and it deserves the evidence on screen.
+function stops(path) {
+  const { pts } = parse(path);
+  const D = cumulative(pts);
+  const m = measure(pts, D);
+  const out = [
+    `Stationary episodes — ${path}`,
+    `  ${m.episodes.length} episode(s); ${m.realPauses.length} classified as real stops`,
+    '',
+  ];
+  if (!m.episodes.length) {
+    out.push('  none — no samples fall below the stationary threshold.');
+    return out.join('\n');
+  }
+  out.push('     start       dur     moved   displacement   verdict');
+  for (const e of m.episodes) {
+    const t0 = pts[e.from].t - pts[0].t;
+    const disp = haversine(pts[e.from], pts[Math.min(e.to + 1, pts.length - 1)]);
+    const real = m.realPauses.includes(e);
+    out.push(
+      `  ${hms(t0).padStart(8)}  ${(e.dur.toFixed(0) + 's').padStart(6)}` +
+      `  ${(e.dist.toFixed(1) + 'm').padStart(7)}  ${(disp.toFixed(1) + ' m').padStart(12)}` +
+      `   ${real ? 'real stop' : 'artifact'}`);
+  }
+  out.push('');
+  out.push("Displacement is straight-line distance between the episode's endpoints. Near zero means the");
+  out.push('athlete genuinely did not move, so that time is real and a repair must preserve it. Metres');
+  out.push('covered while apparently stationary means the timestamps are lying about how long those');
+  out.push('samples took, which is the defect this tool repairs.');
+  return out.join('\n');
+}
+
+// Pace and effort over time. A healthy file with a complaint attached usually means the run
+// was not what the athlete remembers, so show them what it actually was.
+function profile(path, segSec) {
+  const { pts } = parse(path);
+  const D = cumulative(pts);
+  const t0 = pts[0].t, total = pts[pts.length - 1].t - t0;
+  const hasHr = pts.some(p => p.hr != null);
+  const out = [
+    `Pace profile — ${path}`,
+    '',
+    hasHr ? '  segment          distance    pace    avg HR' : '  segment          distance    pace',
+  ];
+  for (let s0 = 0; s0 < total; s0 += segSec) {
+    const s1 = Math.min(s0 + segSec, total);
+    let i0 = -1, i1 = -1;
+    for (let i = 0; i < pts.length; i++) {
+      const rel = pts[i].t - t0;
+      if (i0 < 0 && rel >= s0) i0 = i;
+      if (rel <= s1) i1 = i;
+    }
+    if (i0 < 0 || i1 <= i0) continue;
+    const d = D[i1] - D[i0], dt = pts[i1].t - pts[i0].t;
+    if (d <= 0 || dt <= 0) continue;
+    const hrs = pts.slice(i0, i1 + 1).map(p => p.hr).filter(x => x != null);
+    const hr = hrs.length ? Math.round(hrs.reduce((x, y) => x + y, 0) / hrs.length) : null;
+    const label = `${hms(s0)}-${hms(s1)}`;
+    out.push(
+      `  ${label.padEnd(16)} ${(d / 1609.344).toFixed(2).padStart(5)} mi` +
+      `  ${pace(dt / (d / 1609.344)).padStart(6)}${hr != null ? '   ' + String(hr).padStart(5) : ''}`);
+  }
+  if (hasHr) {
+    out.push('');
+    out.push('If pace and heart rate rise and fall together the recording is internally consistent —');
+    out.push('effort tracking pace is what a real run looks like, and is evidence against corruption.');
+  }
+  return out.join('\n');
+}
+
 // ---------- cli ----------
 const argv = process.argv.slice(2);
 const cmd = argv[0];
@@ -341,11 +413,19 @@ try {
   } else if (cmd === 'splits') {
     if (!positional[0]) throw new Error('splits requires a file path');
     console.log(has('km') ? splits(positional[0], 1000, 'km') : splits(positional[0], 1609.344, 'mi'));
+  } else if (cmd === 'stops') {
+    if (!positional[0]) throw new Error('stops requires a file path');
+    console.log(stops(positional[0]));
+  } else if (cmd === 'profile') {
+    if (!positional[0]) throw new Error('profile requires a file path');
+    console.log(profile(positional[0], parseFloat(flag('segment', 300))));
   } else {
     console.error('Usage: node tcx.mjs diagnose <file> [--json]');
     console.error('       node tcx.mjs repair <in> <out> [--window 30] [--force]');
     console.error('       node tcx.mjs verify <original> <repaired>');
     console.error('       node tcx.mjs splits <file> [--km]');
+    console.error('       node tcx.mjs stops <file>');
+    console.error('       node tcx.mjs profile <file> [--segment 300]');
     process.exit(64);
   }
 } catch (e) { console.error(`error: ${e.message}`); process.exit(70); }

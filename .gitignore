@@ -6,3 +6,6 @@
 
 # Generated regression fixtures (reproduce with make_fixtures.mjs)
 plugins/activity-data/skills/activity-file-repair/fixtures/*.tcx
+
+# Skill-creator eval scratch
+plugins/*/skills/*-workspace/

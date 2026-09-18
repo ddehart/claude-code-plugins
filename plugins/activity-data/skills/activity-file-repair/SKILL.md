@@ -89,9 +89,37 @@ healthy case, and the tool reports it as such rather than as unknown.
 ### 3. Read the verdict
 
 - **`timing-healthy` → no repair.** Timestamps track the track. Whatever the complaint is, it is
-  not this defect. Look at GPS noise, or ask what the person expected.
+  not this defect. Saying only "the file is fine" leaves the person exactly where they started,
+  though — they can see their pace looks wrong and now have no explanation. Show them what the run
+  actually was:
+
+  ```bash
+  node "${CLAUDE_PLUGIN_ROOT}/skills/activity-file-repair/scripts/tcx.mjs" profile <file.tcx>
+  node "${CLAUDE_PLUGIN_ROOT}/skills/activity-file-repair/scripts/tcx.mjs" splits <file.tcx>
+  ```
+
+  An average pace hides a lot. A run that opened at 9:30 and closed at 7:00 averages to something
+  the athlete never actually ran, and will feel wrong in both directions. Where heart rate is
+  present, `profile` shows it alongside pace: effort rising with speed is strong evidence the
+  recording is honest. If the profile also looks unremarkable, check GPS noise, and ask what number
+  they expected and where they saw it — the answer is sometimes a different activity entirely.
+
 - **`real-pauses` → no repair.** Sustained stretches where the position is genuinely static.
-  Moving time below elapsed time is *correct*. Say so plainly rather than "fixing" it.
+  Moving time below elapsed time is *correct*. Say so plainly rather than "fixing" it — and show
+  the evidence rather than asserting it:
+
+  ```bash
+  node "${CLAUDE_PLUGIN_ROOT}/skills/activity-file-repair/scripts/tcx.mjs" stops <file.tcx>
+  ```
+
+  Each episode prints how far the athlete moved during it. Near-zero displacement is a real stop;
+  metres covered while apparently stationary is the timestamp artifact instead. That distinction is
+  the whole decision, so put it on screen rather than asking anyone to trust the verdict.
+
+  Then answer what they actually wanted. Someone who says "I was out there the full 30 minutes"
+  usually wants the platform to *display* elapsed time rather than moving time — which is a display
+  setting, not a defect in their file. Point them at it. Refusing a repair and offering nothing
+  reads as a brush-off, when the honest answer is that the number they want already exists.
 - **`timestamps-decoupled` → repair.** The defect described above.
 - **`timestamps-decoupled-with-pauses` → repair.** Both at once — common on city runs with
   stoplights. Repair rewrites the moving segments and leaves the stops exactly as recorded.
