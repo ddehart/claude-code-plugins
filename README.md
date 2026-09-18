@@ -70,6 +70,16 @@ Generator for per-project knowledge graphs with cross-domain promotion. Scaffold
 | `promote` | Derive a portable claim into a target graph (or a rule into the instruction tier) with association against the target's maps and per-promotion approval |
 | `graph-patch` | Propagate template fixes into a project's already-generated, hand-sharpened skills without regenerating them — applies each pending change by judgment, verifies it landed, and records what was applied |
 
+### activity-data
+
+Skills for exported fitness and wearable activity data. Currently one: repairing TCX files whose per-sample timestamps are decoupled from their GPS positions — a defect confirmed on the Google Pixel Watch 4, where the positions, total distance and total elapsed time are all correct but the time is misallocated across samples. Upload platforms discard the resulting fake near-stationary samples when computing moving time, so the activity comes back with a flattering pace over an implausibly short moving time. Diagnoses before it repairs, and refuses to touch a file it has not classified as defective, because reallocating time across a run with genuine stops fabricates an athletic record.
+
+**Skills included:**
+
+| Skill | Description |
+|-------|-------------|
+| `activity-file-repair` | Diagnose and repair decoupled TCX timestamps, verify the repair changed timing and nothing else, check splits against an external record, and re-upload to Strava |
+
 ## Usage
 
 Once installed, the agents and skills are automatically available. Claude will proactively use them when you:
@@ -103,6 +113,12 @@ Once installed, the agents and skills are automatically available. Claude will p
 - Ask to graduate a principle into an always-loaded rule
 - Ask what template fixes a project's generated skills are still missing
 
+**activity-data:**
+- Say a run parsed wrong, or that a workout shows a pace that looks too good
+- Say moving time is well below elapsed time on an uploaded activity
+- Point at a `.tcx` or a watch export that landed in Drive
+- Ask to fix an activity file, or to upload a corrected run
+
 ## Updating
 
 ```bash
@@ -110,6 +126,7 @@ Once installed, the agents and skills are automatically available. Claude will p
 /plugin update meta-claude@ddehart-plugins
 /plugin update pm-workflow@ddehart-plugins
 /plugin update knowledge-commons@ddehart-plugins
+/plugin update activity-data@ddehart-plugins
 ```
 
 ## Naming Conventions

@@ -3,3 +3,6 @@
 
 # Ephemeral git worktrees created by EnterWorktree
 .claude/worktrees/
+
+# Generated regression fixtures (reproduce with make_fixtures.mjs)
+plugins/activity-data/skills/activity-file-repair/fixtures/*.tcx
