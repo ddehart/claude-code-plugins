@@ -213,8 +213,10 @@ there:
   — a mile entered half a second fast is charged at both ends. Cumulative drift is the honest
   measure.
 - **Rebase any partial final mile onto the other record's distance.** The tail is whatever is left
-  after the last full mile, so any disagreement about total distance lands entirely in it. A 0.26%
-  difference in total distance has shown up as an apparent 10 s/mi error on the closing segment.
+  after the last full mile, so any disagreement about total distance lands entirely in it. A
+  disagreement of about 0.2% — 24 m over 11 km — has shown up as an apparent 10 s/mi error on a
+  closing segment of under a mile, which is five times the tolerance below and reads as a clear
+  failure until you divide by the same distance the other record used.
 
 A second or two per mile is boundary rounding and interpolation. More than that, once read both ways
 above, means stop and understand it before uploading.
