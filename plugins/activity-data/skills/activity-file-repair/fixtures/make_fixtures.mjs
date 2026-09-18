@@ -1,6 +1,7 @@
 // Build synthetic TCX fixtures with known ground truth, so the diagnosis can be
 // checked against cases where we know what the right answer is.
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const START = new Date('2026-09-10T08:00:00.000Z').getTime();
 const LAT0 = 40.0230, LON0 = -83.0078;
@@ -64,7 +65,10 @@ function walk(durationSec, { pauses = [] } = {}) {
 }
 
 mkdirSync(new URL('.', import.meta.url), { recursive: true });
-const here = new URL('.', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+// fileURLToPath rather than .pathname: a URL path is percent-encoded, so a checkout under a
+// directory with a space in it yields "has%20space" and every write lands somewhere wrong or
+// fails outright. It also handles the Windows drive-letter prefix without a hand-rolled regex.
+const here = fileURLToPath(new URL('.', import.meta.url));
 
 // 1. HEALTHY — uniform 1 Hz sampling, no stops. Expect: timing-healthy / no-repair.
 writeFileSync(here + 'healthy.tcx', tcx(walk(1800)));
