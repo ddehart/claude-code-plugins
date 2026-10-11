@@ -9,6 +9,7 @@ Run from this directory:
 import importlib.util
 import json
 import tempfile
+import time
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
@@ -28,12 +29,7 @@ FAKE_OAT = PREFIX + 'oat01-' + ALNUM + '_-'
 FAKE_API = PREFIX + 'api03-' + ALNUM[::-1]
 FAKE_OPENAI = 'sk-' + 'proj-' + ALNUM
 FAKE_GHP = 'gh' + 'p_' + ALNUM
-FAKE_GH_PAT = 'github' + '_pat_' + ALNUM
-FAKE_SLACK = 'xo' + 'xb-' + '1234567890-' + ALNUM
-FAKE_YA29 = 'ya' + '29.' + ALNUM
 FAKE_REFRESH = '1/' + '/0g' + ALNUM
-FAKE_AIZA = 'AI' + 'za' + ALNUM[:35]
-FAKE_AKIA = 'AK' + 'IA' + 'ABCDEFGHIJ234567'
 FAKE_TELEGRAM = '1234567890' + ':' + ('AAH' + ALNUM)[:35]
 
 BARE_TOKENS = {
@@ -41,12 +37,12 @@ BARE_TOKENS = {
     'anthropic oauth token': FAKE_OAT,
     'openai': FAKE_OPENAI,
     'github': FAKE_GHP,
-    'github fine-grained pat': FAKE_GH_PAT,
-    'slack': FAKE_SLACK,
-    'google access token': FAKE_YA29,
+    'github fine-grained pat': 'github' + '_pat_' + ALNUM,
+    'slack': 'xo' + 'xb-' + '1234567890-' + ALNUM,
+    'google access token': 'ya' + '29.' + ALNUM,
     'google refresh token': FAKE_REFRESH,
-    'google api key': FAKE_AIZA,
-    'aws access key id': FAKE_AKIA,
+    'google api key': 'AI' + 'za' + ALNUM[:35],
+    'aws access key id': 'AK' + 'IA' + 'ABCDEFGHIJ234567',
     'telegram bot token': FAKE_TELEGRAM,
 }
 
@@ -123,11 +119,19 @@ SECRET_VALUES = [
 ]
 
 
-class BareTokenTest(unittest.TestCase):
+class RedactAssertions(unittest.TestCase):
+    def assertRedacts(self, cases):
+        for raw, want in cases.items():
+            with self.subTest(raw=raw):
+                self.assertEqual(redact(raw), want)
+
+    def assertUnchanged(self, texts):
+        self.assertRedacts({text: text for text in texts})
+
+
+class BareTokenTest(RedactAssertions):
     def test_each_format_redacted_in_prose(self):
-        for label, token in BARE_TOKENS.items():
-            with self.subTest(label):
-                self.assertEqual(redact(f'got {token} back'), 'got [REDACTED] back')
+        self.assertRedacts({f'got {token} back': 'got [REDACTED] back' for token in BARE_TOKENS.values()})
 
     def test_telegram_token_in_bot_url(self):
         self.assertEqual(
@@ -136,13 +140,15 @@ class BareTokenTest(unittest.TestCase):
         )
 
     def test_bearer_header(self):
-        self.assertEqual(
-            redact('-H "Authorization: Bearer abcdef0123456789abcdef"'),
-            '-H "Authorization: Bearer [REDACTED]"',
-        )
+        self.assertRedacts({
+            '-H "Authorization: Bearer abcdef0123456789abcdef"': '-H "Authorization: Bearer [REDACTED]"',
+            # A keyed value that carries an auth scheme: the credential goes, not the word Bearer
+            'access_token: Bearer eyJhbGciOi.eyJzdWIiOi.c2lnbmF0dXJl': 'access_token: Bearer [REDACTED]',
+            '-H "x-api-key: Bearer abc123def456"': '-H "x-api-key: Bearer [REDACTED]"',
+        })
 
 
-class KeyedSecretTest(unittest.TestCase):
+class KeyedSecretTest(RedactAssertions):
     def test_assignments_keep_name(self):
         cases = {
             f'CLAUDE_CODE_OAUTH_TOKEN={FAKE_OAT}': 'CLAUDE_CODE_OAUTH_TOKEN=[REDACTED]',
@@ -154,15 +160,15 @@ class KeyedSecretTest(unittest.TestCase):
             '--api-key=abc123': '--api-key=[REDACTED]',
             'export TG_BOT_TOKEN=123:abc rest': 'export TG_BOT_TOKEN=[REDACTED] rest',
         }
-        for raw, want in cases.items():
-            with self.subTest(raw=raw):
-                self.assertEqual(redact(raw), want)
+        self.assertRedacts(cases)
 
     def test_secret_names_beyond_token_and_api_key(self):
-        for name in ['AWS_SECRET_ACCESS_KEY', 'STRIPE_SECRET_KEY', 'PRIVATE_KEY',
-                     'OPENAI_KEY', 'DB_PASSWORD', 'GOOGLE_APPLICATION_CREDENTIALS']:
-            with self.subTest(name=name):
-                self.assertEqual(redact(f'{name}=s3cr3tvalue'), f'{name}=[REDACTED]')
+        self.assertRedacts({
+            f'{name}=s3cr3tvalue': f'{name}=[REDACTED]'
+            for name in ['AWS_SECRET_ACCESS_KEY', 'STRIPE_SECRET_KEY', 'PRIVATE_KEY',
+                         'OPENAI_KEY', 'DB_PASSWORD', 'GOOGLE_APPLICATION_CREDENTIALS',
+                         'client-secret']
+        })
 
     def test_quoted_values_with_spaces(self):
         cases = {
@@ -170,67 +176,64 @@ class KeyedSecretTest(unittest.TestCase):
             'DB_PASSWORD="correct horse battery"': 'DB_PASSWORD="[REDACTED]"',
             'token = "abc def"': 'token = "[REDACTED]"',
         }
-        for raw, want in cases.items():
-            with self.subTest(raw=raw):
-                self.assertEqual(redact(raw), want)
+        self.assertRedacts(cases)
 
     def test_json_keys(self):
-        self.assertEqual(
-            redact('{"refresh_token": "1abc", "client_secret": "x y", "expiry": 3600}'),
-            '{"refresh_token": "[REDACTED]", "client_secret": "[REDACTED]", "expiry": 3600}',
-        )
-        # JSON nested inside a JSON string
-        self.assertEqual(
-            redact('"{\\"access_token\\": \\"abc123\\"}"'),
-            '"{\\"access_token\\": \\"[REDACTED]\\"}"',
-        )
+        self.assertRedacts({
+            '{"refresh_token": "1abc", "client_secret": "x y", "expiry": 3600}':
+                '{"refresh_token": "[REDACTED]", "client_secret": "[REDACTED]", "expiry": 3600}',
+            # JSON nested inside a JSON string
+            '"{\\"access_token\\": \\"abc123\\"}"': '"{\\"access_token\\": \\"[REDACTED]\\"}"',
+        })
 
     def test_yaml_and_header_lines(self):
         cases = {
             'token: abc123': 'token: [REDACTED]',
             '  - api_key: abc123': '  - api_key: [REDACTED]',
             '> x-api-key: am_abc123': '> x-api-key: [REDACTED]',
+            '< x-auth-token: abc123secret': '< x-auth-token: [REDACTED]',
             'curl -H "x-api-key: am_abc123" https://x': 'curl -H "x-api-key: [REDACTED]" https://x',
         }
-        for raw, want in cases.items():
-            with self.subTest(raw=raw):
-                self.assertEqual(redact(raw), want)
+        self.assertRedacts(cases)
 
 
-class StructurePreservedTest(unittest.TestCase):
+class StructurePreservedTest(RedactAssertions):
     def test_surrounding_punctuation_survives(self):
         cases = {
             '⏺ Bash(env TOKEN=abc123)': '⏺ Bash(env TOKEN=[REDACTED])',
             'GET /cb?access_token=abc123&page=2': 'GET /cb?access_token=[REDACTED]&page=2',
             'use `CLAUDE_CODE_OAUTH_TOKEN=\\S+`, then': 'use `CLAUDE_CODE_OAUTH_TOKEN=[REDACTED]`, then',
         }
-        for raw, want in cases.items():
-            with self.subTest(raw=raw):
-                self.assertEqual(redact(raw), want)
+        self.assertRedacts(cases)
 
     def test_shell_references_are_not_secrets(self):
-        for text in ['TODOIST_API_TOKEN="$TODOIST_API_TOKEN" ./run',
+        self.assertUnchanged(['TODOIST_API_TOKEN="$TODOIST_API_TOKEN" ./run',
                      'token=${TOKEN}', 'TOKEN=$TOKEN', 'API_KEY="$(pass show x)"',
                      'TOKEN=""', 'Authorization: Bearer $KEY',
                      """printf 'header = "x-api-key: %s"\\n' "$KEY\"""",
                      'f.write(f"export TYPESAFE_API_KEY={key}\\n")',
-                     '"x-api-key": "<redacted>"', 'API_KEY=...']:
-            with self.subTest(text=text):
-                self.assertEqual(redact(text), text)
+                     '"x-api-key": "<redacted>"', 'API_KEY=...'])
 
     def test_leaves_ordinary_text_alone(self):
-        for text in ['max_tokens=4096', '"input_tokens": 1234', 'token budget is fine',
+        self.assertUnchanged(['max_tokens=4096', '"input_tokens": 1234', 'token budget is fine',
                      'secret sauce', 'sk-learn', 'we lost the token: it expired',
                      'send a Bearer token header', 'SSH_AUTH_SOCK=/tmp/agent',
-                     "print('nextPageToken:', body.get('nextPageToken'))"]:
-            with self.subTest(text=text):
-                self.assertEqual(redact(text), text)
+                     "print('nextPageToken:', body.get('nextPageToken'))"])
 
     def test_idempotent(self):
         text = f'GITHUB_TOKEN={FAKE_GHP} "token": "a b" Bearer abcdef0123456789abcdef {FAKE_API}'
         once = redact(text)
         self.assertEqual(redact(once), once)
         self.assertNotIn('[REDACTED]]', once)
+
+    def test_long_word_runs_stay_linear(self):
+        # Long kebab-case and base64url runs once backtracked quadratically
+        # (16 KB of a-a-a... took ~8 s). Generous bound; healthy is ~1 ms.
+        for text in ['a-' * 8192, ('Ab0_-' * 4000) + '=']:
+            with self.subTest(length=len(text)):
+                start = time.monotonic()
+                redact(text)
+                self.assertLess(time.monotonic() - start, 0.5)
 
 
 class ExportRedactionTest(unittest.TestCase):

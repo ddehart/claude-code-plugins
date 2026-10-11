@@ -9,3 +9,6 @@ plugins/activity-data/skills/activity-file-repair/fixtures/*.tcx
 
 # Skill-creator eval scratch
 plugins/*/skills/*-workspace/
+
+# Python bytecode from running script tests
+__pycache__/
