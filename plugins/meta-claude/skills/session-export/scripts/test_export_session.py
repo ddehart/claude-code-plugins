@@ -192,6 +192,17 @@ class KeyedSecretTest(RedactAssertions):
                          'client-secret']
         })
 
+    def test_unquoted_spaced_assignment_when_credential_like(self):
+        self.assertRedacts({
+            'PrivateKey = yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk=': 'PrivateKey = [REDACTED]',
+            'password = hunter2hunter2hunter2': 'password = [REDACTED]',
+        })
+        # Code, not credentials: calls, attribute chains, short values
+        self.assertUnchanged([
+            'token = get_token()', 'password = self.config.password',
+            'api_key = os.environ["API_KEY"]', 'secret = 42',
+        ])
+
     def test_quoted_values_with_spaces(self):
         cases = {
             "export CLIENT_SECRET='abc def ghi'": "export CLIENT_SECRET='[REDACTED]'",
@@ -252,6 +263,30 @@ class PrivateKeyTest(RedactAssertions):
             '\n'.join(pgp): f'{pgp[0]}\n[REDACTED]\n{pgp[-1]}',
         })
 
+    def test_key_assigned_to_a_secret_named_variable(self):
+        # The keyed pass used to redact the BEGIN line itself, leaving the body
+        # for nothing to find. These are the env-dump and config shapes.
+        body = '\n'.join(KEY_LINES)
+        self.assertRedacts({
+            f'HOME=/home/u\nSSH_PRIVATE_KEY={self.BEGIN}\n{body}\n{self.END}\nPATH=/bin':
+                f'HOME=/home/u\nSSH_PRIVATE_KEY={self.BEGIN}\n[REDACTED]\n{self.END}\nPATH=/bin',
+            f'private_key: {self.BEGIN}\n  {body}\n  {self.END}':
+                f'private_key: {self.BEGIN}\n[REDACTED]\n{self.END}',
+            '{"private_key": "' + '\\n'.join([armor('BEGIN'), *KEY_LINES, armor('END')]) + '\\n"}':
+                '{"private_key": "' + armor('BEGIN') + '\\n[REDACTED]\\n' + armor('END') + '\\n"}',
+        })
+
+    def test_line_cut_by_truncation(self):
+        # A one-line JSON dump cut at 500 characters ends mid-body with `...`
+        cut = '{"private_key": "' + armor('BEGIN') + '\\n' + KEY_LINES[0][:40] + '...'
+        self.assertRedacts({cut: '{"private_key": "' + armor('BEGIN') + '\\n[REDACTED]...'})
+
+    def test_armor_line_alone_untouched(self):
+        self.assertUnchanged([
+            f"grep -l -- '{self.BEGIN}' ~/.ssh/*",
+            f'Look for a line reading {self.BEGIN} at the top.',
+        ])
+
     def test_public_material_untouched(self):
         self.assertUnchanged([
             f'ssh-ed25519 {KEY_LINES[0]} derek@devbox',
@@ -268,6 +303,10 @@ class UrlCredentialTest(RedactAssertions):
                 'git remote set-url origin https://x-access-token:[REDACTED]@github.com/o/r.git',
             'redis://:s3cret@localhost:6379/0': 'redis://:[REDACTED]@localhost:6379/0',
             'amqp://u:pa:ss@mq': 'amqp://u:[REDACTED]@mq',
+            # Raw `/` and `@` in generated passwords
+            'postgres://app:ab/cd+ef==@db.internal/app': 'postgres://app:[REDACTED]@db.internal/app',
+            'postgres://app:p@ss@db.internal/app': 'postgres://app:[REDACTED]@db.internal/app',
+            '(see mysql://root:x/y@z@db:3306)': '(see mysql://root:[REDACTED]@db:3306)',
         })
 
     def test_urls_without_a_password_untouched(self):
@@ -275,6 +314,7 @@ class UrlCredentialTest(RedactAssertions):
             'http://localhost:8080/path', 'https://user@github.com/o/r', 'git@github.com:org/repo.git',
             'postgres://app:$DB_PASSWORD@db/app', 'mailto:someone@example.com',
             'see http://example.com/a:b@c',
+            'http://localhost:8080/users/@me',
         ])
 
 
@@ -311,7 +351,8 @@ class StructurePreservedTest(RedactAssertions):
         # Long kebab-case, dotted, and base64url runs once backtracked
         # quadratically (64 KB of a-a-a... took seconds). Generous bound;
         # healthy is a few ms.
-        for text in ['a-' * 32768, 'a.' * 32768, ('Ab0_-' * 13000) + '=']:
+        for text in ['a-' * 32768, 'a.' * 32768, ('Ab0_-' * 13000) + '=',
+                     'x://u:' + 'b@' * 32768, 'PrivateKey = ' + 'a1' * 32768]:
             with self.subTest(length=len(text)):
                 start = time.monotonic()
                 redact(text)
