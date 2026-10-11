@@ -79,7 +79,7 @@ Ideas and enhancements are tracked in [GitHub Issues](https://github.com/ddehart
 This is a documentation-only repository. There are:
 - No dependencies to install
 - No build process
-- No tests to run
+- No tests to run, except `plugins/meta-claude/skills/session-export/scripts/test_export_session.py` (stdlib `unittest`; run `python3 -m unittest test_export_session.py` from that directory)
 - No linting configured
 
 Changes are validated by ensuring:

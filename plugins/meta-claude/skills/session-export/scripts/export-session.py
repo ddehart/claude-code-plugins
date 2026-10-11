@@ -15,6 +15,26 @@ from pathlib import Path
 # Get home directory dynamically
 HOME_DIR = os.path.expanduser("~")
 
+# Credential patterns scrubbed from everything the exporter writes. Exports are
+# meant to be committed, and a session that inspects its environment (env,
+# /proc/<pid>/environ, cat .secrets) prints live credentials into the JSONL.
+# Assignments keep the variable name so the transcript still reads sensibly.
+REDACTED = '[REDACTED]'
+REDACTION_PATTERNS = [
+    # NAME=value where NAME ends in api_key / api-key / apikey / token / secret,
+    # case-insensitive (CLAUDE_CODE_OAUTH_TOKEN=, GITHUB_TOKEN=, api_key=, ...)
+    (re.compile(r'(?i)\b(\w*(?:api[_-]?key|token|secret))=\S+'), r'\1=' + REDACTED),
+    # Anthropic keys and OAuth tokens anywhere (sk-ant-api03-..., sk-ant-oat01-...)
+    (re.compile(r'sk-ant-[A-Za-z0-9_-]+'), REDACTED),
+]
+
+
+def redact(text):
+    """Replace credential-shaped substrings with [REDACTED]."""
+    for pattern, replacement in REDACTION_PATTERNS:
+        text = pattern.sub(replacement, text)
+    return text
+
 
 def generate_edit_diff(old_string, new_string, max_lines=15):
     """Generate a simple diff showing added/removed lines.
@@ -437,7 +457,7 @@ def export_session(jsonl_path, output_path):
     try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w') as f:
-            f.write('\n'.join(output_lines))
+            f.write(redact('\n'.join(output_lines)))
     except PermissionError:
         print(f"✗ Error: Permission denied writing to: {output_path}")
         sys.exit(1)
@@ -447,7 +467,7 @@ def export_session(jsonl_path, output_path):
 
     print(f"✓ Exported session to: {output_path}")
     if info['summary']:
-        print(f"  Summary: {info['summary']}")
+        print(f"  Summary: {redact(info['summary'])}")
     print(f"  File size: {output_path.stat().st_size / 1024:.1f} KB")
 
 
