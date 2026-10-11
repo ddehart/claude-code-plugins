@@ -353,6 +353,35 @@ class UrlQueryTokenTest(RedactAssertions):
             f'https://x.test/dl?t=Zx9{ALNUM}': 'https://x.test/dl?t=[REDACTED]',
         })
 
+    def test_token_followed_by_any_punctuation(self):
+        url = f'https://cal.test/ical.ics?k={self.HEX32}'
+        done = 'https://cal.test/ical.ics?k=[REDACTED]'
+        self.assertRedacts({
+            f'see {url}, then refresh': f'see {done}, then refresh',
+            f'| {url}| ok |': f'| {done}| ok |',
+            f'URL={url};': f'URL={done};',
+            f'[{url}]': f'[{done}]',
+            # JSON-escaped newline after the URL
+            f'"body": "url {url}\\nnext line"': f'"body": "url {done}\\nnext line"',
+        })
+
+    def test_escaped_parameter_separators(self):
+        sig = self.HEX32 * 2
+        self.assertRedacts({
+            # HTML/XML
+            f'<a href="https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4&amp;X-Amz-Signature={sig}">':
+                '<a href="https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4&amp;X-Amz-Signature=[REDACTED]">',
+            # JSON from Go tools, which escape `&` as \u0026
+            f'"url":"https://b.s3.amazonaws.com/f?a=1\\u0026X-Amz-Signature={sig}"':
+                '"url":"https://b.s3.amazonaws.com/f?a=1\\u0026X-Amz-Signature=[REDACTED]"',
+        })
+
+    def test_raw_base64_signature(self):
+        self.assertRedacts({
+            'https://acct.blob.core.windows.net/c/b?sv=2021-08-06&sig=AbC1+dEf2/GhI3jKl4MnO5pQr6=':
+                'https://acct.blob.core.windows.net/c/b?sv=2021-08-06&sig=[REDACTED]',
+        })
+
     def test_ordinary_query_values_untouched(self):
         self.assertUnchanged([
             'https://example.com/?s=how+to+configure+nginx',
@@ -361,6 +390,11 @@ class UrlQueryTokenTest(RedactAssertions):
             'https://api.github.com/repos/o/r/contents/f?ref=' + 'd7f320f0' * 5,
             'https://example.com/?code=200',
             'see https://example.com/a?s=$TOKEN',
+            'https://example.com/?s=how+to+configure+nginx+on+ubuntu+24',
+            # Percent-encoded URLs and searches, and paths, aren't tokens
+            'https://accounts.google.com/o/oauth2/auth?redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fcallback&scope=x',
+            'https://www.google.com/search?q=how%20to%20configure%20nginx%20on%20ubuntu%2024',
+            'https://api.test/files?path=/home/derek/projects/airbnb-prep/data2.json',
         ])
 
 

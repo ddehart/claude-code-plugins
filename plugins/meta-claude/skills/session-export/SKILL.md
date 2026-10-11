@@ -87,7 +87,8 @@ The export produces UI-style readable text with:
   - The password in URLs like `postgres://user:password@host`, including raw `/` and `@` in it.
   - Access tokens in URL query strings: signature-style parameters (`sig`, `signature`, `code`,
     `X-Amz-Signature`, ...) and any long random-looking value (32+ characters with a letter and a
-    digit), as in calendar export links and pre-signed S3/GCS URLs. UUIDs and git SHAs are kept;
+    digit, not %-encoded text or a path), as in calendar export links and pre-signed S3/GCS URLs,
+    including `&amp;`-escaped and JSON `\u0026`-escaped links. UUIDs and git SHAs are kept;
     other long hashes in a query string, like a `?v=<hash>` cache-buster, are redacted too.
   - Token formats recognizable anywhere: Anthropic, OpenAI, GitHub, Slack, Google OAuth and API
     keys, AWS access key IDs, Telegram bot tokens.
