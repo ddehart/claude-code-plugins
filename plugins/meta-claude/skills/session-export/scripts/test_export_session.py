@@ -319,6 +319,8 @@ class UrlCredentialTest(RedactAssertions):
             'postgres://app:ab/cd+ef==@db.internal/app': 'postgres://app:[REDACTED]@db.internal/app',
             'postgres://app:p@ss@db.internal/app': 'postgres://app:[REDACTED]@db.internal/app',
             '(see mysql://root:x/y@z@db:3306)': '(see mysql://root:[REDACTED]@db:3306)',
+            # Long tokens used as passwords, well past the old 256-character cap
+            'https://u:' + 'a1' * 300 + '@h/x': 'https://u:[REDACTED]@h/x',
         })
 
     def test_urls_without_a_password_untouched(self):
@@ -365,7 +367,10 @@ class StructurePreservedTest(RedactAssertions):
         # healthy is a few ms.
         for text in ['a-' * 32768, 'a.' * 32768, ('Ab0_-' * 13000) + '=',
                      'x://u:' + 'b@' * 32768, 'PrivateKey = ' + 'a1' * 32768,
-                     'x://u:' * 11000, 'a://' * 16000, 'http://h:8080/p,' * 4000]:
+                     # 32 KB is enough to expose a quadratic URL scan (~1 s)
+                     'x://u:' * 5500, 'a://' * 8000, 'http://h:8080/p,' * 2000,
+                     '-----BEGIN RSA PRIV' + 'ATE KEY-----\n' * 2000,
+                     '-----BEGIN RSA PRIV' + 'ATE KEY-----\n' + ('Abc: ' + 'x' * 58 + '\n') * 1000]:
             with self.subTest(length=len(text)):
                 start = time.monotonic()
                 redact(text)
