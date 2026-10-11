@@ -43,10 +43,11 @@ _AUTH_SCHEME = r'(?i:(?:bearer|basic)[ \t]+)?'
 _SECRET_VALUE = rf'{_AUTH_SCHEME}(?P<value>{_QUOTED_VALUE}|{_BARE_VALUE})'
 _COLON = r'[ \t]*:[ \t]*'
 # An unquoted value that reads as a credential rather than code: 16+ chars of
-# token alphabet, at least one digit, then whitespace, `,`, `;`, or the end.
+# token alphabet, at least one digit, then the end of the value: whitespace,
+# `,`, `;`, a closing quote, backtick, or paren, or the end of the text.
 # `token = get_token()` and `password = self.config.password` don't qualify.
 _OPAQUE_TOKEN = r'[A-Za-z0-9+/_.~-]'  # base64, base64url, JWT
-_CREDENTIAL_LIKE = rf'(?={_OPAQUE_TOKEN}*\d){_OPAQUE_TOKEN}{{16,}}=*(?:[\s,;]|$)'
+_CREDENTIAL_LIKE = rf'(?={_OPAQUE_TOKEN}*\d){_OPAQUE_TOKEN}{{16,}}=*(?:[\s,;"\'`)]|$)'
 _VALUE_QUOTES = re.compile(r'((?:\\?["\'])?)(.*?)((?:\\?["\'])?)')
 # References and placeholders, not secrets: $VAR, ${VAR}, $(cmd), %s, {name}
 # (f-strings and templates), <name>, and elisions.
