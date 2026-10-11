@@ -332,6 +332,38 @@ class UrlCredentialTest(RedactAssertions):
         ])
 
 
+class UrlQueryTokenTest(RedactAssertions):
+    HEX32 = 'a1b2c3d4e5f60718' * 2
+
+    def test_capability_and_signed_links(self):
+        self.assertRedacts({
+            # A calendar export link: the URL alone grants read access. Caught
+            # under a signature-style name, and as a long value under any name.
+            f'https://www.airbnb.com/calendar/ical/12345678.ics?s={self.HEX32}':
+                'https://www.airbnb.com/calendar/ical/12345678.ics?s=[REDACTED]',
+            f'https://www.airbnb.com/calendar/ical/12345678.ics?k={self.HEX32}':
+                'https://www.airbnb.com/calendar/ical/12345678.ics?k=[REDACTED]',
+            # Pre-signed S3: the signature goes (the AKIA key id is caught separately)
+            f'https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature={self.HEX32 * 2}&x=1':
+                'https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=[REDACTED]&x=1',
+            f'https://storage.googleapis.com/b/o?X-Goog-Signature={self.HEX32}': 
+                'https://storage.googleapis.com/b/o?X-Goog-Signature=[REDACTED]',
+            'https://app/cb?code=4/0AbCdEf123456789xyz&state=ok': 'https://app/cb?code=[REDACTED]&state=ok',
+            # A long random value under any name
+            f'https://x.test/dl?t=Zx9{ALNUM}': 'https://x.test/dl?t=[REDACTED]',
+        })
+
+    def test_ordinary_query_values_untouched(self):
+        self.assertUnchanged([
+            'https://example.com/?s=how+to+configure+nginx',
+            'https://example.com/list?page=2&sort=desc&q=hello',
+            'https://api.test/items?id=550e8400-e29b-41d4-a716-446655440000',
+            'https://api.github.com/repos/o/r/contents/f?ref=' + 'd7f320f0' * 5,
+            'https://example.com/?code=200',
+            'see https://example.com/a?s=$TOKEN',
+        ])
+
+
 class StructurePreservedTest(RedactAssertions):
     def test_surrounding_punctuation_survives(self):
         cases = {
@@ -369,6 +401,7 @@ class StructurePreservedTest(RedactAssertions):
                      'x://u:' + 'b@' * 32768, 'PrivateKey = ' + 'a1' * 32768,
                      # 32 KB is enough to expose a quadratic URL scan (~1 s)
                      'x://u:' * 5500, 'a://' * 8000, 'http://h:8080/p,' * 2000,
+                     '&s=' * 11000, '?t=a1' + 'b' * 32000 + '!',
                      '-----BEGIN RSA PRIV' + 'ATE KEY-----\n' * 2000,
                      '-----BEGIN RSA PRIV' + 'ATE KEY-----\n' + ('Abc: ' + 'x' * 58 + '\n') * 1000]:
             with self.subTest(length=len(text)):
