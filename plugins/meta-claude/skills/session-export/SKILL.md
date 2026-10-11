@@ -75,7 +75,8 @@ The export produces UI-style readable text with:
 - Concise output (truncates long file contents)
 - Filtered meta messages and command tags
 - Credentials redacted to `[REDACTED]`, so exports are safe to commit:
-  - Keyed secrets, keeping the name: `NAME=value`, `"name": value` (JSON), `name: value` at line
+  - Keyed secrets, keeping the name: `NAME=value`, `Name = value` when the value looks like a
+    credential (INI, WireGuard), `"name": value` (JSON), `name: value` at line
     start (YAML, `curl -v`) or inside a quoted header (`-H "x-api-key: …"`), where the name ends in
     `api_key`, `access_key`, `secret_key`, `private_key`, `client_secret`, `token`, `secret`,
     `password`, or `credentials` (any case), or is an upper-case env var ending in `_KEY`.
@@ -83,7 +84,7 @@ The export produces UI-style readable text with:
   - `Bearer`/`Basic` auth values.
   - Private key blocks (PEM, OpenSSH, PGP), keeping the BEGIN/END lines, including blocks cut off
     before their END line.
-  - The password in URLs like `postgres://user:password@host`.
+  - The password in URLs like `postgres://user:password@host`, including raw `/` and `@` in it.
   - Token formats recognizable anywhere: Anthropic, OpenAI, GitHub, Slack, Google OAuth and API
     keys, AWS access key IDs, Telegram bot tokens.
 

@@ -42,16 +42,22 @@ _BARE_VALUE = r'[^\s"\'`,;)}\]&]+'
 _AUTH_SCHEME = r'(?i:(?:bearer|basic)[ \t]+)?'
 _SECRET_VALUE = rf'{_AUTH_SCHEME}(?P<value>{_QUOTED_VALUE}|{_BARE_VALUE})'
 _COLON = r'[ \t]*:[ \t]*'
+# An unquoted value that reads as a credential rather than code: 16+ chars of
+# token alphabet, at least one digit, then whitespace, `,`, `;`, or the end.
+# `token = get_token()` and `password = self.config.password` don't qualify.
+_CREDENTIAL_LIKE = r'(?=[A-Za-z0-9+/_.~-]*\d)[A-Za-z0-9+/_.~-]{16,}=*(?:[\s,;]|$)'
 _VALUE_QUOTES = re.compile(r'((?:\\?["\'])?)(.*?)((?:\\?["\'])?)')
 # References and placeholders, not secrets: $VAR, ${VAR}, $(cmd), %s, {name}
 # (f-strings and templates), <name>, and elisions.
 _PLACEHOLDER = re.compile(r'\$(?:\{?\w+\}?|\(.*)|%s|\{\w*\}?|<[\w -]*>|\.\.\.|…')
 
 _KEYED_PATTERNS = [
-    # NAME=value, and NAME = "value" with spaces only before a quoted literal.
+    # NAME=value; NAME = "value"; and NAME = value (INI, WireGuard's
+    # `PrivateKey = ...`) when the value looks like a credential.
     # (?<![\w-]) rather than \b: one match attempt per word run, not one per
     # hyphen in it, which made long kebab-case or base64url runs quadratic.
-    rf'(?<![\w-])(?P<name>{_SECRET_NAME})(?:[ \t]*=[ \t]*(?=\\?["\'])|=){_SECRET_VALUE}',
+    rf'(?<![\w-])(?P<name>{_SECRET_NAME})'
+    rf'(?:[ \t]*=[ \t]*(?=\\?["\'])|[ \t]+=[ \t]+(?={_CREDENTIAL_LIKE})|=){_SECRET_VALUE}',
     # "name": value (JSON, Python dicts)
     rf'(?P<q>\\?["\'])(?P<name>{_SECRET_NAME})(?P=q){_COLON}{_SECRET_VALUE}',
     # name: value at line start (YAML, curl -v request and response headers);
@@ -82,8 +88,11 @@ _BARE_TOKEN_PATTERNS = [
 def _redact_value(match):
     """Replace a keyed secret's value, keeping its name, separator, and quotes."""
     opening, inner, closing = _VALUE_QUOTES.fullmatch(match.group('value')).groups()
-    # Bare values stop at `]`, so a value that is already redacted reads `[REDACTED`.
-    if not inner or inner.startswith('[REDACTED') or _PLACEHOLDER.fullmatch(inner):
+    # Bare values stop at `]`, so a value that is already redacted reads
+    # `[REDACTED`. A key block was already handled by the earlier PEM pass,
+    # which keeps the armor lines; redacting `-----BEGIN` here would hide that.
+    if (not inner or inner.startswith(('[REDACTED', '-----BEGIN'))
+            or _PLACEHOLDER.fullmatch(inner)):
         return match.group(0)
     return match.string[match.start():match.start('value')] + opening + REDACTED + closing
 
@@ -94,41 +103,59 @@ def _redact_value(match):
 # exporter's indent) or on JSON-escaped `\n`. The END line is optional: the
 # exporter cuts long tool results off after a few lines, which drops it.
 _PEM_NEWLINE = r'(?:\\n|\r?\n)[ \t]*'
+_PEM_LABEL = r'[A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----'
 # A base64 line has to run to the end of the line, or `Version: ...` would
-# match as the base64 line `Version` and end the block early.
-_PEM_LINE = rf'(?:[A-Za-z0-9+/=]+(?=\\|\r?\n|$)|[A-Z][\w-]*: [^\n\\]*|(?={_PEM_NEWLINE}[A-Za-z0-9+/=]))'
+# match as the base64 line `Version` and end the block early. The end can
+# also be the exporter's truncation mark (`...`) or a closing JSON quote.
+_PEM_LINE = (
+    rf'(?:[A-Za-z0-9+/=]+(?=\\|\r?\n|$|\.\.\.|…|")'
+    rf'|[A-Z][\w-]*: [^\n\\]*|(?={_PEM_NEWLINE}[A-Za-z0-9+/=]))'
+)
 _PEM_BLOCK = re.compile(
-    r'(?P<begin>-----BEGIN [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----)'
+    rf'(?P<begin>-----BEGIN {_PEM_LABEL})'
     rf'(?:(?P<sep>{_PEM_NEWLINE}){_PEM_LINE}(?:{_PEM_NEWLINE}{_PEM_LINE})*)?'
-    rf'(?:{_PEM_NEWLINE}(?P<end>-----END [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----))?'
+    rf'(?:{_PEM_NEWLINE}(?P<end>-----END {_PEM_LABEL}))?'
 )
 
 
 def _redact_pem(match):
     """Keep a key block's BEGIN and END lines; replace the body."""
+    if match.group('sep') is None:  # just the armor line, e.g. a grep pattern
+        return match.group(0)
     sep = '\\n' if (match.group('sep') or '').startswith('\\') else '\n'
     end = sep + match.group('end') if match.group('end') else ''
     return match.group('begin') + sep + REDACTED + end
 
 
 # The password in scheme://user:password@host (postgres://, https://, and
-# redis://:password@host, where the user is often empty).
+# redis://:password@host, where the user is often empty). The password runs to
+# the last `@` before the host, so raw `/` and `@` inside it (generated
+# passwords, which clients like libpq accept) are covered.
 # scp-style git@host:path has no `://`, so it never matches.
 # Anchored on (?<![A-Za-z0-9+.-]) rather than \b, so a long dotted or hyphenated
 # run is scanned for a scheme once, not once per word inside it.
-_URL_CREDENTIAL = re.compile(r'((?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*://[^\s/:@"\']*:)([^\s/@"\']+)(?=@)')
+_URL_CREDENTIAL = re.compile(
+    r'((?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*://[^\s/:@"\']*:)'
+    r'([^\s"\'`]+)(?=@[^\s@/?#"\'`]+(?:[/?#\s"\'`)]|$))'
+)
+# host:8080/path@x is a port and a path, not a password
+_PORT_AND_PATH = re.compile(r'\d{1,5}/')
 
 
 def _redact_url_password(match):
-    if _PLACEHOLDER.fullmatch(match.group(2)):
+    password = match.group(2)
+    if _PLACEHOLDER.fullmatch(password) or _PORT_AND_PATH.match(password):
         return match.group(0)
     return match.group(1) + REDACTED
 
 
-# Keyed patterns run first so `GITHUB_TOKEN=ghp_...` keeps its name.
+# Key blocks run first: a keyed pattern would otherwise redact the `-----BEGIN`
+# of `SSH_PRIVATE_KEY=-----BEGIN ...` and leave the body for nothing to find.
+# Keyed patterns run before bare tokens so `GITHUB_TOKEN=ghp_...` keeps its name.
 REDACTION_PATTERNS = (
-    [(re.compile(p), _redact_value) for p in _KEYED_PATTERNS]
-    + [(_PEM_BLOCK, _redact_pem), (_URL_CREDENTIAL, _redact_url_password)]
+    [(_PEM_BLOCK, _redact_pem)]
+    + [(re.compile(p), _redact_value) for p in _KEYED_PATTERNS]
+    + [(_URL_CREDENTIAL, _redact_url_password)]
     + [(re.compile(r'(?i)\b((?:bearer|basic)[ \t]+)[A-Za-z0-9._~+/-]{16,}=*'), r'\1' + REDACTED)]
     + [(re.compile(p), REDACTED) for p in _BARE_TOKEN_PATTERNS]
 )
