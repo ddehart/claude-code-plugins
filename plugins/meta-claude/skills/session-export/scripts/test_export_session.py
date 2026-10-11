@@ -33,12 +33,17 @@ FAKE_REFRESH = '1/' + '/0g' + ALNUM
 FAKE_TELEGRAM = '1234567890' + ':' + ('AAH' + ALNUM)[:35]
 
 
-def armor(edge, kind=''):
+def armor(edge, kind='', suffix=''):
     """A private-key armor line, split so the file holds no literal key header."""
-    return f'-----{edge} {kind}PRIV' + 'ATE KEY-----'
+    return f'-----{edge} {kind}PRIV' + f'ATE KEY{suffix}-----'
 
 
 KEY_LINES = [ALNUM + ALNUM[:28], ALNUM[::-1] + 'abcdefghijklmnopqrstuvwxyz01', 'ZmFrZWtleWJvZHk=']
+BODY = '\n'.join(KEY_LINES)
+SSH_BEGIN, SSH_END = armor('BEGIN', 'OPENSSH '), armor('END', 'OPENSSH ')
+# A key JSON-escaped onto one line (a service-account file), and its redaction
+ESCAPED_KEY = '\\n'.join([armor('BEGIN'), *KEY_LINES, armor('END')]) + '\\n'
+ESCAPED_KEY_REDACTED = armor('BEGIN') + '\\n[REDACTED]\\n' + armor('END') + '\\n'
 
 BARE_TOKENS = {
     'anthropic api key': FAKE_API,
@@ -123,7 +128,7 @@ FIXTURE_LINES = [
         'type': 'user',
         'message': {'content': [{
             'type': 'tool_result', 'tool_use_id': 'toolu_3',
-            'content': '\n'.join([armor('BEGIN', 'OPENSSH '), *KEY_LINES, armor('END', 'OPENSSH ')]),
+            'content': '\n'.join([SSH_BEGIN, *KEY_LINES, SSH_END]),
         }]},
     },
     {
@@ -231,33 +236,29 @@ class KeyedSecretTest(RedactAssertions):
 
 
 class PrivateKeyTest(RedactAssertions):
-    BEGIN, END = armor('BEGIN', 'OPENSSH '), armor('END', 'OPENSSH ')
-
     def test_block_body_replaced_armor_kept(self):
-        body = '\n'.join(KEY_LINES)
         self.assertRedacts({
-            f'before\n{self.BEGIN}\n{body}\n{self.END}\nafter':
-                f'before\n{self.BEGIN}\n[REDACTED]\n{self.END}\nafter',
+            f'before\n{SSH_BEGIN}\n{BODY}\n{SSH_END}\nafter':
+                f'before\n{SSH_BEGIN}\n[REDACTED]\n{SSH_END}\nafter',
             # Indented the way the exporter indents tool results
-            '\n'.join('  ' + line for line in [self.BEGIN, *KEY_LINES, self.END]):
-                f'  {self.BEGIN}\n[REDACTED]\n{self.END}',
+            '\n'.join('  ' + line for line in [SSH_BEGIN, *KEY_LINES, SSH_END]):
+                f'  {SSH_BEGIN}\n[REDACTED]\n{SSH_END}',
             # JSON-escaped on one line (a service-account file, a dumped config)
-            '"' + '\\n'.join([armor('BEGIN'), *KEY_LINES, armor('END')]) + '\\n"':
-                '"' + armor('BEGIN') + '\\n[REDACTED]\\n' + armor('END') + '\\n"',
+            f'"{ESCAPED_KEY}"': f'"{ESCAPED_KEY_REDACTED}"',
         })
 
     def test_cut_off_block_without_end_line(self):
         self.assertRedacts({
-            f'{self.BEGIN}\n  {KEY_LINES[0]}\n  {KEY_LINES[1]}\n    ... (12 more lines)\n\n⏺ Next':
-                f'{self.BEGIN}\n[REDACTED]\n    ... (12 more lines)\n\n⏺ Next',
-            f'{self.BEGIN}\n  {KEY_LINES[0]}\n\n⏺ Next': f'{self.BEGIN}\n[REDACTED]\n\n⏺ Next',
+            f'{SSH_BEGIN}\n  {KEY_LINES[0]}\n  {KEY_LINES[1]}\n    ... (12 more lines)\n\n⏺ Next':
+                f'{SSH_BEGIN}\n[REDACTED]\n    ... (12 more lines)\n\n⏺ Next',
+            f'{SSH_BEGIN}\n  {KEY_LINES[0]}\n\n⏺ Next': f'{SSH_BEGIN}\n[REDACTED]\n\n⏺ Next',
         })
 
     def test_encrypted_and_pgp_blocks(self):
         encrypted = [armor('BEGIN', 'RSA '), 'Proc-Type: 4,ENCRYPTED', 'DEK-Info: AES-128-CBC,0A1B2C3D',
                      '', *KEY_LINES, armor('END', 'RSA ')]
-        pgp = ['-----BEGIN PGP PRIV' + 'ATE KEY BLOCK-----', 'Version: GnuPG v2', '', *KEY_LINES,
-               '-----END PGP PRIV' + 'ATE KEY BLOCK-----']
+        pgp = [armor('BEGIN', 'PGP ', ' BLOCK'), 'Version: GnuPG v2', '', *KEY_LINES,
+               armor('END', 'PGP ', ' BLOCK')]
         self.assertRedacts({
             '\n'.join(encrypted): f'{encrypted[0]}\n[REDACTED]\n{encrypted[-1]}',
             '\n'.join(pgp): f'{pgp[0]}\n[REDACTED]\n{pgp[-1]}',
@@ -266,14 +267,20 @@ class PrivateKeyTest(RedactAssertions):
     def test_key_assigned_to_a_secret_named_variable(self):
         # The keyed pass used to redact the BEGIN line itself, leaving the body
         # for nothing to find. These are the env-dump and config shapes.
-        body = '\n'.join(KEY_LINES)
         self.assertRedacts({
-            f'HOME=/home/u\nSSH_PRIVATE_KEY={self.BEGIN}\n{body}\n{self.END}\nPATH=/bin':
-                f'HOME=/home/u\nSSH_PRIVATE_KEY={self.BEGIN}\n[REDACTED]\n{self.END}\nPATH=/bin',
-            f'private_key: {self.BEGIN}\n  {body}\n  {self.END}':
-                f'private_key: {self.BEGIN}\n[REDACTED]\n{self.END}',
-            '{"private_key": "' + '\\n'.join([armor('BEGIN'), *KEY_LINES, armor('END')]) + '\\n"}':
-                '{"private_key": "' + armor('BEGIN') + '\\n[REDACTED]\\n' + armor('END') + '\\n"}',
+            f'HOME=/home/u\nSSH_PRIVATE_KEY={SSH_BEGIN}\n{BODY}\n{SSH_END}\nPATH=/bin':
+                f'HOME=/home/u\nSSH_PRIVATE_KEY={SSH_BEGIN}\n[REDACTED]\n{SSH_END}\nPATH=/bin',
+            f'private_key: {SSH_BEGIN}\n  {BODY}\n  {SSH_END}':
+                f'private_key: {SSH_BEGIN}\n[REDACTED]\n{SSH_END}',
+            f'{{"private_key": "{ESCAPED_KEY}"}}': f'{{"private_key": "{ESCAPED_KEY_REDACTED}"}}',
+        })
+
+    def test_flattened_onto_one_line(self):
+        # Some env and secret displays join a key's lines with spaces
+        flat = ' '.join([SSH_BEGIN, *KEY_LINES, SSH_END])
+        self.assertRedacts({
+            f'"private_key": "{flat}"': f'"private_key": "{SSH_BEGIN} [REDACTED] {SSH_END}"',
+            f'SSH_PRIVATE_KEY={flat} PATH=/bin': f'SSH_PRIVATE_KEY={SSH_BEGIN} [REDACTED] {SSH_END} PATH=/bin',
         })
 
     def test_line_cut_by_truncation(self):
@@ -283,8 +290,8 @@ class PrivateKeyTest(RedactAssertions):
 
     def test_armor_line_alone_untouched(self):
         self.assertUnchanged([
-            f"grep -l -- '{self.BEGIN}' ~/.ssh/*",
-            f'Look for a line reading {self.BEGIN} at the top.',
+            f"grep -l -- '{SSH_BEGIN}' ~/.ssh/*",
+            f'Look for a line reading {SSH_BEGIN} at the top.',
         ])
 
     def test_public_material_untouched(self):
@@ -352,7 +359,8 @@ class StructurePreservedTest(RedactAssertions):
         # quadratically (64 KB of a-a-a... took seconds). Generous bound;
         # healthy is a few ms.
         for text in ['a-' * 32768, 'a.' * 32768, ('Ab0_-' * 13000) + '=',
-                     'x://u:' + 'b@' * 32768, 'PrivateKey = ' + 'a1' * 32768]:
+                     'x://u:' + 'b@' * 32768, 'PrivateKey = ' + 'a1' * 32768,
+                     'x://u:' * 11000, 'a://' * 16000, 'http://h:8080/p,' * 4000]:
             with self.subTest(length=len(text)):
                 start = time.monotonic()
                 redact(text)
@@ -386,7 +394,7 @@ class ExportRedactionTest(unittest.TestCase):
         self.assertIn('/proc/4242/environ', text)
         self.assertIn('cat ~/.config/gws/credentials.json', text)
         self.assertIn('postgres://app:[REDACTED]@db/app', text)
-        self.assertIn(armor('BEGIN', 'OPENSSH ') + '\n[REDACTED]\n' + armor('END', 'OPENSSH '), text)
+        self.assertIn(f'{SSH_BEGIN}\n[REDACTED]\n{SSH_END}', text)
 
 
 if __name__ == '__main__':
