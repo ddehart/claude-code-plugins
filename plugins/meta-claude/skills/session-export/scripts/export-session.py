@@ -88,9 +88,47 @@ def _redact_value(match):
     return match.string[match.start():match.start('value')] + opening + REDACTED + closing
 
 
+# A private key block (PEM, OpenSSH, PGP): the BEGIN line, then body lines of
+# base64 or armor headers (Proc-Type:, Version:), with a blank line allowed
+# only where more base64 follows. Lines break on real newlines (plus the
+# exporter's indent) or on JSON-escaped `\n`. The END line is optional: the
+# exporter cuts long tool results off after a few lines, which drops it.
+_PEM_NEWLINE = r'(?:\\n|\r?\n)[ \t]*'
+# A base64 line has to run to the end of the line, or `Version: ...` would
+# match as the base64 line `Version` and end the block early.
+_PEM_LINE = rf'(?:[A-Za-z0-9+/=]+(?=\\|\r?\n|$)|[A-Z][\w-]*: [^\n\\]*|(?={_PEM_NEWLINE}[A-Za-z0-9+/=]))'
+_PEM_BLOCK = re.compile(
+    r'(?P<begin>-----BEGIN [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----)'
+    rf'(?:(?P<sep>{_PEM_NEWLINE}){_PEM_LINE}(?:{_PEM_NEWLINE}{_PEM_LINE})*)?'
+    rf'(?:{_PEM_NEWLINE}(?P<end>-----END [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----))?'
+)
+
+
+def _redact_pem(match):
+    """Keep a key block's BEGIN and END lines; replace the body."""
+    sep = '\\n' if (match.group('sep') or '').startswith('\\') else '\n'
+    end = sep + match.group('end') if match.group('end') else ''
+    return match.group('begin') + sep + REDACTED + end
+
+
+# The password in scheme://user:password@host (postgres://, https://, and
+# redis://:password@host, where the user is often empty).
+# scp-style git@host:path has no `://`, so it never matches.
+# Anchored on (?<![A-Za-z0-9+.-]) rather than \b, so a long dotted or hyphenated
+# run is scanned for a scheme once, not once per word inside it.
+_URL_CREDENTIAL = re.compile(r'((?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*://[^\s/:@"\']*:)([^\s/@"\']+)(?=@)')
+
+
+def _redact_url_password(match):
+    if _PLACEHOLDER.fullmatch(match.group(2)):
+        return match.group(0)
+    return match.group(1) + REDACTED
+
+
 # Keyed patterns run first so `GITHUB_TOKEN=ghp_...` keeps its name.
 REDACTION_PATTERNS = (
     [(re.compile(p), _redact_value) for p in _KEYED_PATTERNS]
+    + [(_PEM_BLOCK, _redact_pem), (_URL_CREDENTIAL, _redact_url_password)]
     + [(re.compile(r'(?i)\b((?:bearer|basic)[ \t]+)[A-Za-z0-9._~+/-]{16,}=*'), r'\1' + REDACTED)]
     + [(re.compile(p), REDACTED) for p in _BARE_TOKEN_PATTERNS]
 )

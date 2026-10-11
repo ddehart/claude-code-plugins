@@ -32,6 +32,14 @@ FAKE_GHP = 'gh' + 'p_' + ALNUM
 FAKE_REFRESH = '1/' + '/0g' + ALNUM
 FAKE_TELEGRAM = '1234567890' + ':' + ('AAH' + ALNUM)[:35]
 
+
+def armor(edge, kind=''):
+    """A private-key armor line, split so the file holds no literal key header."""
+    return f'-----{edge} {kind}PRIV' + 'ATE KEY-----'
+
+
+KEY_LINES = [ALNUM + ALNUM[:28], ALNUM[::-1] + 'abcdefghijklmnopqrstuvwxyz01', 'ZmFrZWtleWJvZHk=']
+
 BARE_TOKENS = {
     'anthropic api key': FAKE_API,
     'anthropic oauth token': FAKE_OAT,
@@ -107,6 +115,20 @@ FIXTURE_LINES = [
     {
         'type': 'assistant',
         'message': {'content': [{
+            'type': 'tool_use', 'id': 'toolu_3', 'name': 'Bash',
+            'input': {'command': 'cat ~/.ssh/id_ed25519; psql postgres://app:hunter2db@db/app -c "select 1"'},
+        }]},
+    },
+    {
+        'type': 'user',
+        'message': {'content': [{
+            'type': 'tool_result', 'tool_use_id': 'toolu_3',
+            'content': '\n'.join([armor('BEGIN', 'OPENSSH '), *KEY_LINES, armor('END', 'OPENSSH ')]),
+        }]},
+    },
+    {
+        'type': 'assistant',
+        'message': {'content': [{
             'type': 'text',
             'text': f'The worker had {FAKE_OAT[:40]} while the shell had {FAKE_API}.',
         }]},
@@ -115,7 +137,7 @@ FIXTURE_LINES = [
 
 SECRET_VALUES = [
     FAKE_OAT[:40], FAKE_API, FAKE_OPENAI, FAKE_GHP, FAKE_REFRESH,
-    'am_notarealkey456', 'GOCSPX-notarealsecret',
+    'am_notarealkey456', 'GOCSPX-notarealsecret', 'hunter2db', *KEY_LINES,
 ]
 
 
@@ -197,6 +219,65 @@ class KeyedSecretTest(RedactAssertions):
         self.assertRedacts(cases)
 
 
+class PrivateKeyTest(RedactAssertions):
+    BEGIN, END = armor('BEGIN', 'OPENSSH '), armor('END', 'OPENSSH ')
+
+    def test_block_body_replaced_armor_kept(self):
+        body = '\n'.join(KEY_LINES)
+        self.assertRedacts({
+            f'before\n{self.BEGIN}\n{body}\n{self.END}\nafter':
+                f'before\n{self.BEGIN}\n[REDACTED]\n{self.END}\nafter',
+            # Indented the way the exporter indents tool results
+            '\n'.join('  ' + line for line in [self.BEGIN, *KEY_LINES, self.END]):
+                f'  {self.BEGIN}\n[REDACTED]\n{self.END}',
+            # JSON-escaped on one line (a service-account file, a dumped config)
+            '"' + '\\n'.join([armor('BEGIN'), *KEY_LINES, armor('END')]) + '\\n"':
+                '"' + armor('BEGIN') + '\\n[REDACTED]\\n' + armor('END') + '\\n"',
+        })
+
+    def test_cut_off_block_without_end_line(self):
+        self.assertRedacts({
+            f'{self.BEGIN}\n  {KEY_LINES[0]}\n  {KEY_LINES[1]}\n    ... (12 more lines)\n\n⏺ Next':
+                f'{self.BEGIN}\n[REDACTED]\n    ... (12 more lines)\n\n⏺ Next',
+            f'{self.BEGIN}\n  {KEY_LINES[0]}\n\n⏺ Next': f'{self.BEGIN}\n[REDACTED]\n\n⏺ Next',
+        })
+
+    def test_encrypted_and_pgp_blocks(self):
+        encrypted = [armor('BEGIN', 'RSA '), 'Proc-Type: 4,ENCRYPTED', 'DEK-Info: AES-128-CBC,0A1B2C3D',
+                     '', *KEY_LINES, armor('END', 'RSA ')]
+        pgp = ['-----BEGIN PGP PRIV' + 'ATE KEY BLOCK-----', 'Version: GnuPG v2', '', *KEY_LINES,
+               '-----END PGP PRIV' + 'ATE KEY BLOCK-----']
+        self.assertRedacts({
+            '\n'.join(encrypted): f'{encrypted[0]}\n[REDACTED]\n{encrypted[-1]}',
+            '\n'.join(pgp): f'{pgp[0]}\n[REDACTED]\n{pgp[-1]}',
+        })
+
+    def test_public_material_untouched(self):
+        self.assertUnchanged([
+            f'ssh-ed25519 {KEY_LINES[0]} derek@devbox',
+            f'-----BEGIN PUBLIC KEY-----\n{KEY_LINES[0]}\n-----END PUBLIC KEY-----',
+            f'-----BEGIN CERTIFICATE-----\n{KEY_LINES[0]}\n-----END CERTIFICATE-----',
+        ])
+
+
+class UrlCredentialTest(RedactAssertions):
+    def test_password_redacted_user_and_host_kept(self):
+        self.assertRedacts({
+            'postgres://app:hunter2@db.internal:5432/app': 'postgres://app:[REDACTED]@db.internal:5432/app',
+            'git remote set-url origin https://x-access-token:abc123def@github.com/o/r.git':
+                'git remote set-url origin https://x-access-token:[REDACTED]@github.com/o/r.git',
+            'redis://:s3cret@localhost:6379/0': 'redis://:[REDACTED]@localhost:6379/0',
+            'amqp://u:pa:ss@mq': 'amqp://u:[REDACTED]@mq',
+        })
+
+    def test_urls_without_a_password_untouched(self):
+        self.assertUnchanged([
+            'http://localhost:8080/path', 'https://user@github.com/o/r', 'git@github.com:org/repo.git',
+            'postgres://app:$DB_PASSWORD@db/app', 'mailto:someone@example.com',
+            'see http://example.com/a:b@c',
+        ])
+
+
 class StructurePreservedTest(RedactAssertions):
     def test_surrounding_punctuation_survives(self):
         cases = {
@@ -227,9 +308,10 @@ class StructurePreservedTest(RedactAssertions):
         self.assertNotIn('[REDACTED]]', once)
 
     def test_long_word_runs_stay_linear(self):
-        # Long kebab-case and base64url runs once backtracked quadratically
-        # (16 KB of a-a-a... took ~8 s). Generous bound; healthy is ~1 ms.
-        for text in ['a-' * 8192, ('Ab0_-' * 4000) + '=']:
+        # Long kebab-case, dotted, and base64url runs once backtracked
+        # quadratically (64 KB of a-a-a... took seconds). Generous bound;
+        # healthy is a few ms.
+        for text in ['a-' * 32768, 'a.' * 32768, ('Ab0_-' * 13000) + '=']:
             with self.subTest(length=len(text)):
                 start = time.monotonic()
                 redact(text)
@@ -262,6 +344,8 @@ class ExportRedactionTest(unittest.TestCase):
         # The commands themselves survive; only values are scrubbed.
         self.assertIn('/proc/4242/environ', text)
         self.assertIn('cat ~/.config/gws/credentials.json', text)
+        self.assertIn('postgres://app:[REDACTED]@db/app', text)
+        self.assertIn(armor('BEGIN', 'OPENSSH ') + '\n[REDACTED]\n' + armor('END', 'OPENSSH '), text)
 
 
 if __name__ == '__main__':
