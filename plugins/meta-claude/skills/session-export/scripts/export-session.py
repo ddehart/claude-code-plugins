@@ -23,38 +23,48 @@ HOME_DIR = os.path.expanduser("~")
 REDACTED = '[REDACTED]'
 
 # A key that names a secret: anything ending in api_key / access_key /
-# secret_key / private_key / client_secret / token / secret / password /
-# credentials (case-insensitive, `_` or `-` separators), or an upper-case
-# env var ending in _KEY (OPENAI_KEY). `max_tokens` and `input_tokens` don't
-# match: the name has to end at the separator.
+# secret_key / private_key / token / secret / password / credentials
+# (case-insensitive, `_` or `-` separators), or an upper-case env var ending
+# in _KEY (OPENAI_KEY). `max_tokens` and `input_tokens` don't match: the name
+# has to end at the separator.
 _SECRET_NAME = (
-    r'(?:(?i:[\w-]*?(?:api[_-]?key|access[_-]?key|secret[_-]?key|private[_-]?key'
-    r'|client[_-]?secret|token|secret|password|passwd|credentials?))'
+    r'(?:(?i:[\w-]*?(?:(?:api|access|secret|private)[_-]?key'
+    r'|token|secret|password|passwd|credentials?))'
     r'|[A-Z][A-Z0-9_]*_KEY)'
 )
-# The value after the separator: a quoted string (spaces allowed, JSON-escaped
-# quotes allowed), or a bare run that stops at whitespace, quotes, backticks,
-# and the punctuation that usually closes the surrounding structure.
-_SECRET_VALUE = r'(?P<value>\\?"[^"\n]*?\\?"|\\?\'[^\'\n]*?\\?\'|[^\s"\'`,;)}\]&]+)'
-_VALUE_QUOTES = re.compile(r'^((?:\\?["\'])?)(.*?)((?:\\?["\'])?)$', re.S)
+# A quoted value (spaces allowed, JSON-escaped quotes allowed), or a bare run
+# that stops at whitespace, quotes, backticks, and the punctuation that
+# usually closes the surrounding structure.
+_QUOTED_VALUE = r'\\?"[^"\n]*?\\?"|\\?\'[^\'\n]*?\\?\''
+_BARE_VALUE = r'[^\s"\'`,;)}\]&]+'
+# An auth scheme before the value is kept, so `token: Bearer eyJ...` redacts
+# the credential rather than the word "Bearer".
+_AUTH_SCHEME = r'(?i:(?:bearer|basic)[ \t]+)?'
+_SECRET_VALUE = rf'{_AUTH_SCHEME}(?P<value>{_QUOTED_VALUE}|{_BARE_VALUE})'
+_COLON = r'[ \t]*:[ \t]*'
+_VALUE_QUOTES = re.compile(r'((?:\\?["\'])?)(.*?)((?:\\?["\'])?)')
 # References and placeholders, not secrets: $VAR, ${VAR}, $(cmd), %s, {name}
 # (f-strings and templates), <name>, and elisions.
-_PLACEHOLDER = re.compile(r'\$(?:\{?\w+\}?$|\()|%s$|\{\w*\}?$|<[\w -]*>$|(?:\.\.\.|…)$')
+_PLACEHOLDER = re.compile(r'\$(?:\{?\w+\}?|\(.*)|%s|\{\w*\}?|<[\w -]*>|\.\.\.|…')
 
 _KEYED_PATTERNS = [
-    # NAME=value, and NAME = "value" with spaces only before a quoted literal
-    rf'\b(?P<name>{_SECRET_NAME})(?:[ \t]*=[ \t]*(?=\\?["\'])|=){_SECRET_VALUE}',
+    # NAME=value, and NAME = "value" with spaces only before a quoted literal.
+    # (?<![\w-]) rather than \b: one match attempt per word run, not one per
+    # hyphen in it, which made long kebab-case or base64url runs quadratic.
+    rf'(?<![\w-])(?P<name>{_SECRET_NAME})(?:[ \t]*=[ \t]*(?=\\?["\'])|=){_SECRET_VALUE}',
     # "name": value (JSON, Python dicts)
-    rf'(?P<q>\\?["\'])(?P<name>{_SECRET_NAME})(?P=q)[ \t]*:[ \t]*{_SECRET_VALUE}',
-    # name: value at line start (YAML, curl -v headers); not mid-sentence,
-    # where "token: " is usually prose
-    rf'(?m)^[ \t>*-]*(?P<name>{_SECRET_NAME})[ \t]*:[ \t]*{_SECRET_VALUE}',
+    rf'(?P<q>\\?["\'])(?P<name>{_SECRET_NAME})(?P=q){_COLON}{_SECRET_VALUE}',
+    # name: value at line start (YAML, curl -v request and response headers);
+    # not mid-sentence, where "token: " is usually prose
+    rf'(?m)^[ \t<>*-]*(?P<name>{_SECRET_NAME}){_COLON}{_SECRET_VALUE}',
     # name: value just inside a quote (-H "x-api-key: ..."). Bare values only,
     # so a label like print('nextPageToken:', body) isn't read as a header.
-    rf'(?<=["\'])(?P<name>{_SECRET_NAME})[ \t]*:[ \t]*(?P<value>[^\s"\'`,;)}}\]&]+)',
+    rf'(?<=["\'])(?P<name>{_SECRET_NAME}){_COLON}{_AUTH_SCHEME}(?P<value>{_BARE_VALUE})',
 ]
 
-# Credentials recognizable by shape alone, wherever they appear.
+# Credentials recognizable by shape alone, wherever they appear. The
+# knowledge-commons plugin's scripts/scan-secrets.sh detects (rather than
+# rewrites) an overlapping set; keep the two in mind together.
 _BARE_TOKEN_PATTERNS = [
     r'sk-ant-[A-Za-z0-9_-]+',                       # Anthropic API keys and OAuth tokens
     r'\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{20,}',  # OpenAI
@@ -71,18 +81,17 @@ _BARE_TOKEN_PATTERNS = [
 
 def _redact_value(match):
     """Replace a keyed secret's value, keeping its name, separator, and quotes."""
-    opening, inner, closing = _VALUE_QUOTES.match(match.group('value')).groups()
-    if not inner or inner.startswith(REDACTED[:-1]) or _PLACEHOLDER.match(inner):
+    opening, inner, closing = _VALUE_QUOTES.fullmatch(match.group('value')).groups()
+    # Bare values stop at `]`, so a value that is already redacted reads `[REDACTED`.
+    if not inner or inner.startswith('[REDACTED') or _PLACEHOLDER.fullmatch(inner):
         return match.group(0)
-    keep = match.start('value') - match.start()
-    return match.group(0)[:keep] + opening + REDACTED + closing
+    return match.string[match.start():match.start('value')] + opening + REDACTED + closing
 
 
-# Keyed patterns run first, so `GITHUB_TOKEN=ghp_...` keeps its name.
+# Keyed patterns run first so `GITHUB_TOKEN=ghp_...` keeps its name.
 REDACTION_PATTERNS = (
     [(re.compile(p), _redact_value) for p in _KEYED_PATTERNS]
-    + [(re.compile(r'(?i)\b(?P<scheme>bearer|basic)(?P<sep>[ \t]+)[A-Za-z0-9._~+/-]{16,}=*'),
-        r'\g<scheme>\g<sep>' + REDACTED)]
+    + [(re.compile(r'(?i)\b((?:bearer|basic)[ \t]+)[A-Za-z0-9._~+/-]{16,}=*'), r'\1' + REDACTED)]
     + [(re.compile(p), REDACTED) for p in _BARE_TOKEN_PATTERNS]
 )
 
