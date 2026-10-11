@@ -81,6 +81,9 @@ The export produces UI-style readable text with:
     `password`, or `credentials` (any case), or is an upper-case env var ending in `_KEY`.
     `$VAR`, `$(cmd)`, `%s`, `{name}`, and `<name>` values are left alone.
   - `Bearer`/`Basic` auth values.
+  - Private key blocks (PEM, OpenSSH, PGP), keeping the BEGIN/END lines, including blocks cut off
+    before their END line.
+  - The password in URLs like `postgres://user:password@host`.
   - Token formats recognizable anywhere: Anthropic, OpenAI, GitHub, Slack, Google OAuth and API
     keys, AWS access key IDs, Telegram bot tokens.
 
