@@ -46,8 +46,13 @@ _COLON = r'[ \t]*:[ \t]*'
 # token alphabet, at least one digit, then the end of the value: whitespace,
 # `,`, `;`, a closing quote, backtick, or paren, or the end of the text.
 # `token = get_token()` and `password = self.config.password` don't qualify.
+def _digit_token(chars, min_len):
+    """`min_len` or more characters from `chars`, at least one of them a digit."""
+    return rf'(?={chars}*\d){chars}{{{min_len},}}'
+
+
 _OPAQUE_TOKEN = r'[A-Za-z0-9+/_.~-]'  # base64, base64url, JWT
-_CREDENTIAL_LIKE = rf'(?={_OPAQUE_TOKEN}*\d){_OPAQUE_TOKEN}{{16,}}=*(?:[\s,;"\'`)]|$)'
+_CREDENTIAL_LIKE = rf'{_digit_token(_OPAQUE_TOKEN, 16)}=*(?:[\s,;"\'`)]|$)'
 _VALUE_QUOTES = re.compile(r'((?:\\?["\'])?)(.*?)((?:\\?["\'])?)')
 # References and placeholders, not secrets: $VAR, ${VAR}, $(cmd), %s, {name}
 # (f-strings and templates), <name>, and elisions.
@@ -154,39 +159,48 @@ _URL_CREDENTIAL = re.compile(
 # Access tokens in URL query strings: capability links (a calendar export
 # whose URL alone grants access), pre-signed S3 and GCS links, OAuth codes.
 # A parameter starts after `?`, `&`, `;` (so `&amp;` in HTML/XML counts), or
-# JSON's `&`. Its value runs to the first character outside the rule's
+# JSON's `\u0026`. Its value runs to the first character outside the rule's
 # alphabet, so a token followed by `,`, `|`, `]`, or an escaped `\n` is still
-# caught. Every rule needs a digit in the value.
+# caught. Every rule needs a digit in the value. The separator is part of the
+# match but not of the value, and _redact_value keeps everything before the
+# value, so it survives.
 def _query_token(names, chars, min_len, guard=''):
     return re.compile(
-        rf'(?:(?<=[?&;])|(?<=\\u0026)){names}='
-        rf'(?P<value>{guard}(?={chars}*\d){chars}{{{min_len},}})(?!{chars})'
+        rf'(?:[?&;]|\\u0026){names}='
+        rf'(?P<value>{guard}{_digit_token(chars, min_len)})(?!{chars})'
     )
 
+
+_QUERY_ALPHABET = r'[A-Za-z0-9_.~=-]'  # no `%` or `/`: see the any-name rule
+_UUID_OR_GIT_SHA = r'[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}|[0-9a-f]{40}'
 
 _QUERY_TOKEN_PATTERNS = [
     # Signature-style names: 16+ characters of base64, raw (`+`, `/`) or
     # %-encoded.
     _query_token(r'(?i:sig|signature|code|key|x-amz-signature|x-amz-security-token|x-goog-signature)',
                  r'[A-Za-z0-9_.~%/=+-]', 16),
-    # `s` is a signature on some links and a search box on others, so no `+`:
-    # `?s=how+to+configure+nginx` isn't read as a token.
-    _query_token(r'(?i:s)', r'[A-Za-z0-9_.~%/=-]', 16),
-    # Any name, when the value is long and random-looking: 32+ token characters
-    # with a letter. No `%` or `/`, so encoded URLs, searches, and paths stay
-    # readable. UUIDs and 40-hex git SHAs (`?ref=<sha>`) are left alone; other
-    # long hashes, like a `?v=<hash>` cache-buster, are redacted too (SKILL.md).
-    _query_token(r'[\w.-]+', r'[A-Za-z0-9_.~=-]', 32, guard=(
-        r'(?![0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![\w.~=-]))'
-        r'(?![0-9a-f]{40}(?![\w.~=-]))(?=[A-Za-z0-9_.~=-]*[A-Za-z])'
+    # `s` is a signature on some links and a search box on others. The any-name
+    # rule below already catches a long `s=` token; this one adds short
+    # (16-31 character) `s=` signatures. No `+`, so `?s=how+to+configure+nginx`
+    # isn't read as a token.
+    _query_token(r'[sS]', r'[A-Za-z0-9_.~%/=-]', 16),
+    # Any name, when the value is long and random-looking: 32+ characters with
+    # a letter. No `%` or `/`, so encoded URLs, searches, and paths stay
+    # readable. UUIDs and 40-hex git SHAs (`?ref=<sha>`) are left alone here
+    # only, where the name says nothing; `API_KEY=<uuid>` is still redacted by
+    # the keyed patterns. Other long hashes, like a `?v=<hash>` cache-buster,
+    # are redacted too (SKILL.md).
+    _query_token(r'[\w.-]+', _QUERY_ALPHABET, 32, guard=(
+        rf'(?!(?:{_UUID_OR_GIT_SHA})(?!{_QUERY_ALPHABET}))(?={_QUERY_ALPHABET}*[A-Za-z])'
     )),
 ]
 
 
 # Order matters, in three tiers. Structural passes (key blocks, URL passwords,
 # URL query tokens) run first, so a keyed pattern can't redact `-----BEGIN` out
-# from under a key body. Keyed patterns run next, so `GITHUB_TOKEN=ghp_...`
-# keeps its name. Shape-only patterns run last. A later pass leaves alone what
+# from under a key body, and a URL keeps its structure with only the secret
+# part replaced. Keyed patterns run next, so `GITHUB_TOKEN=ghp_...` keeps its
+# name. Shape-only patterns run last. A later pass leaves alone what
 # an earlier one already redacted (see _redact_value).
 REDACTION_PATTERNS = (
     [(_PEM_BLOCK, _redact_pem), (_URL_CREDENTIAL, _redact_value)]
