@@ -45,7 +45,8 @@ _COLON = r'[ \t]*:[ \t]*'
 # An unquoted value that reads as a credential rather than code: 16+ chars of
 # token alphabet, at least one digit, then whitespace, `,`, `;`, or the end.
 # `token = get_token()` and `password = self.config.password` don't qualify.
-_CREDENTIAL_LIKE = r'(?=[A-Za-z0-9+/_.~-]*\d)[A-Za-z0-9+/_.~-]{16,}=*(?:[\s,;]|$)'
+_OPAQUE_TOKEN = r'[A-Za-z0-9+/_.~-]'  # base64, base64url, JWT
+_CREDENTIAL_LIKE = rf'(?={_OPAQUE_TOKEN}*\d){_OPAQUE_TOKEN}{{16,}}=*(?:[\s,;]|$)'
 _VALUE_QUOTES = re.compile(r'((?:\\?["\'])?)(.*?)((?:\\?["\'])?)')
 # References and placeholders, not secrets: $VAR, ${VAR}, $(cmd), %s, {name}
 # (f-strings and templates), <name>, and elisions.
@@ -57,7 +58,7 @@ _KEYED_PATTERNS = [
     # (?<![\w-]) rather than \b: one match attempt per word run, not one per
     # hyphen in it, which made long kebab-case or base64url runs quadratic.
     rf'(?<![\w-])(?P<name>{_SECRET_NAME})'
-    rf'(?:[ \t]*=[ \t]*(?=\\?["\'])|[ \t]+=[ \t]+(?={_CREDENTIAL_LIKE})|=){_SECRET_VALUE}',
+    rf'(?:[ \t]*=[ \t]*(?=\\?["\']|{_CREDENTIAL_LIKE})|=){_SECRET_VALUE}',
     # "name": value (JSON, Python dicts)
     rf'(?P<q>\\?["\'])(?P<name>{_SECRET_NAME})(?P=q){_COLON}{_SECRET_VALUE}',
     # name: value at line start (YAML, curl -v request and response headers);
@@ -86,12 +87,12 @@ _BARE_TOKEN_PATTERNS = [
 
 
 def _redact_value(match):
-    """Replace a keyed secret's value, keeping its name, separator, and quotes."""
+    """Replace a secret value, keeping its name, separator, and quotes."""
     opening, inner, closing = _VALUE_QUOTES.fullmatch(match.group('value')).groups()
-    # Bare values stop at `]`, so a value that is already redacted reads
-    # `[REDACTED`. A key block was already handled by the earlier PEM pass,
-    # which keeps the armor lines; redacting `-----BEGIN` here would hide that.
-    if (not inner or inner.startswith(('[REDACTED', '-----BEGIN'))
+    # Skip references and placeholders, values an earlier pass already redacted
+    # (a bare value stops at `]`, so it reads `[REDACTED`), and the lone
+    # `-----BEGIN` word the key-block pass leaves in `KEY=-----BEGIN ...`.
+    if (not inner or '[REDACTED' in inner or inner == '-----BEGIN'
             or _PLACEHOLDER.fullmatch(inner)):
         return match.group(0)
     return match.string[match.start():match.start('value')] + opening + REDACTED + closing
@@ -100,20 +101,21 @@ def _redact_value(match):
 # A private key block (PEM, OpenSSH, PGP): the BEGIN line, then body lines of
 # base64 or armor headers (Proc-Type:, Version:), with a blank line allowed
 # only where more base64 follows. Lines break on real newlines (plus the
-# exporter's indent) or on JSON-escaped `\n`. The END line is optional: the
-# exporter cuts long tool results off after a few lines, which drops it.
-_PEM_NEWLINE = r'(?:\\n|\r?\n)[ \t]*'
+# exporter's indent), on JSON-escaped `\n`, or on a single space when the key
+# was flattened onto one line (env displays) and key data follows. The END
+# line is optional: the exporter cuts long tool results off after a few lines.
+_PEM_NEWLINE = r'(?:(?:\\n|\r?\n)[ \t]*|[ ](?=[A-Za-z0-9+/=]{16}|-----END))'
 _PEM_LABEL = r'[A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----'
 # A base64 line has to run to the end of the line, or `Version: ...` would
 # match as the base64 line `Version` and end the block early. The end can
 # also be the exporter's truncation mark (`...`) or a closing JSON quote.
 _PEM_LINE = (
-    rf'(?:[A-Za-z0-9+/=]+(?=\\|\r?\n|$|\.\.\.|…|")'
+    rf'(?:[A-Za-z0-9+/=]+(?=\\|\r?\n|$|\.\.\.|…|"| )'
     rf'|[A-Z][\w-]*: [^\n\\]*|(?={_PEM_NEWLINE}[A-Za-z0-9+/=]))'
 )
 _PEM_BLOCK = re.compile(
     rf'(?P<begin>-----BEGIN {_PEM_LABEL})'
-    rf'(?:(?P<sep>{_PEM_NEWLINE}){_PEM_LINE}(?:{_PEM_NEWLINE}{_PEM_LINE})*)?'
+    rf'(?:(?P<sep>{_PEM_NEWLINE}){_PEM_LINE})*'
     rf'(?:{_PEM_NEWLINE}(?P<end>-----END {_PEM_LABEL}))?'
 )
 
@@ -122,7 +124,8 @@ def _redact_pem(match):
     """Keep a key block's BEGIN and END lines; replace the body."""
     if match.group('sep') is None:  # just the armor line, e.g. a grep pattern
         return match.group(0)
-    sep = '\\n' if (match.group('sep') or '').startswith('\\') else '\n'
+    sep = match.group('sep')
+    sep = '\\n' if sep.startswith('\\') else ' ' if sep == ' ' else '\n'
     end = sep + match.group('end') if match.group('end') else ''
     return match.group('begin') + sep + REDACTED + end
 
@@ -131,32 +134,27 @@ def _redact_pem(match):
 # redis://:password@host, where the user is often empty). The password runs to
 # the last `@` before the host, so raw `/` and `@` inside it (generated
 # passwords, which clients like libpq accept) are covered.
-# scp-style git@host:path has no `://`, so it never matches.
-# Anchored on (?<![A-Za-z0-9+.-]) rather than \b, so a long dotted or hyphenated
-# run is scanned for a scheme once, not once per word inside it.
+# host:8080/path@x is a port and a path, not a password. scp-style
+# git@host:path has no `://`, so it never matches.
+# Two guards keep this linear: the scheme anchors on (?<![A-Za-z0-9+.-])
+# rather than \b (one attempt per dotted or hyphenated run), and the password
+# is capped at 256 characters, so a long run of `x://` starts can't each scan
+# to the end of the run.
 _URL_CREDENTIAL = re.compile(
-    r'((?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*://[^\s/:@"\']*:)'
-    r'([^\s"\'`]+)(?=@[^\s@/?#"\'`]+(?:[/?#\s"\'`)]|$))'
+    r'(?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*://[^\s/:@"\']*:'
+    r'(?P<value>(?!\d{1,5}/)[^\s"\'`]{1,256})(?=@[^\s@/?#"\'`]+(?:[/?#\s"\'`]|$))'
 )
-# host:8080/path@x is a port and a path, not a password
-_PORT_AND_PATH = re.compile(r'\d{1,5}/')
 
 
-def _redact_url_password(match):
-    password = match.group(2)
-    if _PLACEHOLDER.fullmatch(password) or _PORT_AND_PATH.match(password):
-        return match.group(0)
-    return match.group(1) + REDACTED
-
-
-# Key blocks run first: a keyed pattern would otherwise redact the `-----BEGIN`
-# of `SSH_PRIVATE_KEY=-----BEGIN ...` and leave the body for nothing to find.
-# Keyed patterns run before bare tokens so `GITHUB_TOKEN=ghp_...` keeps its name.
+# Order matters, in three tiers. Structural passes (key blocks, URL passwords)
+# run first, so a keyed pattern can't redact `-----BEGIN` out from under a key
+# body. Keyed patterns run next, so `GITHUB_TOKEN=ghp_...` keeps its name.
+# Shape-only patterns run last. A later pass leaves alone what an earlier one
+# already redacted (see _redact_value).
 REDACTION_PATTERNS = (
-    [(_PEM_BLOCK, _redact_pem)]
+    [(_PEM_BLOCK, _redact_pem), (_URL_CREDENTIAL, _redact_value)]
     + [(re.compile(p), _redact_value) for p in _KEYED_PATTERNS]
-    + [(_URL_CREDENTIAL, _redact_url_password)]
-    + [(re.compile(r'(?i)\b((?:bearer|basic)[ \t]+)[A-Za-z0-9._~+/-]{16,}=*'), r'\1' + REDACTED)]
+    + [(re.compile(rf'(?i)\b((?:bearer|basic)[ \t]+){_OPAQUE_TOKEN}{{16,}}=*'), r'\1' + REDACTED)]
     + [(re.compile(p), REDACTED) for p in _BARE_TOKEN_PATTERNS]
 )
 
