@@ -201,6 +201,11 @@ class KeyedSecretTest(RedactAssertions):
         self.assertRedacts({
             'PrivateKey = yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk=': 'PrivateKey = [REDACTED]',
             'password = hunter2hunter2hunter2': 'password = [REDACTED]',
+            # Quoted or in backticks, as in prose and code that mention one
+            '`PrivateKey = yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk=` (from wg)':
+                '`PrivateKey = [REDACTED]` (from wg)',
+            "cfg = 'PrivateKey = yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk='":
+                "cfg = 'PrivateKey = [REDACTED]'",
         })
         # Code, not credentials: calls, attribute chains, short values
         self.assertUnchanged([
