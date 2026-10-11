@@ -92,7 +92,8 @@ def _redact_value(match):
     opening, inner, closing = _VALUE_QUOTES.fullmatch(match.group('value')).groups()
     # Skip references and placeholders, values an earlier pass already redacted
     # (a bare value stops at `]`, so it reads `[REDACTED`), and the lone
-    # `-----BEGIN` word the key-block pass leaves in `KEY=-----BEGIN ...`.
+    # `-----BEGIN` word the key-block pass leaves in `KEY=-----BEGIN ...`
+    # (_redact_pem keeps that line, so the coupling is to its output shape).
     if (not inner or '[REDACTED' in inner or inner == '-----BEGIN'
             or _PLACEHOLDER.fullmatch(inner)):
         return match.group(0)
@@ -122,7 +123,10 @@ _PEM_BLOCK = re.compile(
 
 
 def _redact_pem(match):
-    """Keep a key block's BEGIN and END lines; replace the body."""
+    """Keep a key block's BEGIN and END lines; replace the body.
+
+    _redact_value skips the `-----BEGIN` this leaves behind; keep the two in step.
+    """
     if match.group('sep') is None:  # just the armor line, e.g. a grep pattern
         return match.group(0)
     sep = match.group('sep')
@@ -139,11 +143,11 @@ def _redact_pem(match):
 # git@host:path has no `://`, so it never matches.
 # Two guards keep this linear: the scheme anchors on (?<![A-Za-z0-9+.-])
 # rather than \b (one attempt per dotted or hyphenated run), and the password
-# is capped at 256 characters, so a long run of `x://` starts can't each scan
-# to the end of the run.
+# is capped at 1,024 characters, so a long run of `x://` starts can't each scan
+# to the end of the run. A longer password goes unredacted (see SKILL.md).
 _URL_CREDENTIAL = re.compile(
     r'(?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*://[^\s/:@"\']*:'
-    r'(?P<value>(?!\d{1,5}/)[^\s"\'`]{1,256})(?=@[^\s@/?#"\'`]+(?:[/?#\s"\'`]|$))'
+    r'(?P<value>(?!\d{1,5}/)[^\s"\'`]{1,1024})(?=@[^\s@/?#"\'`]+(?:[/?#\s"\'`]|$))'
 )
 
 

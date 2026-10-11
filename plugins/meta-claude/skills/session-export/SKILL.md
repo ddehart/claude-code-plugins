@@ -89,6 +89,12 @@ The export produces UI-style readable text with:
     keys, AWS access key IDs, Telegram bot tokens.
 
   This is pattern matching, not a guarantee. Review an export before publishing it outside a private repo.
+  Known limits, all failing open (the value is exported as-is):
+  - `Name = value` with spaces and no quotes needs a credential-looking value (16+ characters
+    including a digit), so `password = hunter2` passes through. `NAME=value` and quoted values
+    have no such limit.
+  - URL passwords longer than 1,024 characters, or containing a space or quote.
+  - Secrets under names that don't end in one of the listed suffixes, in formats not listed above.
   Tests: `python3 -m unittest test_export_session.py` from `scripts/`.
 
 ## Examples
