@@ -74,6 +74,9 @@ The export produces UI-style readable text with:
 - Tool uses formatted with `⎿` markers
 - Concise output (truncates long file contents)
 - Filtered meta messages and command tags
+- Credentials redacted: `sk-ant-…` tokens and `NAME=value` assignments whose name ends in
+  `api_key`/`api-key`/`apikey`/`token`/`secret` (case-insensitive) become `[REDACTED]`, so exports
+  are safe to commit. Tests: `python3 -m unittest test_export_session.py` from `scripts/`.
 
 ## Examples
 
