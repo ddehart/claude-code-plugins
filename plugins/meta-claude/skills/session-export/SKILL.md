@@ -74,9 +74,18 @@ The export produces UI-style readable text with:
 - Tool uses formatted with `⎿` markers
 - Concise output (truncates long file contents)
 - Filtered meta messages and command tags
-- Credentials redacted: `sk-ant-…` tokens and `NAME=value` assignments whose name ends in
-  `api_key`/`api-key`/`apikey`/`token`/`secret` (case-insensitive) become `[REDACTED]`, so exports
-  are safe to commit. Tests: `python3 -m unittest test_export_session.py` from `scripts/`.
+- Credentials redacted to `[REDACTED]`, so exports are safe to commit:
+  - Keyed secrets, keeping the name: `NAME=value`, `"name": value` (JSON), `name: value` at line
+    start (YAML, `curl -v`) or inside a quoted header (`-H "x-api-key: …"`), where the name ends in
+    `api_key`, `access_key`, `secret_key`, `private_key`, `client_secret`, `token`, `secret`,
+    `password`, or `credentials` (any case), or is an upper-case env var ending in `_KEY`.
+    `$VAR`, `$(cmd)`, `%s`, `{name}`, and `<name>` values are left alone.
+  - `Bearer`/`Basic` auth values.
+  - Token formats recognizable anywhere: Anthropic, OpenAI, GitHub, Slack, Google OAuth and API
+    keys, AWS access key IDs, Telegram bot tokens.
+
+  This is pattern matching, not a guarantee. Review an export before publishing it outside a private repo.
+  Tests: `python3 -m unittest test_export_session.py` from `scripts/`.
 
 ## Examples
 

@@ -17,16 +17,74 @@ HOME_DIR = os.path.expanduser("~")
 
 # Credential patterns scrubbed from everything the exporter writes. Exports are
 # meant to be committed, and a session that inspects its environment (env,
-# /proc/<pid>/environ, cat .secrets) prints live credentials into the JSONL.
-# Assignments keep the variable name so the transcript still reads sensibly.
+# /proc/<pid>/environ, cat .secrets, curl -v) prints live credentials into the
+# JSONL. Keyed secrets keep their name and quotes so the transcript still reads
+# sensibly; only the value becomes [REDACTED].
 REDACTED = '[REDACTED]'
-REDACTION_PATTERNS = [
-    # NAME=value where NAME ends in api_key / api-key / apikey / token / secret,
-    # case-insensitive (CLAUDE_CODE_OAUTH_TOKEN=, GITHUB_TOKEN=, api_key=, ...)
-    (re.compile(r'(?i)\b(\w*(?:api[_-]?key|token|secret))=\S+'), r'\1=' + REDACTED),
-    # Anthropic keys and OAuth tokens anywhere (sk-ant-api03-..., sk-ant-oat01-...)
-    (re.compile(r'sk-ant-[A-Za-z0-9_-]+'), REDACTED),
+
+# A key that names a secret: anything ending in api_key / access_key /
+# secret_key / private_key / client_secret / token / secret / password /
+# credentials (case-insensitive, `_` or `-` separators), or an upper-case
+# env var ending in _KEY (OPENAI_KEY). `max_tokens` and `input_tokens` don't
+# match: the name has to end at the separator.
+_SECRET_NAME = (
+    r'(?:(?i:[\w-]*?(?:api[_-]?key|access[_-]?key|secret[_-]?key|private[_-]?key'
+    r'|client[_-]?secret|token|secret|password|passwd|credentials?))'
+    r'|[A-Z][A-Z0-9_]*_KEY)'
+)
+# The value after the separator: a quoted string (spaces allowed, JSON-escaped
+# quotes allowed), or a bare run that stops at whitespace, quotes, backticks,
+# and the punctuation that usually closes the surrounding structure.
+_SECRET_VALUE = r'(?P<value>\\?"[^"\n]*?\\?"|\\?\'[^\'\n]*?\\?\'|[^\s"\'`,;)}\]&]+)'
+_VALUE_QUOTES = re.compile(r'^((?:\\?["\'])?)(.*?)((?:\\?["\'])?)$', re.S)
+# References and placeholders, not secrets: $VAR, ${VAR}, $(cmd), %s, {name}
+# (f-strings and templates), <name>, and elisions.
+_PLACEHOLDER = re.compile(r'\$(?:\{?\w+\}?$|\()|%s$|\{\w*\}?$|<[\w -]*>$|(?:\.\.\.|…)$')
+
+_KEYED_PATTERNS = [
+    # NAME=value, and NAME = "value" with spaces only before a quoted literal
+    rf'\b(?P<name>{_SECRET_NAME})(?:[ \t]*=[ \t]*(?=\\?["\'])|=){_SECRET_VALUE}',
+    # "name": value (JSON, Python dicts)
+    rf'(?P<q>\\?["\'])(?P<name>{_SECRET_NAME})(?P=q)[ \t]*:[ \t]*{_SECRET_VALUE}',
+    # name: value at line start (YAML, curl -v headers); not mid-sentence,
+    # where "token: " is usually prose
+    rf'(?m)^[ \t>*-]*(?P<name>{_SECRET_NAME})[ \t]*:[ \t]*{_SECRET_VALUE}',
+    # name: value just inside a quote (-H "x-api-key: ..."). Bare values only,
+    # so a label like print('nextPageToken:', body) isn't read as a header.
+    rf'(?<=["\'])(?P<name>{_SECRET_NAME})[ \t]*:[ \t]*(?P<value>[^\s"\'`,;)}}\]&]+)',
 ]
+
+# Credentials recognizable by shape alone, wherever they appear.
+_BARE_TOKEN_PATTERNS = [
+    r'sk-ant-[A-Za-z0-9_-]+',                       # Anthropic API keys and OAuth tokens
+    r'\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{20,}',  # OpenAI
+    r'\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}',  # GitHub tokens
+    r'\bgithub_pat_[A-Za-z0-9_]{20,}',              # GitHub fine-grained PATs
+    r'\bxox[abposr]-[A-Za-z0-9-]{10,}',             # Slack
+    r'\bya29\.[A-Za-z0-9._-]{20,}',                 # Google OAuth access tokens
+    r'\b1//0[A-Za-z0-9_-]{20,}',                    # Google OAuth refresh tokens
+    r'\bAIza[0-9A-Za-z_-]{35}',                     # Google API keys
+    r'\b(?:AKIA|ASIA)[A-Z0-9]{16}\b',               # AWS access key IDs
+    r'(?:(?<=bot)|\b)\d{8,10}:[A-Za-z0-9_-]{35}\b',  # Telegram bot tokens, incl. /bot<token>/ URLs
+]
+
+
+def _redact_value(match):
+    """Replace a keyed secret's value, keeping its name, separator, and quotes."""
+    opening, inner, closing = _VALUE_QUOTES.match(match.group('value')).groups()
+    if not inner or inner.startswith(REDACTED[:-1]) or _PLACEHOLDER.match(inner):
+        return match.group(0)
+    keep = match.start('value') - match.start()
+    return match.group(0)[:keep] + opening + REDACTED + closing
+
+
+# Keyed patterns run first, so `GITHUB_TOKEN=ghp_...` keeps its name.
+REDACTION_PATTERNS = (
+    [(re.compile(p), _redact_value) for p in _KEYED_PATTERNS]
+    + [(re.compile(r'(?i)\b(?P<scheme>bearer|basic)(?P<sep>[ \t]+)[A-Za-z0-9._~+/-]{16,}=*'),
+        r'\g<scheme>\g<sep>' + REDACTED)]
+    + [(re.compile(p), REDACTED) for p in _BARE_TOKEN_PATTERNS]
+)
 
 
 def redact(text):
