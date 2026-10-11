@@ -334,53 +334,51 @@ class UrlCredentialTest(RedactAssertions):
 
 class UrlQueryTokenTest(RedactAssertions):
     HEX32 = 'a1b2c3d4e5f60718' * 2
+    HEX64 = HEX32 * 2
+
+    def assertTokenRedacted(self, token, *templates):
+        """Each template, with `<T>` as the token, redacts to `<T>` -> [REDACTED]."""
+        self.assertRedacts({tpl.replace('<T>', token): tpl.replace('<T>', '[REDACTED]') for tpl in templates})
 
     def test_capability_and_signed_links(self):
-        self.assertRedacts({
+        self.assertTokenRedacted(
+            self.HEX32,
             # A calendar export link: the URL alone grants read access. Caught
             # under a signature-style name, and as a long value under any name.
-            f'https://www.airbnb.com/calendar/ical/12345678.ics?s={self.HEX32}':
-                'https://www.airbnb.com/calendar/ical/12345678.ics?s=[REDACTED]',
-            f'https://www.airbnb.com/calendar/ical/12345678.ics?k={self.HEX32}':
-                'https://www.airbnb.com/calendar/ical/12345678.ics?k=[REDACTED]',
-            # Pre-signed S3: the signature goes (the AKIA key id is caught separately)
-            f'https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature={self.HEX32 * 2}&x=1':
-                'https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=[REDACTED]&x=1',
-            f'https://storage.googleapis.com/b/o?X-Goog-Signature={self.HEX32}': 
-                'https://storage.googleapis.com/b/o?X-Goog-Signature=[REDACTED]',
-            'https://app/cb?code=4/0AbCdEf123456789xyz&state=ok': 'https://app/cb?code=[REDACTED]&state=ok',
-            # A long random value under any name
-            f'https://x.test/dl?t=Zx9{ALNUM}': 'https://x.test/dl?t=[REDACTED]',
-        })
+            'https://www.airbnb.com/calendar/ical/12345678.ics?s=<T>',
+            'https://www.airbnb.com/calendar/ical/12345678.ics?k=<T>',
+            'https://storage.googleapis.com/b/o?X-Goog-Signature=<T>',
+        )
+        # Pre-signed S3: the signature goes (the AKIA key id is caught separately)
+        self.assertTokenRedacted(
+            self.HEX64, 'https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=<T>&x=1')
+        self.assertTokenRedacted('4/0AbCdEf123456789xyz', 'https://app/cb?code=<T>&state=ok')
+        # A long random value under any name
+        self.assertTokenRedacted(f'Zx9{ALNUM}', 'https://x.test/dl?t=<T>')
 
     def test_token_followed_by_any_punctuation(self):
-        url = f'https://cal.test/ical.ics?k={self.HEX32}'
-        done = 'https://cal.test/ical.ics?k=[REDACTED]'
-        self.assertRedacts({
-            f'see {url}, then refresh': f'see {done}, then refresh',
-            f'| {url}| ok |': f'| {done}| ok |',
-            f'URL={url};': f'URL={done};',
-            f'[{url}]': f'[{done}]',
+        self.assertTokenRedacted(
+            self.HEX32,
+            'see https://cal.test/ical.ics?k=<T>, then refresh',
+            '| https://cal.test/ical.ics?k=<T>| ok |',
+            'URL=https://cal.test/ical.ics?k=<T>;',
+            '[https://cal.test/ical.ics?k=<T>]',
             # JSON-escaped newline after the URL
-            f'"body": "url {url}\\nnext line"': f'"body": "url {done}\\nnext line"',
-        })
+            '"body": "url https://cal.test/ical.ics?k=<T>\\nnext line"',
+        )
 
     def test_escaped_parameter_separators(self):
-        sig = self.HEX32 * 2
-        self.assertRedacts({
+        self.assertTokenRedacted(
+            self.HEX64,
             # HTML/XML
-            f'<a href="https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4&amp;X-Amz-Signature={sig}">':
-                '<a href="https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4&amp;X-Amz-Signature=[REDACTED]">',
+            '<a href="https://b.s3.amazonaws.com/f?X-Amz-Algorithm=AWS4&amp;X-Amz-Signature=<T>">',
             # JSON from Go tools, which escape `&` as \u0026
-            f'"url":"https://b.s3.amazonaws.com/f?a=1\\u0026X-Amz-Signature={sig}"':
-                '"url":"https://b.s3.amazonaws.com/f?a=1\\u0026X-Amz-Signature=[REDACTED]"',
-        })
+            '"url":"https://b.s3.amazonaws.com/f?a=1\\u0026X-Amz-Signature=<T>"',
+        )
 
     def test_raw_base64_signature(self):
-        self.assertRedacts({
-            'https://acct.blob.core.windows.net/c/b?sv=2021-08-06&sig=AbC1+dEf2/GhI3jKl4MnO5pQr6=':
-                'https://acct.blob.core.windows.net/c/b?sv=2021-08-06&sig=[REDACTED]',
-        })
+        self.assertTokenRedacted(
+            'AbC1+dEf2/GhI3jKl4MnO5pQr6=', 'https://acct.blob.core.windows.net/c/b?sv=2021-08-06&sig=<T>')
 
     def test_ordinary_query_values_untouched(self):
         self.assertUnchanged([
