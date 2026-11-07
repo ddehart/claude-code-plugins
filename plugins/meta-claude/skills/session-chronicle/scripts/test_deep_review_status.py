@@ -123,7 +123,7 @@ class RealHeadingShapes(ChronicleCase):
 
     def test_devbox_lightweight_headings_and_older_review_headings(self):
         notes = (
-            '#### 2026-10-30 (latest; the 10-30 22:20 winpc file-transfer entry) — Lightweight check '
+            '#### 2026-10-30 (latest; the 10-30 22:20 file-transfer entry) — Lightweight check '
             '(1 entry since the 10-17 anchor), augmented by an `agy` cross-pass.\n'
             'One watch-item promoted.\n\n'
             '#### 2026-08-23 (later) — The cross-pass named a stagnation the practice had been circling\n'
