@@ -1,5 +1,7 @@
 # Auto-Trigger Deep Review for Session Chronicle
 
+> **Partly superseded 2026-11-06.** The anchor described under Counting Mechanics, and the "since last evolution" scope, were replaced by [deep-review-anchor.md](deep-review-anchor.md). The rest of this spec is current.
+
 ## Problem
 
 The session-chronicle skill has two modes of reflective practice evolution:

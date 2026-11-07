@@ -25,6 +25,13 @@ HEADING = re.compile(r'^(#{1,6})\s+(.*?)\s*$')
 DATED_NOTE = re.compile(r'^(\d{4}-\d{2}-\d{2})\b(.*)$')
 FENCE = re.compile(r'^\s*(```|~~~)')
 
+# `(deep review)` is the marker SKILL.md writes. The rest are older shapes still
+# in practice files: `— Deep review (14 entries...)`, `— Escalated deep review`,
+# and plain dated headings over `Deep review ran; ...`, `Deep review at the
+# 10-entry threshold`, or `**Escalated from the lightweight check to a deep review.**`
+REVIEW_HEADING = re.compile(r'^[\s(—–:-]*(?:escalated )?deep review\b', re.I)
+REVIEW_OPENING = re.compile(r'^[*_]*(?:deep review (?:ran|at)\b|escalated\b[^.]*\bdeep review\b)', re.I)
+
 
 def is_date(text):
     try:
@@ -70,8 +77,14 @@ def evolution_notes(text):
 
 
 def is_deep_review(note):
-    """Whether a dated note records a deep review."""
-    return True
+    """Whether a dated note records a deep review.
+
+    Most notes that mention a deep review are lightweight notes deferring to the
+    next one, and a false match suppresses a review. So only the heading right
+    after the date and the known opening lines count. A missed older note costs
+    one early review, which then writes the current marker.
+    """
+    return bool(REVIEW_HEADING.match(note['rest']) or REVIEW_OPENING.match(note['opening']))
 
 
 def status(chronicle_dir):

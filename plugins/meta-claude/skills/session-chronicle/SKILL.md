@@ -75,24 +75,30 @@ A session is substantive if **two or more** of these occurred:
 
 6. **Evolve the reflective practice**
 
-   **6a. Count entries since last evolution.**
-   Read `docs/chronicle/reflective-practice.md` and find the most recent `#### YYYY-MM-DD` heading in the Evolution Notes section. Then count distinct chronicle files (`docs/chronicle/YYYY-MM-DD.md`) dated strictly after that anchor (files with the same date as the anchor are excluded; the file created this session counts toward the total). If no dated evolution notes exist (fresh project or placeholder text only), count all chronicle files.
+   **6a. Count entries since the last deep review.**
+   Run this from the project root, after writing today's entry so it counts:
+
+   ```bash
+   python3 "${CLAUDE_SKILL_DIR}/scripts/deep-review-status.py" docs/chronicle
+   ```
+
+   It prints JSON: `last_deep_review` (the anchor date, or null), `count`, `due`, and `entries` (the chronicle files dated strictly after the anchor, newest first). Files dated the same as the anchor are excluded. With no deep review on record, every chronicle file counts. Lightweight notes never move the anchor. Don't count by hand: if the script fails, say so in the Step 8 report and run the lightweight check.
 
    **6b. Choose review tier.**
 
-   - **If count >= 10 → mandatory deep review.** Read all Reflection sections from entries since the last evolution note (Glob on `docs/chronicle/*.md`, sorted by filename descending, reading `### Reflection` sections from files dated after the anchor). If more than 20 entries have accumulated, prioritize the most recent 20. Notice:
+   - **If `due` is true → mandatory deep review.** Read the `### Reflection` sections of the files in `entries`. If there are more than 20, prioritize the most recent 20. Notice:
      - Which prompts produced genuine insight vs. formulaic responses
      - What new questions or themes are emerging
      - Whether the reflective voice is developing or stagnating
 
-     Update `docs/chronicle/reflective-practice.md` with evolved questions and approach. Write changes as a brief narrative under a new `#### YYYY-MM-DD` heading in Evolution Notes — not just a list swap. If no changes are warranted, still write a no-op note to reset the counter:
+     Update `docs/chronicle/reflective-practice.md` with evolved questions and approach. Write changes as a brief narrative in Evolution Notes under a new `#### YYYY-MM-DD (deep review)` heading, using today's date — not just a list swap. The `(deep review)` marker is what resets the count, so it goes right after the date. If no changes are warranted, still write a no-op note:
 
      ```
-     #### YYYY-MM-DD  (use today's date)
+     #### YYYY-MM-DD (deep review)
      Deep review ran; no changes warranted.
      ```
 
-   - **If count < 10 → lightweight check.** Read back the last 3 Reflection sections from prior entries (Glob on `docs/chronicle/*.md`, sorted descending, then Read the `### Reflection` sections).
+   - **If `due` is false → lightweight check.** Read back the last 3 Reflection sections from prior entries (Glob on `docs/chronicle/*.md`, sorted descending, then Read the `### Reflection` sections).
 
      Notice:
      - Are you reaching for the same framings or seed questions repeatedly?
@@ -102,7 +108,7 @@ A session is substantive if **two or more** of these occurred:
      If something warrants it, update `docs/chronicle/reflective-practice.md`:
      - Add new questions that have emerged to "Current Approach"
      - Retire questions that have become formulaic (move to a "Retired" section with a note on why; if the section doesn't exist yet, add it after "Evolution Notes")
-     - Add a brief note to "Evolution Notes" under a `#### YYYY-MM-DD` heading describing what changed and what prompted it
+     - Add a brief note to "Evolution Notes" under a plain `#### YYYY-MM-DD` heading describing what changed and what prompted it. Keep the `(deep review)` marker off it: a lightweight note must not reset the count.
 
      **Discretionary escalation:** If the lightweight check reveals patterns warranting deeper examination — same framings recurring across entries, seed questions producing consistently formulaic responses — escalate to the deep review process above instead of continuing with the lightweight check.
 
@@ -110,7 +116,7 @@ A session is substantive if **two or more** of these occurred:
 
 7. Apply the memory write-gate (see Memory Promotion below)
 
-8. Report: entry location, word count, any memories promoted, deep review status if triggered (e.g., "Deep review triggered (12 entries since last evolution); reflective-practice.md updated." or "Deep review triggered (10 entries since last evolution); no practice changes warranted.")
+8. Report: entry location, word count, any memories promoted, deep review status if triggered (e.g., "Deep review triggered (12 entries since last deep review); reflective-practice.md updated." or "Deep review triggered (10 entries since last deep review); no practice changes warranted.")
 
 ## Workflow: First-Use Initialization
 
@@ -201,20 +207,20 @@ Practice evolution happens in three ways:
 
 **Continuous (during every chronicle write):** Step 6 of the write workflow scans the last 3 reflections for repetition, emerging themes, or stale questions. This is lightweight — most writes won't produce a practice update, and that's expected.
 
-**Auto-escalation (during chronicle write when threshold crossed):** Step 6 counts chronicle entries since the last dated Evolution Note in `reflective-practice.md`. If 10 or more entries have accumulated without an evolution, the deep review runs inline — mandatory, not discretionary. The model may also escalate before the threshold if the lightweight check reveals stagnation. Scope: all Reflection sections since the last evolution note. A no-op note is written even when no changes are warranted, to reset the counter.
+**Auto-escalation (during chronicle write when threshold crossed):** Step 6 counts chronicle entries since the last deep review recorded in `reflective-practice.md`. If 10 or more entries have accumulated, the deep review runs inline — mandatory, not discretionary. The model may also escalate before the threshold if the lightweight check reveals stagnation. Scope: all Reflection sections since the last deep review. A no-op note is written even when no changes are warranted, to reset the counter.
 
 **Deep review (`/session-chronicle reflect`):** A deliberate, broader examination available anytime — for when you want to step back and assess the practice as a whole, regardless of the entry count.
 
 The `/session-chronicle reflect` subcommand:
 
 1. Read `docs/chronicle/reflective-practice.md` (current approach)
-2. Read all Reflection sections since the last evolution note (if more than 20, prioritize the most recent 20). This scope aligns with the inline auto-escalation — when triggered manually, the review examines the full accumulated window, not just 5-10 entries.
+2. Read the Reflection sections of the files in `entries` from `deep-review-status.py` (see Step 6a; if more than 20, prioritize the most recent 20). This scope aligns with the inline auto-escalation — when triggered manually, the review examines the full accumulated window, not just 5-10 entries.
 3. Notice:
    - Which prompts produced genuine insight vs. formulaic responses
    - What new questions or themes are emerging
    - Whether the reflective voice is developing or stagnating
 4. Update `reflective-practice.md` with evolved questions and approach
-5. Write the changes as a brief narrative under a `#### YYYY-MM-DD` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write a dated no-op note (e.g., "Deep review ran; no changes warranted.") to reset the entry counter.
+5. Write the changes as a brief narrative under a `#### YYYY-MM-DD (deep review)` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write the no-op note from Step 6b to reset the entry counter.
 
 ## Reflective Philosophy
 
