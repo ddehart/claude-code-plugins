@@ -82,7 +82,7 @@ A session is substantive if **two or more** of these occurred:
    python3 "${CLAUDE_SKILL_DIR}/scripts/deep-review-status.py" docs/chronicle
    ```
 
-   It prints JSON: `last_deep_review` (the anchor date, or null), `count`, `due`, and `entries` (the chronicle files dated strictly after the anchor, newest first). Files dated the same as the anchor are excluded. With no deep review on record, every chronicle file counts. Lightweight notes never move the anchor. Don't count by hand. If the script fails, check that you're in the project root and run it again. If it still fails, run the lightweight check and put the error first in the Step 8 report, because the mandatory review can't fire until it's fixed.
+   It prints JSON: `last_deep_review` (the anchor date, or null), `count`, `due`, and `entries` (the chronicle files dated strictly after the anchor, newest first). With no deep review on record, every chronicle file counts. Lightweight notes never move the anchor. Don't count by hand. If the script fails, check that you're in the project root and run it again. If it still fails, run the lightweight check and put the error first in the Step 8 report, because the mandatory review can't fire until it's fixed.
 
    **6b. Choose review tier.**
 

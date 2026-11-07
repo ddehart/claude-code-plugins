@@ -18,7 +18,7 @@ Evidence on 2026-11-06: `daily-briefing` had 35 dated notes across 27 entries af
 
 **R4. Recognition is deliberately strict.** Most notes that mention a deep review are lightweight notes deferring to the next one. A false match suppresses a review, which is the bug, so a note counts only if:
 
-- the heading after the date, past any parenthetical qualifier, is the marker or an older form: `(deep review)`, `(full deep review)`, `(later) — Deep review ...`, `— Escalated deep review ...`, and not followed by words like "not due" or "deferred"
+- the heading after the date, past any parenthetical qualifier, is the marker or an older form: `(deep review)`, `(full deep review)`, `— Deep review`, `— Deep review (14 entries ...`, `— Deep review across ...`, `— Escalated deep review (...`. What may follow `deep review` is an allowlist, because a list of negating words can't be complete
 - or its first body line is a known older opening: `Deep review ran;`, `Deep review at the 10-entry threshold`, `Escalated from ... to a deep review`
 
 Older files also use `###` for dated notes, so both levels count. A miss can make the review fire again on every write, so the skill re-runs the script after writing a review note and confirms `last_deep_review` is today. Section headings match loosely (`## Evolution notes (newest first)`, `### Evolution Notes`) for the same reason.
@@ -39,7 +39,7 @@ The cost is one review per project on its next chronicle write, capped at 20 ent
 
 `daily-briefing`'s Between Deep Reviews workaround keeps working: its Cross-pass Log sits outside Evolution Notes, and its marker is the canonical one. The workaround is no longer needed, and removing it is that project's call.
 
-The `chronicle-cross-pass` skill's Prompt B reads the three newest Evolution Notes. It doesn't depend on the anchor, so it needs no change.
+The `chronicle-cross-pass` skill's Prompt B reads the three newest Evolution Notes and doesn't depend on the anchor. Its deep-review section still scopes to "the last evolution note", so its optional `$FILES` trim needs to use the script's `entries` instead. That skill lives outside this repo.
 
 ## Verification
 
