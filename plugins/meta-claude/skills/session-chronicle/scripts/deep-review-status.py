@@ -20,25 +20,67 @@ from pathlib import Path
 
 THRESHOLD = 10
 
-ENTRY_FILE = re.compile(r'^(\d{4}-\d{2}-\d{2})\.md$')
 HEADING = re.compile(r'^(#{1,6})\s+(.*?)\s*$')
+EVOLUTION_SECTION = re.compile(r'evolution notes\b', re.I)
 DATED_NOTE = re.compile(r'^(\d{4}-\d{2}-\d{2})\b(.*)$')
-FENCE = re.compile(r'^\s*(```|~~~)')
+FENCE = re.compile(r'^\s*(`{3,}|~{3,})(.*)$')
 
 # `(deep review)` is the marker SKILL.md writes. The rest are older shapes still
 # in practice files: `— Deep review (14 entries...)`, `— Escalated deep review`,
 # and plain dated headings over `Deep review ran; ...`, `Deep review at the
 # 10-entry threshold`, or `**Escalated from the lightweight check to a deep review.**`
-REVIEW_HEADING = re.compile(r'^[\s(—–:-]*(?:escalated )?deep review\b', re.I)
-REVIEW_OPENING = re.compile(r'^[*_]*(?:deep review (?:ran|at)\b|escalated\b[^.]*\bdeep review\b)', re.I)
+# A parenthetical qualifier may come first, as in `(later) — Deep review`.
+REVIEW_HEADING = re.compile(
+    r'^(?:[\s—–:-]*\([^)]*\))*'
+    r'[\s(—–:-]*(?:(?:escalated|full) )?deep review\b'
+    r'(?![\s:;,—–-]*(?:not|deferred|held|skipped|due|overdue|pending|postponed)\b)',
+    re.I,
+)
+REVIEW_OPENING = re.compile(
+    r'^[*_]*(?:deep review ran[;:,.]'
+    r'|deep review at the \d+-entry threshold'
+    r'|escalated (?:from [^.]*? )?to a deep review\b)',
+    re.I,
+)
 
 
 def is_date(text):
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', text):
+        return False
     try:
         date.fromisoformat(text)
     except ValueError:
         return False
     return True
+
+
+def closes_fence(opening, line):
+    """Whether `line` closes the fence opened by the FENCE match `opening`."""
+    fence = FENCE.match(line)
+    return bool(
+        fence
+        and fence[1][0] == opening[1][0]
+        and len(fence[1]) >= len(opening[1])
+        and not fence[2].strip()
+    )
+
+
+def unfenced_lines(text):
+    """Yield the lines outside fenced code. An unclosed fence hides nothing."""
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines):
+        opening = FENCE.match(lines[index])
+        if opening:
+            close = next(
+                (n for n in range(index + 1, len(lines)) if closes_fence(opening, lines[n])),
+                None,
+            )
+            if close is not None:
+                index = close + 1
+                continue
+        yield lines[index]
+        index += 1
 
 
 def evolution_notes(text):
@@ -50,24 +92,21 @@ def evolution_notes(text):
     template can neither add a note nor end the section.
     """
     notes = []
-    in_section = in_fence = False
+    section_level = None
     awaiting_opening = None
-    for line in text.splitlines():
-        if FENCE.match(line):
-            in_fence = not in_fence
-            continue
-        if in_fence:
-            continue
+    for line in unfenced_lines(text):
         heading = HEADING.match(line)
-        if heading and len(heading[1]) <= 2:
-            in_section = heading[2].lower() == 'evolution notes'
+        if heading:
+            level = len(heading[1])
             awaiting_opening = None
-        elif not in_section:
-            continue
-        elif heading:
-            awaiting_opening = None
+            if section_level and level <= section_level:
+                section_level = None
+            if not section_level:
+                if level <= 3 and EVOLUTION_SECTION.match(heading[2]):
+                    section_level = level
+                continue
             dated = DATED_NOTE.match(heading[2])
-            if dated and len(heading[1]) >= 3 and is_date(dated[1]):
+            if dated and level >= 3 and is_date(dated[1]):
                 awaiting_opening = {'date': dated[1], 'rest': dated[2], 'opening': ''}
                 notes.append(awaiting_opening)
         elif awaiting_opening and line.strip():
@@ -80,9 +119,9 @@ def is_deep_review(note):
     """Whether a dated note records a deep review.
 
     Most notes that mention a deep review are lightweight notes deferring to the
-    next one, and a false match suppresses a review. So only the heading right
-    after the date and the known opening lines count. A missed older note costs
-    one early review, which then writes the current marker.
+    next one, and a false match suppresses a review. So only the known heading
+    and opening shapes count. A miss costs an early review, and SKILL.md has the
+    review confirm its own note was recognized.
     """
     return bool(REVIEW_HEADING.match(note['rest']) or REVIEW_OPENING.match(note['opening']))
 
@@ -91,25 +130,29 @@ def status(chronicle_dir):
     """Compute the deep-review status of a chronicle directory."""
     chronicle_dir = Path(chronicle_dir)
     practice = chronicle_dir / 'reflective-practice.md'
-    text = practice.read_text(encoding='utf-8') if practice.is_file() else ''
+    text = practice.read_text(encoding='utf-8', errors='replace') if practice.is_file() else ''
 
-    reviews = [n['date'] for n in evolution_notes(text) if is_deep_review(n)]
+    # A future date can only be a typo, and as the anchor it would stop the count.
+    today = date.today().isoformat()
+    reviews = [
+        note['date'] for note in evolution_notes(text)
+        if is_deep_review(note) and note['date'] <= today
+    ]
     last_review = max(reviews, default=None)
 
-    entries = sorted(
-        (p.name for p in chronicle_dir.iterdir()
-         if ENTRY_FILE.match(p.name) and is_date(p.stem)),
+    dates = sorted(
+        (p.stem for p in chronicle_dir.glob('*.md') if p.is_file() and is_date(p.stem)),
         reverse=True,
     )
     if last_review:
-        entries = [name for name in entries if name[:10] > last_review]
+        dates = [entry for entry in dates if entry > last_review]
 
     return {
         'last_deep_review': last_review,
-        'count': len(entries),
+        'count': len(dates),
         'threshold': THRESHOLD,
-        'due': len(entries) >= THRESHOLD,
-        'entries': entries,
+        'due': len(dates) >= THRESHOLD,
+        'entries': [f'{entry}.md' for entry in dates],
     }
 
 

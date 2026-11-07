@@ -156,6 +156,40 @@ class RealHeadingShapes(ChronicleCase):
         self.assertEqual(self.chronicle(practice(notes))['last_deep_review'], '2026-05-01')
 
 
+class VariantsThatMustStillResetTheCount(ChronicleCase):
+    """A review the script can't see fires again on every write."""
+
+    def test_qualifier_before_the_marker(self):
+        for heading in (
+            '#### 2026-05-01 (later) — Deep review',
+            '#### 2026-05-01 (later) (deep review)',
+            '#### 2026-05-01 (full deep review)',
+            '#### 2026-05-01 (the 05-01 18:00 entry) — Deep review (12 entries since the 04-01 review)',
+            '#### 2026-05-01 — Deep review: no changes warranted',
+        ):
+            with self.subTest(heading=heading):
+                result = self.chronicle(practice(f'{heading}\nText.\n'))
+                self.assertEqual(result['last_deep_review'], '2026-05-01')
+
+    def test_section_heading_variants(self):
+        for section in ('## Evolution notes (newest first)', '## Evolution Notes ##', '### Evolution Notes'):
+            with self.subTest(section=section):
+                text = f'# Reflective Practice\n\n{section}\n\n#### 2026-05-01 (deep review)\nText.\n'
+                self.assertEqual(self.chronicle(text)['last_deep_review'], '2026-05-01')
+
+    def test_h3_section_ends_at_the_next_h3(self):
+        text = (
+            '### Evolution Notes\n\n#### 2026-05-01 (deep review)\nText.\n\n'
+            '### Retired\n\n#### 2026-06-01 (deep review)\nNot a note.\n'
+        )
+        self.assertEqual(self.chronicle(text)['last_deep_review'], '2026-05-01')
+
+    def test_non_utf8_bytes_do_not_stop_the_count(self):
+        text = practice('#### 2026-05-01 (deep review)\nText.\n').encode() + b'\xff\n'
+        (self.dir / 'reflective-practice.md').write_bytes(text)
+        self.assertEqual(status(self.dir)['last_deep_review'], '2026-05-01')
+
+
 class NotesThatAreNotDeepReviews(ChronicleCase):
     """A false match suppresses a review, which is the bug, so matching stays strict."""
 
@@ -168,6 +202,12 @@ class NotesThatAreNotDeepReviews(ChronicleCase):
             ('#### 2026-05-01 (fifth, lightweight — concurrent with the fourth)', 'Text.'),
             ('#### 2026-05-01 — Lightweight check; deep review deferred', 'Text.'),
             ('#### 2026-05-01 — Held for the next deep review', 'Text.'),
+            ('#### 2026-05-01 — Deep review not due', 'Text.'),
+            ('#### 2026-05-01 (deep review deferred)', 'Text.'),
+            ('#### 2026-05-01 (later) — Deep review pending', 'Text.'),
+            ('#### 2026-05-01', 'Escalated this question to the next deep review.'),
+            ('#### 2026-05-01', 'Deep review at the next threshold should weigh this.'),
+            ('#### 2026-05-01', 'Deep review ran yesterday in another session.'),
         ):
             with self.subTest(heading=heading, opening=opening):
                 result = self.chronicle(practice(f'{heading}\n{opening}\n'))
@@ -185,6 +225,24 @@ class NotesThatAreNotDeepReviews(ChronicleCase):
             '#### 2026-04-02 (deep review)\nAfter the fence.\n'
         )
         self.assertEqual(self.chronicle(practice(notes))['last_deep_review'], '2026-04-02')
+
+    def test_unterminated_fence_does_not_hide_later_notes(self):
+        notes = '#### 2026-04-01\nThe prompt:\n\n```\nnever closed\n\n#### 2026-05-01 (deep review)\nText.\n'
+        self.assertEqual(self.chronicle(practice(notes))['last_deep_review'], '2026-05-01')
+
+    def test_fence_closes_only_on_its_own_kind(self):
+        notes = (
+            '#### 2026-03-01 (deep review)\nText.\n\n'
+            '~~~\n```\n#### 2026-04-01 (deep review)\n~~~\n\n'
+            '````\n```\n#### 2026-04-02 (deep review)\n````\n'
+        )
+        self.assertEqual(self.chronicle(practice(notes))['last_deep_review'], '2026-03-01')
+
+    def test_future_dated_review_is_ignored(self):
+        notes = '#### 2099-01-01 (deep review)\nA typo.\n\n#### 2026-05-01 (deep review)\nText.\n'
+        result = self.chronicle(practice(notes), ['2026-05-02'])
+        self.assertEqual(result['last_deep_review'], '2026-05-01')
+        self.assertEqual(result['count'], 1)
 
     def test_invalid_date_is_ignored(self):
         notes = '#### 2026-13-45 (deep review)\nText.\n'
@@ -253,6 +311,7 @@ class Dates(ChronicleCase):
         (self.dir / 'daily-digest-lessons.md').write_text('notes\n', encoding='utf-8')
         (self.dir / '2026-05-02-extra.md').write_text('notes\n', encoding='utf-8')
         (self.dir / '2026-13-45.md').write_text('notes\n', encoding='utf-8')
+        (self.dir / '2026-05-03.md').mkdir()
         result = self.chronicle(practice('#### 2026-05-01 (deep review)\nText.\n'), ['2026-05-02'])
         self.assertEqual(result['entries'], ['2026-05-02.md'])
 
@@ -305,6 +364,12 @@ class SkillInstructions(ChronicleCase):
 
     def test_skill_no_op_template_carries_the_marker_in_its_heading(self):
         self.assertTrue(self.no_op_template().startswith('#### YYYY-MM-DD (deep review)\n'))
+
+    def test_review_confirms_the_script_recognized_its_note(self):
+        self.assertIn('confirm `last_deep_review` is today', self.skill)
+
+    def test_script_failure_leads_the_report(self):
+        self.assertIn('put the error first in the Step 8 report', self.skill)
 
     def test_seed_shows_the_marker(self):
         seed = (SKILL_DIR / 'assets/reflective-practice-seed.md').read_text(encoding='utf-8')

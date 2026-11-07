@@ -25,6 +25,10 @@ plugins/
         SKILL.md                    # Session export skill definition
         scripts/
           export-session.py         # Python export utility
+      session-chronicle/
+        SKILL.md                    # Session chronicle skill definition
+        scripts/
+          deep-review-status.py     # Deep-review count, called from Step 6a
 ```
 
 **Key concepts:**
@@ -79,7 +83,7 @@ Ideas and enhancements are tracked in [GitHub Issues](https://github.com/ddehart
 This is a documentation-only repository. There are:
 - No dependencies to install
 - No build process
-- No tests to run, except `plugins/meta-claude/skills/session-export/scripts/test_export_session.py` (stdlib `unittest`; run `python3 -m unittest test_export_session.py` from that directory)
+- No tests to run, except the script tests under `plugins/meta-claude/skills/session-export/scripts/` and `plugins/meta-claude/skills/session-chronicle/scripts/` (stdlib `unittest`; run `python3 -m unittest test_<name>.py` from that directory)
 - No linting configured
 
 Changes are validated by ensuring:

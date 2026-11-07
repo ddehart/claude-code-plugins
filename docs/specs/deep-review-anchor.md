@@ -16,12 +16,14 @@ Evidence on 2026-11-06: `daily-briefing` had 35 dated notes across 27 entries af
 
 **R3. New deep reviews write `#### YYYY-MM-DD (deep review)`.** No external state, per the original spec's goal. `daily-briefing` already used this marker by hand.
 
-**R4. Recognition is deliberately strict.** Most notes that mention a deep review are lightweight notes deferring to the next one. A false match suppresses a review, which is the bug, while a miss costs one early review that then writes the current marker. So a note counts only if:
+**R4. Recognition is deliberately strict.** Most notes that mention a deep review are lightweight notes deferring to the next one. A false match suppresses a review, which is the bug, so a note counts only if:
 
-- the heading text right after the date is the marker or an older form: `(deep review)`, `— Deep review ...`, `— Escalated deep review ...`
-- or its first body line is a known older opening: `Deep review ran`, `Deep review at`, `Escalated ... deep review`
+- the heading after the date, past any parenthetical qualifier, is the marker or an older form: `(deep review)`, `(full deep review)`, `(later) — Deep review ...`, `— Escalated deep review ...`, and not followed by words like "not due" or "deferred"
+- or its first body line is a known older opening: `Deep review ran;`, `Deep review at the 10-entry threshold`, `Escalated from ... to a deep review`
 
-Older files also use `###` for dated notes, so both levels count.
+Older files also use `###` for dated notes, so both levels count. A miss can make the review fire again on every write, so the skill re-runs the script after writing a review note and confirms `last_deep_review` is today. Section headings match loosely (`## Evolution notes (newest first)`, `### Evolution Notes`) for the same reason.
+
+A review dated after today is ignored as a typo, since it would otherwise stop the count until that date.
 
 **R5. With no deep review on record, every chronicle file counts.** This matches the original spec's legacy-project case. Falling back to the newest dated note would keep the bug in exactly the projects it has hurt most: `wellstead` has 91 dated notes across 36 entries and no recorded review.
 
@@ -41,4 +43,4 @@ The `chronicle-cross-pass` skill's Prompt B reads the three newest Evolution Not
 
 ## Verification
 
-Tests were written against a literal transcription of the old rule and failed there (19 failures, including the core case) before the fix. Restoring the old rule in a copy fails them again.
+Tests were written against a literal transcription of the old rule and failed there (19 failures, including the core case) before the fix. Restoring the old rule in a copy fails them again. A code review then found gaps in recognition, sections, fences, and future dates. Each got a failing test before its fix.
