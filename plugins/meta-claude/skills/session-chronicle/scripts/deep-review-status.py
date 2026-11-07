@@ -8,7 +8,7 @@ under Evolution Notes in reflective-practice.md.
 Usage:
     python3 deep-review-status.py [chronicle-dir]    (default: docs/chronicle)
 
-Prints JSON: last_deep_review, count, threshold, due, entries (newest first).
+Prints JSON: last_deep_review, count, due, entries (newest first).
 Exits 2 if the chronicle directory does not exist.
 """
 
@@ -25,15 +25,16 @@ EVOLUTION_SECTION = re.compile(r'evolution notes\b', re.I)
 DATED_NOTE = re.compile(r'^(\d{4}-\d{2}-\d{2})\b(.*)$')
 FENCE = re.compile(r'^\s*(`{3,}|~{3,})(.*)$')
 
-# `(deep review)` is the marker SKILL.md writes. The rest are older shapes still
-# in practice files: `— Deep review (14 entries...)`, `— Escalated deep review`,
-# and plain dated headings over `Deep review ran; ...`, `Deep review at the
-# 10-entry threshold`, or `**Escalated from the lightweight check to a deep review.**`
-# A parenthetical qualifier may come first, as in `(later) — Deep review`.
+# `(deep review)` is the marker SKILL.md writes. The other shapes come from older
+# notes: headings like `— Deep review (14 entries...)`, `— Deep review across 16
+# reflections`, and `— Escalated deep review (after a miscount)`, and plain dated
+# headings over `Deep review at the 10-entry threshold`, the previous no-op note
+# `Deep review ran; ...`, or `**Escalated from the lightweight check to a deep review.**`
+# A parenthetical qualifier may come first, as in `(later) (deep review)`.
+# What follows `deep review` is an allowlist: `Deep review can wait` must not match.
 REVIEW_HEADING = re.compile(
-    r'^(?:[\s—–:-]*\([^)]*\))*'
-    r'[\s(—–:-]*(?:(?:escalated|full) )?deep review\b'
-    r'(?![\s:;,—–-]*(?:not|deferred|held|skipped|due|overdue|pending|postponed)\b)',
+    r'^[\s—–:-]*(?:\([^)]*\)[\s—–:-]*)*?'
+    r'\(?(?:(?:escalated|full) )?deep review(?:\)|\s*$|\s+\(|\s+across\b)',
     re.I,
 )
 REVIEW_OPENING = re.compile(
@@ -45,13 +46,10 @@ REVIEW_OPENING = re.compile(
 
 
 def is_date(text):
-    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', text):
-        return False
     try:
-        date.fromisoformat(text)
+        return date.fromisoformat(text).isoformat() == text
     except ValueError:
         return False
-    return True
 
 
 def closes_fence(opening, line):
@@ -87,9 +85,10 @@ def evolution_notes(text):
     """Return the dated notes under Evolution Notes, in file order.
 
     Each note is a dict: date, rest (the heading after the date), and opening
-    (the first line of its body). Dated notes are `###` or `####` headings; older
-    practice files use `###`. Fenced code is skipped, so a quoted prompt or
-    template can neither add a note nor end the section.
+    (the first line of its body). Older practice files date their notes with `###`
+    rather than `####`, so any heading inside the section can be a note. Fenced
+    code is skipped, so a quoted prompt or template can neither add a note nor end
+    the section.
     """
     notes = []
     section_level = None
@@ -106,7 +105,7 @@ def evolution_notes(text):
                     section_level = level
                 continue
             dated = DATED_NOTE.match(heading[2])
-            if dated and level >= 3 and is_date(dated[1]):
+            if dated and is_date(dated[1]):
                 awaiting_opening = {'date': dated[1], 'rest': dated[2], 'opening': ''}
                 notes.append(awaiting_opening)
         elif awaiting_opening and line.strip():
@@ -128,7 +127,6 @@ def is_deep_review(note):
 
 def status(chronicle_dir):
     """Compute the deep-review status of a chronicle directory."""
-    chronicle_dir = Path(chronicle_dir)
     practice = chronicle_dir / 'reflective-practice.md'
     text = practice.read_text(encoding='utf-8', errors='replace') if practice.is_file() else ''
 
@@ -140,19 +138,17 @@ def status(chronicle_dir):
     ]
     last_review = max(reviews, default=None)
 
-    dates = sorted(
-        (p.stem for p in chronicle_dir.glob('*.md') if p.is_file() and is_date(p.stem)),
+    entries = sorted(
+        (p.name for p in chronicle_dir.glob('*.md')
+         if p.is_file() and is_date(p.stem) and p.stem > (last_review or '')),
         reverse=True,
     )
-    if last_review:
-        dates = [entry for entry in dates if entry > last_review]
 
     return {
         'last_deep_review': last_review,
-        'count': len(dates),
-        'threshold': THRESHOLD,
-        'due': len(dates) >= THRESHOLD,
-        'entries': [f'{entry}.md' for entry in dates],
+        'count': len(entries),
+        'due': len(entries) >= THRESHOLD,
+        'entries': entries,
     }
 
 

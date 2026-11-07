@@ -165,7 +165,6 @@ class VariantsThatMustStillResetTheCount(ChronicleCase):
             '#### 2026-05-01 (later) (deep review)',
             '#### 2026-05-01 (full deep review)',
             '#### 2026-05-01 (the 05-01 18:00 entry) — Deep review (12 entries since the 04-01 review)',
-            '#### 2026-05-01 — Deep review: no changes warranted',
         ):
             with self.subTest(heading=heading):
                 result = self.chronicle(practice(f'{heading}\nText.\n'))
@@ -204,6 +203,9 @@ class NotesThatAreNotDeepReviews(ChronicleCase):
             ('#### 2026-05-01 — Held for the next deep review', 'Text.'),
             ('#### 2026-05-01 — Deep review not due', 'Text.'),
             ('#### 2026-05-01 (deep review deferred)', 'Text.'),
+            ('#### 2026-05-01 (deep review unnecessary)', 'Text.'),
+            ('#### 2026-05-01 — Deep review can wait', 'Text.'),
+            ('#### 2026-05-01 — Deep review waived', 'Text.'),
             ('#### 2026-05-01 (later) — Deep review pending', 'Text.'),
             ('#### 2026-05-01', 'Escalated this question to the next deep review.'),
             ('#### 2026-05-01', 'Deep review at the next threshold should weigh this.'),
@@ -327,7 +329,6 @@ class CommandLine(ChronicleCase):
         self.assertEqual(json.loads(result.stdout), {
             'last_deep_review': '2026-05-01',
             'count': 2,
-            'threshold': 10,
             'due': False,
             'entries': ['2026-05-03.md', '2026-05-02.md'],
         })
