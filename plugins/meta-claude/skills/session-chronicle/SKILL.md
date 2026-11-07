@@ -82,7 +82,7 @@ A session is substantive if **two or more** of these occurred:
    python3 "${CLAUDE_SKILL_DIR}/scripts/deep-review-status.py" docs/chronicle
    ```
 
-   It prints JSON: `last_deep_review` (the anchor date, or null), `count`, `due`, and `entries` (the chronicle files dated strictly after the anchor, newest first). Files dated the same as the anchor are excluded. With no deep review on record, every chronicle file counts. Lightweight notes never move the anchor. Don't count by hand: if the script fails, say so in the Step 8 report and run the lightweight check.
+   It prints JSON: `last_deep_review` (the anchor date, or null), `count`, `due`, and `entries` (the chronicle files dated strictly after the anchor, newest first). Files dated the same as the anchor are excluded. With no deep review on record, every chronicle file counts. Lightweight notes never move the anchor. Don't count by hand. If the script fails, check that you're in the project root and run it again. If it still fails, run the lightweight check and put the error first in the Step 8 report, because the mandatory review can't fire until it's fixed.
 
    **6b. Choose review tier.**
 
@@ -97,6 +97,8 @@ A session is substantive if **two or more** of these occurred:
      #### YYYY-MM-DD (deep review)
      Deep review ran; no changes warranted.
      ```
+
+     After writing the note, run the script again and confirm `last_deep_review` is today. If it isn't, the note wasn't recognized and the review will fire again on the next write: fix the heading to match the form above.
 
    - **If `due` is false → lightweight check.** Read back the last 3 Reflection sections from prior entries (Glob on `docs/chronicle/*.md`, sorted descending, then Read the `### Reflection` sections).
 
@@ -220,7 +222,7 @@ The `/session-chronicle reflect` subcommand:
    - What new questions or themes are emerging
    - Whether the reflective voice is developing or stagnating
 4. Update `reflective-practice.md` with evolved questions and approach
-5. Write the changes as a brief narrative under a `#### YYYY-MM-DD (deep review)` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write the no-op note from Step 6b to reset the entry counter.
+5. Write the changes as a brief narrative under a `#### YYYY-MM-DD (deep review)` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write the no-op note from Step 6b to reset the entry counter. Then confirm the script recognized the note, as Step 6b describes.
 
 ## Reflective Philosophy
 
