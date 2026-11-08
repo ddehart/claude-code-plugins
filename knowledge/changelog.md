@@ -283,7 +283,12 @@ Sinks: two Todoist tasks in `claude code marketplace`: run the script tests in C
 Mac-only paths (`-Users-derek-personal-…` in the process skill, `~/Developer/commons` in `.commons.yml`).
 
 Promotions: candidate 4 was skipped as already in the commons, as a claim that a check repaired after seeing
-the number it missed agrees by construction. Three others were proposed for Derek's approval.
+the number it missed agrees by construction. Derek approved the other three, and they landed in the
+commons as `bec4085`:
+- "a rule an llm executes from prose cannot be tested until it is code"
+- "a list of the ways to deny a phrase accepts every denial it does not list"
+- "a fail-safe direction is safe only if the miss it accepts does not recur", which is the first evidence
+  from a second domain under its question
 
 [patch-check-suggested] — the last `/graph-patch` suggestion was 2026-08-01, so this run raises it. Run
 `/graph-patch` to see whether template fixes are pending.
