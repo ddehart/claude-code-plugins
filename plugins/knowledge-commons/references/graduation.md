@@ -34,8 +34,11 @@ links on the line, and links inside commentary paragraphs, are annotations. Open
 - A link that doesn't resolve, or a note with no `## evidence`, stops the review of that question:
   report it and skip. Don't review partial evidence.
 
-**Families.** Domain names that share their first hyphen-separated segment form a family: `orchard`,
-`orchard-nursery` and `orchard-cidery` are one family. Related projects are not independent observers.
+**Families.** A domain name and every name that extends it with a hyphen form a family, **when the root
+is itself a domain in the graph**. If `orchard`, `orchard-nursery` and `orchard-cidery` all appear, they
+are one family. `shop-floor` and `shop-ledger` are not a family unless `shop` is a domain too: two
+projects that happen to start with the same word aren't related on that evidence alone. Related projects
+are not independent observers.
 State both numbers in every proposal ("6 domain names, 4 families"), and say when a group is eligible
 only because of a sibling in the same family. Eligibility and ordering still use names. The family count
 is there so the reader can weigh it.
@@ -125,13 +128,17 @@ in place under older conventions, and counts as graduated too.
   `> **Split YYYY-MM-DD.** <n> claims moved: <k> to [[note]], <k> to [[note]]. What stays is <one clause>.`
 - **Retitle**, when what stays is narrower than the title:
   - rename the note file;
-  - replace every `[[old title]]` link anywhere in the graph with `[[new title]]`. That includes claims'
-    `supports:`, maps, other notes, and `changelog.md`, because a wikilink is a pointer, not prose;
+  - replace the target in every link to it anywhere in the graph, in all its forms: `[[old title]]`,
+    `[[old title|shown text]]`, `[[old title#section]]` and `[[old title#section|shown text]]`. Keep
+    the shown text and the section, and change only the title. That includes claims' `supports:`, maps,
+    other notes, and `changelog.md`, because a wikilink is a pointer, not prose;
   - add `Formerly titled *<old title>*.` to the split marker;
   - move the map line to its new alphabetical position.
 
   List every file the rename touches in the proposal, before writing anything. A large question can have
-  dozens of links.
+  dozens of links. After writing, search the graph for `[[old title` (no closing brackets, so every form
+  matches). Expect zero hits; the `Formerly titled` line names the old title in plain text, not as a
+  link. Any hit means the rename isn't finished.
 - **A split-off question** follows the graph's question shape. It opens with one line,
   `Split out of [[original]] on YYYY-MM-DD.`, then its own `## question` body. Write that body fresh: what
   the group shares, and what's still open about it. Don't copy it from the original. Then `## evidence`
@@ -151,25 +158,34 @@ the others.
 
 ## 7. Records
 
-**Stamps.** Every question a review touched gets a stamp on its map line. A newer stamp replaces the old
-one instead of adding to it.
+**Stamps.** Every question a review touched gets a stamp on its map line. The stamp records the date
+**and the number of claims the question holds once the review's moves are written**. A newer stamp
+replaces the old one instead of adding to it.
 
-- **Hold:** `*(eligible; reviewed YYYY-MM-DD and held: <reason in one clause>)*`. A hold with no reason
-  given is recorded as `held: no reason given`.
-- **Everything else:** `*(reviewed YYYY-MM-DD: <one clause on the moves>)*`. This goes on the original,
-  each split-off question, and each existing question that received claims.
+- **Hold:** `*(eligible; reviewed YYYY-MM-DD, <n> claims, held: <reason in one clause>)*`. A hold with no
+  reason given is recorded as `held: no reason given`.
+- **Everything else:** `*(reviewed YYYY-MM-DD, <n> claims: <one clause on the moves>)*`. This goes on the
+  original, each split-off question, and each existing question that received claims.
 
-A stamped question comes back into the backlog, and into `promote` §7, only when new evidence arrives:
+**Older holds written in the note body** (a paragraph such as "Eligible, reviewed YYYY-MM-DD and held")
+count as stamps. So do older map-line stamps without a claim count. When a review finds one, it replaces
+it with a full stamp on the map line.
 
-- one of its claims has a `date:` later than the stamp, or
-- for a question that received moved claims, it has gained a claim it didn't have at the stamp. Moved
-  claims keep their old `date:`, so the date check alone would never bring it back.
+**Eligible for review.** This is the one definition both callers use. A question is eligible for review
+when all three hold:
+
+1. **It is open.** It carries no `> **Graduated` marker and isn't headed `## so what` (§4).
+2. **It has two or more distinct domains** among its claims (§1).
+3. **It is unstamped, or has new evidence since its stamp:**
+   - it holds **more claims than the stamp records**, or
+   - one of its claims has a `date:` **later than** the stamp's date.
+
+   The count is what catches a claim promoted the same day as the review. It also catches claims moved in
+   from another question, which keep their old `date:`. The date clause covers older stamps that carry no
+   count.
 
 There is no calendar expiry. A review records a judgment about the evidence, and only new evidence can
 change it.
-
-**Older holds written in the note body** (a paragraph such as "Eligible, reviewed YYYY-MM-DD and held")
-count as stamps. When a review finds one, it moves the stamp onto the map line.
 
 **Changelog.** Every approved review except a pure hold gets **one dated bullet appended at the end of
 `changelog.md`**, in the form promotions use:
@@ -227,5 +243,12 @@ and a reader handed all of it at once can't find what needs their judgment.
    - whether to retitle.
 
 The reader can approve the whole set, approve some moves, edit, choose "not now", or stop. Drop any move
-that isn't approved. The approved moves must still leave every claim in exactly one place; if they don't,
-say which claims are left without a home and re-propose for them.
+that isn't approved. A dropped move's claims stay in the original. That changes what stays, so re-check
+everything that depended on it before writing:
+
+- **A retitle.** The new title must still cover every claim that now stays. If it doesn't, drop the
+  retitle or propose a title that fits, and say which.
+- **A graduation of what stays.** It must still pass §2 with the added claims. If it doesn't, the
+  graduation drops too.
+- **The split marker and the stamp.** Their claim counts and "what stays" clause must describe the
+  original as it will actually be written.
