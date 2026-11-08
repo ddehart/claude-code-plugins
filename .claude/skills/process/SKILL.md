@@ -397,11 +397,20 @@ something you'd look up, none covered by `plugin` or `skill` — and existing no
 corroborating instances when a single run is thin. Name the category and list the instances evidencing
 it, so the reader judges from evidence rather than from your assertion.
 
-**Recommend; don't do.** Where an `entity:` list already exists, the work is a new entry in
-`.commons.yml`, a directory, a map, and backfilling notes for the instances you found. Where there is
-none, the work is *establishing* the tier — the larger ask, and worth saying rather than folding in.
-Either way the sanctioned route is re-interviewing `graph-init`'s block 2; `.commons.yml` belongs to
-`graph-init`, never to this skill.
+**Recommend; don't do.** The route is a direct edit, made once the graph's owner says yes. Where an
+`entity:` list already exists, as it does here, the work is a new entry in `.commons.yml`'s `entity:`
+list, a directory, a map, an atlas link in `principium.md`, a line in the sibling `knowledge-graph`
+skill's "Types in This Graph" list, a mention wherever this skill names the declared types (the
+"This graph declares `plugin` and `skill`" line above, and step 6's lookup-only entity-note line), and
+backfilling notes for the instances you found. `plugin` and `skill` share `entities/` and
+`maps/entities.md`, so a new type may join them there under its own heading in that map instead of
+getting its own directory, map, and atlas link. Where there is no `entity:` list, the work is
+*establishing* the tier, by the same route. It's the larger ask, and worth saying rather than folding in.
+
+During the run, never edit `.commons.yml`, add the entry, or create the directory; offer to make the
+edit once the run is done. Re-interviewing `graph-init` is an optional alternative, never the required
+route, and it doesn't rewrite this skill or its `knowledge-graph` sibling, so the skill edits above are
+needed either way.
 
 Gate it the same way as pending patches. When you raise a category, write `[entity-type-gap: <category>]`
 into this run's changelog entry. Before raising one, scan both `knowledge/changelog.md` and the most

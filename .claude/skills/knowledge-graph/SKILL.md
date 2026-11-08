@@ -116,7 +116,10 @@ deliberate, flagged exception for a future run to cluster, not license to skip t
   A question graduates into a `decision` when it settles, or a `pattern` when what it reveals recurs.
 - **Entities** — `plugin` and `skill`, stored in `entities/`. Notes for the named nouns worth a name in
   this graph. Retrieved by lookup, never by association — but they may accumulate curated context and a
-  dated interaction log; "lookup" describes how they're found, not how thin they must stay.
+  dated interaction log; "lookup" describes how they're found, not how thin they must stay. A new entity
+  type is added by direct edit once the graph's owner approves, not by a required `graph-init`
+  re-interview, and that edit includes a line here as well as the `entity:` entry in `.commons.yml`.
+  `/process`'s report step lists the rest of the work.
 - **Reference** — `reference`, stored in `reference/`. Unbounded lookup facts (Claude Code feature
   behaviors, format specs); never an association surface.
 
