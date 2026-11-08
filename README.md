@@ -68,6 +68,7 @@ Generator for per-project knowledge graphs with cross-domain promotion. Scaffold
 |-------|-------------|
 | `graph-init` | Interview → `.commons.yml` + graph scaffold + generated project-owned `process` and `knowledge-graph` skills; `--config-only` wires an existing hand-built graph into promotion |
 | `promote` | Derive a portable claim into a target graph (or a rule into the instruction tier) with association against the target's maps and per-promotion approval |
+| `graduate` | Walk a receiving graph's eligible open questions one at a time and propose moves for each (graduate to a principle, split, move claims to an existing note, retitle, or hold), with per-review approval; `promote` offers the same review when a promotion makes a question eligible |
 | `graph-patch` | Propagate template fixes into a project's already-generated, hand-sharpened skills without regenerating them — applies each pending change by judgment, verifies it landed, and records what was applied |
 
 ### activity-data
@@ -110,6 +111,7 @@ Once installed, the agents and skills are automatically available. Claude will p
 - Ask to set up a knowledge graph in a project, or wire an existing one into promotion
 - Ask to process a chronicle entry, transcript, or other source into the graph
 - Ask whether something generalizes, or to promote a claim into the commons
+- Ask what's ready to graduate, or to work through the commons' question backlog
 - Ask to graduate a principle into an always-loaded rule
 - Ask what template fixes a project's generated skills are still missing
 
