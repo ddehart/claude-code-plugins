@@ -10,8 +10,9 @@ Each caller owns its own trigger, target resolution, refresh, and commit/push po
 everything between "here is an eligible question" and "these files changed": the test, the moves, the
 writes, the records, and the proposal the reader approves.
 
-A **receiving graph** declares a `question` attractor and its evidence notes carry `domain:` frontmatter,
-because evidence arrives there by promotion. A commons is the usual case. A graph whose questions settle
+**The receiving-graph check.** A receiving graph declares a `question` attractor in `.commons.yml`, and
+its evidence notes carry `domain:` frontmatter, because evidence arrives there by promotion. Check the
+second part by opening the frontmatter of two or three evidence notes. A commons is the usual case. A graph whose questions settle
 against their own "what would settle it" clause, with single-domain evidence, is not a receiving graph,
 and nothing here applies to it.
 
@@ -81,15 +82,13 @@ original note. Every claim must end up in exactly one place.
 | **Hold** | The whole question | Coherent but not ready, with a stated reason | A map stamp only (§7) |
 | **Not now** | The whole review | The reader wants to skip without deciding | Nothing. It stays in the backlog |
 
-Before proposing a new question or principle, check whether an existing note already says it, by
-reading the notes rather than matching titles. A title that collides with an existing note means stop
-and show both: it's probably a move to the existing note.
+A proposed title that collides with an existing note means stop and show both: it's probably a move to
+the existing note.
 
 Moving a claim in or out changes the domain count of both notes. A note that drops below two domains
 leaves the backlog. Say so in the changelog bullet ("single-domain again").
 
-A group that passes §2 can be graduated in the same review. A passing group that isn't graduated stays in
-the backlog under §7's stamp.
+A group that passes §2 can be graduated in the same review.
 
 ## 4. What a graduation writes
 
@@ -118,9 +117,9 @@ the question in place.
      `graduated YYYY-MM-DD to a <destination type> on <one clause>`.
 5. **Changelog bullet** (§7).
 
-A question has graduated when its note carries a `> **Graduated` marker. Judge that from the note, never
-from its map line, whose wording varies. A note headed `## so what` instead of `## question` graduated
-in place under older conventions, and counts as graduated too.
+**The open test.** A question has graduated when its note carries a `> **Graduated` marker. Judge that
+from the note, never from its map line, whose wording varies. A note headed `## so what` instead of
+`## question` graduated in place under older conventions, and counts as graduated too.
 
 ## 5. What a split writes
 
@@ -243,12 +242,7 @@ and a reader handed all of it at once can't find what needs their judgment.
    - whether to retitle.
 
 The reader can approve the whole set, approve some moves, edit, choose "not now", or stop. Drop any move
-that isn't approved. A dropped move's claims stay in the original. That changes what stays, so re-check
-everything that depended on it before writing:
-
-- **A retitle.** The new title must still cover every claim that now stays. If it doesn't, drop the
-  retitle or propose a title that fits, and say which.
-- **A graduation of what stays.** It must still pass §2 with the added claims. If it doesn't, the
-  graduation drops too.
-- **The split marker and the stamp.** Their claim counts and "what stays" clause must describe the
-  original as it will actually be written.
+that isn't approved. A dropped move's claims stay in the original, which changes what stays. So when any
+move is dropped, don't patch the remaining set: recompute the moves for the claims as they now stand and
+re-propose before writing anything. The retitle, a graduation of what stays, the split marker, the
+stamps and the changelog bullet all depend on what stays.

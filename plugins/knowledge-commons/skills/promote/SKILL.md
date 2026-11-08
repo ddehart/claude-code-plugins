@@ -99,12 +99,10 @@ fastest way to see what the claim might connect to. Three outcomes, in order of 
 2. **Attaches to an open question.** No forcing required — questions exist to absorb claims that don't yet
    support a principle. **Confirm the question is still open before attaching to it.** A question that has
    already graduated is not a valid target: the claim belongs under the attractor it became, as evidence,
-   which is outcome 1. Check this by reading the note itself, never by where a map happens to list it. A
-   question has graduated if it carries a `> **Graduated YYYY-MM-DD** to [[…]]` marker under its first
-   heading. It keeps its `## question` heading and stays in the questions map as the record of how the
-   stance formed, so neither the heading nor the map tells you anything. Attach to the attractor the
-   marker names instead. A note headed `## so what` graduated in place under older conventions; it is
-   now the attractor, so attach to it as outcome 1.
+   which is outcome 1. Check this by reading the note itself, never by where a map happens to list it:
+   apply the open test in `${CLAUDE_PLUGIN_ROOT}/references/graduation.md` §4. A graduated question
+   keeps its `## question` heading and its map line, so neither tells you anything. Attach to the
+   attractor its marker names.
 3. **Nothing fits.** Propose a new question, not a new attractor. Attractors earn their name from
    accumulated evidence; a promotion may create one when the material genuinely warrants it (a fresh commons
    with nothing to attach to yet), but the default for a first-of-its-kind claim is a question.
@@ -175,30 +173,23 @@ pushed the promotion, check whether it just made a question ready for review.
 
 Run this section only when all of the following hold:
 
-- **The target is a receiving graph.** It declares a `question` attractor, and its evidence notes carry
-  `domain:`. A commons is the usual case.
-- **The association was outcome 2.** The claim attached to an existing open question. Outcome 1 never
-  triggers it, because attractors aren't graduated again. Neither does outcome 3: a new question has one
-  claim. Neither does §4.
-- **That question is now eligible for review**, as defined once in
-  `${CLAUDE_PLUGIN_ROOT}/references/graduation.md` §7 ("Eligible for review"). Apply that definition as
-  written; don't restate it here. The claim you just attached is part of the count it checks.
+- **The target passes the receiving-graph check** at the opening of
+  `${CLAUDE_PLUGIN_ROOT}/references/graduation.md`.
+- **The association was outcome 2:** the claim attached to an existing open question.
+- **That question is now eligible for review**, as `graduation.md` §7 defines it. The claim you just
+  attached counts.
 
-When all of these hold, run the review in `graduation.md` for that one question, in this session: the
-evidence that made it eligible is in front of the reader now. The trigger is "eligible and not reviewed
-since its newest evidence", not only "first claim from a second domain". That way a held question that
-gains evidence gets looked at again, and so does an eligible question nobody has reviewed yet.
+Then run the review in `graduation.md` for that one question, in this session, while the evidence that
+made it eligible is in front of the reader.
 
 - **On approval**, write the approved moves in the target. Commit them **separately from the promotion**,
-  so a review that gets reverted doesn't take the promotion with it. Then push. A rejected push is
-  handled as in §6.
+  so a review that gets reverted doesn't take the promotion with it. Then push, handling a rejected push
+  as in §6.
 - **"Not now"** writes nothing. The `graduate` skill's backlog walk will find the question later.
-- **Don't chain.** Everything the review touched is stamped, so a group it split off or left eligible
-  waits for the backlog walk or for new evidence. Don't start a second review here.
+- **Don't chain.** Review only this one question. Anything else the review left eligible waits for the
+  backlog walk.
 
 Called from a `/process` promotion tail, this section runs once per promoted candidate, inside that
-candidate's `promote` run. If two candidates land on the same question, the second sees the first one's
-stamp or graduation marker. If the first review held or split the question, the second claim raises the
-count above the stamp, so the question is offered for review again with both claims in view.
+candidate's `promote` run.
 
 A promoted note must stand alone. That's the whole test, at every step of this flow.

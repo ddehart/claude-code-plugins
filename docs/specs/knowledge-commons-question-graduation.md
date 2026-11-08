@@ -569,6 +569,12 @@ the corrected versions below; the decisions above are left as written, as the re
   writing.
 - **R17, graph-init.** The generated skill must name the `graduate` skill, never a plugin file path,
   which doesn't resolve from the project.
+- **Cleanup pass.** Each rule now has one owner in `graduation.md`: the receiving-graph check, the open
+  test, eligibility, and stamps. `promote` and `graduate` point to it. `graduate` reuses `promote` §1's
+  refresh and §6's rejected-push handling instead of copying them. It also maps every claim's domain and
+  date with a single search per walk, and reads destination notes and rules once per walk rather than
+  once per review. A partial approval now recomputes and re-proposes the moves, instead of patching named
+  dependents one by one.
 - **Triggers.** `graduate` and `promote` both answer to "graduate". Each description now names the other
   for the direction it doesn't handle: question → principle, or principle → rule.
 
