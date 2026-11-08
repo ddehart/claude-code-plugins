@@ -482,12 +482,14 @@ Entries are append-only and ordered by version.
     Recommending is not doing: during the run the step never edits .commons.yml, adds the entry, or
     creates the directory; it may offer to make the edit after the run. Don't name /graph-patch as an
     owner of the entity: list; it amends only the generated: block and would correctly refuse. (f)
-    Cadence: when raising a category, write a marker of the form [entity-type-gap: <category>] into
-    the changelog entry this step already writes. Before raising one, scan the live changelog and the
-    most recent monthly archive for the literal prefix, read the categories recorded under it, and
-    stay quiet if one is the same category by meaning rather than by string equality. Nothing
-    constrains how runs word a category, so a whole-marker match would re-raise the same gap every
-    run. Suppression is per-category and expires when the marker rotates out of both files.
+    Cadence: a category already raised is not raised again while its record lasts, and sameness is
+    judged by meaning rather than by string equality, because nothing constrains how runs word a
+    category. The template does this with a marker of the form [entity-type-gap: <category>] in the
+    changelog entry this step already writes, scanning the live changelog and the most recent monthly
+    archive for its fixed prefix. A graph that already keeps that record another way (a marker
+    without brackets, a shadow log) keeps its own mechanism: never change an existing graph's marker
+    form, since its recorded markers would stop matching and every category already raised would be
+    raised again.
   rationale: >
     The graph-init route was never how types were actually added. Graph owners add entity types by
     direct edit with their own approval: financial-planning added estate-document on 2026-11-01 and
@@ -502,7 +504,11 @@ Entries are append-only and ordered by version.
     days after its tier existed. The enumeration in the two generated skills is the part both routes
     kept missing, which is why (d) lists it. Points (a)-(c), (e) and (f) are step10-entity-type-gap's,
     unchanged; they are restated so this entry is complete on its own and the superseded one never
-    needs applying.
+    needs applying. Point (f) and its test clause are stated by substance rather than by the
+    template's literal marker: the first patch run (2026-11-08) found four graphs that had already
+    kept the cadence a different way on purpose, three with unbracketed markers and one with a
+    shadow log, and a literal clause would have left their edit permanently unverifiable. That
+    correction was made in place, before any graph had stamped this id.
   satisfied-test: >
     Does the section have the run report recommend adding a new entity TYPE to .commons.yml (not
     notes for individual nouns of an existing type) when the run repeatedly names a category no
@@ -511,12 +517,14 @@ Entries are append-only and ordered by version.
     name a direct edit, made once the owner approves, as the route, listing among the work at least
     the entity: entry, a directory, a map, an atlas link, and the line in the sibling knowledge-graph
     skill's type list? Does it stop at recommending during the run, without editing .commons.yml?
-    Does its cadence fix only the marker prefix [entity-type-gap:, scan both the live and the archived
-    changelog, and judge whether a category was already raised by meaning? The section FAILS if, as a
-    current instruction, it says the entity: list or type declarations belong to graph-init or are
-    graph-init's to write; names a graph-init re-interview as the sanctioned, required, or only
-    route; says /graph-patch owns or may change the entity: list; applies the check only when an
-    entity tier exists; or matches the whole marker literally. Naming the re-interview as an optional
+    Does it have a cadence that keeps an already-raised category from being raised again, with a
+    record that survives the changelog's monthly rotation and a sameness judgment made by meaning?
+    Any fixed record form passes: the template's [entity-type-gap: prefix, the same prefix without
+    brackets, or a graph's own log. The section FAILS if, as a current instruction, it says the
+    entity: list or type declarations belong to graph-init or are graph-init's to write; names a
+    graph-init re-interview as the sanctioned, required, or only route; says /graph-patch owns or
+    may change the entity: list; applies the check only when an entity tier exists; or decides
+    sameness by matching a free-form category name literally. Naming the re-interview as an optional
     alternative passes, and so does a sentence reporting the graph-init route as a former claim that
     was corrected. If the section covers a graph with no entity: list, it must call establishing the
     tier the larger ask, by the same route; a section for a graph that already declares types may
