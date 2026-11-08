@@ -23,7 +23,7 @@ every project on plugin update; they must not appear here.
 |---|---|
 | `id` | Stable kebab-case identifier. Recorded in the project's `.commons.yml` `applied:` list, so it can never be renamed once shipped. |
 | `file` | `process` or `knowledge-graph`. |
-| `anchor` | The **exact `##` heading text** the change targets — not a pattern, not a section number. A delta whose anchor doesn't resolve is skipped and reported loudly, never relocated by guess. |
+| `anchor` | The **exact `##` heading text** the change targets — not a pattern, not a section number. A delta whose anchor doesn't resolve is skipped and reported loudly, never relocated by guess. From 0.7.0 it may instead be a **list of exact headings** when the target section is titled differently across live graphs; exactly one entry may match, once, or the delta skips as missing or ambiguous. See "A numbering divergence" below for why. |
 | `version` | The plugin version that introduced the delta. |
 | `instruction` | The semantic change, in domain-neutral terms. What must be true of the section afterward — not the words to insert. |
 | `rationale` | *Why* the change exists, including how the defect was found. This is what lets an agent adapt the edit to prose that has diverged from the template instead of pasting into it. |
@@ -175,6 +175,12 @@ Entries are append-only and ordered by version.
     and require looking in the archived changelog as well as the live one — so the suppression
     survives the changelog's monthly rotation?
 
+# Superseded in part, 2026-11-08 (0.7.0), by step10-entity-type-gap-direct-edit below. Point (d)'s
+# route is wrong: it names graph-init's block-2 re-interview as the sanctioned way to change declared
+# types, and the satisfied-test requires that. Entity types are added by direct edit once the owner
+# says yes. Everything else here stands. Kept unchanged because graphs have it stamped as applied. If
+# this entry is ever pending in the same run as its successor, apply it with (d) as the successor
+# states it, and don't count the graph-init clause of this satisfied-test as a requirement.
 - id: step10-entity-type-gap
   file: process
   anchor: "## 10. Report"
@@ -446,6 +452,98 @@ Entries are append-only and ordered by version.
     synthesis, fails. So does an entry stating the graph has no synthesis tier on the grounds that
     its source is already a session- or event-level synthesis — that reasoning names a synthesis
     tier and must be corrected to declare it rather than to deny it.
+
+- id: step10-entity-type-gap-direct-edit
+  file: process
+  anchor: ["## 10. Report", "## 12. Report"]
+  version: 0.7.0
+  instruction: >
+    Correct the route the missing-entity-type recommendation names; it supersedes point (d) of
+    step10-entity-type-gap. (a) Attribute the decision to the graph's owner, not to graph-init: a
+    change to .commons.yml's entity: list needs the owner's own yes, which is why it surfaces in the
+    report rather than riding the per-run plan approval. Remove any statement that the entity: list,
+    or .commons.yml's type declarations, belong to graph-init or are graph-init's to write, and any
+    statement that re-interviewing graph-init (its block 2, or its types questions) is the sanctioned,
+    required, or only way to change declared types. (b) Name the route as a direct edit, made once the
+    owner says yes, and list what it covers: a new entry in the entity: list, a directory, a map, an
+    atlas link, a line in the sibling knowledge-graph skill's type list, a mention wherever this
+    process skill itself names the declared types (an inspect-step signal class, for example), and
+    backfill of existing notes. A graph-init re-interview may be named as an option, never as a
+    requirement; if it is named, say that it does not rewrite already-generated skills, so the skill
+    edits are needed either way. (c) Where the section covers a graph with no entity: list, keep
+    saying plainly that establishing the tier is the larger ask, by the same direct-edit route. A
+    section already rewritten for a graph that declares entity types may leave that case out; don't
+    add it back. (d) Keep what was right:
+    during the run this step only recommends and never edits .commons.yml, adds the entry, or creates
+    the directory; it may offer to make the edit after the run. Leave the recurrence bar, the evidence
+    naming, the unconditional check, and the [entity-type-gap: ...] cadence as they are, and don't
+    introduce any claim that /graph-patch owns or may change the entity: list.
+  rationale: >
+    The graph-init route was never how types were actually added. Graph owners add entity types by
+    direct edit with their own approval: financial-planning added estate-document on 2026-11-01 and
+    income-stream on 2026-11-08 that way; claude-usage added its first three types on 2026-10-05;
+    osu-builder-in-residence added program on 2026-07-28 and published copy on 2026-08-01;
+    airbnb-prep declared tool on 2026-09-27 directly
+    at the user's instruction. None of those involved a re-interview. Because generated skills
+    repeated the graph-init route, they kept steering their owner toward a heavier path. The route
+    was also incomplete. A re-interview rewrites .commons.yml, but graph-init won't overwrite
+    hand-sharpened generated skills without asking. So a graph that followed it got a config
+    declaring the new type and skills that still enumerated the old ones: airbnb-prep's
+    knowledge-graph skill said "none declared" for seventeen days after its tier existed. The
+    enumeration in the two generated skills is the part both routes kept missing, which is why (b)
+    lists it. The original delta's other properties were right and stay; only the route changes.
+    This is a new entry rather than an edit to step10-entity-type-gap because that id is already
+    stamped as applied in generated graphs, which would never see an in-place change. The anchor is a
+    list because 0.6.0 split the heading: freshly generated graphs title this section
+    "## 12. Report", while graphs patched up to 0.6.0 kept "## 10. Report", and on 2026-11-08 the
+    graphs needing this fix were split about evenly between the two.
+  satisfied-test: >
+    Does the section's missing-entity-type recommendation name a direct edit, made once the graph's
+    owner approves, as the route to adding a type (and to establishing the tier where the graph has no
+    entity: list), listing among the work at least the entity: entry in .commons.yml, a directory, a
+    map, an atlas link, and the line in the sibling knowledge-graph skill's type list? The section
+    FAILS if, as a current instruction, it says the entity: list or .commons.yml's type declarations
+    belong to graph-init or are graph-init's to write, or names a graph-init re-interview (of block 2
+    or its types questions) as the sanctioned, required, or only route. Naming the re-interview as an
+    optional alternative passes, and so does a sentence reporting the graph-init route as a former
+    claim that was corrected. It must also still say that during the run the step recommends and does
+    not itself edit .commons.yml, and must not say /graph-patch owns or may change the entity: list.
+    If the section covers the case of a graph with no entity: list, it must call establishing the
+    tier the larger ask, by the same route; a section written for a graph that already declares
+    entity types and omits that case passes on this point.
+
+- id: kg-types-entity-route
+  file: knowledge-graph
+  anchor: "## Types in This Graph"
+  version: 0.7.0
+  instruction: >
+    Have the Entities entry say how a new entity type is added: a direct edit once the graph's owner
+    says yes, covering an entry in .commons.yml's entity: list, a directory, a map, an atlas link, a
+    line in this types section, a mention wherever the sibling process skill names the declared
+    types, and backfill. A graph-init re-interview may be named as an option, never as a requirement,
+    and if it is named, say that it does not rewrite this skill, so this section needs the edit
+    either way. If the section already names graph-init or a re-interview of its block 2 as the
+    sanctioned or required route for a new type, replace that claim; keep any history of how this
+    graph's existing types were actually added, reworded so it no longer asserts the route as
+    required. Don't edit the type list itself or the descriptions of the types it declares.
+  rationale: >
+    The process template's report step, through step10-entity-type-gap, told generated graphs that a
+    new entity type had to go through a graph-init re-interview. At least one graph (airbnb-prep)
+    carried that claim into its knowledge-graph skill's types section as local prose: "That remains
+    the sanctioned route for a new type." Graph owners actually add types by direct edit (see
+    step10-entity-type-gap-direct-edit for the instances), and a re-interview leaves this skill's type
+    list stale because graph-init won't overwrite hand-sharpened generated skills without asking.
+    airbnb-prep's list said "none declared" for seventeen days after its tier existed. This section
+    is where a reader looks to see what types exist, so it is the right place to say that adding one
+    means editing the list too. The template now says so; graphs whose section never mentioned a
+    route only gain the sentence.
+  satisfied-test: >
+    Does the section, in or next to its Entities entry, say that a new entity type is added by direct
+    edit once the graph's owner approves, and that the edit includes a line in this types section
+    (not only the .commons.yml entity: entry)? The section FAILS if, as a current instruction, it
+    names graph-init or a re-interview of its block 2 as the sanctioned, required, or only route for
+    a new type, or says type declarations are graph-init's to write. Naming the re-interview as an
+    optional alternative passes, and so does history recording that a past type was added that way.
 ```
 
 ## A numbering divergence these six introduce
@@ -474,3 +572,10 @@ the prose is rendered from current templates, so those deltas are never selected
 still reach an anchor that will not resolve — `/graph-patch`'s 0.1.8 bootstrap, and a retry after a
 delta failed and stayed unstamped. Both skip loudly and neither misapplies, but a reader seeing
 `anchor not found` on a 0.6.0-generated graph should recognize it as this, not as a corrupted skill.
+
+**A delta written after 0.6.0 has neither protection.** It isn't stamped on 0.6.0-generated graphs, so
+it is selected for both populations, and any `process` stage after `## 2. Resolve` carries a different
+number in each. From 0.7.0 such a delta lists both headings as its `anchor`, for example
+`["## 10. Report", "## 12. Report"]` (D23 in the patch-mechanism spec). Exactly one must match, so
+nothing about exact matching loosens. `step10-entity-type-gap-direct-edit` is the first delta to do
+this. Graphs that have had a stage heading renamed by hand still skip loudly, which is correct.

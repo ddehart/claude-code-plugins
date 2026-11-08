@@ -30,7 +30,7 @@ Seven fields, per the spec's D8:
 |---|---|
 | `id` | Stable kebab-case identifier, globally unique, recorded in a project's `applied:` list |
 | `file` | `process` or `knowledge-graph` |
-| `anchor` | The **exact `##` heading text** the change targets — not a pattern, not a number |
+| `anchor` | The **exact `##` heading text** the change targets — not a pattern, not a number. A list of exact headings when live graphs title the section differently (any `process` stage after `## 2. Resolve`; see the "numbering divergence" note in `deltas.md`) |
 | `version` | The plugin version that introduces it |
 | `instruction` | The semantic change, in domain-neutral terms |
 | `rationale` | *Why* — this is what lets the patcher adapt the edit to prose that has diverged, instead of pasting |

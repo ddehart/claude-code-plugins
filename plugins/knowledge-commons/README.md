@@ -137,7 +137,9 @@ Because generated skills are project-owned and get sharpened by hand, a template
 plugin reaches nothing that was already generated. Across three live graphs, section headings
 survive generation byte-identical while bodies diverge by up to 78% — so `graph-patch` anchors on
 exact heading text and applies **semantic instructions by judgment**, never a textual diff and
-never a regeneration.
+never a regeneration. Where live graphs number the same section differently (0.6.0 renumbered fresh
+graphs; patched ones kept their numbers), a delta's anchor lists each exact heading, and exactly one
+must match.
 
 Each patchable change is recorded as a **delta** in
 [`references/deltas.md`](references/deltas.md), carrying an `anchor`, an `instruction`, a

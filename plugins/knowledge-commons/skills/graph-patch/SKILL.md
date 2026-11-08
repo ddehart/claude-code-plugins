@@ -137,15 +137,20 @@ starting the next.
 
 ### 4a. Locate the anchor
 
-Find the `anchor` string as an **exact heading match** in the target file.
+Find the `anchor` as an **exact heading match** in the target file. `anchor` is either one heading
+string or a **list of exact heading strings**: the same section titled differently across graphs (a
+graph generated at 0.6.0 numbers `## 12. Report` where a graph patched up to 0.6.0 kept
+`## 10. Report`). For a list, look for every entry; the anchor resolves only if the list yields
+**exactly one** heading, once, in this file. Each entry is matched exactly, the same as a string anchor.
+A list is a set of exact alternatives, not a pattern.
 
-- **Not found → skip it, loudly.** Report the delta id, the anchor text, and the file. **Never
+- **Not found → skip it, loudly.** For a list, that means none of its entries is in the file. Report the delta id, the anchor text, and the file. **Never
   stamp it.** **Never relocate it semantically** — do not look for "where that section moved to,"
   do not pick the nearest plausible heading, do not apply the instruction somewhere else. Guessing
   where content went is where a patcher does real damage to hand-written prose. A delta that
   can't find its target does nothing, loudly, rather than landing somewhere convincing.
 - **Matches more than once → skip it, loudly, the same way.** An ambiguous anchor is a missing
-  anchor.
+  anchor. For a list, this includes two of its entries both being present.
 
 There are real, legitimate reasons an anchor is absent — a project renamed a heading, or the
 heading was templated at generation time and resolved differently here. Skipping is the correct

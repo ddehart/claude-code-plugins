@@ -154,6 +154,8 @@ not to write the block D7 requires.
 lets an agent write the change in the project's own voice. The `satisfied-test` is load-bearing twice
 over — see D9 and D14.
 
+> **Amended 2026-11-08 (plugin 0.7.0):** `anchor` may also be a list of exact headings. See D23.
+
 **D9. The patcher judges redundancy before proposing.** Read the target section; if the
 `satisfied-test` already passes, report *already satisfied*, record the delta as applied, and propose no
 edit. *Rationale:* a project may have hand-fixed the same defect. Consistent with the explicit-negatives
@@ -231,6 +233,26 @@ likely to miss the satisfied-test as a generated one.
 **D22. The bootstrap stamp is written to disk before the first edit.** D6 said "writes the stamp, then
 applies" without pinning ordering; making it explicit means a crashed or interrupted run still leaves
 honest state rather than edits with no record.
+
+### Amended after shipping
+
+**D23. `anchor` may be a list of exact headings, of which exactly one must match** (2026-11-08, plugin
+0.7.0). A string anchor works as before. A list names every exact heading the target section is known to
+carry across live graphs; the patcher resolves each, and the delta applies only when the list yields
+exactly one matching heading, once, in the file. Zero matches is D16's missing anchor; more than one,
+whether one listed heading appears twice or two listed headings both appear, is D18's ambiguous anchor.
+Nothing about matching loosens: each entry is still exact heading text, never a pattern, and the
+patcher never relocates.
+
+*Rationale:* 0.6.0 split the `process` heading population. The template inserted two stages and
+renumbered everything after `## 2. Resolve`, so a graph generated at 0.6.0 titles its report section
+`## 12. Report`, while every graph patched up to 0.6.0 kept `## 10. Report`, because deltas insert
+relative to existing headings and never renumber. On 2026-11-08 the live graphs that needed
+`step10-entity-type-gap-direct-edit` were split about evenly between the two. A single-string anchor
+would skip in about half of them, and with no declined state (Q3) that skip would come back on every
+later run. Twin deltas, one per heading, have the same problem: every graph carries the twin that
+can't resolve. The numbering split is permanent for any delta targeting a stage after `## 2. Resolve`,
+so the format needed to carry it rather than each future delta working around it.
 
 ### Keeping the log honest
 

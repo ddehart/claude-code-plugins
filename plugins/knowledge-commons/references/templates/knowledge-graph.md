@@ -105,7 +105,11 @@ an unlinked pile. Everything else on this list is a judgment call; this one is c
 - **Attractors** — {attractor-type-list}. Accumulate evidence; each carries a "so what."
 - **Entities** — {entity-type-or-none}. Notes for the nouns worth a name in this graph. Retrieved by
   lookup, never by association — but they may accumulate curated context and a dated interaction log if
-  the domain calls for it; "lookup" describes how they're found, not how thin they must stay.
+  the domain calls for it; "lookup" describes how they're found, not how thin they must stay. Adding a
+  new entity type is a direct edit once the graph's owner says yes: an entry in `.commons.yml`'s
+  `entity:` list, a directory, a map, an atlas link, a line in this list, and a mention wherever the
+  sibling `process` skill names the declared types, then backfill. A `graph-init` re-interview is an
+  option, never a requirement, and it does not rewrite this skill, so this list needs the edit either way.
 - **Reference** — {reference-type-or-none}, stored in `{reference-dir}`. Unbounded lookup facts; never an
   association surface.
 
