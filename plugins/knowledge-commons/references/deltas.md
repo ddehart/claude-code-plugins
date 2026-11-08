@@ -23,7 +23,7 @@ every project on plugin update; they must not appear here.
 |---|---|
 | `id` | Stable kebab-case identifier. Recorded in the project's `.commons.yml` `applied:` list, so it can never be renamed once shipped. |
 | `file` | `process` or `knowledge-graph`. |
-| `anchor` | The **exact `##` heading text** the change targets — not a pattern, not a section number. A delta whose anchor doesn't resolve is skipped and reported loudly, never relocated by guess. From 0.7.0 it may instead be a **list of exact headings** when the target section is titled differently across live graphs; exactly one entry may match, once, or the delta skips as missing or ambiguous. See "A numbering divergence" below for why. |
+| `anchor` | The **exact `##` heading text** the change targets — not a pattern, not a section number. A delta whose anchor doesn't resolve is skipped and reported loudly, never relocated by guess. For `process`, write the heading as the current template has it (`## 12. Report`); from 0.8.0 the patcher matches on the title and ignores the stage number, because live graphs number stages differently. See "A numbering divergence" below. |
 | `version` | The plugin version that introduced the delta. |
 | `instruction` | The semantic change, in domain-neutral terms. What must be true of the section afterward — not the words to insert. |
 | `rationale` | *Why* the change exists, including how the defect was found. This is what lets an agent adapt the edit to prose that has diverged from the template instead of pasting into it. |
@@ -181,7 +181,7 @@ Entries are append-only and ordered by version.
     and require looking in the archived changelog as well as the live one — so the suppression
     survives the changelog's monthly rotation?
 
-# Superseded (0.7.0) by step10-entity-type-gap-direct-edit: point (d)'s graph-init route is wrong.
+# Superseded (0.8.0) by step10-entity-type-gap-direct-edit: point (d)'s graph-init route is wrong.
 # Kept unchanged because graphs have this id stamped.
 - id: step10-entity-type-gap
   file: process
@@ -457,8 +457,8 @@ Entries are append-only and ordered by version.
 
 - id: step10-entity-type-gap-direct-edit
   file: process
-  anchor: ["## 10. Report", "## 11. Report", "## 12. Report"]
-  version: 0.7.0
+  anchor: "## 12. Report"
+  version: 0.8.0
   supersedes: step10-entity-type-gap
   instruction: >
     Have the run report recommend a new entity *type* (a new entry in .commons.yml's entity: list)
@@ -525,7 +525,7 @@ Entries are append-only and ordered by version.
 - id: kg-types-entity-route
   file: knowledge-graph
   anchor: "## Types in This Graph"
-  version: 0.7.0
+  version: 0.8.0
   instruction: >
     Have the Entities entry say how a new entity type is added: a direct edit once the graph's owner
     says yes, never a required graph-init re-interview, and the edit includes a line in this types
@@ -581,10 +581,13 @@ still reach an anchor that will not resolve — `/graph-patch`'s 0.1.8 bootstrap
 delta failed and stayed unstamped. Both skip loudly and neither misapplies, but a reader seeing
 `anchor not found` on a 0.6.0-generated graph should recognize it as this, not as a corrupted skill.
 
-**A delta written after 0.6.0 has neither protection.** It isn't stamped on 0.6.0-generated graphs, so
-it is selected for both populations, and any `process` stage after `## 2. Resolve` carries a different
-number in each. A stage after the synthesize stage has a third number in a graph generated at 0.6.0
-without a synthesis tier, since the template omits that stage and renumbers. From 0.7.0 such a delta
-lists every heading as its `anchor`, for example `["## 10. Report", "## 11. Report", "## 12. Report"]`
-(D23 in the patch-mechanism spec). Exactly one must match. `step10-entity-type-gap-direct-edit` is
-the first delta to do this. Graphs that have had a stage heading renamed by hand still skip loudly, which is correct.
+**A delta written after 0.6.0 has neither protection**, and this is what title matching fixes. It
+isn't stamped on 0.6.0-generated graphs, so it is selected for both populations, and any `process`
+stage after `## 2. Resolve` carries a different number in each: `## 10. Report` in a patched graph,
+`## 12. Report` in a fresh one, and `## 11. Report` in a fresh one without a synthesis tier, since the
+template omits that stage and renumbers. From 0.8.0 the patcher ignores the stage number and matches the
+title (D23 in the patch-mechanism spec), so one anchor, written as the current template has it, resolves
+in all three. It also lets the pre-0.6.0 anchors above resolve on the bootstrap and retry paths. A
+heading whose *title* a project renamed by hand still skips loudly, which is correct. And the rule above
+about the preserve and synthesize stages still stands: a patched graph may have those stages under a
+different title, or not at all.

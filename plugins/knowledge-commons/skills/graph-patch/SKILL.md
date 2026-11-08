@@ -145,20 +145,21 @@ whole of this section, before starting the next.
 
 ### 4a. Locate the anchor
 
-Find the `anchor` as an **exact heading match** in the target file. `anchor` is either one heading
-string or a **list of exact heading strings**, used when live graphs title the same section
-differently (the log's numbering-divergence note says why). For a list, look for every entry; the
-anchor resolves only if the list yields **exactly one** heading, once, in this file. A list is a set of
-exact alternatives, not a pattern.
+Find the `anchor` as an **exact heading match** in the target file. For a `process` delta, compare
+**titles**: drop the generated `## <N>. ` number from the anchor and from each `##` heading in the file,
+then match the remaining text exactly, so `## 10. Report` resolves to `## 12. Report` in a graph that
+numbers its stages differently. That number is the only part removed; the rest of the heading must
+match character for character. `knowledge-graph` headings carry no numbers and are matched exactly as
+written.
 
-- **Not found → skip it, loudly.** For a list, that means none of its entries is in the file. Report
-  the delta id, the anchor text, and the file. **Never stamp it.** **Never relocate it
-  semantically** — do not look for "where that section moved to," do not pick the nearest plausible
-  heading, do not apply the instruction somewhere else. Guessing where content went is where a
-  patcher does real damage to hand-written prose. A delta that can't find its target does nothing,
-  loudly, rather than landing somewhere convincing.
+- **Not found → skip it, loudly.** Report the delta id, the anchor text, and the file. **Never stamp
+  it.** **Never relocate it semantically** — do not look for "where that section moved to," do not
+  pick the nearest plausible heading, do not apply the instruction somewhere else. Guessing where
+  content went is where a patcher does real damage to hand-written prose. A delta that can't find
+  its target does nothing, loudly, rather than landing somewhere convincing.
 - **Matches more than once → skip it, loudly, the same way.** An ambiguous anchor is a missing
-  anchor. For a list, this includes two of its entries both being present.
+  anchor. For a `process` delta that includes two headings whose titles match, whatever their
+  numbers.
 
 There are real, legitimate reasons an anchor is absent — a project renamed a heading, or the
 heading was templated at generation time and resolved differently here. Skipping is the correct
