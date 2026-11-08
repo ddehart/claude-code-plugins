@@ -417,7 +417,11 @@ For each template:
   arrive via the plugin's `promote` skill carrying `domain:`, nothing is authored directly, and the
   association step (existing principle / open question / new question) is where new material meets the
   graph. Narrow the awareness protocol accordingly: structural noticing (drift, duplicates, a question
-  ready to graduate), not new-evidence capture.
+  ready to graduate), not new-evidence capture. For a question ready to graduate, the offer names the
+  plugin's `graduate` skill as the way to act on it: *"Worth reviewing [question] for graduation?
+  `/graduate` walks it."* Wherever the generated skill describes graduation, describe the shape in
+  `references/graduation.md`: a new attractor note, with the question kept as its record under a
+  Graduated marker. Never describe a question being rewritten in place.
 
 The file you write must contain no braces, no SLOT comments, and no orchard or shopcraft examples —
 those exist in the templates to teach *this* generation step, not to ship. If you finish and a brace

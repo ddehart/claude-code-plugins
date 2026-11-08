@@ -43,11 +43,12 @@ deliberately omits.
 |-------|--------|--------------|
 | `graph-init` | `/graph-init` | Scaffold a new graph in the current project, or wire an existing hand-built graph into promotion (`--config-only`). Interviews, writes `.commons.yml`, scaffolds the atlas/maps/type directories, and generates the project-owned `process` and `knowledge-graph` skills. |
 | `promote` | `/promote` | Derive a portable claim from a source graph into a target graph or the instruction tier, with association and human approval. |
+| `graduate` | `/graduate` | Walk a receiving graph's eligible open questions (evidence from two or more domains), one at a time. Each review tests whether the claims share one mechanism and one remedy, then proposes moves: graduate to a principle, split off new questions, move claims to an existing note, retitle, or hold. |
 | `graph-patch` | `/graph-patch` | Propagate template fixes into a project's already-generated, hand-sharpened skills — without regenerating them. Reads the delta log, applies each pending semantic change by judgment, verifies it landed, records what was applied. |
 
-All three auto-trigger from natural phrasing too — "set up a knowledge graph", "does this
-generalize?", "promote this to the commons", "what template fixes am I missing?" — not just the
-slash commands.
+All four auto-trigger from natural phrasing too — "set up a knowledge graph", "does this
+generalize?", "promote this to the commons", "what's ready to graduate?", "what template fixes am I
+missing?" — not just the slash commands.
 
 ## How it works
 
@@ -91,6 +92,12 @@ can meet the same pattern from another. `promote` is the single uniform mechanis
 - Promotion **associates**: the claim supports an existing principle, attaches to an open
   question, or (default for a first-of-its-kind claim) opens a new question. Attractors earn
   their names from accumulated evidence.
+- **Questions graduate once a second domain backs them**, and two domains is a prompt to check the
+  question's coherence, not a signal to graduate. A review asks whether the claims share one mechanism
+  and one remedy. Usually they don't yet: the question splits, or some claims move to a note that
+  already says what they say. When they do, a new principle is written and the question is kept as its
+  record. `promote` offers that review the moment a promotion makes a question eligible, and `graduate`
+  walks the backlog. Each reviewed question is stamped, so it comes back only when new evidence lands.
 - The commons graduates its own held principles one tier further — into `~/.claude/rules/`, as
   behavioral rules — via the same flow.
 - Every promotion is **human-approved**: the skill proposes the full derived note and its map
@@ -162,12 +169,14 @@ plugins/knowledge-commons/
   skills/
     graph-init/SKILL.md               # the generator
     promote/SKILL.md                  # the cross-domain derivation mechanism
+    graduate/SKILL.md                 # the backlog walk — reviews eligible questions
     graph-patch/SKILL.md              # the maintainer — propagates template fixes
   scripts/
     scan-secrets.sh                   # the redaction gate's deterministic floor
     test-scan-secrets.sh              # its planted-secret test
   references/
     graph-conventions.md              # the shared note/map/frontmatter contract
+    graduation.md                     # the review procedure graduate and promote share
     deltas.md                         # the append-only delta log /graph-patch reads
     templates/
       process.md                      # → generated <project>/.claude/skills/process

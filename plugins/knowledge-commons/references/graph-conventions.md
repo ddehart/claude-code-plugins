@@ -213,9 +213,26 @@ particular domain happens to talk about the same thing.
 ```
 
 A question note reads like a thin attractor — same two-part shape, `## question` standing in for
-`## so what` — because that's what it is: an attractor that hasn't earned its name yet. When enough
-evidence accumulates (typically once a second domain's claim lands under it), it's promoted in place
-to a proper attractor.
+`## so what` — because that's what it is: an attractor that hasn't earned its name yet.
+
+**Graduation.** In a receiving graph, a question becomes eligible once a second domain's claim lands
+under it. That's a prompt to check the question's coherence, not a signal to graduate: a question broad
+enough to collect claims quickly is often several questions. When it does graduate, it is **not**
+rewritten in place.
+
+- A new attractor note is written, with a stance for a title and its own `## so what`.
+- The claims' `supports:` move to the new note.
+- The question note is kept as the record of how the stance formed, still headed `## question`, with a
+  marker under that heading:
+
+```markdown
+## question
+> **Graduated 2026-05-02** to [[timing beats technique for seasonal work]], on evidence from orchard
+> and shopcraft.
+```
+
+A question can also be split, have claims moved to another note, be retitled, or be held. The procedure
+for all of it is in [`graduation.md`](graduation.md), used by the `graduate` skill and by `promote`.
 
 ### Entity and synthesis notes (domain-optional)
 
