@@ -1,6 +1,6 @@
 ---
 name: promote
-description: "Derive a portable claim from a source graph into a target graph or the instruction tier, with association and human approval. Use when the user asks to promote a note or insight to the commons, wants to know whether something generalizes, invokes /promote, asks to derive a claim into the commons, or asks to graduate a principle into a rule. Triggers: promote this to the commons, does this generalize, /promote, derive this into the commons, graduate this principle to a rule."
+description: "Derive a portable claim from a source graph into a target graph or the instruction tier, with association and human approval. Use when the user asks to promote a note or insight to the commons, wants to know whether something generalizes, invokes /promote, asks to derive a claim into the commons, or asks to graduate a principle into a rule (graduating an open question into a principle is the graduate skill). Triggers: promote this to the commons, does this generalize, /promote, derive this into the commons, graduate this principle to a rule."
 argument-hint: "[note or claim to promote]"
 allowed-tools:
   - Read
@@ -180,12 +180,9 @@ Run this section only when all of the following hold:
 - **The association was outcome 2.** The claim attached to an existing open question. Outcome 1 never
   triggers it, because attractors aren't graduated again. Neither does outcome 3: a new question has one
   claim. Neither does §4.
-- **That question is now eligible.** It has two or more distinct `domain:` values among its claims,
-  counted as `${CLAUDE_PLUGIN_ROOT}/references/graduation.md` §1 describes.
-- **It isn't stamped without new evidence.** If its map line (or, for an older hold, its body) carries a
-  review stamp, a claim dated after the stamp must be present (`graduation.md` §7). The claim you just
-  promoted counts only if its `date:` is later than the stamp. A question stamped today waits for the
-  backlog walk.
+- **That question is now eligible for review**, as defined once in
+  `${CLAUDE_PLUGIN_ROOT}/references/graduation.md` §7 ("Eligible for review"). Apply that definition as
+  written; don't restate it here. The claim you just attached is part of the count it checks.
 
 When all of these hold, run the review in `graduation.md` for that one question, in this session: the
 evidence that made it eligible is in front of the reader now. The trigger is "eligible and not reviewed
@@ -201,6 +198,7 @@ gains evidence gets looked at again, and so does an eligible question nobody has
 
 Called from a `/process` promotion tail, this section runs once per promoted candidate, inside that
 candidate's `promote` run. If two candidates land on the same question, the second sees the first one's
-stamp or graduation marker and behaves accordingly.
+stamp or graduation marker. If the first review held or split the question, the second claim raises the
+count above the stamp, so the question is offered for review again with both claims in view.
 
 A promoted note must stand alone. That's the whole test, at every step of this flow.

@@ -540,6 +540,38 @@ The five proposals and the review page stay out of this repo, which is public. T
 content from Derek's employer and personal projects. They were working files in the session's
 scratchpad.
 
+## Revisions after code review (2026-11-08, PR #79)
+
+A high-effort review of the implementation found defects in decisions as written. The skills implement
+the corrected versions below; the decisions above are left as written, as the record.
+
+- **R7, families.** "Share their first hyphen-separated segment" lumped unrelated projects. The commons'
+  `claude-code-plugins` and `claude-usage` both start with `claude`. Now a family is a domain name plus
+  the names that extend it with a hyphen, **when the root is itself a domain**.
+- **R7, cost.** Counting from frontmatter for every question meant hundreds of reads per walk. The
+  `(domain)` suffixes are now a prefilter: a question whose suffixes are all present and show one domain
+  is skipped. Every other question is counted from frontmatter, which stays authoritative.
+- **R10, stamps.** A stamp carrying only a date can't see a claim promoted the same day as the review,
+  and the "gains a claim it didn't have" clause had nothing recorded to compare against. Stamps now
+  record the claim count too. "New evidence since the stamp" means more claims than the stamp records,
+  or a claim dated after it.
+  - "Eligible for review" is now defined once, in `graduation.md` §7, and both `promote` §7 and
+    `graduate` cite it. The two copies had already drifted once.
+- **R11, resolution.** Resolving the target, then refreshing it, then checking it's a receiving graph
+  meant that running `/graduate` from a source graph with a `question` attractor (this repo)
+  fast-forwarded and dirty-checked the source repo. The receiving-graph check now runs before the
+  refresh: it reads only `.commons.yml` and two or three evidence notes' frontmatter, which are stable.
+  Only the chosen target is refreshed.
+- **R19, retitle.** Links are replaced in all their forms (`|shown text`, `#section`). After writing, the
+  graph is searched for remaining links to the old title.
+- **R4, partial approval.** A dropped move's claims stay in the original. Anything that depended on what
+  stays (a retitle, a graduation of the remainder, the split marker and stamp) is re-checked before
+  writing.
+- **R17, graph-init.** The generated skill must name the `graduate` skill, never a plugin file path,
+  which doesn't resolve from the project.
+- **Triggers.** `graduate` and `promote` both answer to "graduate". Each description now names the other
+  for the direction it doesn't handle: question → principle, or principle → rule.
+
 ## Execution plan
 
 One PR on a `feat/` branch. Everything here is plugin-owned and ships together.

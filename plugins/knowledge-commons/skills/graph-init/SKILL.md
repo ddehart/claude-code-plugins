@@ -419,9 +419,10 @@ For each template:
   graph. Narrow the awareness protocol accordingly: structural noticing (drift, duplicates, a question
   ready to graduate), not new-evidence capture. For a question ready to graduate, the offer names the
   plugin's `graduate` skill as the way to act on it: *"Worth reviewing [question] for graduation?
-  `/graduate` walks it."* Wherever the generated skill describes graduation, describe the shape in
-  `references/graduation.md`: a new attractor note, with the question kept as its record under a
-  Graduated marker. Never describe a question being rewritten in place.
+  `/graduate` walks it."* Wherever the generated skill describes graduation, describe it in its own
+  words: a new attractor note, with the question kept as its record under a Graduated marker. Never
+  describe a question being rewritten in place. Name the `graduate` skill, never a plugin file path. The
+  generated skill lives in the project, where the plugin's `references/` directory doesn't resolve.
 
 The file you write must contain no braces, no SLOT comments, and no orchard or shopcraft examples —
 those exist in the templates to teach *this* generation step, not to ship. If you finish and a brace

@@ -1,6 +1,6 @@
 ---
 name: graduate
-description: "Review a receiving graph's eligible open questions — those with evidence from two or more domains — one at a time, and graduate, split, move claims, retitle, or hold each with human approval. Use when the user asks to graduate questions, review the commons backlog, see which questions are ready to become principles, or invokes /graduate. Triggers: graduate questions, /graduate, what's ready to graduate, review eligible questions, work the commons backlog."
+description: "Review a receiving graph's eligible open questions — those with evidence from two or more domains — one at a time, and graduate each to a principle, split it, move claims, retitle, or hold, with human approval. Use when the user asks to graduate questions into principles, review the commons question backlog, see which questions are ready to become principles, or invokes /graduate. Triggers: graduate questions, graduate this question, /graduate, which questions are ready to graduate, review eligible questions, work the commons backlog. Not for turning a principle into a rule; that is promote's instruction-tier branch."
 argument-hint: "[graph path or question title]"
 allowed-tools:
   - Read
@@ -25,20 +25,30 @@ only the walk around it: which graph, which questions, in what order, and when t
 
 ## 1. Resolve the target
 
-Locate the graph to walk from configuration alone. Read no maps or notes yet; that waits for the refresh
-in §2.
+Decide which graph to walk **before refreshing anything**. Only the graph you settle on gets refreshed.
+A source project you happen to be standing in must never be fetched, fast-forwarded, or checked for a
+dirty tree on this skill's behalf.
 
 1. **An explicit path**, if the caller gave one. A question title passed as the argument is not a path
    (see §5).
-2. **The current project's graph**, if its `.commons.yml` declares a `question` attractor. This is only
-   a candidate until §2's receiving-graph check confirms it.
-3. **Otherwise, the graph named by the current project's `promotes-to:`.**
+2. **The current project's graph**, if it is a receiving graph. Its `.commons.yml` must declare a
+   `question` attractor, **and** its evidence notes must carry `domain:` frontmatter. Check the second
+   part by opening the frontmatter of two or three evidence notes. Both are stable facts about the graph,
+   so reading them before the refresh is safe. Its maps and questions are not; leave them for §3. A
+   source graph can declare a `question` attractor too (its questions settle against their own "what
+   would settle it" clause), so the `domain:` check is what tells them apart.
+3. **Otherwise, the graph named by the current project's `promotes-to:`.** Apply the same receiving-graph
+   check to it.
 
-Check that the path holds a `.commons.yml`. If it doesn't, stop and report the exact path that failed to
-resolve. Don't search for a commons elsewhere. A `promotes-to:` written on another machine can name a
-path that doesn't exist on this one, and guessing would walk the wrong graph or none.
+Check that the chosen path holds a `.commons.yml`. If it doesn't, stop and report the exact path that
+failed to resolve. Don't search for a commons elsewhere. A `promotes-to:` written on another machine can
+name a path that doesn't exist on this one, and guessing would walk the wrong graph or none.
 
-## 2. Refresh before reading anything
+If the chosen graph fails the receiving-graph check, say it has no domain-counted questions and stop.
+Then find the destination attractor: the attractor type other than `question`. If there is none, or more
+than one, stop and ask.
+
+## 2. Refresh before reading the maps and questions
 
 The target is usually shared with other machines and sessions. Before you read its maps or notes: if it's
 a git repository with a remote, fetch and fast-forward, then say what came in, especially questions,
@@ -53,27 +63,22 @@ continue, but say so, and every proposal must state it was weighed against a pos
 
 **A dirty working tree stops the walk before any write.** Report what's uncommitted and stop. Don't stash
 or commit someone else's work.
-
-**Then confirm it's a receiving graph.** It must declare a `question` attractor, and its evidence notes
-must carry `domain:` frontmatter; open two or three to check.
-
-- If the candidate was the current project and it fails this check, it's a source graph whose questions
-  settle another way. Switch to its `promotes-to:` target, check that path as in §1, refresh it, and
-  check again.
-- If the target fails the check, say it has no domain-counted questions and stop.
-
-Then find the destination attractor: the attractor type other than `question`. If there is none, or more
-than one, stop and ask.
-
 ## 3. Build the backlog
 
-For every note in the question directory:
+The backlog is every question that is **eligible for review** as `graduation.md` §7 defines it. Apply
+that definition; don't restate or vary it here. Judge "open" from the note, never from the map line.
 
-- **Skip graduated questions.** Use the test in `graduation.md` §4: a `> **Graduated` marker, or a
-  `## so what` heading. Judge it from the note, never from the map line.
-- **Count domains** per `graduation.md` §1. Eligible means two or more distinct `domain:` values.
-- **Skip stamped questions** with no new evidence since the stamp, per `graduation.md` §7. The stamp may
-  be on the map line or, for older holds, in the note body.
+Building the backlog would mean opening every claim of every question, which is hundreds of reads before
+the first review. To avoid that, use the evidence lines' `(domain)` suffixes as a **prefilter**:
+
+- **Skip** a question whose suffixes are all present and show a single domain. Its claims would have to
+  disagree with their own suffixes for it to be eligible, and that is checked whenever a question is
+  reviewed (`graduation.md` §1).
+- **Read claim frontmatter** for every other question: two or more distinct suffixes, or any evidence
+  item with a missing or malformed suffix. Count domains from the frontmatter, which is authoritative.
+
+The stamp checks need only the map line, the claim count, and each claim's `date:`, which you read
+during that frontmatter pass.
 
 Order by distinct domain names descending, then claim count descending, then title. Show the reader:
 
