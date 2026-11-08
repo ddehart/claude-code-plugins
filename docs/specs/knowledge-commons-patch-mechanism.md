@@ -2,7 +2,7 @@
 
 **Status:** Implemented and in use — shipped across PRs #65, #66, #67, #68, #70
 **Date:** 2026-07-21 (drafted) · 2026-07-22 (status updated)
-**Plugin:** `knowledge-commons` v0.5.0 (D23–D24 added at v0.7.0)
+**Plugin:** `knowledge-commons` v0.5.0
 **Related:** [`knowledge-commons.md`](./knowledge-commons.md) (the plugin's founding spec)
 
 > **What actually shipped.** `/graph-patch` exists, the delta log at
@@ -156,7 +156,7 @@ lets an agent write the change in the project's own voice. The `satisfied-test` 
 over — see D9 and D14.
 
 > **Amended 2026-11-08 (plugin 0.7.0):** `anchor` may also be a list of exact headings (D23), and an
-> optional eighth field, `supersedes`, names an earlier delta this one corrects in part (D24).
+> optional eighth field, `supersedes`, names an earlier delta this one replaces (D24).
 
 **D9. The patcher judges redundancy before proposing.** Read the target section; if the
 `satisfied-test` already passes, report *already satisfied*, record the delta as applied, and propose no
@@ -246,28 +246,29 @@ whether one listed heading appears twice or two listed headings both appear, is 
 Nothing about matching loosens: each entry is still exact heading text, never a pattern, and the
 patcher never relocates.
 
-*Rationale:* 0.6.0 split the `process` heading population. The template inserted two stages and
-renumbered everything after `## 2. Resolve`, so a graph generated at 0.6.0 titles its report section
-`## 12. Report`, while every graph patched up to 0.6.0 kept `## 10. Report`, because deltas insert
-relative to existing headings and never renumber. On 2026-11-08 the live graphs that needed
-`step10-entity-type-gap-direct-edit` were split about evenly between the two. A graph generated at 0.6.0 without a synthesis tier has a third numbering for any stage
-after the synthesize stage, because the template omits that stage and renumbers (`## 11. Report`). A
-single-string anchor
-would skip in about half of them, and with no declined state (Q3) that skip would come back on every
-later run. Twin deltas, one per heading, have the same problem: every graph carries the twin that
+*Rationale:* 0.6.0 split the `process` heading population: graphs generated at 0.6.0 number every
+stage after `## 2. Resolve` differently from graphs patched up to it, and a third numbering exists for
+stages after the synthesize stage. The populations are recorded in the delta log's numbering-divergence
+note, not here. On 2026-11-08 the live graphs that needed `step10-entity-type-gap-direct-edit` were split
+about evenly between `## 10. Report` and `## 12. Report`. A single-string anchor would skip in about half
+of them, and with no declined state (Q3) that skip would come back on every later run. Twin deltas, one per heading, have the same problem: every graph carries the twin that
 can't resolve. The numbering split is permanent for any delta targeting a stage after `## 2. Resolve`,
 so the format needed to carry it rather than each future delta working around it.
 
-**D24. A delta may name an earlier delta it `supersedes`, and the patcher applies the earlier one as
-amended** (2026-11-08, plugin 0.7.0). When a shipped delta turns out partly wrong, its entry can't be
-edited, because graphs have its id stamped and would never see the change. So a new delta carries the
-correction and names the old id in `supersedes:`. Wherever the old delta is still pending, `/graph-patch`
-applies it with the successor's instruction winning on conflicts, and answers its `satisfied-test`
-without the replaced clauses. The old entry keeps its text, with a comment pointing at the successor.
-*Rationale:* selection is log order, so without this a graph that hadn't applied the old delta would be
-offered the wrong content first and its removal second: two contradictory approvals, and a skip on the
-second leaves the wrong content standing. First used by `step10-entity-type-gap-direct-edit`, which
-corrects the route named in point (d) of `step10-entity-type-gap`.
+**D24. A delta may name an earlier delta it `supersedes`; the successor is complete, and the earlier
+one is never applied** (2026-11-08, plugin 0.7.0). When a shipped delta turns out partly wrong, its entry
+can't be edited, because graphs have its id stamped and would never see the change. So a new delta states
+the full corrected end state, with its own complete `satisfied-test`, and names the old id in
+`supersedes:`. While the old id is pending, `/graph-patch` doesn't select it, and stamps it once the
+successor verifies or is already satisfied. A graph that already applied the old delta just gets the
+successor, whose test fails only on the corrected part, so D9 confines the edit to that. The old entry
+keeps its text, with a comment pointing at the successor. *Rationale:* selection is log order, so
+without this a graph that hadn't applied the old delta would be offered the wrong content first and its
+removal second: two contradictory approvals, and a skip on the second leaves the wrong content
+standing. An earlier draft had the patcher apply the old delta as the successor amended it; that made
+the patcher merge two instructions and derive a post-condition at runtime, where an authored test is
+the whole point of D14. First used by `step10-entity-type-gap-direct-edit`, which corrects the route
+named in point (d) of `step10-entity-type-gap`.
 
 ### Keeping the log honest
 

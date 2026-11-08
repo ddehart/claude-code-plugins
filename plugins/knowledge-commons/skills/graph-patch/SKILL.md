@@ -126,15 +126,13 @@ set, and report which of three cases it hit:
 
 **With no argument**, take every pending delta, in log order.
 
-**A superseded delta is applied as its successor amends it.** A delta may carry an optional
-`supersedes:` field naming an earlier delta id that it corrects in part. Whenever that earlier delta is
-pending, whether alone, by argument, or in the same run as its successor, apply it with the successor's
-`instruction` taking precedence wherever the two conflict. Don't write content the successor removes,
-and answer the earlier delta's `satisfied-test` without the clauses the successor replaces. Never apply
-the superseded content and then propose removing it in the next delta: the reader would approve two
-contradictory edits, and a skip on the second would leave the wrong one standing. Each delta is still
-stamped only as it verifies. When the earlier delta is already applied, the successor is an ordinary
-pending delta.
+**A superseded delta is replaced, not applied.** A delta may carry an optional `supersedes:` naming
+an earlier delta id. The successor states the full end state with its own complete `satisfied-test`,
+so while the earlier id is pending, don't select it: applying it would propose content the successor
+then removes. Stamp it in step 5 alongside its successor, once the successor verifies or is found
+already satisfied; if the successor is skipped or fails, both stay pending. Follow a chain the same way
+(a superseded successor hands its predecessors to its own successor). If an argument names a superseded
+id, say which delta replaces it and apply that one instead.
 
 If nothing is pending, say so and stop. That is a clean, common outcome — but state it as "no
 pending deltas," and still report anything out of scope.
@@ -148,11 +146,10 @@ whole of this section, before starting the next.
 ### 4a. Locate the anchor
 
 Find the `anchor` as an **exact heading match** in the target file. `anchor` is either one heading
-string or a **list of exact heading strings**: the same section titled differently across graphs (a
-graph generated at 0.6.0 numbers `## 12. Report`, or `## 11. Report` without a synthesis tier, where
-a graph patched up to 0.6.0 kept `## 10. Report`). For a list, look for every entry; the anchor
-resolves only if the list yields **exactly one** heading, once, in this file. Each entry is matched
-exactly, the same as a string anchor. A list is a set of exact alternatives, not a pattern.
+string or a **list of exact heading strings**, used when live graphs title the same section
+differently (the log's numbering-divergence note says why). For a list, look for every entry; the
+anchor resolves only if the list yields **exactly one** heading, once, in this file. A list is a set of
+exact alternatives, not a pattern.
 
 - **Not found → skip it, loudly.** For a list, that means none of its entries is in the file. Report
   the delta id, the anchor text, and the file. **Never stamp it.** **Never relocate it
@@ -229,7 +226,8 @@ this and the patcher should not invent a second.
 Update the `generated:` block in `.commons.yml`:
 
 - Append to `applied:` the ids of deltas that **actually applied and verified in 4d**, plus the ids
-  found *already satisfied* in 4b. Nothing else.
+  found *already satisfied* in 4b, plus any pending ids those deltas `supersedes` (step 3). Nothing
+  else.
 - **Never stamp** a delta that was skipped, whose anchor was missing or ambiguous, or whose
   post-condition failed.
 - Set `template-version` to the highest `version` among the deltas you stamped for that file. If

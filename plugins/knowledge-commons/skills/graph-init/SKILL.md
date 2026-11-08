@@ -37,11 +37,9 @@ Before asking anything, check the project root for `.commons.yml`. If it exists,
 already initialized — say so, and offer to re-interview one or two specific blocks (name them by
 number, see the interview below) rather than starting over. Don't silently overwrite a working
 config. If what the user wants is a new entity type, a re-interview is not needed: offer the direct
-edit instead, once they say yes. That means an entry in `.commons.yml`'s `entity:` list, a directory,
-a map, an atlas link, a line in the generated `knowledge-graph` skill's type list, a mention wherever
-the generated `process` skill names the declared types, and backfill. A re-interview would update
-`.commons.yml` alone, because this skill never rewrites already-generated skills without asking, so
-the skills' type lists would go stale.
+edit instead, once they say yes. The work is listed in the missing-entity-type passage of
+`templates/process.md`'s report step. A re-interview would update `.commons.yml` alone, because this
+skill never rewrites already-generated skills without asking, so their type lists would go stale.
 
 If no `.commons.yml` exists, proceed to the interview. Once block 1 has answered `root:`, before
 scaffolding (step 5), check whether that directory already holds files. An empty or missing

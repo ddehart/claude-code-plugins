@@ -36,9 +36,10 @@ Seven fields, per the spec's D8:
 | `rationale` | *Why* — this is what lets the patcher adapt the edit to prose that has diverged, instead of pasting |
 | `satisfied-test` | An explicit test for "does the target already say this?" — used both to detect redundancy before the edit and to verify the edit landed after |
 
-Plus one optional field: `supersedes`, the id of an earlier delta this one corrects in part. Use it
-instead of editing a shipped entry, which graphs may already have stamped; leave the earlier entry's
-text unchanged and put a comment above it pointing at its successor.
+Plus one optional field: `supersedes`, the id of an earlier delta this one replaces. Use it instead of
+editing a shipped entry, which graphs may already have stamped. The successor must state the full end
+state with its own complete `satisfied-test`, since the earlier entry is never applied once replaced;
+leave the earlier entry's text unchanged and put a comment above it pointing at its successor.
 
 Write the `satisfied-test` sharply. It is load-bearing twice over, and a vague one makes both
 redundancy detection and post-condition verification unreliable.
