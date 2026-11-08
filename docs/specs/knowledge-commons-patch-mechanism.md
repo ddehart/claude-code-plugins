@@ -2,7 +2,7 @@
 
 **Status:** Implemented and in use — shipped across PRs #65, #66, #67, #68, #70
 **Date:** 2026-07-21 (drafted) · 2026-07-22 (status updated)
-**Plugin:** `knowledge-commons` v0.5.0
+**Plugin:** `knowledge-commons` v0.5.0 (D23–D24 added at v0.7.0)
 **Related:** [`knowledge-commons.md`](./knowledge-commons.md) (the plugin's founding spec)
 
 > **What actually shipped.** `/graph-patch` exists, the delta log at
@@ -15,7 +15,8 @@
 > level — recommending notes for individual nouns — and that was the wrong layer; the ask was new entity
 > **types** for `.commons.yml`'s `entity:` list. Deltas `step4-entity-signal-class` and
 > `step5-entity-recommend` were removed and replaced by `step10-entity-type-gap` in v0.5.0 (PR #70). The
-> superseded note under "Initial batch" carries the detail. D1–D22 are otherwise as-built.
+> superseded note under "Initial batch" carries the detail. D1–D22 are otherwise as-built; D23 and D24
+> were added after shipping (2026-11-08, plugin 0.7.0), under "Amended after shipping."
 
 ## Problem
 
@@ -154,7 +155,8 @@ not to write the block D7 requires.
 lets an agent write the change in the project's own voice. The `satisfied-test` is load-bearing twice
 over — see D9 and D14.
 
-> **Amended 2026-11-08 (plugin 0.7.0):** `anchor` may also be a list of exact headings. See D23.
+> **Amended 2026-11-08 (plugin 0.7.0):** `anchor` may also be a list of exact headings (D23), and an
+> optional eighth field, `supersedes`, names an earlier delta this one corrects in part (D24).
 
 **D9. The patcher judges redundancy before proposing.** Read the target section; if the
 `satisfied-test` already passes, report *already satisfied*, record the delta as applied, and propose no
@@ -248,11 +250,24 @@ patcher never relocates.
 renumbered everything after `## 2. Resolve`, so a graph generated at 0.6.0 titles its report section
 `## 12. Report`, while every graph patched up to 0.6.0 kept `## 10. Report`, because deltas insert
 relative to existing headings and never renumber. On 2026-11-08 the live graphs that needed
-`step10-entity-type-gap-direct-edit` were split about evenly between the two. A single-string anchor
+`step10-entity-type-gap-direct-edit` were split about evenly between the two. A graph generated at 0.6.0 without a synthesis tier has a third numbering for any stage
+after the synthesize stage, because the template omits that stage and renumbers (`## 11. Report`). A
+single-string anchor
 would skip in about half of them, and with no declined state (Q3) that skip would come back on every
 later run. Twin deltas, one per heading, have the same problem: every graph carries the twin that
 can't resolve. The numbering split is permanent for any delta targeting a stage after `## 2. Resolve`,
 so the format needed to carry it rather than each future delta working around it.
+
+**D24. A delta may name an earlier delta it `supersedes`, and the patcher applies the earlier one as
+amended** (2026-11-08, plugin 0.7.0). When a shipped delta turns out partly wrong, its entry can't be
+edited, because graphs have its id stamped and would never see the change. So a new delta carries the
+correction and names the old id in `supersedes:`. Wherever the old delta is still pending, `/graph-patch`
+applies it with the successor's instruction winning on conflicts, and answers its `satisfied-test`
+without the replaced clauses. The old entry keeps its text, with a comment pointing at the successor.
+*Rationale:* selection is log order, so without this a graph that hadn't applied the old delta would be
+offered the wrong content first and its removal second: two contradictory approvals, and a skip on the
+second leaves the wrong content standing. First used by `step10-entity-type-gap-direct-edit`, which
+corrects the route named in point (d) of `step10-entity-type-gap`.
 
 ### Keeping the log honest
 

@@ -444,11 +444,10 @@ type list of the sibling `knowledge-graph` skill, a mention wherever this skill 
 is no `entity:` list at all — the graph answered "none" when it was set up — the recommendation is to
 *establish* the tier rather than add to it, which is the larger of the two asks and worth saying
 plainly. Either way the route is the same: a direct edit, made once the graph's owner says yes. A
-`graph-init` re-interview is not required and is not the path to name. It stays an option the owner may
-choose, but it does not rewrite already-generated skills like this one unless asked to, so the skill
-edits above are needed either way. Offer to make the edit after the run. This step recommends; during the
-run it does not edit `.commons.yml`, does not add the entry, and does not create the directory or the
-tier.
+`graph-init` re-interview is optional, never required, and it does not rewrite already-generated skills
+like this one unless asked to, so the skill edits above are needed either way. Offer to make the edit
+after the run. This step recommends; during the run it does not edit `.commons.yml`, does not add the
+entry, and does not create the directory or the tier.
 
 Cadence, on the same reasoning as the patch suggestion above — a recommendation that repeats every run
 stops being read. When you raise a category, write a marker of the form `[entity-type-gap: <category>]`

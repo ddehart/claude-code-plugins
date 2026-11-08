@@ -126,29 +126,40 @@ set, and report which of three cases it hit:
 
 **With no argument**, take every pending delta, in log order.
 
+**A superseded delta is applied as its successor amends it.** A delta may carry an optional
+`supersedes:` field naming an earlier delta id that it corrects in part. Whenever that earlier delta is
+pending, whether alone, by argument, or in the same run as its successor, apply it with the successor's
+`instruction` taking precedence wherever the two conflict. Don't write content the successor removes,
+and answer the earlier delta's `satisfied-test` without the clauses the successor replaces. Never apply
+the superseded content and then propose removing it in the next delta: the reader would approve two
+contradictory edits, and a skip on the second would leave the wrong one standing. Each delta is still
+stamped only as it verifies. When the earlier delta is already applied, the successor is an ordinary
+pending delta.
+
 If nothing is pending, say so and stop. That is a clean, common outcome — but state it as "no
 pending deltas," and still report anything out of scope.
 
 ## 4. Apply each delta
 
-Each log entry carries seven fields: `id`, `file`, `anchor`, `version`, `instruction`,
-`rationale`, `satisfied-test`. Work one delta at a time, through the whole of this section, before
-starting the next.
+Each log entry carries seven fields: `id`, `file`, `anchor`, `version`, `instruction`, `rationale`,
+`satisfied-test`, plus an optional `supersedes` (see step 3). Work one delta at a time, through the
+whole of this section, before starting the next.
 
 ### 4a. Locate the anchor
 
 Find the `anchor` as an **exact heading match** in the target file. `anchor` is either one heading
 string or a **list of exact heading strings**: the same section titled differently across graphs (a
-graph generated at 0.6.0 numbers `## 12. Report` where a graph patched up to 0.6.0 kept
-`## 10. Report`). For a list, look for every entry; the anchor resolves only if the list yields
-**exactly one** heading, once, in this file. Each entry is matched exactly, the same as a string anchor.
-A list is a set of exact alternatives, not a pattern.
+graph generated at 0.6.0 numbers `## 12. Report`, or `## 11. Report` without a synthesis tier, where
+a graph patched up to 0.6.0 kept `## 10. Report`). For a list, look for every entry; the anchor
+resolves only if the list yields **exactly one** heading, once, in this file. Each entry is matched
+exactly, the same as a string anchor. A list is a set of exact alternatives, not a pattern.
 
-- **Not found → skip it, loudly.** For a list, that means none of its entries is in the file. Report the delta id, the anchor text, and the file. **Never
-  stamp it.** **Never relocate it semantically** — do not look for "where that section moved to,"
-  do not pick the nearest plausible heading, do not apply the instruction somewhere else. Guessing
-  where content went is where a patcher does real damage to hand-written prose. A delta that
-  can't find its target does nothing, loudly, rather than landing somewhere convincing.
+- **Not found → skip it, loudly.** For a list, that means none of its entries is in the file. Report
+  the delta id, the anchor text, and the file. **Never stamp it.** **Never relocate it
+  semantically** — do not look for "where that section moved to," do not pick the nearest plausible
+  heading, do not apply the instruction somewhere else. Guessing where content went is where a
+  patcher does real damage to hand-written prose. A delta that can't find its target does nothing,
+  loudly, rather than landing somewhere convincing.
 - **Matches more than once → skip it, loudly, the same way.** An ambiguous anchor is a missing
   anchor. For a list, this includes two of its entries both being present.
 

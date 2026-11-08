@@ -37,6 +37,12 @@ edits, and verification starts passing on edits that did nothing. Make it a ques
 unfamiliar, heavily-rewritten version of that section can answer reliably, about substance rather than
 wording.
 
+One field is optional:
+
+| Field | Purpose |
+|---|---|
+| `supersedes` | The `id` of an earlier delta this one corrects in part. That id stays in the log unchanged, because graphs have it stamped; `/graph-patch` applies it, wherever it is still pending, as this entry amends it, so it never writes content this entry would then remove. |
+
 Entries are append-only and ordered by version.
 
 ## Entries
@@ -178,9 +184,9 @@ Entries are append-only and ordered by version.
 # Superseded in part, 2026-11-08 (0.7.0), by step10-entity-type-gap-direct-edit below. Point (d)'s
 # route is wrong: it names graph-init's block-2 re-interview as the sanctioned way to change declared
 # types, and the satisfied-test requires that. Entity types are added by direct edit once the owner
-# says yes. Everything else here stands. Kept unchanged because graphs have it stamped as applied. If
-# this entry is ever pending in the same run as its successor, apply it with (d) as the successor
-# states it, and don't count the graph-init clause of this satisfied-test as a requirement.
+# says yes. Everything else here stands. Kept unchanged because graphs have it stamped as applied. The
+# successor's `supersedes:` field tells /graph-patch to apply this entry as the successor amends it
+# wherever this one is still pending.
 - id: step10-entity-type-gap
   file: process
   anchor: "## 10. Report"
@@ -455,8 +461,9 @@ Entries are append-only and ordered by version.
 
 - id: step10-entity-type-gap-direct-edit
   file: process
-  anchor: ["## 10. Report", "## 12. Report"]
+  anchor: ["## 10. Report", "## 11. Report", "## 12. Report"]
   version: 0.7.0
+  supersedes: step10-entity-type-gap
   instruction: >
     Correct the route the missing-entity-type recommendation names; it supersedes point (d) of
     step10-entity-type-gap. (a) Attribute the decision to the graph's owner, not to graph-init: a
@@ -473,8 +480,7 @@ Entries are append-only and ordered by version.
     edits are needed either way. (c) Where the section covers a graph with no entity: list, keep
     saying plainly that establishing the tier is the larger ask, by the same direct-edit route. A
     section already rewritten for a graph that declares entity types may leave that case out; don't
-    add it back. (d) Keep what was right:
-    during the run this step only recommends and never edits .commons.yml, adds the entry, or creates
+    add it back. (d) Keep what was right: during the run this step only recommends and never edits .commons.yml, adds the entry, or creates
     the directory; it may offer to make the edit after the run. Leave the recurrence bar, the evidence
     naming, the unconditional check, and the [entity-type-gap: ...] cadence as they are, and don't
     introduce any claim that /graph-patch owns or may change the entity: list.
@@ -483,8 +489,7 @@ Entries are append-only and ordered by version.
     direct edit with their own approval: financial-planning added estate-document on 2026-11-01 and
     income-stream on 2026-11-08 that way; claude-usage added its first three types on 2026-10-05;
     osu-builder-in-residence added program on 2026-07-28 and published copy on 2026-08-01;
-    airbnb-prep declared tool on 2026-09-27 directly
-    at the user's instruction. None of those involved a re-interview. Because generated skills
+    airbnb-prep declared tool on 2026-09-27 directly at the user's instruction. None of those involved a re-interview. Because generated skills
     repeated the graph-init route, they kept steering their owner toward a heavier path. The route
     was also incomplete. A re-interview rewrites .commons.yml, but graph-init won't overwrite
     hand-sharpened generated skills without asking. So a graph that followed it got a config
@@ -496,7 +501,9 @@ Entries are append-only and ordered by version.
     stamped as applied in generated graphs, which would never see an in-place change. The anchor is a
     list because 0.6.0 split the heading: freshly generated graphs title this section
     "## 12. Report", while graphs patched up to 0.6.0 kept "## 10. Report", and on 2026-11-08 the
-    graphs needing this fix were split about evenly between the two.
+    graphs needing this fix were split about evenly between the two. "## 11. Report" is listed too:
+    a graph generated at 0.6.0 without a synthesis tier omits the synthesize stage and renumbers, so
+    it titles the section that way. No graph on devbox has that heading, but nothing prevents one.
   satisfied-test: >
     Does the section's missing-entity-type recommendation name a direct edit, made once the graph's
     owner approves, as the route to adding a type (and to establishing the tier where the graph has no
@@ -560,7 +567,7 @@ resolves in a freshly generated graph and silently fails to resolve in every pat
 failure this log's skip-loudly rule exists to make visible rather than to rely on.
 
 **The divergence runs in both directions, and the reverse arm is the easier one to forget.** Nine of the
-twelve anchors above — every pre-0.6.0 `process` entry, plus the three new ones anchored on
+first twelve anchors above (the entries through 0.6.0) — every pre-0.6.0 `process` entry, plus the three new ones anchored on
 `## 4. Inspect`, `## 5. Propose the plan` and `## 6. Run to completion` — name headings the 0.6.0
 template no longer has, because inserting two stages renumbered everything after `## 2. Resolve`. They
 still resolve in every *already-generated* graph, which is the population they exist to patch, so this
@@ -575,7 +582,9 @@ delta failed and stayed unstamped. Both skip loudly and neither misapplies, but 
 
 **A delta written after 0.6.0 has neither protection.** It isn't stamped on 0.6.0-generated graphs, so
 it is selected for both populations, and any `process` stage after `## 2. Resolve` carries a different
-number in each. From 0.7.0 such a delta lists both headings as its `anchor`, for example
-`["## 10. Report", "## 12. Report"]` (D23 in the patch-mechanism spec). Exactly one must match, so
+number in each. A stage after the synthesize stage has a third number in a graph generated at 0.6.0
+without a synthesis tier, since the template omits that stage and renumbers. From 0.7.0 such a delta
+lists every heading as its `anchor`, for example `["## 10. Report", "## 11. Report", "## 12. Report"]`
+(D23 in the patch-mechanism spec). Exactly one must match, so
 nothing about exact matching loosens. `step10-entity-type-gap-direct-edit` is the first delta to do
 this. Graphs that have had a stage heading renamed by hand still skip loudly, which is correct.
