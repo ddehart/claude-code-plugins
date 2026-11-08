@@ -17,11 +17,12 @@ The sibling-session case has no guard at all: the existing double-counting guard
 not two sessions describing one event. Two runs will land the same incident as a note from each side, and it
 reads as two witnesses.
 
-*Two witnesses (2026-07-28, 2026-08-01). Open.*
+*Three witnesses (2026-07-28, 2026-08-01, 2026-11-06). Open.*
 
 ## evidence
 - [[the promotion target moved between the redundancy screen and the write]]
 - [[two sessions independently wrote the same decision note]]
+- [[a time-bound log check picked up concurrent runs and a model-list default]]
 
 ## related
 - [[naming a failure shape confers no immunity to it]]

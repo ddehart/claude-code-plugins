@@ -12,10 +12,11 @@ structure the design rests on. Write for the misreading: when a field is require
 an explicit check rather than a conditional; when a reference could bind two ways, disambiguate it. Two
 independent promotion runs disagreeing on whether to add a date is the drift a firmer sentence prevents.
 
-*One witness (2026-07-15). Open.*
+*Two witnesses (2026-07-15, 2026-11-06). Open.*
 
 ## evidence
 - [[a soft if-applicable instruction produced two promotion runs that disagreed]]
+- [[the deep-review count was untestable until it moved from prose into a script]]
 
 ## related
 - [[a generator reproduces its template's flaws]]

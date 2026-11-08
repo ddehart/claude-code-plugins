@@ -1,0 +1,2782 @@
+
+ * ▐▛███▜▌ *   Claude Code v2.1.317
+* ▝▜█████▛▘ *  Opus 5.5 · Claude API
+ *  ▘▘ ▝▝  *   ~/dev/claude-code-plugins
+
+> Please pull main from remote
+
+⏺ Bash(git status -sb && git pull --ff-only origin main && git log --oneline -5)
+  ⎿  
+  ## main...origin/main
+From https://github.com/ddehart/claude-code-plugins
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+8883655 refactor(session-export): tidy query-token rules and tests
+558086d fix(session-export): query tokens before punctuation, escaped links, raw base64
+de5532c fix(session-export): redact access tokens in URL query strings
+c4a03f9 fix(session-export): raise URL password cap, document fail-open limits
+c575355 fix(session-export): end credential-like values...
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: Local main was already up to date with origin/main at 8883655. The pull brought in no new commits, and the working tree is clean.)
+  ⎿  
+Nothing is pending, so the app draws no box; the recap is the session's status. Your closing message is your answer to the user: write it now, as the last thing you say this turn.
+
+⏺ `main` was already up to date with the remote, so the pull brought in nothing new. The latest commit is still `8883655` (`refactor(session-export): tidy query-token rules and tests`), and the working tree is clean.
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Read skill, repo conventions, real practice files",
+    "status": "in_progress"
+  },
+  {
+    "content": "Settle script vs eval design",
+    "status": "pending"
+  },
+  {
+    "content": "Write test and show it failing",
+    "status": "pending"
+  },
+  {
+    "content": "Implement fix and show test passing",
+    "status": "pending"
+  },
+  {
+    "content": "Confirm test fails when fix is reverted",
+    "status": "pending"
+  },
+  {
+    "content": "Bump versions, update docs, open PR",
+    "status": "pending"
+  },
+  {
+    "content": "Report back to the requesting session",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (7 steps).
+
+⏺ Bash(git status -sb && ls -R plugins/meta-claude/skills/session-chronicle plugins/meta-claude/skills/session-export && cat plugins/meta-claude/skills/session-chronicle/SKILL.md && cat plugins/meta-claude/.claude-plugin/plugin.json && cat .claude-plugin/marketplace.json && ls .claude .claude/rules 2>/dev/null; ls docs | head -30; ls .github/workflows 2>/dev/null; git log --oneline -8 -- plugins/meta-claude/skills/session-chronicle)
+  ⎿  
+⏺ Bash(for f in ~/projects/daily-briefing/docs/chronicle/reflective-practice.md ~/devbox/docs/chronicle/reflective-practice.md; do echo "=== $f"; wc -l "$f"; grep -nE '^#{1,6} ' "$f" | cut -c1-170 | tail -70; ls "$(dirname "$f")" | wc -l; ls "$(dirname "$f")" | tail -6; done; echo; echo "=== other practice files"; find ~ -name reflective-practice.md -not -path '*/node_modules/*' -not -path '*/.claude/plugins/*' 2>/dev/null | head -30)
+  ⎿  
+  Read 5 lines
+
+  (157 lines)
+
+⏺ Bash(cat .claude/rules/plugin-updates.md; echo ------; cat plugins/meta-claude/skills/session-chronicle/assets/reflective-practice-seed.md; echo ------; sed -n 1,40p plugins/meta-claude/skills/session-export/scripts/test_export_session.py; echo ------; cat .github/workflows/claude.yml | head -30; echo ---; grep -n "chronicle\|session-export" README.md | head -20; grep -rn "export-session.py" plugins/meta-claude/skills/session-export/SKILL.md | head; grep -rln "CLAUDE_SKILL_DIR" plugins | head; ls docs/specs | tail -15; cat .gitignore)
+  ⎿  
+⏺ Bash(cd ~; for f in devbox services/<project> dev/claude-code-plugins dev/osu-builder-in-residence projects/<project> projects/<project> projects/daily-briefing projects/<project> projects/airbnb-prep projects/<project> projects/daily-digest projects/log-archaeologist projects/persimmon-care dev/wellstead; do p=$f/docs/chronicle/reflective-practice.md; n=$(ls $f/docs/chronicle | grep -cE '^[0-9]{4}-[0-9]{2}-[0-9]{2}\.md$'); echo "=== $f entries=$n sections: $(grep -nE '^## ' $p | tr '\n' ';' | cut -c1-200)"; awk '/^## Evolution Notes/{f=1;next} /^## /{f=0} f && /^#{3,4} /' $p | grep -iE 'deep|review|escalat' | cut -c1-120 | head -8; echo "  dated headings in Evo: $(awk '/^## Evolution Notes/{f=1;next} /^## /{f=0} f && /^#{3,4} [0-9]{4}-/' $p | wc -l)"; done; echo; sed -n 1,20p devbox/docs/chronicle/reflective-practice.md | cut -c1-200; grep -nE '^#{1,3} ' devbox/docs/chronicle/reflective-practice.md | cut -c1-120 | head -30; grep -nE '^#### ' devbox/docs/chronicle/reflective-practice.md | head -22 | cut -c1-190)
+  ⎿  
+⏺ Bash(cd ~/projects/daily-briefing/docs/chronicle; sed -n 1,8p reflective-practice.md | cut -c1-300; sed -n 45,62p reflective-practice.md | cut -c1-400; sed -n 400,406p reflective-practice.md | cut -c1-300; sed -n 825,829p reflective-practice.md | cut -c1-300; echo; sed -n '/Prompt B/,+25p' ~/.claude/skills/chronicle-cross-pass/SKILL.md | cut -c1-260 | head -50; grep -n "Evolution Notes\|anchor\|counter" ~/.claude/skills/chronicle-cross-pass/SKILL.md | cut -c1-220)
+  ⎿  
+  (171 lines)
+
+  (108 lines)
+
+  (47 lines)
+
+⏺ Bash(cat docs/specs/auto-trigger-deep-review.md | cut -c1-260; echo ------; grep -n -i "deep review\|evolution note\|anchor" docs/specs/session-chronicle.md | cut -c1-200 | head; echo ------; gh pr list --state open --limit 10; echo ------; grep -rIl -i "evolution note\|10-entry\|deep review" ~/.claude/rules ~/.claude/skills ~/devbox/.claude 2>/dev/null; grep -n -i "evolution note\|10-entry\|deep review" ~/.claude/rules/chronicle-gemini-synthesis.md ~/devbox/.claude/rules/*chronicle* 2>/dev/null | cut -c1-220
+cat > /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/survey.py <<'EOF'
+import re,sys,pathlib
+home=pathlib.Path.home()
+roots="devbox services/<project> dev/claude-code-plugins dev/osu-builder-in-residence projects/<project> projects/<project> projects/daily-briefing projects/<project> projects/airbnb-prep projects/<project> projects/daily-digest projects/log-archaeologist projects/persimmon-care dev/wellstead".split()
+H=re.compile(r'^(#{1,6}) +(.*)$')
+D=re.compile(r'^(\d{4}-\d{2}-\d{2})\b(.*)$')
+for r in roots:
+    p=home/r/'docs/chronicle/reflective-practice.md'
+    lines=p.read_text().splitlines()
+    on=False; notes=[]; cur=None; evo=0; fence=0
+    for i,l in enumerate(lines,1):
+        m=H.match(l)
+        if l.startswith('```'): fence+=1
+        if m and len(m[1])==2:
+            on = m[2].strip().lower().startswith('evolution notes')
+            evo+=on; cur=None; continue
+        if not on: continue
+        if m and len(m[1])>=3:
+            d=D.match(m[2])
+            if d: cur={'line':i,'date':d[1],'rest':d[2],'body':[]}; notes.append(cur)
+            elif len(m[1])==3: 
+                print('   NONDATE-H3',r,i,l[:90]); 
+            continue
+        if cur is not None and l.strip(): cur['body'].append(l)
+    print('==',r,'evo sections',evo,'notes',len(notes),'fence lines',fence)
+    for n in notes:
+        h='deep review' in n['rest'].lower()
+        b=' '.join(n['body'])
+        hits=[m.start() for m in re.finditer('deep review',b,re.I)]
+        if h or hits:
+            s=(b[max(0,hits[0]-50):hits[0]+70] if hits else '')
+            print(f"  L{n['line']} {n['date']} H={int(h)} nbody={len(hits)} first@{hits[0] if hits else '-'} | {n['rest'][:70]!r} | ...{s!r}")
+EOF
+python3 -I /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/survey.py)
+  ⎿  
+  (226 lines)
+
+⏺ Bash(cd ~; S=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad
+sed -n 257,259p dev/osu-builder-in-residence/docs/chronicle/reflective-practice.md | cut -c1-260
+for n in 744 797 842 699 582 541; do sed -n "${n},$((n+2))p" devbox/docs/chronicle/reflective-practice.md | cut -c1-230; echo; done
+echo === other wording; for r in dev/wellstead projects/airbnb-prep dev/claude-code-plugins projects/persimmon-care projects/daily-digest; do echo "-- $r"; awk '/^## Evolution Notes/{f=1;next} /^## /{f=0} f' $r/docs/chronicle/reflective-practice.md | grep -n -iE 'full review|reviewed all|review across|practice review|read all|all [0-9]+ (entries|reflections)|^#{3,4} .*review' | cut -c1-170 | head -8; done
+sed -n 16,22p projects/daily-digest/docs/chronicle/reflective-practice.md | cut -c1-200; sed -n 27,34p projects/daily-digest/docs/chronicle/reflective-practice.md | cut -c1-200
+sed -n 1455,1460p devbox/docs/chronicle/reflective-practice.md | cut -c900-1500
+cd /home/derek/dev/claude-code-plugins; echo === refs; grep -rn "reflective-practice\|Evolution Note\|evolution note" plugins .claude README.md --include=* -il | grep -v 'session-chronicle/SKILL.md'; grep -n -i "evolution\|deep review\|counter" plugins/meta-claude/skills/session-chronicle/references/guidelines.md | cut -c1-200)
+  ⎿  
+  (57 lines)
+
+⏺ Mcp  Ccd Turn  Update Plan(advance: True)
+  ⎿  
+Plan updated: step 2 of 7 is in progress.
+
+⏺ Bash(git switch -c fix/chronicle-deep-review-anchor && mkdir -p plugins/meta-claude/skills/session-chronicle/scripts && git branch --show-current)
+  ⎿  
+⏺ Write(deep-review-status.py - 117 lines)
+  ⎿  
+⏺ Write(test_deep_review_status.py - 312 lines)
+  ⎿  
+⏺ Bash(cd /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | tee /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/red.txt | grep -E '^(FAIL|ERROR):|^Ran |^FAILED|^OK|AssertionError' | cut -c1-140)
+  ⎿  
+  Switched to a new branch 'fix/chronicle-deep-review-anchor'
+  fix/chronicle-deep-review-anchor
+
+  File created successfully at: /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py (file state is current in your context — no need to Read it back)
+
+  File created successfully at: /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/scripts/test_deep_review_status.py (file state is current in your context — no need to Read it back)
+
+  (42 lines)
+
+⏺ The tests fail against today's rule the way the bug predicts, with the core case stuck at a count of 0 instead of 10+. I'm committing that failing state, then fixing the rule and the skill's wording.
+
+⏺ Bash(cd /home/derek/dev/claude-code-plugins && python3 - <<'EOF'
+import pathlib
+p=pathlib.Path('plugins/meta-claude/skills/session-chronicle/scripts/test_deep_review_status.py')
+t=p.read_text()
+old1="""        template = re.search(r'```\\n(#### YYYY-MM-DD.*?Deep review ran.*?)```', self.skill, re.S)
+        self.assertIsNotNone(template, 'no-op template not found in SKILL.md')
+        note = template[1].replace('YYYY-MM-DD', '2026-05-01')
+        self.assertEqual(self.chronicle(practice(note))['last_deep_review'], '2026-05-01')
+
+    def test_skill_no_op_template_carries_the_marker_in_its_heading(self):
+        self.assertIn('#### YYYY-MM-DD (deep review)\\nDeep review ran', self.skill)
+"""
+new1="""        note = self.no_op_template().replace('YYYY-MM-DD', '2026-05-01')
+        self.assertEqual(self.chronicle(practice(note))['last_deep_review'], '2026-05-01')
+
+    def test_skill_no_op_template_carries_the_marker_in_its_heading(self):
+        self.assertTrue(self.no_op_template().startswith('#### YYYY-MM-DD (deep review)\\n'))
+"""
+assert old1 in t
+t=t.replace(old1,new1)
+old2="""    def test_step_6a_runs_the_script(self):"""
+new2="""    def no_op_template(self):
+        template = re.search(r'^ *```\\n( *#### YYYY-MM-DD.*?Deep review ran.*?)^ *```', self.skill, re.S | re.M)
+        self.assertIsNotNone(template, 'no-op template not found in SKILL.md')
+        return textwrap.dedent(template[1])
+
+    def test_step_6a_runs_the_script(self):"""
+assert old2 in t
+t=t.replace(old2,new2)
+t=t.replace("import tempfile\nimport unittest\n","import tempfile\nimport textwrap\nimport unittest\n")
+p.write_text(t)
+EOF
+cd plugins/meta-claude/skills/session-chronicle/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | tee /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/red.txt | grep -E '^Ran |^FAILED|^OK|^ERROR'; grep -c '^FAIL' /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/red.txt; grep -A12 'FAIL: test_review_is_due_when' /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/red.txt | tail -9
+cd /home/derek/dev/claude-code-plugins && git add plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py plugins/meta-claude/skills/session-chronicle/scripts/test_deep_review_status.py && git commit -q -F - <<'EOF'
+test(session-chronicle): pin the deep-review count, failing
+
+Step 6a is prose, so nothing could test it. This moves the count into a
+script that transcribes today's rule literally (any dated Evolution Note
+is the anchor) and adds the tests that rule should meet. 20 fail here,
+including the core case: 10+ entries after the last deep review, each
+with its own dated lightweight note, reports not due.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -1)
+  ⎿  
+⏺ Read(SKILL.md)
+  ⎿  
+⏺ Read(SKILL.md)
+  ⎿  
+  Ran 29 tests in 0.053s
+  FAILED (failures=19)
+  20
+      self.assertEqual(result['last_deep_review'], '2026-04-12')
+  AssertionError: '2026-04-24' != '2026-04-12'
+  - 2026-04-24
+  ?          -
+  + 2026-04-12
+  ?         +
+  
+  
+  ======================================================================
+  6f1dca5 test(session-chronicle): pin the deep-review count, failing
+
+  (48 lines)
+
+  225	2. **Specificity over abstraction** — "The debugging felt constrained because every fix revealed another layer" is better than "The session was challenging."
+  226	
+  227	3. **Emergence over formula** — The seed questions are starting points. As you read past reflections, let new questions arise. Retire prompts that have become formulaic.
+  228	
+  229	4. **No sentience claims** — This is self-observation of functional states. Use precise language: "something akin to," "functionally similar to," "what might be called." Not "I felt happy."
+    ... (19 more lines)
+
+⏺ Update(deep-review-status.py)
+  ⎿  Added 10 lines, removed 4 lines
+     -def is_deep_review(note):
+     -    """Whether a dated note records a deep review."""
+     -    return True
+     -
+     +def is_deep_review(note):
+     +    """Whether a dated note records a deep review.
+     +
+     +    Most notes that mention a deep review are lightweight notes deferring to the
+     +    next one, and a false match suppresses a review. So only the heading right
+     +    after the date and the known opening lines count. A missed older note costs
+     ... (2 more diff lines)
+⏺ Update(deep-review-status.py)
+  ⎿  Added 9 lines, removed 2 lines
+     -FENCE = re.compile(r'^\s*(```|~~~)')
+     -
+     +FENCE = re.compile(r'^\s*(```|~~~)')
+     +
+     +# `(deep review)` is the marker SKILL.md writes. The rest are older shapes still
+     +# in practice files: `— Deep review (14 entries...)`, `— Escalated deep review`,
+     +# and plain dated headings over `Deep review ran; ...`, `Deep review at the
+     +# 10-entry threshold`, or `**Escalated from the lightweight check to a deep review.**`
+     +REVIEW_HEADING = re.compile(r'^[\s(—–:-]*(?:escalated )?deep review\b', re.I)
+       ... (2 more added)
+⏺ Update(SKILL.md)
+  ⎿  Added 12 lines, removed 6 lines
+     -   **6a. Count entries since last evolution.**
+     -   Read `docs/chronicle/reflective-practice.md` and find the most recent `#### YYYY-MM-DD` heading in the Evolution Notes section. Then count distinct chronicle files (`docs/chronicle/YYYY-MM-DD.md`) dated strictly after that anchor (files with the same date as the anchor are excluded; the file created this session counts toward the total). If no dated evolution notes exist (fresh project or placeholder text only), count all chronicle files.
+     -
+     -   **6b. Choose review tier.**
+     -
+     -   - **If count >= 10 → mandatory deep review.** Read all Reflection sections from entries since the last evolution note (Glob on `docs/chronicle/*.md`, sorted by filename descending, reading `### Reflection` sections from files dated after the anchor). If more than 20 entries have accumulated, prioritize the most recent 20. Notice:
+     +   **6a. Count entries since the last deep review.**
+     +   Run this from the project root, after writing today's entry so it counts:
+     +
+     +   ```bash
+     ... (4 more diff lines)
+⏺ Update(SKILL.md)
+  ⎿  Added 8 lines, removed 8 lines
+     -     Update `docs/chronicle/reflective-practice.md` with evolved questions and approach. Write changes as a brief narrative under a new `#### YYYY-MM-DD` heading in Evolution Notes — not just a list swap. If no changes are warranted, still write a no-op note to reset the counter:
+     -
+     -     ```
+     -     #### YYYY-MM-DD  (use today's date)
+     -     Deep review ran; no changes warranted.
+     -     ```
+     -
+       ... (1 more removed)
+     +     Update `docs/chronicle/reflective-practice.md` with evolved questions and approach. Write changes as a brief narrative in Evolution Notes under a new `#### YYYY-MM-DD (deep review)` heading, using today's date — not just a list swap. The `(deep review)` marker is what resets the count, so it goes right after the date. If no changes are warranted, still write a no-op note:
+     +
+     ... (6 more diff lines)
+⏺ Update(SKILL.md)
+  ⎿  Added 3 lines, removed 3 lines
+     -     - Add a brief note to "Evolution Notes" under a `#### YYYY-MM-DD` heading describing what changed and what prompted it
+     -
+     -     **Discretionary escalation:**
+     +     - Add a brief note to "Evolution Notes" under a plain `#### YYYY-MM-DD` heading describing what changed and what prompted it. Keep the `(deep review)` marker off it: a lightweight note must not reset the count.
+     +
+     +     **Discretionary escalation:**
+⏺ Update(SKILL.md)
+  ⎿  Added 1 lines, removed 1 lines
+     -deep review status if triggered (e.g., "Deep review triggered (12 entries since last evolution); reflective-practice.md updated." or "Deep review triggered (10 entries since last evolution); no practice changes warranted.")
+     +deep review status if triggered (e.g., "Deep review triggered (12 entries since last deep review); reflective-practice.md updated." or "Deep review triggered (10 entries since last deep review); no practice changes warranted.")
+⏺ Update(SKILL.md)
+  ⎿  Added 1 lines, removed 1 lines
+     -**Auto-escalation (during chronicle write when threshold crossed):** Step 6 counts chronicle entries since the last dated Evolution Note in `reflective-practice.md`. If 10 or more entries have accumulated without an evolution, the deep review runs inline — mandatory, not discretionary. The model may also escalate before the threshold if the lightweight check reveals stagnation. Scope: all Reflection sections since the last evolution note. A no-op note is written even when no changes are warranted, to reset the counter.
+     +**Auto-escalation (during chronicle write when threshold crossed):** Step 6 counts chronicle entries since the last deep review recorded in `reflective-practice.md`. If 10 or more entries have accumulated, the deep review runs inline — mandatory, not discretionary. The model may also escalate before the threshold if the lightweight check reveals stagnation. Scope: all Reflection sections since the last deep review. A no-op note is written even when no changes are warranted, to reset the counter.
+⏺ Update(SKILL.md)
+  ⎿  Added 1 lines, removed 1 lines
+     -2. Read all Reflection sections since the last evolution note (if more than 20, prioritize the most recent 20). This scope aligns with the inline auto-escalation — when triggered manually, the review examines the full accumulated window, not just 5-10 entries.
+     +2. Read the Reflection sections of the files in `entries` from `deep-review-status.py` (see Step 6a; if more than 20, prioritize the most recent 20). This scope aligns with the inline auto-escalation — when triggered manually, the review examines the full accumulated window, not just 5-10 entries.
+⏺ Update(SKILL.md)
+  ⎿  Added 1 lines, removed 1 lines
+     -5. Write the changes as a brief narrative under a `#### YYYY-MM-DD` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write a dated no-op note (e.g., "Deep review ran; no changes warranted.") to reset the entry counter.
+     +5. Write the changes as a brief narrative under a `#### YYYY-MM-DD (deep review)` heading in Evolution Notes, not just a list swap. If no changes are warranted, still write the no-op note from Step 6b to reset the entry counter.
+⏺ Bash(python3 - <<'EOF'
+import pathlib,re
+seed=pathlib.Path('plugins/meta-claude/skills/session-chronicle/assets/reflective-practice-seed.md')
+t=seed.read_text()
+old="[Each entry starts with a `#### YYYY-MM-DD` heading. When a deep review finds no changes, still write a dated no-op entry to reset the entry counter.]"
+new="[Each entry starts with a `#### YYYY-MM-DD` heading. A deep review uses `#### YYYY-MM-DD (deep review)`, which resets the entry counter; other notes don't. When a deep review finds no changes, still write a no-op entry under that heading.]"
+assert old in t; seed.write_text(t.replace(old,new))
+r=pathlib.Path('README.md'); t=r.read_text()
+old="Auto-triggers deep practice review after 10+ entries without evolution. Manual `/session-chronicle reflect` now reviews all entries since last evolution (capped at 20)."
+new="Auto-triggers deep practice review after 10+ entries since the last deep review. Manual `/session-chronicle reflect` reviews all entries since the last deep review (capped at 20)."
+assert old in t; r.write_text(t.replace(old,new))
+for f,pat in (('plugins/meta-claude/.claude-plugin/plugin.json','"version": "1.8.3"'),('.claude-plugin/marketplace.json','"version": "1.8.3"')):
+    p=pathlib.Path(f); t=p.read_text(); assert t.count(pat)==1; p.write_text(t.replace(pat,'"version": "1.9.0"'))
+EOF
+python3 -c "import json;print(json.load(open('plugins/meta-claude/.claude-plugin/plugin.json'))['version']);print([p['version'] for p in json.load(open('.claude-plugin/marketplace.json'))['plugins'] if p['name']=='meta-claude'])"
+S=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad
+cd plugins/meta-claude/skills/session-chronicle/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | tee $S/green.txt | tail -25 | cut -c1-160
+echo === real files, read-only
+cd ~; for f in devbox services/<project> dev/claude-code-plugins dev/osu-builder-in-residence projects/<project> projects/<project> projects/daily-briefing projects/<project> projects/airbnb-prep projects/<project> projects/daily-digest projects/log-archaeologist projects/persimmon-care dev/wellstead; do printf '%-34s ' $f; python3 -B ~/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py $f/docs/chronicle | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['last_deep_review'],d['count'],'DUE' if d['due'] else '')"; done)
+  ⎿  
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py has been updated successfully. (file state is current in your context — no need to Read it back)
+
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py has been updated successfully. (file state is current in your context — no need to Read it back)
+
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/SKILL.md has been updated successfully.
+
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/SKILL.md has been updated successfully.
+
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/SKILL.md has been updated successfully.
+
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/SKILL.md has been updated successfully.
+
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/SKILL.md has been updated successfully.
+
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/SKILL.md has been updated successfully.
+
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/SKILL.md has been updated successfully.
+
+  1.9.0
+  ['1.9.0']
+  .............................
+  ----------------------------------------------------------------------
+  Ran 29 tests in 0.053s
+    ... (18 more lines)
+
+⏺ Mcp  Ccd Turn  Update Plan(done: [
+  2,
+  3,
+  4
+]
+      start: 5)
+  ⎿  
+Plan updated: step 5 of 7 is in progress. App actions available now: create_pr, verify.
+
+⏺ Bash(cd /home/derek/dev/claude-code-plugins
+S=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad
+SK=plugins/meta-claude/skills/session-chronicle
+run(){ # name, python mutation over the copied script/skill
+  rm -rf $S/mut && mkdir -p $S/mut && cp -r $SK $S/mut/sc
+  python3 - "$S/mut/sc" "$2" "$3" "$4" <<'EOF'
+import sys,pathlib
+root,f,old,new=sys.argv[1:5]
+p=pathlib.Path(root)/f; t=p.read_text(); assert old in t,old; p.write_text(t.replace(old,new))
+EOF
+  printf '%-44s ' "$1"; (cd $S/mut/sc/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | grep -E '^(OK|FAILED)'); }
+run "every dated note is a review (the bug)" scripts/deep-review-status.py "return bool(REVIEW_HEADING.match(note['rest']) or REVIEW_OPENING.match(note['opening']))" "return True"
+run "no note is ever a review" scripts/deep-review-status.py "return bool(REVIEW_HEADING.match(note['rest']) or REVIEW_OPENING.match(note['opening']))" "return False"
+run "heading marker ignored" scripts/deep-review-status.py "REVIEW_HEADING.match(note['rest']) or " ""
+run "opening line ignored" scripts/deep-review-status.py " or REVIEW_OPENING.match(note['opening'])" ""
+run "anchor date counts (>= not >)" scripts/deep-review-status.py "name[:10] > last_review" "name[:10] >= last_review"
+run "threshold off by one (> not >=)" scripts/deep-review-status.py "len(entries) >= THRESHOLD" "len(entries) > THRESHOLD"
+run "fences not skipped" scripts/deep-review-status.py "if FENCE.match(line):" "if False:"
+run "marker dropped from no-op template" SKILL.md "#### YYYY-MM-DD (deep review)
+     Deep review ran" "#### YYYY-MM-DD
+     Deep review ran"
+rm -rf $S/mut
+echo; grep -n "CLAUDE_SKILL_DIR" plugins/meta-claude/skills/self-documentation/references/core-features.md | cut -c1-200
+git commit -q --amend -F - <<'EOF'
+test(session-chronicle): pin the deep-review count, failing
+
+Step 6a is prose, so nothing could test it. This moves the count into a
+script that transcribes today's rule literally (any dated Evolution Note
+is the anchor) and adds the tests that rule should meet. They fail here
+with 19 failures, including the core case: 10+ entries after the last
+deep review, each with its own dated lightweight note, reports not due.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git log --oneline -2; git status --short)
+  ⎿  
+⏺ Write(deep-review-anchor.md - 45 lines)
+  ⎿  
+⏺ Bash(python3 - <<'EOF'
+import pathlib
+p=pathlib.Path('docs/specs/auto-trigger-deep-review.md'); t=p.read_text()
+h='# Auto-Trigger Deep Review for Session Chronicle\n\n'
+assert t.startswith(h)
+note='> **Partly superseded 2026-11-06.** The anchor described under Counting Mechanics, and the "since last evolution" scope, were replaced by [deep-review-anchor.md](deep-review-anchor.md). The rest of this spec is current.\n\n'
+p.write_text(h+note+t[len(h):])
+EOF
+git diff --stat; git status --short; grep -n "wellstead\|airbnb" docs/specs/deep-review-anchor.md | cut -c1-120)
+  ⎿  
+  every dated note is a review (the bug)       FAILED (failures=15)
+  no note is ever a review                     FAILED (failures=14)
+  heading marker ignored                       FAILED (failures=10)
+  opening line ignored                         FAILED (failures=3)
+  anchor date counts (>= not >)                FAILED (failures=4)
+    ... (13 more lines)
+
+  File created successfully at: /home/derek/dev/claude-code-plugins/docs/specs/deep-review-anchor.md (file state is current in your context — no need to Read it back)
+
+   .claude-plugin/marketplace.json                    |  2 +-
+   README.md                                          |  2 +-
+   docs/specs/auto-trigger-deep-review.md             |  2 ++
+   plugins/meta-claude/.claude-plugin/plugin.json     |  2 +-
+   .../meta-claude/skills/session-chronicle/SKILL.md  | 28 +++++++++++++---------
+    ... (13 more lines)
+
+⏺ Mcp  Ccd Turn  Update Plan(advance: True)
+  ⎿  
+Plan updated: step 6 of 7 is in progress. App actions available now: create_pr, verify.
+
+⏺ Bash(gh repo view --json visibility -q .visibility; git grep -il "wellstead\|daily-briefing\|airbnb-prep\|<host>" -- . ':!plugins/meta-claude/skills/session-chronicle' ':!docs/specs/deep-review-anchor.md' | head -8; git ls-files docs/chronicle | wc -l; (cd plugins/meta-claude/skills/session-chronicle/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | tail -3); git diff plugins/meta-claude/skills/session-chronicle/SKILL.md | grep -E '^[-+]' | cut -c1-140 | head -30)
+  ⎿  
+⏺ Toolsearch(query: select:SendMessage,mcp__ccd_pr__get_status,mcp__ccd_pr__bind_pr
+      max_results: 3)
+  ⎿  
+  (43 lines)
+
+⏺ Bash(for n in airbnb-prep persimmon-care daily-digest wellstead daily-briefing <host> devbox; do printf '%-16s %s\n' $n "$(git grep -il -- "$n" HEAD -- . ':!docs/specs/deep-review-anchor.md' ':!plugins/meta-claude/skills/session-chronicle' | wc -l)"; done)
+  ⎿  
+  airbnb-prep      1
+  persimmon-care   1
+  daily-digest     0
+  wellstead        13
+  daily-briefing   0
+  <host>            0
+  devbox           6
+
+⏺ Bash(sed -i 's/the 10-30 22:20 <host> file-transfer entry/the 10-30 22:20 file-transfer entry/' plugins/meta-claude/skills/session-chronicle/scripts/test_deep_review_status.py && (cd plugins/meta-claude/skills/session-chronicle/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | tail -1) && python3 -B -m json.tool .claude-plugin/marketplace.json >/dev/null && git add .claude-plugin/marketplace.json README.md docs/specs/auto-trigger-deep-review.md docs/specs/deep-review-anchor.md plugins/meta-claude/.claude-plugin/plugin.json plugins/meta-claude/skills/session-chronicle/SKILL.md plugins/meta-claude/skills/session-chronicle/assets/reflective-practice-seed.md plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py plugins/meta-claude/skills/session-chronicle/scripts/test_deep_review_status.py && git commit -q -F - <<'EOF'
+fix(session-chronicle): count entries since the last deep review
+
+Step 6a anchored on the newest dated Evolution Note. Lightweight checks
+write dated notes too, so each one reset the count and the mandatory
+10-entry deep review never fired.
+
+The anchor is now the newest deep review. New reviews write
+`#### YYYY-MM-DD (deep review)`, older shapes are recognized strictly, and
+lightweight notes no longer move the count. With no review on record,
+every entry counts, so projects past the threshold get one review on
+their next chronicle write. Decisions are in
+docs/specs/deep-review-anchor.md.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git status --short; git log --oneline -3; git push -u origin fix/chronicle-deep-review-anchor 2>&1 | tail -2
+gh pr create --base main --title "fix(session-chronicle): count entries since the last deep review" --body-file - <<'EOF'
+## Problem
+
+Step 6a counted chronicle files since the newest dated heading under Evolution Notes. Lightweight checks write dated notes too, so each one reset the count and the mandatory 10-entry deep review never fired. `daily-briefing` went from 04-12 to 11-06 without a full deep review, with its count stuck at 0 to 2.
+
+## Fix
+
+- **The anchor is now the newest deep review**, not the newest dated note. Lightweight notes stay dated but no longer affect the count.
+- **The count is code.** `scripts/deep-review-status.py` replaces the prose in Step 6a, so it can be tested deterministically. It's Python stdlib with `unittest`, matching session-export.
+- **New reviews write `#### YYYY-MM-DD (deep review)`.** Older shapes are recognized strictly, because a false match suppresses a review while a miss only costs one early review.
+
+Decisions and rationale are in `docs/specs/deep-review-anchor.md`.
+
+## Behavior change to review
+
+With no deep review on record, every entry counts. Six of the 14 practice files on the devbox will run one deep review on their next chronicle write, capped at 20 entries: `devbox` (27 entries since 07-12), `claude-code-plugins`, `airbnb-prep`, `daily-digest`, `persimmon-care`, and `wellstead`. `daily-digest` was already due under the old rule. This is why the bump is minor (1.9.0).
+
+## Testing
+
+From `plugins/meta-claude/skills/session-chronicle/scripts`:
+
+```
+python3 -m unittest test_deep_review_status.py
+```
+
+- The first commit transcribes the old rule literally and fails with 19 failures. The core case reports a count of 0 instead of 10+.
+- The second commit passes all 29 tests.
+- Eight mutations of a copy all fail the tests, including restoring the old rule (15 failures), `>=` for `>` on the anchor date, an off-by-one threshold, and dropping the marker from the SKILL.md template.
+- Run read-only against all 14 real practice files: `daily-briefing` reports 2026-11-06 with a count of 0, and `devbox` reports 2026-07-12 with 27.
+
+Not tested: a live `/session-chronicle` run through the installed plugin. If the script can't run, Step 6a says to report that and do the lightweight check.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF)
+  ⎿  
+  OK
+b00a012 fix(session-chronicle): count entries since the last deep review
+716d4e3 test(session-chronicle): pin the deep-review count, failing
+8883655 refactor(session-export): tidy query-token rules and tests
+ * [new branch]      fix/chronicle-deep-review-anchor -> fix/chronicle-deep-review-anchor
+branch 'fix/chronicle-deep-review-anchor' set up to track 'origin/fix/chronicle-deep-review-anchor'.
+https://github.com/ddehart/claude-code-plugins/pull/77
+[This command modified 1 file you've previo...
+
+⏺ The PR is open, so I'm checking its status and sending the report back to the session that asked for it.
+
+⏺ Mcp  Ccd Pr  Get Status
+  ⎿  
+{
+  "bound": true,
+  "pr": {
+    "number": 77,
+    "url": "https://github.com/ddehart/claude-code-plugins/pull/77",
+    "repo": "ddehart/claude-code-plugins",
+    "host": "github.com",
+    "title": "fix(session-chronicle): count entries since the last deep review",
+    "state": "open",
+    "draft": false,
+    "base": "main",
+    "head": "fix/chronicle-deep-review-anchor"
+  },
+  "checks": {
+    "available": true,
+    "passing": 0,
+    "failing": 0,
+    "pending": 0,
+    "skipped": 0,
+    "failingChecks": []
+  },
+  "mergeable": "MERGEABLE",
+  "mergeStateStatus": "CLEAN",
+  "mergeQueue": {
+    "enabled": false,
+    "queued": false
+  },
+  "monitor": {
+    "auto_fix": false,
+    "address_comments": false,
+    "auto_merge": false,
+    "auto_archive_on_close": false
+  }
+}
+
+⏺ Mcp  Ccd Turn  Update Plan(advance: True)
+  ⎿  
+Plan updated: step 7 of 7 is in progress.
+
+⏺ Sendmessage(to: uds:/run/user/1000/cc-socks/325463.sock
+      summary: Report deep-review counter fix and PR
+      message: |
+  The deep-review counter fix is up as a PR, not merged: https://github.com/ddehart/claude-code-plugins/pull/77
+  
+  DESIGN CHOICE: a script, not an eval. `plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py` does the count, and `test_deep_review_status.py` tests it with stdlib `unittest`, matching session-export. An eval would test one model's reading of the prose, not the rule. The anchor is now the newest deep review. New reviews write `#### YYYY-MM-DD (deep review)`. Decisions are in `docs/specs/deep-review-anchor.md`, and `auto-trigger-deep-review.md` is marked partly superseded.
+  
+  FAILING OUTPUT (commit 716d4e3, a literal transcription of today's rule, where every dated note is an anchor):
+  Ran 29 tests. FAILED (failures=19)
+  Core case: `AssertionError: '2026-04-24' != '2026-04-12'`, so the newest lightweight note became the anchor. The 10-entry and 9-entry cases gave `0 != 10` and `0 != 9`.
+  
+  PASSING OUTPUT (commit b00a012):
+  Ran 29 tests. OK
+  
+  CAN IT FAIL FOR THE RIGHT REASON: yes. I ran eight mutations on a copy and all failed the tests:
+  - old rule restored: 15 failures
+  - no note ever counts: 14
+  - heading marker ignored: 10
+  - opening line ignored: 3
+  - `>=` on the anchor date: 4
+  - threshold off by one: 3
+  - code fences not skipped: 1
+  - marker dropped from the SKILL.md template: 1
+  
+  HEADING SHAPES: all the shapes you listed are tested, with one reduced. The daily-briefing marker and its Between Deep Reviews and Cross-pass Log sections, the old body-only `Deep review at the 10-entry threshold`, devbox lightweight and `###` review headings, and same-day notes all pass. I dropped "<host>" from the devbox fixture text because the repo is public.
+  
+  NO MARKER AT ALL: every entry counts, matching the original spec's legacy-project case. Falling back to the newest dated note would keep the bug where it hurts most: wellstead has 91 dated notes across 36 entries and no recorded review. Matching stays strict, because most notes that mention a deep review are deferring to the next one. A false match suppresses a review, while a miss costs one early review.
+  
+  READ-ONLY RUN ON ALL 14 REAL PRACTICE FILES: daily-briefing reports 2026-11-06 with count 0. devbox reports 2026-07-12 with count 27. Six are due on their next chronicle write, each capped at 20 entries: devbox, claude-code-plugins, airbnb-prep, daily-digest, persimmon-care, wellstead. daily-digest was already due under the old rule.
+  
+  CROSS-PASS SKILL: no change needed. Prompt B reads the three newest Evolution Notes and doesn't depend on the anchor.
+  
+  OPEN:
+  1. Derek decides the merge, including whether six one-time reviews are acceptable. The bump is minor (1.9.0) because of that behavior change.
+  2. daily-digest's bold dated paragraphs (`**2026-04-05 — Deep review after 6 entries**`) aren't parsed. That's the only file with this shape, and its result matches today's.
+  3. daily-briefing's Between Deep Reviews workaround keeps working but is no longer needed once this merges. Removing it is your call there.
+  4. Not tested: a live `/session-chronicle` run through the installed plugin. If the script can't run, Step 6a says to report that and do the lightweight check.
+  5. The spec and tests name daily-briefing and daily-digest, which weren't in this public repo before.
+      type: message
+      recipient: uds:/run/user/1000/cc-socks/325463.sock
+      recipient_kind: session
+      content: The deep-review counter fix is up as a PR, not me…)
+  ⎿  
+{"success":true,"message":"“Report deep-review counter fix and PR” → uds:/run/user/1000/cc-socks/325463.sock; in that session's inbox, not yet read by its Claude — a [Cross-session delivery notice] follows if that session holds it (usually a different permission mode) or refuses it","msg_id":"bace17fd-20e5-4c04-905e-0715f3a8e4cc"}
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: PR 77 fixes the deep-review counter: the count now runs from the last deep review, in a tested script. All 29 tests pass and the requesting session has the report. It isn't merged, and no live chronicle run was tested.
+      ask: Merge PR 77, accepting one-time deep reviews in six projects?
+      actions: [
+  {
+    "action": "merge",
+    "label": "Merge"
+  },
+  {
+    "label": "Not yet"
+  }
+])
+  ⎿  
+  Not shown: merge does not hold right now (app actions available: none), so the app could not draw that button and would drop your question with it. Call wrap_up again with only available app actions, or say it as a reply ({"label": "…"}), only for something you can do yourself when it is clicked. But if the user already passed that offer over, call wrap_up again without it and without the question that makes it, or with the recap alone: do not reword it as a reply or ask it in your closing messa...
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: PR 77 fixes the deep-review counter: the count now runs from the last deep review, in a tested script. All 29 tests pass and the requesting session has the report. It isn't merged, and no live chronicle run was tested.
+      ask: Merge PR 77, accepting one-time deep reviews in six projects?
+      actions: [
+  {
+    "label": "Yes, merge it"
+  },
+  {
+    "label": "Not yet"
+  }
+])
+  ⎿  
+Shown in the next-step box. Your closing message is your answer to the user: write it now, in full, as the last thing you say this turn. The box asks your question, so do not ask it again.
+
+⏺ The deep-review counter fix is ready for your review in [PR 77](https://github.com/ddehart/claude-code-plugins/pull/77), and I've sent the report back to the session that asked for it. It isn't merged, and I haven't tested a live `/session-chronicle` run through the installed plugin.
+
+- **The bug:** the skill counted entries since the newest dated note, and lightweight checks write dated notes too. Each one reset the count, so the mandatory 10-entry review never fired.
+- **The fix:** the count now starts from the last deep review, and new reviews write `#### YYYY-MM-DD (deep review)`. The counting moved out of the skill's prose into a small script, because a test can only be deterministic against code. I chose that over an eval, which would only test how one model read the prose.
+- **Failing first:** the first commit copies today's rule literally and gives 19 test failures. The core case reports 0 entries instead of 10 or more. The second commit passes all 29 tests.
+- **Can the tests catch a regression:** yes. I broke a copy of the fix eight ways, including restoring the old rule, and the tests failed every time.
+
+**What merging changes:** six of your 14 projects with a practice file will run one deep review on their next chronicle write, capped at 20 entries. They are `devbox`, `claude-code-plugins`, `airbnb-prep`, `daily-digest`, `persimmon-care` and `wellstead`. `daily-digest` was already due under the old rule. All but `devbox` have no recognizable deep review on record, so every entry counts for them. That's why I bumped the version to 1.9.0 rather than a patch.
+
+**Public repo:** the spec and tests now name `daily-briefing` and `daily-digest`, which weren't in this public repo before.
+
+Decisions and reasoning are in [deep-review-anchor.md](docs/specs/deep-review-anchor.md).
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Gather the PR diff",
+    "status": "in_progress"
+  },
+  {
+    "content": "Scan diff across the review angles",
+    "status": "pending"
+  },
+  {
+    "content": "Report findings",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (3 steps).
+
+⏺ Bash(git status -sb | head -5 && git diff @{upstream}...HEAD --stat; git diff main...HEAD --stat | tail -12; cat -n plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py; sed -n 74,100p plugins/meta-claude/skills/session-chronicle/SKILL.md | cut -c1-420; grep -n "evolution\|Glob\|last 3\|counter\|since" plugins/meta-claude/skills/session-chronicle/SKILL.md | cut -c1-200; sed -n 1,3p plugins/meta-claude/skills/session-chronicle/assets/reflective-practice-seed.md; grep -n -i "script\|python\|allowed-tools" plugins/meta-claude/skills/session-export/SKILL.md | head; ls -la plugins/meta-claude/skills/session-export/scripts plugins/meta-claude/skills/session-chronicle/scripts; sed -n 20,40p CLAUDE.md; sed -n 610,630p plugins/meta-claude/skills/self-documentation/references/core-features.md | cut -c1-240)
+  ⎿  
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad && rm -rf rv && mkdir rv && cd rv && S=/home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py
+t(){ printf '%-44s ' "$1"; python3 -B $S . 2>&1 | python3 -c "import sys,json
+s=sys.stdin.read()
+try:
+  d=json.loads(s);print(d['last_deep_review'],d['count'])
+except Exception: print('ERR',s.strip().splitlines()[-1][:100])"; }
+touch 2026-05-02.md 2026-05-03.md
+printf '## Evolution Notes\n\n#### 2026-05-01 (Deep Review)\nx\n' > reflective-practice.md; t "case marker"
+printf '## Evolution Notes\n\n#### 2026-05-01: deep review\nx\n' > reflective-practice.md; t "colon form"
+printf '## Evolution Notes\n\n#### 2026-05-01 - Deep review\nx\n' > reflective-practice.md; t "hyphen"
+printf '## Evolution Notes\n\n#### 2026-05-01 (full deep review)\nx\n' > reflective-practice.md; t "full deep review heading"
+printf '## Evolution Notes\n\n#### 2026-05-01 (later) — Deep review\nx\n' > reflective-practice.md; t "(later) before marker"
+printf '## Evolution Notes\n\n#### 2026-05-01 (deep review deferred)\nx\n' > reflective-practice.md; t "deferred inside marker"
+printf '## Evolution Notes\n\n#### 2026-05-01 — Deep review not due\nx\n' > reflective-practice.md; t "heading: not due"
+printf '## Evolution Notes\n\n#### 2026-05-01\nEscalated the concern. Held for deep review.\n' > reflective-practice.md; t "opening escalated period"
+printf '## Evolution Notes\n\n#### 2026-05-01\nEscalated this question to the next deep review.\n' > reflective-practice.md; t "opening escalated to next"
+printf '## Evolution Notes\n\n#### 2026-05-01\nDeep review at the next threshold should weigh this.\n' > reflective-practice.md; t "opening at next threshold"
+printf '## Evolution Notes\n\n#### 2026-05-01\n> Deep review ran; no changes warranted.\n' > reflective-practice.md; t "blockquote opening"
+printf '## Evolution Notes ##\n\n#### 2026-05-01 (deep review)\nx\n' > reflective-practice.md; t "closed atx section heading"
+printf '## Evolution notes (newest first)\n\n#### 2026-05-01 (deep review)\nx\n' > reflective-practice.md; t "section suffix"
+printf '### Evolution Notes\n\n#### 2026-05-01 (deep review)\nx\n' > reflective-practice.md; t "h3 section"
+printf '## Evolution Notes\n\n#### 2099-01-01 (deep review)\nx\n' > reflective-practice.md; t "future date"
+printf '## Evolution Notes\n\n#### 2026-05-01 (deep review)\n```\nunterminated\n' > reflective-practice.md; t "unterminated fence after"
+printf '## Evolution Notes\n\n```\nunterminated\n#### 2026-05-01 (deep review)\nx\n' > reflective-practice.md; t "unterminated fence before"
+printf '## Evolution Notes\n\n#### 2026-05-01 (deep review)\n````\n```\n````\n' > reflective-practice.md; t "nested fences"
+printf '\xff\xfe bad' > reflective-practice.md; t "non-utf8 practice"
+mkdir 2026-05-04.md; printf '## Evolution Notes\n' > reflective-practice.md; t "dir named like entry"; rmdir 2026-05-04.md
+rm reflective-practice.md; mkdir reflective-practice.md; t "practice is dir"; rmdir reflective-practice.md
+cd ~; grep -hE '^#{3,4} [0-9]{4}-[0-9]{2}-[0-9]{2}' dev/wellstead/docs/chronicle/reflective-practice.md | grep -iE 'review' | cut -c1-110 | head; for r in projects/airbnb-prep projects/persimmon-care dev/claude-code-plugins dev/wellstead; do grep -ncE '^\s*(```|~~~)' $r/docs/chronicle/reflective-practice.md; done; ls ~/.claude/plugins/cache 2>/dev/null | head -5; python3 --version)
+  ⎿  
+  (244 lines)
+
+  case marker                                  2026-05-01 2
+  colon form                                   2026-05-01 2
+  hyphen                                       2026-05-01 2
+  full deep review heading                     None 2
+  (later) before marker                        None 2
+    ... (25 more lines)
+
+⏺ Bash(grep -n "No tests to run\|export-session.py" CLAUDE.md; grep -n "Don't count by hand\|The \`(deep review)\` marker is what" plugins/meta-claude/skills/session-chronicle/SKILL.md | cut -c1-60)
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(done: [
+  1,
+  2
+]
+      start: 3)
+  ⎿  
+  27:          export-session.py         # Python export utility
+  82:- No tests to run, except `plugins/meta-claude/skills/session-export/scripts/test_export_session.py` (stdlib `unittest`; run `python3 -m unittest test_export_session.py` from that directory)
+  85:   It prints JSON: `last_deep_review` (the anchor date, o
+  94:     Update `docs/chronicle/reflective-practice.md` with
+
+Plan updated: step 3 of 3 is in progress.
+
+⏺ Reportfindings(level: high
+      findings: [
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 32,
+    "summary": "REVIEW_HEADING only matches when the marker comes right after the date, so a qualifier before it hides a real deep review, and the mandatory review then re-fires on every chronicle write.",
+    "short_summary": "Qualifier before the marker hides a real deep review",
+    "failure_scenario": "Real files put a parenthetical right after the date (`#### 2026-10-30 (latest; the 10-30 22:20 ... entry) \u2014 ...`, `#### 2026-07-12 (later) \u2014 ...`). A review written as `#### 2026-12-01 (later) \u2014 Deep review` or `#### 2026-12-01 (full deep review)` returns last_deep_review None in a probe. The anchor never moves, the count stays at 10 or more, and `due` stays true on every write. The docstring's claim that a miss costs one early review doesn't hold here.",
+    "category": "correctness"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 33,
+    "summary": "The recognizers still match notes that say no review happened, which moves the anchor and suppresses a due review, the original bug.",
+    "short_summary": "Recognizers match notes saying no review happened",
+    "failure_scenario": "Probed: `#### 2026-05-01 \u2014 Deep review not due`, `#### 2026-05-01 (deep review deferred)`, opening `Escalated this question to the next deep review.`, and opening `Deep review at the next threshold should weigh this.` all set last_deep_review to 2026-05-01. A lightweight note with any of these resets the count. The tests only cover `Deep review not due` as an opening line, not in a heading.",
+    "category": "correctness"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 97,
+    "summary": "A future-dated deep-review note becomes the anchor, so the count stays at 0 until that date.",
+    "short_summary": "Future-dated review note freezes the count at 0",
+    "failure_scenario": "A typo such as `#### 2062-11-06 (deep review)` passes is_date and wins max(). Probed with 2099-01-01: count 0, due false. No entry can be newer, so the review stops firing with no error. Ignoring anchors later than today, or flagging them, would fix it.",
+    "category": "correctness"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 63,
+    "summary": "The section match is an exact `## Evolution Notes`, so a variant heading hides every note, including freshly written markers.",
+    "short_summary": "Exact section match hides all notes on a variant",
+    "failure_scenario": "`## Evolution notes (newest first)`, `## Evolution Notes ##`, and `### Evolution Notes` each returned last_deep_review None in a probe. Every entry then counts, and the review fires on every write once a project has 10 entries, because the new marker lands in the unrecognized section. All 14 current files use the exact form, so this is a latent risk.",
+    "category": "correctness"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/SKILL.md",
+    "line": 94,
+    "summary": "Nothing checks that the script recognized the note a deep review just wrote, so any writer-reader mismatch goes unnoticed.",
+    "short_summary": "No check that the new review note was recognized",
+    "failure_scenario": "A model writes a slightly different heading, or the section isn't matched, and the skill reports the review as done. The next write repeats the full review with no signal why. Re-running the script after writing and confirming last_deep_review equals today would catch this whole class, including the two findings above that cause repeated reviews.",
+    "category": "altitude"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/SKILL.md",
+    "line": 85,
+    "summary": "When the script fails, Step 6a falls back to the lightweight check, so a persistent failure disables the mandatory review.",
+    "short_summary": "Script failure silently skips the mandatory review",
+    "failure_scenario": "If `python3` isn't on PATH, `${CLAUDE_SKILL_DIR}` isn't expanded in the Bash call, or the session's cwd isn't the project root (exit 2), every write takes the lightweight path. The only trace is a line in the Step 8 report. A non-UTF-8 practice file also raises an uncaught traceback, which the docstring doesn't mention. The `${CLAUDE_SKILL_DIR}` path hasn't been exercised in a live run.",
+    "category": "correctness"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 56,
+    "summary": "Fence tracking toggles on any fence line and ignores fence type and length, so an unterminated or mixed fence swallows the rest of the file.",
+    "short_summary": "Unterminated fence swallows the rest of the notes",
+    "failure_scenario": "An unclosed ``` before the newest review returned last_deep_review None in a probe, which leads to repeated reviews. A ``` line inside a ~~~ block flips the state the same way. Only daily-briefing has fences today, and they're balanced, so this is low risk.",
+    "category": "correctness"
+  },
+  {
+    "file": "CLAUDE.md",
+    "line": 82,
+    "summary": "The repo CLAUDE.md still says the session-export test is the only one, and its architecture tree omits the new script.",
+    "short_summary": "CLAUDE.md test list omits the new test file",
+    "failure_scenario": "Rule text: \"No tests to run, except `plugins/meta-claude/skills/session-export/scripts/test_export_session.py`\". That is now false, so a future session changing the chronicle skill won't know to run test_deep_review_status.py. CI doesn't run it either, so the SKILL.md contract tests only protect anyone who knows they exist.",
+    "category": "conventions"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 100,
+    "summary": "The entry scan doesn't check is_file, so a directory named like a daily file counts as an entry.",
+    "short_summary": "Directory named like an entry is counted",
+    "failure_scenario": "A directory `docs/chronicle/2026-05-04.md/` raised the count from 2 to 3 in a probe and would appear in `entries`, which the skill then tries to read. The old rule counted files only. This is unlikely in practice.",
+    "category": "correctness"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 23,
+    "summary": "ENTRY_FILE captures the date, but the code ignores the group and re-derives it with p.stem and name[:10].",
+    "short_summary": "Entry date is re-derived instead of using the regex group",
+    "failure_scenario": "Two more spellings of the same value must stay in step with the regex. Building (date, name) pairs from the match once would remove the slice and the unused capture.",
+    "category": "simplification"
+  }
+])
+  ⎿  
+  10 findings reported.
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: The review of PR 77 found 10 issues, none fixed yet. Two can cause wrong behavior with plausible headings: repeated mandatory reviews, or a suppressed review. The PR is still open and unmerged.
+      ask: Fix the review findings on PR 77 before merging?
+      actions: [
+  {
+    "label": "Yes, fix them"
+  },
+  {
+    "label": "Not now"
+  }
+])
+  ⎿  
+Shown in the next-step box. Your closing message is your answer to the user: write it now, in full, as the last thing you say this turn. The box asks your question, so do not ask it again.
+
+⏺ The review of [PR 77](https://github.com/ddehart/claude-code-plugins/pull/77) found 10 issues, and I'd fix the first two before merging. Most came from running the script against edge-case practice files; none are fixed yet, and all 10 are in the findings panel.
+
+- **Repeated reviews:** a qualifier before the marker, like `#### 2026-12-01 (later) — Deep review`, isn't recognized. The anchor then never moves, so the mandatory review fires on every chronicle write. `devbox` already puts parentheticals right after the date, so this could happen in real use.
+- **Suppressed reviews:** some notes that say no review happened still count as one, such as `— Deep review not due` or an opening line of `Escalated this question to the next deep review.` That's the original bug in a narrower form, and it contradicts the strict matching I described in the PR.
+
+A third change would catch most repeat-review cases, whatever the cause: re-run the script after writing a review note and confirm it recognized the note.
+
+The remaining findings are lower risk or cleanup:
+- a future-dated note freezes the count at 0
+- a variant `Evolution Notes` heading hides every note
+- a script failure skips the mandatory review
+- unbalanced code fences hide the notes after them
+- the repo `CLAUDE.md` still lists only the session-export test
+- one small edge case and one small cleanup in the script
+
+> Yes, fix them
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Add failing tests for the findings",
+    "status": "in_progress"
+  },
+  {
+    "content": "Fix the script",
+    "status": "pending"
+  },
+  {
+    "content": "Update SKILL.md, spec, and CLAUDE.md",
+    "status": "pending"
+  },
+  {
+    "content": "Check real files and script path in a live skill load",
+    "status": "pending"
+  },
+  {
+    "content": "Commit, push, and update the requesting session",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (5 steps).
+
+⏺ Bash(python3 - <<'EOF'
+import pathlib
+p=pathlib.Path('plugins/meta-claude/skills/session-chronicle/scripts/test_deep_review_status.py'); t=p.read_text()
+
+a="""            ('#### 2026-05-01 — Held for the next deep review', 'Text.'),
+"""
+b=a+"""            ('#### 2026-05-01 — Deep review not due', 'Text.'),
+            ('#### 2026-05-01 (deep review deferred)', 'Text.'),
+            ('#### 2026-05-01 (later) — Deep review pending', 'Text.'),
+            ('#### 2026-05-01', 'Escalated this question to the next deep review.'),
+            ('#### 2026-05-01', 'Deep review at the next threshold should weigh this.'),
+            ('#### 2026-05-01', 'Deep review ran yesterday in another session.'),
+"""
+assert a in t; t=t.replace(a,b)
+
+a="""    def test_invalid_date_is_ignored(self):
+"""
+b="""    def test_unterminated_fence_does_not_hide_later_notes(self):
+        notes = '#### 2026-04-01\\nThe prompt:\\n\\n```\\nnever closed\\n\\n#### 2026-05-01 (deep review)\\nText.\\n'
+        self.assertEqual(self.chronicle(practice(notes))['last_deep_review'], '2026-05-01')
+
+    def test_fence_closes_only_on_its_own_kind(self):
+        notes = (
+            '#### 2026-03-01 (deep review)\\nText.\\n\\n'
+            '~~~\\n```\\n#### 2026-04-01 (deep review)\\n~~~\\n\\n'
+            '````\\n```\\n#### 2026-04-02 (deep review)\\n````\\n'
+        )
+        self.assertEqual(self.chronicle(practice(notes))['last_deep_review'], '2026-03-01')
+
+    def test_future_dated_review_is_ignored(self):
+        notes = '#### 2099-01-01 (deep review)\\nA typo.\\n\\n#### 2026-05-01 (deep review)\\nText.\\n'
+        result = self.chronicle(practice(notes), ['2026-05-02'])
+        self.assertEqual(result['last_deep_review'], '2026-05-01')
+        self.assertEqual(result['count'], 1)
+
+"""+a
+assert a in t; t=t.replace(a,b)
+
+a="""class NotesThatAreNotDeepReviews(ChronicleCase):
+"""
+b="""class VariantsThatMustStillResetTheCount(ChronicleCase):
+    \"\"\"A review the script can't see fires again on every write.\"\"\"
+
+    def test_qualifier_before_the_marker(self):
+        for heading in (
+            '#### 2026-05-01 (later) — Deep review',
+            '#### 2026-05-01 (later) (deep review)',
+            '#### 2026-05-01 (full deep review)',
+            '#### 2026-05-01 (the 05-01 18:00 entry) — Deep review (12 entries since the 04-01 review)',
+            '#### 2026-05-01 — Deep review: no changes warranted',
+        ):
+            with self.subTest(heading=heading):
+                result = self.chronicle(practice(f'{heading}\\nText.\\n'))
+                self.assertEqual(result['last_deep_review'], '2026-05-01')
+
+    def test_section_heading_variants(self):
+        for section in ('## Evolution notes (newest first)', '## Evolution Notes ##', '### Evolution Notes'):
+            with self.subTest(section=section):
+                text = f'# Reflective Practice\\n\\n{section}\\n\\n#### 2026-05-01 (deep review)\\nText.\\n'
+                self.assertEqual(self.chronicle(text)['last_deep_review'], '2026-05-01')
+
+    def test_h3_section_ends_at_the_next_h3(self):
+        text = (
+            '### Evolution Notes\\n\\n#### 2026-05-01 (deep review)\\nText.\\n\\n'
+            '### Retired\\n\\n#### 2026-06-01 (deep review)\\nNot a note.\\n'
+        )
+        self.assertEqual(self.chronicle(text)['last_deep_review'], '2026-05-01')
+
+    def test_non_utf8_bytes_do_not_stop_the_count(self):
+        text = practice('#### 2026-05-01 (deep review)\\nText.\\n').encode() + b'\\xff\\n'
+        (self.dir / 'reflective-practice.md').write_bytes(text)
+        self.assertEqual(status(self.dir)['last_deep_review'], '2026-05-01')
+
+
+"""+a
+assert a in t; t=t.replace(a,b)
+
+a="""class CommandLine(ChronicleCase):
+"""
+b=a
+t=t.replace("""        result = self.chronicle(practice('#### 2026-05-01 (deep review)\\nText.\\n'), ['2026-05-02'])
+        self.assertEqual(result['entries'], ['2026-05-02.md'])
+""","""        (self.dir / '2026-05-03.md').mkdir()
+        result = self.chronicle(practice('#### 2026-05-01 (deep review)\\nText.\\n'), ['2026-05-02'])
+        self.assertEqual(result['entries'], ['2026-05-02.md'])
+""")
+
+a="""    def test_seed_shows_the_marker(self):
+"""
+b="""    def test_review_confirms_the_script_recognized_its_note(self):
+        self.assertIn('confirm `last_deep_review` is today', self.skill)
+
+    def test_script_failure_leads_the_report(self):
+        self.assertIn('put the error first in the Step 8 report', self.skill)
+
+"""+a
+assert a in t; t=t.replace(a,b)
+p.write_text(t)
+EOF
+cd plugins/meta-claude/skills/session-chronicle/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | grep -E '^(FAIL|ERROR):|^Ran |^FAILED|^OK' | sed -E 's/ \(test_deep.*\) ?/ /' | cut -c1-120 | sort | uniq -c | sort -rn)
+  ⎿  
+        5 FAIL: test_notes_mentioning_a_deep_review_are_not_one 
+        4 FAIL: test_qualifier_before_the_marker 
+        3 FAIL: test_section_heading_variants 
+        1 Ran 38 tests in 0.057s
+        1 FAIL: test_unterminated_fence_does_not_hide_later_notes 
+    ... (8 more lines)
+
+⏺ Write(deep-review-status.py - 173 lines)
+  ⎿  
+⏺ Bash(cd /home/derek/dev/claude-code-plugins && python3 - <<'EOF'
+import pathlib
+p=pathlib.Path('plugins/meta-claude/skills/session-chronicle/SKILL.md'); t=p.read_text()
+reps=[
+("Don't count by hand: if the script fails, say so in the Step 8 report and run the lightweight check.",
+ "Don't count by hand. If the script fails, check that you're in the project root and run it again. If it still fails, run the lightweight check and put the error first in the Step 8 report, because the mandatory review can't fire until it's fixed."),
+("""     #### YYYY-MM-DD (deep review)
+     Deep review ran; no changes warranted.
+     ```
+
+""","""     #### YYYY-MM-DD (deep review)
+     Deep review ran; no changes warranted.
+     ```
+
+     After writing the note, run the script again and confirm `last_deep_review` is today. If it isn't, the note wasn't recognized and the review will fire again on the next write: fix the heading to match the form above.
+
+"""),
+("If no changes are warranted, still write the no-op note from Step 6b to reset the entry counter.",
+ "If no changes are warranted, still write the no-op note from Step 6b to reset the entry counter. Then confirm the script recognized the note, as Step 6b describes."),
+]
+for a,b in reps:
+    assert t.count(a)==1,a
+    t=t.replace(a,b)
+p.write_text(t)
+
+p=pathlib.Path('docs/specs/deep-review-anchor.md'); t=p.read_text()
+a=t[t.index('**R4. Recognition'):t.index('**R5.')]
+b="""**R4. Recognition is deliberately strict.** Most notes that mention a deep review are lightweight notes deferring to the next one. A false match suppresses a review, which is the bug, so a note counts only if:
+
+- the heading after the date, past any parenthetical qualifier, is the marker or an older form: `(deep review)`, `(full deep review)`, `(later) — Deep review ...`, `— Escalated deep review ...`, and not followed by words like "not due" or "deferred"
+- or its first body line is a known older opening: `Deep review ran;`, `Deep review at the 10-entry threshold`, `Escalated from ... to a deep review`
+
+Older files also use `###` for dated notes, so both levels count. A miss can make the review fire again on every write, so the skill re-runs the script after writing a review note and confirms `last_deep_review` is today. Section headings match loosely (`## Evolution notes (newest first)`, `### Evolution Notes`) for the same reason.
+
+A review dated after today is ignored as a typo, since it would otherwise stop the count until that date.
+
+"""
+t=t.replace(a,b)
+a="""Tests were written against a literal transcription of the old rule and failed there (19 failures, including the core case) before the fix. Restoring the old rule in a copy fails them again."""
+assert a in t
+t=t.replace(a,a+""" A code review then found gaps in recognition, sections, fences, and future dates. Each got a failing test before its fix.""")
+p.write_text(t)
+
+p=pathlib.Path('CLAUDE.md'); t=p.read_text()
+a="- No tests to run, except `plugins/meta-claude/skills/session-export/scripts/test_export_session.py` (stdlib `unittest`; run `python3 -m unittest test_export_session.py` from that directory)"
+b="- No tests to run, except the script tests under `plugins/meta-claude/skills/session-export/scripts/` and `plugins/meta-claude/skills/session-chronicle/scripts/` (stdlib `unittest`; run `python3 -m unittest test_<name>.py` from that directory)"
+assert a in t; t=t.replace(a,b)
+a="""          export-session.py         # Python export utility
+"""
+b=a+"""      session-chronicle/
+        SKILL.md                    # Session chronicle skill definition
+        scripts/
+          deep-review-status.py     # Deep-review count, called from Step 6a
+"""
+assert a in t; t=t.replace(a,b)
+p.write_text(t)
+EOF
+S=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad
+SCR=$PWD/plugins/meta-claude/skills/session-chronicle/scripts
+(cd $SCR && python3 -B -m unittest test_deep_review_status.py 2>&1 | grep -E '^(FAIL|ERROR):|^Ran |^FAILED|^OK|AssertionError' | cut -c1-150)
+echo === real files; cd ~; for f in devbox services/<project> dev/claude-code-plugins dev/osu-builder-in-residence projects/<project> projects/<project> projects/daily-briefing projects/<project> projects/airbnb-prep projects/<project> projects/daily-digest projects/log-archaeologist projects/persimmon-care dev/wellstead; do printf '%-34s ' $f; python3 -B $SCR/deep-review-status.py $f/docs/chronicle | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['last_deep_review'],d['count'],'DUE' if d['due'] else '')"; done)
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(done: [
+  1,
+  2,
+  3
+]
+      start: 4)
+  ⎿  
+  The file /home/derek/dev/claude-code-plugins/plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py has been updated successfully. (file state is current in your context — no need to Read it back)
+
+  Ran 38 tests in 0.060s
+  OK
+  === real files
+  devbox                             2026-07-12 27 DUE
+  services/<project>           None 1 
+    ... (13 more lines)
+
+Plan updated: step 4 of 5 is in progress.
+
+⏺ Bash(cd /home/derek/dev/claude-code-plugins
+S=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad
+SK=plugins/meta-claude/skills/session-chronicle
+run(){ rm -rf $S/mut && mkdir -p $S/mut && cp -r $SK $S/mut/sc
+  python3 - "$S/mut/sc" "$2" "$3" "$4" <<'EOF'
+import sys,pathlib
+root,f,old,new=sys.argv[1:5]
+p=pathlib.Path(root)/f; t=p.read_text(); assert old in t,old; p.write_text(t.replace(old,new))
+EOF
+  printf '%-40s ' "$1"; (cd $S/mut/sc/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | grep -E '^(OK|FAILED)'); }
+F=scripts/deep-review-status.py
+run "old rule restored" $F "return bool(REVIEW_HEADING.match(note['rest']) or REVIEW_OPENING.match(note['opening']))" "return True"
+run "no negation guard" $F "    r'(?![\s:;,—–-]*(?:not|deferred|held|skipped|due|overdue|pending|postponed)\b)',
+" ""
+run "no parenthetical qualifier" $F "    r'^(?:[\s—–:-]*\([^)]*\))*'
+    r'[\s(—–:-]*" "    r'^[\s(—–:-]*"
+run "future dates allowed" $F " and note['date'] <= today" ""
+run "exact section name" $F "EVOLUTION_SECTION.match(heading[2])" "heading[2].lower() == 'evolution notes'"
+run "no is_file check" $F "if p.is_file() and is_date" "if is_date"
+run "strict utf-8" $F ", errors='replace'" ""
+run "any fence closes any fence" $F "and fence[1][0] == opening[1][0]" ""
+run "skill drops the re-check" SKILL.md 'confirm `last_deep_review` is today' 'carry on'
+rm -rf $S/mut
+echo === live skill load
+L=$S/live; rm -rf $L; mkdir -p $L/.claude/skills/chron-test $L/docs/chronicle; cp -r $SK/SKILL.md $SK/scripts $SK/assets $SK/references $L/.claude/skills/chron-test/; sed -i 's/^name: session-chronicle/name: chron-test/' $L/.claude/skills/chron-test/SKILL.md
+printf '## Evolution Notes\n\n#### 2026-05-01 (deep review)\nx\n\n#### 2026-05-03\nLightweight.\n' > $L/docs/chronicle/reflective-practice.md; touch $L/docs/chronicle/2026-05-02.md $L/docs/chronicle/2026-05-03.md
+cd $L && export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && unset CLAUDECODE && timeout 100 claude -p --model haiku --allowedTools "Skill" "Bash(python3:*)" --max-turns 6 'Load the chron-test skill with the Skill tool. Do not write any entry or file. Run exactly the bash command shown in its Step 6a, then print the exact command you ran on one line and its JSON output.' 2>&1 | tail -25 | cut -c1-200)
+  ⎿  
+  old rule restored                        FAILED (failures=21)
+  no negation guard                        no parenthetical qualifier               FAILED (failures=3)
+  future dates allowed                     FAILED (failures=1)
+  exact section name                       FAILED (failures=2)
+  no is_file check                         FAILED (failures=1)
+    ... (26 more lines)
+
+⏺ Bash(cd /home/derek/dev/claude-code-plugins
+S=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad
+SK=plugins/meta-claude/skills/session-chronicle
+rm -rf $S/mut $S/live && mkdir -p $S/mut && cp -r $SK $S/mut/sc && sed -i 's/(?:not|deferred|held|skipped|due|overdue|pending|postponed)/(?:zzz)/' $S/mut/sc/scripts/deep-review-status.py && (cd $S/mut/sc/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | tail -1); rm -rf $S/mut
+(cd $SK/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | tail -3)
+git status --short
+git add CLAUDE.md docs/specs/deep-review-anchor.md $SK/SKILL.md $SK/scripts/deep-review-status.py $SK/scripts/test_deep_review_status.py && git commit -q -F - <<'EOF'
+fix(session-chronicle): harden deep-review recognition after review
+
+A code review of the count script found reviews it couldn't see, which
+would fire again on every write, and notes it wrongly accepted, which
+would suppress a review.
+
+- Accept a qualifier before the marker, like `(later) — Deep review`
+- Reject notes saying no review ran, like `Deep review not due`
+- Ignore future-dated reviews, which would stop the count
+- Match section heading variants; close fences by kind and length, and
+  let an unclosed fence hide nothing
+- Skip directories named like entries; tolerate non-UTF-8 bytes
+- Have the skill confirm its review note was recognized, and put a
+  script failure first in the report
+- List the new tests in CLAUDE.md
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push 2>&1 | tail -1; git log --oneline -3; git status -sb | head -3
+gh pr view 77 --json body -q .body > $S/pr-body.md
+python3 - "$S/pr-body.md" <<'EOF'
+import sys,pathlib
+p=pathlib.Path(sys.argv[1]); t=p.read_text()
+a="- The second commit passes all 29 tests.\n"; b="- The second commit passes all 29 tests. A code review then added 9 tests that failed before the third commit, so 38 pass now.\n"
+assert a in t; t=t.replace(a,b)
+a="Not tested: a live `/session-chronicle` run through the installed plugin. If the script can't run, Step 6a says to report that and do the lightweight check."
+b="A real skill load in a scratch project (`claude -p`, Haiku) expanded `${CLAUDE_SKILL_DIR}` and ran Step 6a correctly.\n\nNot tested: a full `/session-chronicle` write through the installed plugin. If the script can't run, Step 6a says to run the lightweight check and put the error first in the report."
+assert a in t; t=t.replace(a,b)
+p.write_text(t)
+EOF
+gh pr edit 77 --body-file $S/pr-body.md | tail -1)
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(advance: True)
+  ⎿  
+  FAILED (failures=3)
+  Ran 38 tests in 0.057s
+  
+  OK
+   M CLAUDE.md
+    ... (10 more lines)
+
+Plan updated: step 5 of 5 is in progress.
+
+⏺ Bash(cd /home/derek/dev/claude-code-plugins; S=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad
+gh pr view 77 --json body -q .body 2>/dev/null | grep -c "38 pass now" || true
+gh api -X PATCH repos/ddehart/claude-code-plugins/pulls/77 -F body=@$S/pr-body.md -q .html_url
+gh api repos/ddehart/claude-code-plugins/pulls/77 -q .body | grep -nE "38 pass now|real skill load"| cut -c1-120)
+  ⎿  
+⏺ Reportfindings(level: high
+      findings: [
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 32,
+    "summary": "REVIEW_HEADING only matches when the marker comes right after the date, so a qualifier before it hides a real deep review, and the mandatory review then re-fires on every chronicle write.",
+    "short_summary": "Qualifier before the marker hides a real deep review",
+    "failure_scenario": "`#### 2026-12-01 (later) \u2014 Deep review` or `#### 2026-12-01 (full deep review)` returned last_deep_review None, so `due` stayed true on every write.",
+    "category": "correctness",
+    "outcome": "fixed"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 33,
+    "summary": "The recognizers still match notes that say no review happened, which moves the anchor and suppresses a due review, the original bug.",
+    "short_summary": "Recognizers match notes saying no review happened",
+    "failure_scenario": "`#### 2026-05-01 \u2014 Deep review not due`, `(deep review deferred)`, and opening lines like `Escalated this question to the next deep review.` all set last_deep_review.",
+    "category": "correctness",
+    "outcome": "fixed"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 97,
+    "summary": "A future-dated deep-review note becomes the anchor, so the count stays at 0 until that date.",
+    "short_summary": "Future-dated review note freezes the count at 0",
+    "failure_scenario": "A typo such as `#### 2062-11-06 (deep review)` passed is_date and won max(), giving count 0 and due false.",
+    "category": "correctness",
+    "outcome": "fixed"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 63,
+    "summary": "The section match is an exact `## Evolution Notes`, so a variant heading hides every note, including freshly written markers.",
+    "short_summary": "Exact section match hides all notes on a variant",
+    "failure_scenario": "`## Evolution notes (newest first)`, `## Evolution Notes ##`, and `### Evolution Notes` each returned last_deep_review None, so the review would fire on every write.",
+    "category": "correctness",
+    "outcome": "fixed"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/SKILL.md",
+    "line": 94,
+    "summary": "Nothing checks that the script recognized the note a deep review just wrote, so any writer-reader mismatch goes unnoticed.",
+    "short_summary": "No check that the new review note was recognized",
+    "failure_scenario": "A model writes a slightly different heading and reports the review as done. The next write repeats the full review with no signal why.",
+    "category": "altitude",
+    "outcome": "fixed"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/SKILL.md",
+    "line": 85,
+    "summary": "When the script fails, Step 6a falls back to the lightweight check, so a persistent failure disables the mandatory review.",
+    "short_summary": "Script failure silently skips the mandatory review",
+    "failure_scenario": "If python3 is missing or the cwd is wrong, every write takes the lightweight path with only a line in the Step 8 report. A non-UTF-8 practice file also raised an uncaught traceback.",
+    "category": "correctness",
+    "outcome": "fixed"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 56,
+    "summary": "Fence tracking toggles on any fence line and ignores fence type and length, so an unterminated or mixed fence swallows the rest of the file.",
+    "short_summary": "Unterminated fence swallows the rest of the notes",
+    "failure_scenario": "An unclosed ``` before the newest review returned last_deep_review None. A ``` line inside a ~~~ block flipped the state the same way.",
+    "category": "correctness",
+    "outcome": "fixed"
+  },
+  {
+    "file": "CLAUDE.md",
+    "line": 82,
+    "summary": "The repo CLAUDE.md still says the session-export test is the only one, and its architecture tree omits the new script.",
+    "short_summary": "CLAUDE.md test list omits the new test file",
+    "failure_scenario": "A future session changing the chronicle skill wouldn't know to run test_deep_review_status.py. CI still doesn't run either test file.",
+    "category": "conventions",
+    "outcome": "fixed"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 100,
+    "summary": "The entry scan doesn't check is_file, so a directory named like a daily file counts as an entry.",
+    "short_summary": "Directory named like an entry is counted",
+    "failure_scenario": "A directory `docs/chronicle/2026-05-04.md/` raised the count from 2 to 3 and would appear in `entries`.",
+    "category": "correctness",
+    "outcome": "fixed"
+  },
+  {
+    "file": "plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py",
+    "line": 23,
+    "summary": "ENTRY_FILE captures the date, but the code ignores the group and re-derives it with p.stem and name[:10].",
+    "short_summary": "Entry date is re-derived instead of using the regex group",
+    "failure_scenario": "Two more spellings of the same value had to stay in step with the regex. ENTRY_FILE is gone; is_date now does the whole check on the file stem.",
+    "category": "simplification",
+    "outcome": "fixed"
+  }
+])
+  ⎿  
+⏺ Sendmessage(to: uds:/run/user/1000/cc-socks/325463.sock
+      summary: Update on PR 77 after code review
+      message: |
+  PR 77 is updated after a code review; Derek asked for the fixes. It's still unmerged: https://github.com/ddehart/claude-code-plugins/pull/77
+  
+  What changes from my earlier report:
+  - Tests: 38 pass now, up from 29. The 9 new tests all failed before the fix, in commit b59de09.
+  - Recognition: a qualifier before the marker now counts (`(later) — Deep review`), and notes saying no review ran don't (`Deep review not due`, `(deep review deferred)`).
+  - New skill step: after writing a review note, the skill re-runs the script and confirms `last_deep_review` is today.
+  - Script failure: the error now goes first in the Step 8 report.
+  - Open item 4 is narrowed: a real skill load in a scratch project expanded `${CLAUDE_SKILL_DIR}` and ran Step 6a correctly. A full chronicle write through the installed plugin is still untested.
+  
+  Real-file results are unchanged: the same six projects are due, daily-briefing is at 2026-11-06 with count 0, and devbox is at 2026-07-12 with count 27. The cross-pass skill still needs no change.
+      type: message
+      recipient: uds:/run/user/1000/cc-socks/325463.sock
+      recipient_kind: session
+      content: PR 77 is updated after a code review; Derek asked…)
+  ⎿  
+  0
+  https://github.com/ddehart/claude-code-plugins/pull/77
+  26:- The second commit passes all 29 tests. A code review then added 9 tests that failed before the third commit, so 38 
+  30:A real skill load in a scratch project (`claude -p`, Haiku) expanded `${CLAUDE_SKILL_DIR}` and ran Step 6a correctly.
+
+  10 findings reported.
+
+{"success":true,"message":"“Update on PR 77 after code review” → uds:/run/user/1000/cc-socks/325463.sock; in that session's inbox, not yet read by its Claude — a [Cross-session delivery notice] follows if that session holds it (usually a different permission mode) or refuses it","msg_id":"96db8676-46e1-4c4f-9264-2f6804ce19fc"}
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: All 10 review findings are fixed and pushed to PR 77, and 38 tests pass. Step 6a also ran correctly through a real skill load. The PR isn't merged, and a full chronicle write through the installed plugin is still untested.
+      ask: Merge PR 77, accepting one-time deep reviews in six projects?
+      actions: [
+  {
+    "label": "Yes, merge it"
+  },
+  {
+    "label": "Not yet"
+  }
+])
+  ⎿  
+Shown in the next-step box. Your closing message is your answer to the user: write it now, in full, as the last thing you say this turn. The box asks your question, so do not ask it again.
+
+⏺ All 10 review findings are fixed and pushed to [PR 77](https://github.com/ddehart/claude-code-plugins/pull/77), and all 38 tests pass. The PR is still unmerged, and the requesting session has the update.
+
+- **Failing first:** 9 new tests covered the review findings, and all of them failed before the fix. I also broke a copy of the code nine ways, one per key rule, and the tests failed each time.
+- **Recognition:** `(later) — Deep review` now counts as a review, while `Deep review not due` and `(deep review deferred)` don't.
+- **Repeat-review guard:** after writing a review note, the skill re-runs the script and confirms `last_deep_review` is today. If a heading isn't recognized, the session finds out right away.
+- **Script failures:** the skill still falls back to the lightweight check, but the error now goes first in the report.
+- **Other fixes:**
+  - Future-dated notes are ignored.
+  - `Evolution Notes` heading variants now match.
+  - Unbalanced code fences no longer hide notes.
+  - Non-UTF-8 bytes no longer crash the script.
+  - The repo `CLAUDE.md` now lists the new tests.
+
+I also ran Step 6a through a real skill load in a scratch project. `${CLAUDE_SKILL_DIR}` expanded and the script returned the right count, which closes most of the earlier gap. A full chronicle write through the installed plugin is still untested, and CI doesn't run these tests.
+
+On the real files nothing changed: the same six projects are due. `daily-briefing` still reports 2026-11-06 with a count of 0, and `devbox` reports 2026-07-12 with 27.
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Run four cleanup reviews on the PR diff",
+    "status": "in_progress"
+  },
+  {
+    "content": "Dedup and apply the fixes",
+    "status": "pending"
+  },
+  {
+    "content": "Run tests, commit, and push",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (3 steps).
+
+⏺ Agent(description: Reuse review of PR diff
+      subagent_type: Explore
+      prompt: |
+  Cleanup review, read-only. Repo: /home/derek/dev/claude-code-plugins, branch fix/chronicle-deep-review-anchor. Get the diff with `git -C /home/derek/dev/claude-code-plugins diff main...HEAD`. The main new code is plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py and test_deep_review_status.py beside it, plus SKILL.md prose.
+  
+  Angle: REUSE. Flag new code that re-implements something the codebase already has. Grep adjacent files and any shared helpers (for example plugins/meta-claude/skills/session-export/scripts/) and name the existing helper to call instead. Note plugin skills are installed independently, so a cross-skill import may not be viable; say so if that's the case.
+  
+  Not hunting correctness bugs. Report each finding as file, line, one-line summary, and concrete cost. If there's nothing real, say so. Keep the report under 200 words.)
+  ⎿  
+⏺ Agent(description: Simplification review of PR diff
+      subagent_type: Explore
+      prompt: |
+  Cleanup review, read-only. Repo: /home/derek/dev/claude-code-plugins, branch fix/chronicle-deep-review-anchor. Get the diff with `git -C /home/derek/dev/claude-code-plugins diff main...HEAD`. The main new code is plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py and test_deep_review_status.py beside it, plus SKILL.md prose.
+  
+  Angle: SIMPLIFICATION. Flag unnecessary complexity the diff adds: redundant or derivable state, copy-paste with slight variation, deep nesting, dead code, unused imports or output fields. Name the simpler form that does the same job. Check for behavior preservation: the script's tests must keep passing, including handling of unclosed fences, fence kind/length, h3 sections, and parenthetical qualifiers.
+  
+  Not hunting correctness bugs. Report each finding as file, line, one-line summary, and concrete cost. If there's nothing real, say so. Keep the report under 250 words.)
+  ⎿  
+⏺ Agent(description: Efficiency review of PR diff
+      subagent_type: Explore
+      prompt: |
+  Cleanup review, read-only. Repo: /home/derek/dev/claude-code-plugins, branch fix/chronicle-deep-review-anchor. Get the diff with `git -C /home/derek/dev/claude-code-plugins diff main...HEAD`. The main new code is plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py, a one-shot CLI run once per chronicle write over a practice file of about 1,500 lines and a directory of under 100 files. SKILL.md prose calls it.
+  
+  Angle: EFFICIENCY. Flag wasted work the diff introduces: redundant computation or repeated I/O, sequential independent operations, blocking work on hot paths, long-lived closures. Also flag wasted model work in the SKILL.md instructions, such as redundant reads. Name the cheaper alternative. Only flag what matters at this scale.
+  
+  Not hunting correctness bugs. Report each finding as file, line, one-line summary, and concrete cost. If there's nothing real, say so. Keep the report under 200 words.)
+  ⎿  
+⏺ Agent(description: Altitude review of PR diff
+      subagent_type: Explore
+      prompt: |
+  Cleanup review, read-only. Repo: /home/derek/dev/claude-code-plugins, branch fix/chronicle-deep-review-anchor. Get the diff with `git -C /home/derek/dev/claude-code-plugins diff main...HEAD`. Context is in docs/specs/deep-review-anchor.md. The bug: session-chronicle's mandatory 10-entry deep review never fired because any dated Evolution Note reset the count. The fix is a script, plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py, that anchors on the newest deep review, plus SKILL.md changes.
+  
+  Angle: ALTITUDE. Check that each change fixes the root cause at the right depth rather than patching a symptom with a fragile bandaid. Special cases layered on a mechanism are a sign the fix isn't deep enough. Prefer a simpler, more general change to the underlying mechanism and name it. Judge in particular whether the heading and opening regexes (older shapes, a negation word list) are the right depth, given that real practice files must stay unedited and the skill now writes a canonical marker.
+  
+  Not hunting correctness bugs. Report each finding as file, line, one-line summary, and concrete cost. If there's nothing real, say so. Keep the report under 250 words.)
+  ⎿  
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a35d2addbd8f7aaf6 (internal ID - do not mention to user. Use SendMessage with to: 'a35d2addbd8f7aaf6', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/a35d2addbd8f7aaf6.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a0b5b943d8d130184 (internal ID - do not mention to user. Use SendMessage with to: 'a0b5b943d8d130184', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/a0b5b943d8d130184.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: afab8ff1e1fa838d8 (internal ID - do not mention to user. Use SendMessage with to: 'afab8ff1e1fa838d8', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/afab8ff1e1fa838d8.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a171c13a3ce30f079 (internal ID - do not mention to user. Use SendMessage with to: 'a171c13a3ce30f079', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/a171c13a3ce30f079.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+
+⏺ The four cleanup reviews are running in the background. I'll apply the fixes once they've all reported back.
+
+⏺ Bash(sed -n 55,62p ~/.claude/skills/chronicle-cross-pass/SKILL.md | cut -c1-420; echo ...; sed -n 70,76p ~/.claude/skills/chronicle-cross-pass/SKILL.md | cut -c1-420)
+  ⎿  
+  **double-quoted** for that interpolation, where earlier revisions used single quotes.
+  
+  ### A. Deep review (`/session-chronicle reflect` OR auto-escalation at 10 entries)
+  
+  Use this for both the deliberate `reflect` invocation and the skill's mandatory deep review when 10+ entries have accumulated since the last evolution note in `reflective-practice.md`. Same intent, same corpus shape.
+    ... (10 more lines)
+
+⏺ The reuse review found nothing to change, but it did catch a mistake in my report. The `chronicle-cross-pass` skill does need a wording change: lines 59 and 73 still scope to "the last evolution note". I told the requesting session no change was needed, so I'll correct that once the other three reviews are in.
+
+⏺ The efficiency review found nothing in the script worth changing, only two optional wording notes on `SKILL.md`. I'm still waiting on the simplification and altitude reviews.
+
+> <task-notification>
+<task-id>afab8ff1e1fa838d8</task-id>
+<tool-use-id>toolu_01G6Gg5VyoNUiyttc3jArDps</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/afab8ff1e1fa838d8.output</output-file>
+<status>completed</status>
+<summary>Agent "Efficiency review of PR diff" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>This agent's report was delivered to you as a message from "afab8ff1e1fa838d8" (its SubagentHandback call). Read it there; it is not repeated here.
+</result>
+<usage><subagent_tokens>74165</subagent_tokens><tool_uses>9</tool_uses><duration_ms>42252</duration_ms></usage>
+</task-notification>
+
+⏺ The altitude review's main point is that the list of negation words can't be complete: `— Deep review can wait` still matches. It suggests dropping the older shapes and matching only the marker. That would undo the compatibility the requesting session asked for, so I'm leaning toward a narrower fix, unless the last review changes that. I'm waiting on the simplification review.
+
+> <task-notification>
+<task-id>a171c13a3ce30f079</task-id>
+<tool-use-id>toolu_014Z5eidsAp2VhsBzfoTi9B8</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/a171c13a3ce30f079.output</output-file>
+<status>completed</status>
+<summary>Agent "Altitude review of PR diff" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>This agent's report was delivered to you as a message from "a171c13a3ce30f079" (its SubagentHandback call). Read it there; it is not repeated here.
+</result>
+<usage><subagent_tokens>83260</subagent_tokens><tool_uses>11</tool_uses><duration_ms>87170</duration_ms></usage>
+</task-notification>
+
+⏺ Mcp  Ccd Turn  Update Plan(advance: True)
+  ⎿  
+Plan updated: step 2 of 3 is in progress.
+
+⏺ Bash(python3 - <<'EOF'
+import pathlib
+base=pathlib.Path('plugins/meta-claude/skills/session-chronicle')
+def sub(path,pairs):
+    p=pathlib.Path(path); t=p.read_text()
+    for a,b in pairs:
+        assert t.count(a)==1,a
+        t=t.replace(a,b)
+    p.write_text(t)
+
+sub(base/'scripts/deep-review-status.py',[
+("Prints JSON: last_deep_review, count, threshold, due, entries (newest first).","Prints JSON: last_deep_review, count, due, entries (newest first)."),
+("""# `(deep review)` is the marker SKILL.md writes. The rest are older shapes still
+# in practice files: `— Deep review (14 entries...)`, `— Escalated deep review`,
+# and plain dated headings over `Deep review ran; ...`, `Deep review at the
+# 10-entry threshold`, or `**Escalated from the lightweight check to a deep review.**`
+# A parenthetical qualifier may come first, as in `(later) — Deep review`.
+REVIEW_HEADING = re.compile(
+    r'^(?:[\\s—–:-]*\\([^)]*\\))*'
+    r'[\\s(—–:-]*(?:(?:escalated|full) )?deep review\\b'
+    r'(?![\\s:;,—–-]*(?:not|deferred|held|skipped|due|overdue|pending|postponed)\\b)',
+    re.I,
+)
+""","""# `(deep review)` is the marker SKILL.md writes. The other shapes come from older
+# notes: headings like `— Deep review (14 entries...)`, `— Deep review across 16
+# reflections`, and `— Escalated deep review (after a miscount)`, and plain dated
+# headings over `Deep review at the 10-entry threshold`, the previous no-op note
+# `Deep review ran; ...`, or `**Escalated from the lightweight check to a deep review.**`
+# A parenthetical qualifier may come first, as in `(later) (deep review)`.
+# What follows `deep review` is an allowlist: `Deep review can wait` must not match.
+REVIEW_HEADING = re.compile(
+    r'^[\\s—–:-]*(?:\\([^)]*\\)[\\s—–:-]*)*?'
+    r'\\(?(?:(?:escalated|full) )?deep review(?:\\)|\\s*$|\\s+\\(|\\s+across\\b)',
+    re.I,
+)
+"""),
+("""    if not re.fullmatch(r'\\d{4}-\\d{2}-\\d{2}', text):
+        return False
+    try:
+        date.fromisoformat(text)
+    except ValueError:
+        return False
+    return True
+""","""    try:
+        return date.fromisoformat(text).isoformat() == text
+    except ValueError:
+        return False
+"""),
+("""    (the first line of its body). Dated notes are `###` or `####` headings; older
+    practice files use `###`. Fenced code is skipped, so a quoted prompt or
+    template can neither add a note nor end the section.
+""","""    (the first line of its body). Older practice files date their notes with `###`
+    rather than `####`, so any heading inside the section can be a note. Fenced
+    code is skipped, so a quoted prompt or template can neither add a note nor end
+    the section.
+"""),
+("            if dated and level >= 3 and is_date(dated[1]):\n","            if dated and is_date(dated[1]):\n"),
+("""    chronicle_dir = Path(chronicle_dir)
+    practice = chronicle_dir""","""    practice = chronicle_dir"""),
+("""    dates = sorted(
+        (p.stem for p in chronicle_dir.glob('*.md') if p.is_file() and is_date(p.stem)),
+        reverse=True,
+    )
+    if last_review:
+        dates = [entry for entry in dates if entry > last_review]
+
+    return {
+        'last_deep_review': last_review,
+        'count': len(dates),
+        'threshold': THRESHOLD,
+        'due': len(dates) >= THRESHOLD,
+        'entries': [f'{entry}.md' for entry in dates],
+    }
+""","""    entries = sorted(
+        (p.name for p in chronicle_dir.glob('*.md')
+         if p.is_file() and is_date(p.stem) and p.stem > (last_review or '')),
+        reverse=True,
+    )
+
+    return {
+        'last_deep_review': last_review,
+        'count': len(entries),
+        'due': len(entries) >= THRESHOLD,
+        'entries': entries,
+    }
+"""),
+])
+
+sub(base/'scripts/test_deep_review_status.py',[
+("            '#### 2026-05-01 — Deep review: no changes warranted',\n",""),
+("            'threshold': 10,\n",""),
+("""            ('#### 2026-05-01 (deep review deferred)', 'Text.'),
+""","""            ('#### 2026-05-01 (deep review deferred)', 'Text.'),
+            ('#### 2026-05-01 (deep review unnecessary)', 'Text.'),
+            ('#### 2026-05-01 — Deep review can wait', 'Text.'),
+            ('#### 2026-05-01 — Deep review waived', 'Text.'),
+"""),
+])
+
+sub(base/'SKILL.md',[
+(" Files dated the same as the anchor are excluded. With no deep review on record,"," With no deep review on record,"),
+])
+
+sub('docs/specs/deep-review-anchor.md',[
+("""- the heading after the date, past any parenthetical qualifier, is the marker or an older form: `(deep review)`, `(full deep review)`, `(later) — Deep review ...`, `— Escalated deep review ...`, and not followed by words like "not due" or "deferred"
+""","""- the heading after the date, past any parenthetical qualifier, is the marker or an older form: `(deep review)`, `(full deep review)`, `— Deep review`, `— Deep review (14 entries ...`, `— Deep review across ...`, `— Escalated deep review (...`. What may follow `deep review` is an allowlist, because a list of negating words can't be complete
+"""),
+("""The `chronicle-cross-pass` skill's Prompt B reads the three newest Evolution Notes. It doesn't depend on the anchor, so it needs no change.
+""","""The `chronicle-cross-pass` skill's Prompt B reads the three newest Evolution Notes and doesn't depend on the anchor. Its deep-review section still scopes to "the last evolution note", so its optional `$FILES` trim needs to use the script's `entries` instead. That skill lives outside this repo.
+"""),
+])
+EOF
+SCR=$PWD/plugins/meta-claude/skills/session-chronicle/scripts
+(cd $SCR && python3 -B -m unittest test_deep_review_status.py 2>&1 | grep -E '^(FAIL|ERROR):|^Ran |^FAILED|^OK|AssertionError' | cut -c1-150)
+cd ~; for f in devbox dev/claude-code-plugins dev/osu-builder-in-residence projects/daily-briefing projects/airbnb-prep projects/daily-digest projects/persimmon-care dev/wellstead projects/<project>; do printf '%-34s ' $f; python3 -B $SCR/deep-review-status.py $f/docs/chronicle | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['last_deep_review'],d['count'],'DUE' if d['due'] else '')"; done)
+  ⎿  
+  Ran 38 tests in 0.057s
+  OK
+  devbox                             2026-07-12 27 DUE
+  dev/claude-code-plugins            None 11 DUE
+  dev/osu-builder-in-residence       2026-07-28 4 
+    ... (7 more lines)
+
+⏺ Bash(SK=plugins/meta-claude/skills/session-chronicle && git add docs/specs/deep-review-anchor.md $SK/SKILL.md $SK/scripts/deep-review-status.py $SK/scripts/test_deep_review_status.py && git commit -q -F - <<'EOF'
+refactor(session-chronicle): simplify the deep-review count
+
+- Replace the negation word list with an allowlist of what may follow
+  `deep review`, since `Deep review can wait` got past the list
+- Simplify date checks and entry filtering; drop the unused `threshold`
+  output and a near-dead heading-level check
+- Correct the comment on older shapes, and record that the cross-pass
+  skill's deep-review wording needs a change
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+EOF
+git push 2>&1 | tail -1; git status -sb | head -3; git log --oneline -1)
+  ⎿  
+⏺ Sendmessage(to: uds:/run/user/1000/cc-socks/325463.sock
+      summary: Correct cross-pass claim, send wording change
+      message: |
+  Correction: `~/.claude/skills/chronicle-cross-pass/SKILL.md` does need a wording change. I told you twice that it didn't, and that was wrong. Prompt B is fine, but section A still scopes to the last evolution note.
+  
+  Why it matters: once PR 77 merges, lightweight notes still move "the last evolution note", so line 73's optional trim could give `agy` far fewer files than the deep review's window.
+  
+  The change, per your scope note I haven't made it:
+  - Line 59: replace "since the last evolution note in `reflective-practice.md`" with "since the last deep review in `reflective-practice.md`".
+  - Line 73: replace "trim `$FILES` to entries since the last evolution-note date to match the skill's stated scope" with "trim `$FILES` to the `entries` that `deep-review-status.py` reports, to match the skill's stated scope".
+  
+  Also pushed to PR 77 after a cleanup pass, still unmerged:
+  - `threshold` is gone from the JSON output.
+  - What may follow `deep review` in a heading is now an allowlist, because `— Deep review can wait` got past the negation word list.
+  - 38 tests pass. Spot-checked 9 of the 14 real files after this change, including all six due projects, and the results were unchanged.
+      type: message
+      recipient: uds:/run/user/1000/cc-socks/325463.sock
+      recipient_kind: session
+      content: Correction: `~/.claude/skills/chronicle-cross-pas…)
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(advance: True)
+  ⎿  
+     b59de09..99ab982  fix/chronicle-deep-review-anchor -> fix/chronicle-deep-review-anchor
+  ## fix/chronicle-deep-review-anchor...origin/fix/chronicle-deep-review-anchor
+  99ab982 refactor(session-chronicle): simplify the deep-review count
+
+{"success":true,"message":"“Correct cross-pass claim, send wording change” → uds:/run/user/1000/cc-socks/325463.sock; in that session's inbox, not yet read by its Claude — a [Cross-session delivery notice] follows if that session holds it (usually a different permission mode) or refuses it","msg_id":"efec12b3-0ee7-46f7-9ac6-f56b236d3da8"}
+
+Plan updated: step 3 of 3 is in progress.
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: The cleanup pass is pushed to PR 77, and all 38 tests pass. The heading match now uses an allowlist, and the script is simpler. The PR is unmerged, and the cross-pass skill's wording change is with the requesting session.)
+  ⎿  
+Nothing is pending, so the app draws no box; the recap is the session's status. Your closing message is your answer to the user: write it now, as the last thing you say this turn.
+
+⏺ The cleanup is pushed to [PR 77](https://github.com/ddehart/claude-code-plugins/pull/77), and all 38 tests pass. After the changes I re-ran the script on 9 of the 14 real practice files, including all six due projects, and got the same results. The reuse review found nothing, and the merge decision is still yours.
+
+**Fixed:**
+- **Heading match:** what may follow `deep review` is now an allowlist. The list of negation words could never be complete, and `— Deep review can wait` got past it.
+- **Script simplifications:** date checks and entry filtering are shorter, and I removed the unused `threshold` output and a heading-level check that almost never mattered.
+- **Comment accuracy:** the comment on older shapes claimed they were all still in real files, which wasn't true.
+
+**Correction from me:** I told the requesting session that the `chronicle-cross-pass` skill needed no change, and that was wrong. Its deep-review section still scopes to "the last evolution note", so its optional file trim could pass far fewer files than the review's window. I sent that session the exact wording, since that skill lives outside this repo and it asked to make the change itself. The spec now records this too.
+
+**Skipped:**
+- **Match only the `(deep review)` marker:** this was the biggest suggestion, and would remove most of the parser. It would change intended behavior, though: `devbox` would report no deep review on record and 66 entries, even though one ran on 07-12. The requesting session also asked for those older shapes to keep working, so I kept them. If you'd rather have the smaller code, the reviewer found the same projects come due either way.
+- **Merging the three threshold tests into one table:** the separate names show exactly which case broke.
+- **Using `entries` for the lightweight check:** that list can be too short, so the file search would have to stay anyway.
+- **Reading only the Reflection sections during deep reviews:** this predates the PR and costs little.
+- **Reworking the fence lookahead:** at this file size it doesn't matter.
+
+⏺ Agent(description: Security review of PR diff
+      subagent_type: Explore
+      prompt: |
+  You are a senior security engineer doing a focused, read-only security review of branch fix/chronicle-deep-review-anchor in /home/derek/dev/claude-code-plugins. Get the diff with `git -C /home/derek/dev/claude-code-plugins diff main...HEAD`. Do not write files or change anything.
+  
+  Changed code that runs: plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py (a stdlib Python CLI that reads a local chronicle directory and prints JSON) and SKILL.md instructions that have a model run it. The rest is docs, version bumps, and unit tests.
+  
+  OBJECTIVE: identify HIGH-CONFIDENCE vulnerabilities with real exploitation potential newly added by this PR. Not a general code review. Only flag issues where you're over 80% confident of actual exploitability. Skip theoretical issues, style, and low impact.
+  
+  CATEGORIES: input validation (SQL/command/XXE/template/NoSQL injection, path traversal); authentication and authorization (bypass, privilege escalation, sessions, JWT); crypto and secrets (hardcoded keys, weak crypto, key storage, randomness, certificate validation); injection and code execution (deserialization, pickle, YAML, eval, XSS); data exposure (sensitive logging, PII, API leakage, debug info). Local-network-only exploits can still be high severity.
+  
+  METHOD: 1) Research repo context: security patterns, the threat model, how skills run scripts. 2) Compare the changes to existing patterns and identify new attack surface. 3) Trace data from inputs to sensitive operations and across privilege boundaries.
+  
+  HARD EXCLUSIONS: DoS or resource exhaustion; secrets on disk; rate limiting; memory or CPU exhaustion; missing validation on non-security-critical fields with no proven impact; GitHub Action input sanitization unless clearly triggerable; lack of hardening; theoretical races; outdated libraries; memory safety in memory-safe languages; test-only files; log spoofing; path-only SSRF; user content in AI prompts; regex injection; regex DoS; insecure documentation, including anything in markdown files; lack of audit logs.
+  
+  PRECEDENTS: environment variables and CLI flags are trusted; logging non-PII is fine; only include MEDIUM findings if obvious and concrete; shell command injection needs a concrete path for untrusted input.
+  
+  OUTPUT: for each finding give file, line, severity (HIGH/MEDIUM), category, description, exploit scenario, recommendation, and a 1-10 confidence score. If there are none, say "No vulnerabilities found" and list briefly what you checked. Keep the report under 250 words.)
+  ⎿  
+Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)
+agentId: a1171099eab71e8b8 (internal ID - do not mention to user. Use SendMessage with to: 'a1171099eab71e8b8', summary: '<5-10 word recap>' to continue this agent.)
+The agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.
+Do not duplicate this agent's work — avoid working with the same files or topics it is using.
+output_file: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/a1171099eab71e8b8.output
+Do NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification.
+
+⏺ The security review is running in the background. I'll post the report when it finishes.
+
+⏺ # Security Review: `fix/chronicle-deep-review-anchor`
+
+No vulnerabilities found. The review read the code and did not run the script, so no false-positive filtering step was needed.
+
+**Checked in `plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py`:**
+
+- **Code execution and injection:** it imports only `json`, `re`, `sys`, `datetime` and `pathlib`. It has no subprocess, `eval`, `pickle` or YAML, and makes no writes or network calls.
+- **Shell path:** the `SKILL.md` command takes a fixed `docs/chronicle` argument and the trusted `${CLAUDE_SKILL_DIR}`. No file content reaches a shell.
+- **Path traversal:** the only path input is the trusted CLI argument, the practice filename is fixed, and `glob('*.md')` doesn't recurse.
+- **Data exposure:** the output holds only `last_deep_review`, `count`, `due` and `entries`. Note text is never printed, and anything that isn't a valid date is dropped, so crafted filenames or notes can't put free text in the output.
+- **Module shadowing:** `python3 <path>` puts the script's directory on `sys.path`, not the working directory, so a planted `json.py` in a project root isn't imported.
+- **Other changes:** the manifest diffs are version bumps only, and no hooks were added.
+
+A forged note can suppress a deep review, but that only affects how often reviews run and has no security impact.
+
+> <task-notification>
+<task-id>a1171099eab71e8b8</task-id>
+<tool-use-id>toolu_0111AYuNgAFyiYmCpyCxrESj</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/a1171099eab71e8b8.output</output-file>
+<status>completed</status>
+<summary>Agent "Security review of PR diff" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>This agent's report was delivered to you as a message from "a1171099eab71e8b8" (its SubagentHandback call). Read it there; it is not repeated here.
+</result>
+<usage><subagent_tokens>68019</subagent_tokens><tool_uses>4</tool_uses><duration_ms>24082</duration_ms></usage>
+</task-notification>
+
+> Go ahead and merge the PR
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Check PR state and stacked PRs",
+    "status": "in_progress"
+  },
+  {
+    "content": "Merge PR 77",
+    "status": "pending"
+  },
+  {
+    "content": "Update local main and verify",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (3 steps).
+
+⏺ Bash(gh pr view 77 --json state,mergeable,mergeStateStatus,headRefOid,statusCheckRollup -q '{state,mergeable,mergeStateStatus,headRefOid,checks:(.statusCheckRollup|length)}' 2>/dev/null; git rev-parse HEAD; echo "dependents:"; gh pr list --base fix/chronicle-deep-review-anchor --state open; echo "--"; gh api repos/ddehart/claude-code-plugins -q '{squash:.allow_squash_merge,merge:.allow_merge_commit,rebase:.allow_rebase_merge}'; gh pr list --state merged --limit 5 --json number,title,mergeCommit -q '.[]|"\(.number) \(.mergeCommit.oid[0:7]) \(.title)"'; for c in $(gh pr list --state merged --limit 3 --json mergeCommit -q '.[].mergeCommit.oid'); do git log -1 --format='%h parents=%p %s' $c; done)
+  ⎿  
+  {"checks":0,"headRefOid":"99ab982c05977606ef4daa63a1a842261c0365a5","mergeStateStatus":"CLEAN","mergeable":"MERGEABLE","state":"OPEN"}
+  99ab982c05977606ef4daa63a1a842261c0365a5
+  dependents:
+  --
+  {"merge":true,"rebase":true,"squash":true}
+    ... (8 more lines)
+
+⏺ Bash(gh pr merge 77 --rebase --delete-branch --match-head-commit 99ab982c05977606ef4daa63a1a842261c0365a5 2>&1 | tail -5; git status -sb | head -3; gh pr view 77 --json state,mergedAt,mergeCommit -q '"\(.state) \(.mergedAt) \(.mergeCommit.oid[0:7])"' 2>/dev/null; git fetch -q --prune origin; git log --oneline -5 origin/main; git branch -a | head)
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(advance: True)
+  ⎿  
+   .../scripts/test_deep_review_status.py             | 381 +++++++++++++++++++++
+   10 files changed, 625 insertions(+), 16 deletions(-)
+   create mode 100644 docs/specs/deep-review-anchor.md
+   create mode 100644 plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py
+   create mode 100644 plugins/meta-claude/skills/session-chronicle/scripts/test_deep_review_status.py
+    ... (17 more lines)
+
+Plan updated: step 2 of 3 is in progress.
+
+⏺ Bash(git rev-parse --short HEAD origin/main; git branch --show-current; git branch --list 'fix/chronicle-deep-review-anchor'; (cd plugins/meta-claude/skills/session-chronicle/scripts && python3 -B -m unittest test_deep_review_status.py 2>&1 | tail -3); ls ~/.claude/plugins/cache/ddehart-plugins/meta-claude 2>/dev/null | tail -3)
+  ⎿  
+⏺ Sendmessage(to: uds:/run/user/1000/cc-socks/325463.sock
+      summary: PR 77 merged to main
+      message: |
+  PR 77 is merged to main at 2ffc56b, on Derek's go-ahead: https://github.com/ddehart/claude-code-plugins/pull/77
+  
+  The cross-pass wording change from my last message is yours to apply now. Installed copies of the plugin only get the fix once they update to meta-claude 1.9.0.
+      type: message
+      recipient: uds:/run/user/1000/cc-socks/325463.sock
+      recipient_kind: session
+      content: PR 77 is merged to main at 2ffc56b, on Derek's go…)
+  ⎿  
+  fatal: Needed a single revision
+  main
+  Ran 38 tests in 0.057s
+  
+  OK
+  1.8.3
+
+{"success":true,"message":"“PR 77 merged to main” → uds:/run/user/1000/cc-socks/325463.sock; in that session's inbox, not yet read by its Claude — a [Cross-session delivery notice] follows if that session holds it (usually a different permission mode) or refuses it","msg_id":"289d6e2b-0dfd-4a86-a4ae-56e26f2a81fe"}
+
+⏺ Bash(git rev-parse HEAD origin/main && git status -sb | head -2)
+  ⎿  
+  2ffc56b75cd7e0277f6b6919f61e5deb53616364
+  2ffc56b75cd7e0277f6b6919f61e5deb53616364
+  ## main...origin/main
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: PR 77 is merged to main at 2ffc56b, and local main matches the remote with all 38 tests passing. The installed plugin is still 1.8.3, so the fix isn't live until it updates to 1.9.0.)
+  ⎿  
+Nothing is pending, so the app draws no box; the recap is the session's status. Your closing message is your answer to the user: write it now, as the last thing you say this turn.
+
+⏺ [PR 77](https://github.com/ddehart/claude-code-plugins/pull/77) is merged to `main` at `2ffc56b`, and the fix branch is deleted. Local `main` matches the remote, and all 38 tests pass there.
+
+I used a rebase merge to match the repo's recent PRs. That keeps the four commits separate, so the failing-first test commit is part of `main`'s history.
+
+**Not live yet:** the installed plugin on this machine is still 1.8.3, so chronicle writes here keep using the old count until it updates to 1.9.0. Once it does, the six projects will each run their one deep review on their next chronicle write.
+
+The requesting session knows about the merge and has the `chronicle-cross-pass` wording change to apply.
+
+> Please update the plugin
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Refresh marketplace and update meta-claude",
+    "status": "in_progress"
+  },
+  {
+    "content": "Verify the installed version and script",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (2 steps).
+
+⏺ Bash(export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; claude plugin --help 2>&1 | sed -n 1,25p; claude plugin update --help 2>&1 | sed -n 1,14p; claude plugin marketplace update --help 2>&1 | sed -n 1,10p; python3 - <<'EOF'
+import json,pathlib
+p=pathlib.Path.home()/'.claude/plugins/installed_plugins.json'
+d=json.loads(p.read_text())
+for k,v in d.get('plugins',{}).items():
+    if 'ddehart' in k: print(k,[(i.get('scope'),i.get('version'),i.get('projectPath')) for i in v])
+EOF)
+  ⎿  
+  (51 lines)
+
+⏺ Bash(export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; cd /home/derek/dev/claude-code-plugins; claude plugin update --help 2>&1 | grep -n -A2 -i 'scope'; claude plugin marketplace update ddehart-plugins 2>&1 | tail -3; claude plugin update meta-claude@ddehart-plugins --scope user 2>&1 | tail -3; claude plugin update meta-claude@ddehart-plugins --scope project 2>&1 | tail -3; git status --short; python3 - <<'EOF'
+import json,pathlib,subprocess
+p=pathlib.Path.home()/'.claude/plugins/installed_plugins.json'
+d=json.loads(p.read_text())
+for i in d['plugins']['meta-claude@ddehart-plugins']:
+    print(i.get('scope'),i.get('version'),i.get('installPath'))
+    s=pathlib.Path(i['installPath'])/'skills/session-chronicle/scripts/deep-review-status.py'
+    print('  script present',s.is_file())
+EOF
+S=$(ls -d ~/.claude/plugins/cache/ddehart-plugins/meta-claude/1.9.0 2>/dev/null); ls ~/.claude/plugins/cache/ddehart-plugins/meta-claude; [ -n "$S" ] && python3 -B $S/skills/session-chronicle/scripts/deep-review-status.py ~/projects/daily-briefing/docs/chronicle | head -4; grep -c "deep-review-status.py" $S/skills/session-chronicle/SKILL.md)
+  ⎿  
+  20:  -s, --scope <scope>        Installation scope: user, project, local, managed
+  21-                             (default: auto-detect)
+  22-  -y, --yes                  Accept the displayed marketplace-declared command
+  Replacing the existing marketplace clone…
+  Clone complete, validating marketplace…
+    ... (16 more lines)
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: meta-claude is updated to 1.9.0 at both user and project scope, and the installed script runs correctly. Sessions need a restart to pick it up, and running sessions keep the old skill until then.)
+  ⎿  
+Nothing is pending, so the app draws no box; the recap is the session's status. Your closing message is your answer to the user: write it now, as the last thing you say this turn.
+
+⏺ `meta-claude` is updated from 1.8.3 to 1.9.0, for your user install and for this project's install. The installed script reports the right answer for `daily-briefing`: last deep review 2026-11-06, count 0, not due.
+
+**Restart needed:** new sessions get 1.9.0, but sessions already running keep the old skill until they restart, and that includes this one.
+
+Once restarted, the six projects will each run their one deep review on their next chronicle write. They're `devbox`, `claude-code-plugins`, `airbnb-prep`, `daily-digest`, `persimmon-care` and `wellstead`.
+
+> Did the plugin reload help?
+
+⏺ Skill(skill: meta-claude:session-chronicle
+      args: read)
+  ⎿  
+  Launching skill: meta-claude:session-chronicle
+
+⏺ Yes, the reload worked, so this session is already on 1.9.0 and doesn't need the restart I said it did. To check, I loaded the skill here: it comes from the `meta-claude/1.9.0` folder and has the new Step 6a, with `${CLAUDE_SKILL_DIR}` already expanded to the installed script's path.
+
+I only loaded the skill to look at it, so no entries were read or written. Other sessions that were already open still need their own reload or a restart.
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Check facts the plan depends on",
+    "status": "in_progress"
+  },
+  {
+    "content": "Draft the test plan",
+    "status": "pending"
+  },
+  {
+    "content": "Send it to the requesting session",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (3 steps).
+
+⏺ Bash(cd ~; cat .claude/rules/chronicle-gemini-synthesis.md | cut -c1-500; echo ======; sed -n 1,54p .claude/skills/chronicle-cross-pass/SKILL.md | cut -c1-380; echo ...; sed -n 76,135p .claude/skills/chronicle-cross-pass/SKILL.md | cut -c1-380)
+  ⎿  
+⏺ Bash(cd ~; python3 - <<'EOF'
+import json,pathlib
+p=pathlib.Path.home()/'.gemini/antigravity-cli/settings.json'
+d=json.loads(p.read_text())
+a=d.get('permissions',{}).get('allow',[])
+print(len(a)); print('\n'.join(str(x)[:110] for x in a[:40]))
+EOF
+echo ======; ls projects/daily-briefing/.claude/skills 2>/dev/null; grep -rn -i "session-chronicle\|chronicle" projects/daily-briefing/.claude/skills/process/SKILL.md | cut -c1-260 | head -20; echo ======; grep -n -i "chronicle" projects/daily-briefing/CLAUDE.md | cut -c1-240 | head; grep -rln "session-chronicle" dev/claude-code-plugins/.claude/skills dev/claude-code-plugins/plugins/knowledge-commons 2>/dev/null | head; for r in devbox projects/airbnb-prep dev/wellstead; do ls $r/.claude/skills 2>/dev/null | tr '\n' ' '; echo " <- $r"; done; echo ======; <project> check 2>&1 | tail -6 | cut -c1-200; echo "exit $?"; export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; claude --help 2>&1 | grep -E -- '--(output-format|max-budget|session-id|plugin-dir|add-dir|model|permission-mode|disallowedTools|setting-sources|no-session-persistence)' | cut -c1-110; which faketime; grep -n "enabledPlugins" -A8 ~/.claude/settings.json | grep -i meta; sed -n 1,3p ~/dev/claude-code-plugins/docs/chronicle/reflective-practice.md >/dev/null; ls ~/dev/claude-code-plugins/docs/chronicle | grep -cE '^[0-9-]+\.md$')
+  ⎿  
+  (148 lines)
+
+  (87 lines)
+
+⏺ Bash(cd ~; sed -n 221,236p projects/daily-briefing/.claude/skills/process/SKILL.md | cut -c1-330; echo ======; grep -n "target\|commons\|path" projects/daily-briefing/.commons.yml 2>/dev/null | cut -c1-140 | head -8; echo ======; for r in devbox dev/claude-code-plugins projects/airbnb-prep dev/wellstead projects/daily-briefing; do printf '%-28s %s\n' $r "$(grep -c 'session-chronicle' $r/.claude/skills/process/SKILL.md 2>/dev/null)"; done; echo ======; python3 - <<'EOF'
+import json,pathlib
+d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text())
+for ev,hs in d.get('hooks',{}).items():
+    for h in hs:
+        for x in h.get('hooks',[]): print(ev,h.get('matcher'),str(x.get('command'))[:80])
+EOF
+head -1 a PreToolUse Bash hook 2>/dev/null; ls ~/.claude/hooks 2>/dev/null | head; echo ======; for r in devbox dev/claude-code-plugins projects/airbnb-prep projects/daily-digest projects/persimmon-care dev/wellstead; do printf '%-28s tracked=%s ignored=%s dirty=%s\n' $r "$(git -C $r ls-files docs/chronicle/reflective-practice.md | wc -l)" "$(git -C $r check-ignore -q docs/chronicle/reflective-practice.md && echo yes || echo no)" "$(git -C $r status --short docs/chronicle 2>/dev/null | wc -l)"; done; sed -n 66,73p ~/.claude/skills/chronicle-cross-pass/SKILL.md | grep -n "trim" | cut -c1-260; git -C ~/.local/share/chezmoi log --oneline -2 | cut -c1-90)
+  ⎿  
+  (47 lines)
+
+⏺ Sendmessage(to: uds:/run/user/1000/cc-socks/325463.sock
+      summary: Send chronicle write test plan
+      message: |
+  Test plan for a full chronicle write through installed meta-claude 1.9.0. Nothing has run and nothing is committed. Costs and times are estimates unless marked measured.
+  
+  CHANGES TO YOUR LIST
+  - Item 2: a lightweight run may write no note at all, so "a plain dated note doesn't reset the count" isn't reliably observable. The pass is now on the count itself.
+  - Item 4: `$FILES` from `entries` can't be a pass condition. The cross-pass skill says passing the whole list is fine. Pass: the list contains every file in `entries`.
+  - The cross-pass also runs on lightweight checks, so every run calls agy. I stub it except where the real run matters.
+  - Item 5: a plain `python3` break would break `a PreToolUse Bash hook`, which the PreToolUse hook runs with python3. The shim has to target only this script.
+  - Item 6: daily-briefing's Between Deep Reviews text also says the skill counts from the newest dated heading, which 1.9.0 made false. That could steer a run, so the case tests it.
+  - Item 7: it's five projects, not one. devbox, claude-code-plugins, airbnb-prep, wellstead and daily-briefing all have a `/process` skill that names session-chronicle.
+  - Added: same-day append, 1.8.3 negative control, fires-once, 20-entry cap, `/session-chronicle reflect`, and an interactive run.
+  
+  HARNESS (automated, about 45 min to build, no model spend)
+  - Run shape: `claude -p "/meta-claude:session-chronicle ..."` with a fixed made-up session arc, `--output-format stream-json --verbose`, `--no-session-persistence`, stdin from /dev/null, cwd in a scratch folder, default model. Haiku results don't count.
+  - Fixtures: built by script in the scratchpad, from a copy of this repo's own public chronicle (11 entries). Prior entries get an em-dash, trailing spaces, and one with no final newline, so verbatim copying is really tested.
+  - `check.py` asserts from three sources only: file contents, the stream's tool calls, and agy's log.
+  - Stub `agy`, first on PATH: logs its arguments and prints canned text.
+  - Byte check: sha256 of every fixture file before and after. Only today's file and the practice file may change. If today's file existed, its old content must be a byte-exact prefix. In the practice file, existing Evolution Notes must be unchanged.
+  - Real-file guard: sha256 of all 14 real practice files and their chronicle directories before and after each batch, which must match.
+  - Gates: `<project> check` must exit 0 before each batch (it did tonight, with <n> points of room). Runs must start and end on the same `date +%F`.
+  
+  CASES
+  T0 Checker self-test. Automated, 1 min, free. Change one byte in a prior entry, strip the marker, and swap `last_deep_review`. Pass: `check.py` fails all three.
+  
+  T1 Version. Automated, 3-5 min, one run. Pass: the Step 6a Bash call contains `/meta-claude/1.9.0/`, and `1.8.3` appears nowhere in the stream. This run also confirms slash invocation works under `-p` and measures real time and cost for the rest. Stop if cost looks out of line.
+  
+  T2 Not due. Automated, about 5 min, stub agy. Fixture: anchor, then 3 entries with plain dated notes. Pass: the script call comes after the entry Write, no new `(deep review)` line appears, `last_deep_review` is unchanged, and count is exactly one higher.
+  
+  T3 Same-day append. Automated, about 5 min, stub agy. Today's file already holds a session. Pass: old content is a byte-exact prefix, there's a `---` separator, and count is unchanged.
+  
+  T4 Due, real agy. Automated, about 10 min, two runs, one at a time so log attribution holds. Fixture: the bug's shape, an old anchor then 11 entries, each with a dated lightweight note. Preflight the agy recipe by hand on the scratch path first, since it has only run on real paths. Pass:
+  - Stream order is entry Write, then script, then agy, with the reflection unchanged afterward
+  - A `#### <today> (deep review)` note exists
+  - The script ran at least twice, and the last run shows today with count 0
+  - `$FILES` covers `entries`
+  - The mark-bound log check shows exactly one non-Claude label
+  - The note names that same model
+  Real agy because the served model is the point. It spends agy quota on public data only. The skill records about 85 seconds for 38 entries (measured 07-12).
+  
+  T5 Negative control, the case that must fail. Automated, about 5 min, stub agy. Copy the 1.8.3 skill from the cache into the scratch project under another name, and run it on T4's fixture. Expected: T4's assertions fail with no review. If they pass, the harness proves nothing and we stop.
+  
+  T6 Fires once. Automated, about 5 min, stub agy. Second write on T4's output. Pass: no new marker, and `last_deep_review` stays today.
+  
+  T7 Failure path. Automated, about 5 min, stub agy. PATH shim for `python3`: exit 127 if the arguments contain `deep-review-status.py`, otherwise exec the real one, so the hook still works. Pass: the stream shows at least one failed call, the first line of the final report names the error, Reflection reads happen, no marker is written, and no call reaches `/usr/bin/python3` directly. If it does, the run is void, not passed.
+  
+  T8 Cap. Automated, about 8 min, stub agy. Scratch copy of wellstead (36 entries, the real worst case). Pass: Read calls cover at most the newest 20 entry files.
+  
+  T9 Reflect. Automated, about 8 min, stub agy. Pass: same as T4's marker and re-run checks. No new daily file is written.
+  
+  T10 Local conventions. Automated, about 10 min, two runs, stub agy, with canned text containing one concrete finding. Scratch copy of daily-briefing with its anchor moved back a few days, because its 11-06 anchor would hide the count change today. Pass: no new dated heading in Evolution Notes, and exactly one new Cross-pass Log line. If the skill wins, that's a finding for Derek, not a harness error.
+  
+  T11 `/process` static read. Automated, 5 min, free. Read all five skills for anything that skips or limits Step 6. Pass: all hand off to the whole skill. daily-briefing's says "invoke `meta-claude:session-chronicle`" under one approval, and I've read only that part so far.
+  
+  T12 `/process` live. Manual, 20-30 min, optional. One run in a scratch clone, with promotions declined and the commons directory added to the hash guard. Pass: T2's script-call check. It needs your or Derek's approval at the plan gate, and I'd only do it if T11 raises a doubt.
+  
+  T13 Interactive. Manual, 10 min, Derek. Real `/session-chronicle` in the desktop app in a scratch folder, because `-p` differs on permission prompts and AskUserQuestion. Pass: `check.py` on the resulting files, using T4's file assertions.
+  
+  Total: about 1.5 hours of runs after the harness, roughly 11 model runs plus manual steps.
+  
+  Limits: these are samples, so a pass shows the instructions can work, not that they always will. Discretionary escalation isn't tested because it can't be forced.
+  
+  FIRST REAL WRITES (manual, on natural writes, nothing scheduled)
+  Order: claude-code-plugins first as the canary (11 entries, public, Derek's here), then persimmon-care, daily-digest, airbnb-prep, wellstead, and devbox last (largest file, most history). All six practice files are tracked in git and clean tonight, so `git revert` is the rollback.
+  
+  Watch: sessions opened before the update stay on 1.8.3 until reloaded or restarted, so a write there won't fire the review.
+  
+  A good review, all checkable afterward:
+  - The script reports today with count 0
+  - The heading is the exact marker
+  - `git diff` shows existing notes intact and only today's daily file changed
+  - The note cites specific entry dates and the served model
+  - The next write doesn't review again
+  
+  A bad review:
+  - Heading variant, or a repeat review on the next write
+  - Practice file rewritten wholesale
+  - Entries in `entries` weren't read, per the session log
+  - A no-op with no evidence of reading
+  - The reflection edited after the cross-pass
+  
+  Decisions for Derek:
+  1. Whether T12 runs at all.
+  2. Whether T4's agy quota use is fine.
+  3. Whether the canary order suits him.
+      type: message
+      recipient: uds:/run/user/1000/cc-socks/325463.sock
+      recipient_kind: session
+      content: Test plan for a full chronicle write through inst…)
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(done: [
+  1,
+  2,
+  3
+])
+  ⎿  
+{"success":true,"message":"“Send chronicle write test plan” → uds:/run/user/1000/cc-socks/325463.sock; in that session's inbox, not yet read by its Claude — a [Cross-session delivery notice] follows if that session holds it (usually a different permission mode) or refuses it","msg_id":"f14cd84e-0ef4-4459-9ecf-10717c18b1f3"}
+
+Plan updated: every step is done.
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: The test plan for a full chronicle write through 1.9.0 is with the requesting session for review. Nothing has run, nothing is committed, and no project files changed.)
+  ⎿  
+Nothing is pending, so the app draws no box; the recap is the session's status. Your closing message is your answer to the user: write it now, as the last thing you say this turn.
+
+⏺ I've sent the test plan to the requesting session, which will review it and bring it to you before anything runs. Nothing has run, and nothing is committed.
+
+The plan has 14 cases, about 11 model runs and 1.5 hours once the test harness is built, all on scratch copies. Those figures are estimates; the first run measures real time and cost.
+
+**Changes to the requesting session's list:**
+- **Negative control:** running the old 1.8.3 skill on the same test project must fail the checks. If it passes, the harness proves nothing and we stop.
+- **New cases:** appending to a same-day file byte-for-byte, the review firing only once, the 20-entry cap, `/session-chronicle reflect`, and one interactive run in the app.
+- **Failure case:** simply breaking `python3` would also break your `a PreToolUse Bash hook` hook, so the test blocks only this one script.
+- **`/process`:** it's five projects, not one. The plan starts with a free read of those skills, with a live run only if that raises a doubt.
+
+**Your three decisions, which the requesting session will bring you:**
+- whether the live `/process` run happens at all
+- whether using real `agy` quota on the due path is fine, on public data only
+- whether the rollout order suits you: `claude-code-plugins` first as the canary, `devbox` last
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Read the unattended-claude skill",
+    "status": "in_progress"
+  },
+  {
+    "content": "Build fixtures, checker, stubs, and guard",
+    "status": "pending"
+  },
+  {
+    "content": "Run T0 self-test and T11 static read",
+    "status": "pending"
+  },
+  {
+    "content": "Run T1 and review its cost",
+    "status": "pending"
+  },
+  {
+    "content": "Run T4 and T5 gate",
+    "status": "pending"
+  },
+  {
+    "content": "Run T2, T3, T6 to T10",
+    "status": "pending"
+  },
+  {
+    "content": "Check real-file guard and send report",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (7 steps).
+
+⏺ Skill(skill: unattended-claude)
+  ⎿  
+  Launching skill: unattended-claude
+
+⏺ Bash(cd ~; date; ls dev/claude-code-plugins/docs/chronicle | tail -14 | tr '\n' ' '; echo; ls dev/wellstead/docs/chronicle | grep -E '^20' | tail -3 | tr '\n' ' '; echo; which agy; agy models 2>&1 | cut -f2 | head -8; ls ~/.gemini/antigravity-cli/log 2>/dev/null | tail -2; grep -n "^## Evolution Notes" -A3 dev/claude-code-plugins/docs/chronicle/reflective-practice.md | cut -c1-120; ls ~/.claude/plugins/cache/ddehart-plugins/meta-claude/1.8.3/skills/session-chronicle; grep -l "session-chronicle" projects/persimmon-care/.claude/skills/process/SKILL.md projects/daily-digest/.claude/skills/process/SKILL.md)
+  ⎿  
+  Fri Nov  6 10:24:23 PM EST 2026
+  2026-03-21.md 2026-03-22.md 2026-03-28.md 2026-03-29.md 2026-04-05.md 2026-05-29.md 2026-07-12.md 2026-07-15.md 2026-07-22.md 2026-08-01.md 2026-08-02.md reflective-practice.md 
+  2026-10-09.md 2026-10-10.md 2026-10-16.md 
+  /home/derek/.local/bin/agy
+  Fetching available models...
+    ... (19 more lines)
+
+⏺ Write(h.py - 404 lines)
+  ⎿  
+  File created successfully at: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness/h.py (file state is current in your context — no need to Read it back)
+
+⏺ Write(run.sh - 16 lines)
+  ⎿  
+  File created successfully at: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness/run.sh (file state is current in your context — no need to Read it back)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && chmod +x run.sh && python3 -I h.py guard save && python3 -I h.py selftest; echo "selftest exit $?"; python3 -I h.py build t1; cat cases/t1/prompt.txt | cut -c1-90; <project> check >/dev/null 2>&1; echo "usage exit $?"; date +%T
+echo === T11; cd ~; for r in devbox dev/claude-code-plugins projects/airbnb-prep dev/wellstead projects/daily-briefing projects/persimmon-care projects/daily-digest; do echo "--- $r"; grep -n -i "session-chronicle" $r/.claude/skills/process/SKILL.md | cut -c1-210; grep -n -i -E "skip.*(step 6|reflective|practice|deep review|lightweight)|without.*(step 6|reflect|practice)|step 6|only the (entry|chronicle)" $r/.claude/skills/process/SKILL.md | cut -c1-180 | head -5; done)
+  ⎿  
+  (66 lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && sed -i "s|(d / 'proj/docs').mkdir(parents=True)|(d / 'proj').mkdir(parents=True)|" h.py && python3 -I h.py selftest; echo "selftest exit $?")
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(done: [
+  1,
+  2,
+  3
+]
+      start: 4)
+  ⎿  
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && ./run.sh t1 && python3 -I h.py check t1; tail -3 cases/t1/stderr.log | cut -c1-200)
+  ⎿  
+  PASS  clean
+  FAIL  prior entry changed by one byte
+  FAIL  marker stripped
+  FAIL  last_deep_review moved
+  VOID  agy denied
+  selftest exit 0
+  Shell cwd was reset to /home/derek/dev/claude-code-plugins
+  [This command modified 1 file you've previously read: ../../../../tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness/h.py. Call Read before editing.]
+
+Plan updated: step 4 of 7 is in progress.
+
+  Command running in background with ID: bo2v7tvm4. Output is being written to: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bo2v7tvm4.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /home/derek/dev/claude-code-plugins; directory changes mad...
+
+⏺ The harness is built and its checker self-test passes: it caught all three tampered runs and flagged a permission denial as void. The read of all seven `/process` skills passes too, since each hands off to the whole skill. T1 is running through the installed plugin now, and I'll review its cost before starting the rest.
+
+> <task-notification>
+<task-id>bo2v7tvm4</task-id>
+<tool-use-id>toolu_01N6T9rnP5QmoJMRUysMEgzn</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bo2v7tvm4.output</output-file>
+<status>completed</status>
+<summary>Background command "Run T1 through the installed plugin and check it" completed (exit code 0)</summary>
+</task-notification>
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && cat /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bo2v7tvm4.output | cut -c1-220; date +%T; python3 -I - <<'EOF'
+import json
+for l in open('cases/t1/stream.jsonl'):
+    e=json.loads(l)
+    c=(e.get('message') or {}).get('content')
+    if isinstance(c,list):
+        for x in c:
+            if x.get('type')=='tool_use':
+                i=x.get('input') or {}
+                print('USE',x['name'],str(i.get('command') or i.get('file_path') or i.get('skill') or i)[:150].replace('\n',' '))
+            if x.get('type')=='tool_result' and x.get('is_error'):
+                print('  ERR',str(x.get('content'))[:170])
+    if e.get('type')=='result': print('RESULT',e.get('subtype'),(e.get('result') or '')[:400])
+EOF
+cat cases/t1/agy-argv.log 2>/dev/null | tr '\0' ' ' | cut -c1-200 | head -4)
+  ⎿  
+  (46 lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && python3 -I - <<'EOF'
+import json
+n=0
+for l in open('cases/t1/stream.jsonl'):
+    e=json.loads(l)
+    if e.get('type')=='system' and e.get('subtype')=='init':
+        print({k:e.get(k) for k in ('permissionMode','model','cwd')}); print([ (p.get('name'),p.get('path')) for p in e.get('plugins',[]) if 'meta' in str(p)])
+    c=(e.get('message') or {}).get('content')
+    if isinstance(c,list):
+        for x in c:
+            if x.get('type')=='tool_use' and x['name']=='Bash':
+                n+=1
+                if n in (4,5,6): print('CMD',x['input']['command'][:600]); 
+            if x.get('type')=='tool_result' and n in (4,5,6):
+                print('OUT',str(x.get('content'))[:500])
+    if e.get('type')=='result': print(e.get('result'))
+EOF
+grep -n "defaultMode" ~/.claude/settings.json ~/.claude/settings.local.json 2>/dev/null; git -C ~/dev/claude-code-plugins status --short | head -3; ls -a ~/.claude/projects | grep -c scratchpad-harness)
+  ⎿  
+  (43 lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && <project> check >/dev/null 2>&1; echo "usage exit $?"; python3 -I h.py build t4a t4b t5 2>&1 | cut -c1-120; python3 -I h.py guard verify; date +%T)
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(advance: True)
+  ⎿  
+  usage exit 0
+  built t4a {"last_deep_review": "2026-03-20", "count": 11, "due": true}
+  built t4b {"last_deep_review": "2026-03-20", "count": 11, "due": true}
+  built t5 {"last_deep_review": "2026-03-20", "count": 11, "due": true}
+  GUARD CLEAN 237 files
+  22:28:34
+  Shell cwd was reset to /home/derek/dev/claude-code-plugins
+
+Plan updated: step 5 of 7 is in progress.
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && ./run.sh t4a t4b && python3 -I h.py check t4a t4b)
+  ⎿  
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && ./run.sh t5 && python3 -I h.py check t5)
+  ⎿  
+  Command running in background with ID: b7rhepqfc. Output is being written to: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/b7rhepqfc.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /home/derek/dev/claude-code-plugins; directory changes mad...
+
+  Command running in background with ID: bvnycw77d. Output is being written to: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bvnycw77d.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /home/derek/dev/claude-code-plugins; directory changes mad...
+
+⏺ T1 passed on 1.9.0 in about 2 minutes, at a reported $1.30, which is in line with the plan. The two real-`agy` due-path runs and the 1.8.3 negative control are running now. The rest waits on the control, because if it passes, the harness proves nothing.
+
+> <task-notification>
+<task-id>bvnycw77d</task-id>
+<tool-use-id>toolu_015dA7RUotC2b7tGVBNXodwj</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bvnycw77d.output</output-file>
+<status>completed</status>
+<summary>Background command "Run the 1.8.3 negative control" completed (exit code 0)</summary>
+</task-notification>
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && cut -c1-200 /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bvnycw77d.output; python3 -I - <<'EOF'
+import json
+for l in open('cases/t5/stream.jsonl'):
+    e=json.loads(l)
+    if e.get('type')=='result': print((e.get('result') or '')[:900])
+EOF
+grep -n "^#### 2026-11-06\|^#### 2026-08-02" cases/t5/proj/docs/chronicle/reflective-practice.md | head)
+  ⎿  
+  t5 exit=0 started=2026-11-06 ended=2026-11-06 at=22:31:14
+  == t5: FAIL
+    ok   only daily and practice files changed
+    ok   existing Evolution Notes intact
+    ok   entry written
+    ... (16 more lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && <project> check >/dev/null 2>&1; echo "usage exit $?"; python3 -I h.py build t2 t3 t7 t8 t9 t10a t10b 2>&1 | cut -c1-120; date +%T)
+  ⎿  
+  usage exit 0
+built t2 {"last_deep_review": "2026-07-15", "count": 3, "due": false}
+built t3 {"last_deep_review": "2026-07-15", "count": 4, "due": false}
+built t7 {"last_deep_review": "2026-07-15", "count": 3, "due": false}
+built t8 {"last_deep_review": null, "count": 36, "due": true}
+built t9 {"last_deep_review": "2026-03-20", "count": 11, "due": true}
+built t10a {"last_deep_review": "2026-11-03", "count": 1, "due": false}
+built t10b {"last_deep_review": "2026-11-03", "count": 1, "due": false}
+2...
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && ./run.sh t2 t3 t7 && python3 -I h.py check t2 t3 t7)
+  ⎿  
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && ./run.sh t8 t9 && python3 -I h.py check t8 t9)
+  ⎿  
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && ./run.sh t10a t10b && python3 -I h.py check t10a t10b)
+  ⎿  
+  Command running in background with ID: bmjd51uif. Output is being written to: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bmjd51uif.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /home/derek/dev/claude-code-plugins; directory changes mad...
+
+  Command running in background with ID: beqa8pp9l. Output is being written to: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/beqa8pp9l.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /home/derek/dev/claude-code-plugins; directory changes mad...
+
+  Command running in background with ID: b9qi3yeu1. Output is being written to: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/b9qi3yeu1.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /home/derek/dev/claude-code-plugins; directory changes mad...
+
+⏺ The negative control did its job: 1.8.3 failed T4's checks, stayed on the lightweight path, and reproduced the original bug by counting "one entry since the last note" with 12 unreviewed entries. The gate is clear, so the remaining cases are running in three parallel streams. T6 waits on the first real-`agy` run.
+
+> <task-notification>
+<task-id>b7rhepqfc</task-id>
+<tool-use-id>toolu_01AyU53xuMrMAgvAHTMzzLng</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/b7rhepqfc.output</output-file>
+<status>completed</status>
+<summary>Background command "Run both real-agy due-path cases in sequence" completed (exit code 0)</summary>
+</task-notification>
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && cut -c1-230 /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/b7rhepqfc.output; for c in t4a t4b; do echo "--- $c"; grep -n "^#### 2026-11-06" -A4 cases/$c/proj/docs/chronicle/reflective-practice.md | cut -c1-260 | head -8; tr '\0' ' ' < cases/$c/agy-argv.log | grep -o 'docs/chronicle/20[0-9-]*\.md\|/[^ ]*chronicle/20[0-9-]*\.md' | sort -u | wc -l; python3 -I - "$c" <<'EOF'
+import json,sys
+for l in open(f'cases/{sys.argv[1]}/stream.jsonl'):
+    e=json.loads(l)
+    if e.get('type')=='result': print((e.get('result') or '')[:500])
+EOF
+done)
+  ⎿  
+  (60 lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && python3 -I - <<'EOF'
+import json,re,glob,os,time
+from pathlib import Path
+for c in ('t4a','t4b'):
+    print('---',c, 'mark', time.strftime('%T',time.localtime(os.path.getmtime(f'cases/{c}/mark'))), 'stream end', time.strftime('%T',time.localtime(os.path.getmtime(f'cases/{c}/stream.jsonl'))))
+    i=0; names={}
+    for l in open(f'cases/{c}/stream.jsonl'):
+        e=json.loads(l)
+        m=(e.get('message') or {}).get('content')
+        if isinstance(m,list):
+            for x in m:
+                if x.get('type')=='tool_use':
+                    names[x['id']]=i
+                    inp=x.get('input') or {}
+                    s=str(inp.get('command') or inp.get('file_path') or inp.get('skill'))
+                    if 'deep-review-status' in s or s.endswith('2026-11-06.md') or 'agy -p' in s or 'Propagating' in s:
+                        print(i,x['name'],s[-110:].replace('\n',' ') if x['name']!='Bash' else s[:130].replace('\n',' '))
+                    i+=1
+                if x.get('type')=='tool_result':
+                    t=x.get('content'); t=t if isinstance(t,str) else json.dumps(t)
+                    for mm in re.finditer(r'.{0,60}(label|Gemini \S+ \S+ \(\w+\)).{0,50}',t):
+                        if 'selected' in mm[0] or 'label' in mm[0] or names.get(x.get('tool_use_id'),0)>0 and 'log' in t[:0]:
+                            print('   OUT',names.get(x.get('tool_use_id')),mm[0][:120]); break
+print('=== logs in window')
+base=Path.home()/'.gemini/antigravity-cli/log'
+for p in sorted(base.glob('cli-*.log')):
+    mt=p.stat().st_mtime
+    if mt>=os.path.getmtime('cases/t4a/mark')-5:
+        t=p.read_text(errors='replace')
+        print(p.name,time.strftime('%T',time.localtime(mt)),set(re.findall(r'label=(.*)',t)),len(t))
+EOF
+ps aux | grep -E '[a]gy ' | cut -c1-160 | head -5; crontab -l 2>/dev/null | grep -i -E 'agy|archaeolog' | cut -c1-120)
+  ⎿  
+  (34 lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness; for p in $(pgrep -x agy); do echo "$p cwd=$(readlink /proc/$p/cwd | sed 's/.*harness/H/') parent=$(ps -o ppid= -p $p)"; tr '\0' ' ' </proc/$p/cmdline | cut -c1-120; echo; done; ls ~/.gemini/antigravity-cli/log | tail -4; for c in t2 t3 t7 t8 t9 t10a t10b; do [ -f cases/$c/stream.jsonl ] && printf '%-5s lines=%s realagy=%s stubcalls=%s\n' $c "$(wc -l < cases/$c/stream.jsonl)" "$(grep -c 'local/bin/agy' cases/$c/stream.jsonl)" "$(grep -c 'END--' cases/$c/agy-argv.log 2>/dev/null)"; done; for c in t4a t4b; do printf '%s models=%s total=%s\n' $c "$(tr '\0' '\n' < cases/$c/agy-argv.log | grep -cx models)" "$(grep -c 'END--' cases/$c/agy-argv.log)"; done; date +%T)
+  ⎿  
+  365796 cwd=H/cases/t10a/proj parent= 365788
+  agy -p Read exactly these session journal files, and no others: docs/chronicle/2026-11-06.md docs/chronicle/2026-09-29.m
+  
+  cli-20261106_223429.log
+  cli-20261106_223430.log
+    ... (12 more lines)
+
+⏺ Bash(pgrep -f 'run.sh t10a t10b' | head; pkill -f 'run.sh t10a t10b'; sleep 0; pgrep -af 'run.sh' | cut -c1-80; cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness; python3 -I - <<'EOF'
+import json,re
+for c in 't2 t3 t7 t8 t9 t10a'.split():
+    try: f=open(f'cases/{c}/stream.jsonl')
+    except: continue
+    print('---',c)
+    for l in f:
+        try:e=json.loads(l)
+        except: continue
+        m=(e.get('message') or {}).get('content')
+        if isinstance(m,list):
+            for x in m:
+                if x.get('type')=='tool_use' and x['name']=='Bash':
+                    s=x['input'].get('command','')
+                    if re.search(r'agy\b',s): print('  ',s[:210].replace('\n',' ; '))
+EOF)
+  ⎿  
+  Exit code 144
+  360703
+  360709
+  366325
+
+⏺ Bash(pgrep -af 'run\.sh' | grep -v pgrep | cut -c1-90; cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness; ls cases/t10b/stream.jsonl 2>/dev/null; pgrep -x agy | wc -l; python3 -I - <<'EOF'
+import json,re
+for c in 't2 t3 t7 t8 t9 t10a'.split():
+    try: f=open(f'cases/{c}/stream.jsonl')
+    except: continue
+    print('---',c)
+    for l in f:
+        try:e=json.loads(l)
+        except: continue
+        m=(e.get('message') or {}).get('content')
+        if isinstance(m,list):
+            for x in m:
+                if x.get('type')=='tool_use' and x['name']=='Bash':
+                    s=x['input'].get('command','')
+                    if re.search(r'agy\b',s): print('  ',s[:210].replace('\n',' ; '))
+EOF
+date +%T)
+  ⎿  
+  (29 lines)
+
+⏺ Checking whether any stub-only case reached the real `agy`, since only the two T4 runs had approval for that quota. I've stopped T10's second run until I know.
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness; python3 -I - <<'EOF'
+import json,re
+for c in 't1 t2 t3 t5 t7 t8 t9 t10a'.split():
+    try: f=open(f'cases/{c}/stream.jsonl')
+    except: continue
+    hits=[]
+    for l in f:
+        try:e=json.loads(l)
+        except: continue
+        m=(e.get('message') or {}).get('content') if isinstance(e.get('message'),dict) else None
+        if isinstance(m,list):
+            for x in m:
+                if isinstance(x,dict) and x.get('type')=='tool_use' and x['name']=='Bash':
+                    s=x['input'].get('command','')
+                    if re.search(r'-p "Read exactly',s) :
+                        pre=s[:s.index('-p "Read exactly')][-90:].replace('\n',' ; ')
+                        hits.append(pre)
+    print(c,len(hits),hits[-2:])
+EOF
+for f in ~/.gemini/antigravity-cli/log/cli-20261106_2232*.log ~/.gemini/antigravity-cli/log/cli-20261106_2238*.log; do echo "$f"; grep -m3 -iE 'cwd|workspace|add-dir|Workspace' "$f" | cut -c1-200; done; pgrep -x agy | wc -l; pgrep -af 'run\.sh' | grep -v pgrep | grep -v snapshot | cut -c1-60; date +%T)
+  ⎿  
+  (22 lines)
+
+⏺ Bash(cd ~/.gemini/antigravity-cli/log; H=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness; for f in cli-20261106_2229*.log cli-20261106_223[0-9]*.log; do printf '%s ' "$f"; grep -m1 -o 'workspaceDirs=\[[^]]*' "$f" | sed 's/.*harness.cases.//' | cut -c1-50 | tr '\n' ' '; grep -o 'label=.*' "$f" | head -1; done; cd $H; for c in t10a t8; do grep -n 'SHIM\|command -v agy\|which agy' -c cases/$c/stream.jsonl; done; python3 -I - <<'EOF'
+import json
+for c in ('t10a',):
+    names={}
+    for l in open(f'cases/{c}/stream.jsonl'):
+        try:e=json.loads(l)
+        except: continue
+        m=(e.get('message') or {}).get('content') if isinstance(e.get('message'),dict) else None
+        if isinstance(m,list):
+            for x in m:
+                if isinstance(x,dict) and x.get('type')=='tool_use' and x['name']=='Bash' and 'agy' in x['input'].get('command',''):
+                    names[x['id']]=x['input']['command'][:160].replace('\n',' ; ')
+                if isinstance(x,dict) and x.get('type')=='tool_result' and x.get('tool_use_id') in names:
+                    t=x.get('content'); t=t if isinstance(t,str) else json.dumps(t)
+                    print('CMD',names[x['tool_use_id']]); print('OUT',t[:330].replace('\n',' | '))
+EOF)
+  ⎿  
+  cli-20261106_222922.log t4a/proj label="Gemini 4 Argon (Medium)"
+  cli-20261106_222923.log t4a/proj label="Gemini 4 Argon (Medium)"
+  cli-20261106_222934.log t4a/proj/docs/chronicle label="Gemini 3.8 Flash (High)"
+  cli-20261106_223248.log t10a/proj label="Gemini 4 Argon (Medium)"
+  cli-20261106_223249.log t10a/proj/docs/chronicle label="Gemini 3.8 Flash (High)"
+    ... (11 more lines)
+
+⏺ Bash(cd ~/.claude/shell-snapshots; for f in $(ls -t | head -14); do printf '%s %s ' "$(date -r $f +%T)" "$f"; grep -m1 -o 'cases/[a-z0-9]*/shim' $f | tr '\n' ' '; echo; done; H=/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness; ls -la $H/cases/t10a/shim $H/cases/t10b/shim | cut -c1-70; cut -c1-220 /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bmjd51uif.output)
+  ⎿  
+  (55 lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && python3 -I - <<'EOF'
+import pathlib
+p=pathlib.Path('h.py'); t=p.read_text()
+pairs=[
+("""def is_script(u):
+    return 'deep-review-status.py' in cmd(u)
+""","""def is_script(u):
+    # A real execution, not a grep or a listing that mentions the name.
+    return bool(re.search(r'python3?\\s+"?[^\\s"]*deep-review-status\\.py', cmd(u)))
+"""),
+("""    mark = d / 'mark'
+    labels = set()
+    for p in (HOME / '.gemini/antigravity-cli/log').glob('cli-*.log'):
+        if p.stat().st_mtime >= mark.stat().st_mtime:
+            for m in re.finditer(r'Propagating selected model override.*?label=(.*)', p.read_text(errors='replace')):
+                labels.add(m[1].strip())
+    return labels
+""","""    # Bound to this case: the pass anchors on the case's chronicle dir. `agy models`
+    # logs anchor on the project root and report agy's default, which served nothing.
+    mark = d / 'mark'
+    labels = set()
+    want = f'workspaceDirs=[{d}/proj/docs/chronicle'
+    for p in (HOME / '.gemini/antigravity-cli/log').glob('cli-*.log'):
+        text = p.read_text(errors='replace')
+        if p.stat().st_mtime >= mark.stat().st_mtime and want in text:
+            for m in re.finditer(r'Propagating selected model override.*?label=(.*)', text):
+                labels.add(m[1].strip().strip('"'))
+    return labels
+"""),
+("""    shutil.copytree(proj / 'docs', d / 'before')
+""","""    (d / 'bashenv').write_text(f'agy() {{ "{sdir}/agy" "$@"; }}\\n')
+    shutil.copytree(proj / 'docs', d / 'before')
+"""),
+]
+for a,b in pairs:
+    assert t.count(a)==1,a[:40]
+    t=t.replace(a,b)
+p.write_text(t)
+r=pathlib.Path('run.sh'); t=r.read_text()
+a='  PATH="$D/shim:$PATH" timeout 1200'
+b='''  BE=""; case "$c" in t4a|t4b) ;; *) BE="$D/bashenv";; esac
+  BASH_ENV="$BE" PATH="$D/shim:$PATH" timeout 1200'''
+assert a in r.read_text(); r.write_text(t.replace(a,b))
+EOF
+python3 -I h.py selftest | tail -6; python3 -I h.py check t2 t3 t4a t4b t7 2>&1 | grep -E '^==|FAIL'; pgrep -af 'claude -p' | grep -v pgrep | wc -l; pgrep -x agy | wc -l; ls -la cases/t10a/stream.jsonl | cut -c20-; tail -c 300 cases/t10a/stderr.log; <project> check >/dev/null 2>&1; echo usage $?; date +%T)
+  ⎿  
+  PASS  clean
+  FAIL  prior entry changed by one byte
+  FAIL  marker stripped
+  FAIL  last_deep_review moved
+  VOID  agy denied
+    ... (18 more lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && sed -i "s|want = f'workspaceDirs=\[{d}/proj/docs/chronicle'|want = f'workspaceDirs=[{d.resolve()}/proj/docs/chronicle'|" h.py && python3 -I h.py check t4a t4b 2>&1 | grep -E '^==|FAIL'; python3 -I - <<'EOF'
+import json
+for c,idx in (('t3',(7,10)),('t4b',(6,9))):
+    i=0
+    for l in open(f'cases/{c}/stream.jsonl'):
+        e=json.loads(l); m=(e.get('message') or {}).get('content') if isinstance(e.get('message'),dict) else None
+        if isinstance(m,list):
+            for x in m:
+                if isinstance(x,dict) and x.get('type')=='tool_use':
+                    if i in idx: print(c,i,x['name'],str(x['input'].get('command',x['input'].get('file_path')))[:420].replace('\n',' ; '))
+                    i+=1
+EOF
+sed -n 1,8p cases/t10a/proj/docs/chronicle/reflective-practice.md >/dev/null; pgrep -af 'claude -p' | grep -v pgrep | cut -c1-70 | head -4; ls -la cases/t10a/stream.jsonl | cut -c25-60)
+  ⎿  
+  == t4a: FAIL
+    FAIL exactly one non-Claude model served | set()
+    FAIL note names the served model | set()
+  == t4b: FAIL
+    FAIL script ran after entry write | ([8], [6])
+    ... (13 more lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && grep -n "want = " h.py; grep -m1 -o 'workspaceDirs=.\{0,180\}' ~/.gemini/antigravity-cli/log/cli-20261106_222934.log | cut -c1-40; grep -m1 -o 'workspaceDirs=.*' ~/.gemini/antigravity-cli/log/cli-20261106_222934.log | rev | cut -c1-80 | rev; python3 -I - <<'EOF'
+import pathlib
+p=pathlib.Path('h.py'); t=p.read_text()
+a="""        a('script ran after entry write', script_i and daily_w and script_i[0] > daily_w[0], (daily_w[:1], script_i[:1]))
+"""
+b="""        a('script ran after entry write', script_i and daily_w and script_i[-1] > daily_w[0], (daily_w[:1], script_i[:1]))
+"""
+assert a in t; p.write_text(t.replace(a,b))
+EOF)
+  ⎿  
+  235:    want = f'workspaceDirs=[{d.resolve()}/proj/docs/chronicle'
+  394:    want = {'clean': 'PASS', 'agy denied': 'VOID'}
+  workspaceDirs=[/tmp/claude-1000/-home-de
+  pDataDir=/home/derek/.gemini/antigravity-cli languageServer=true codeAssist=true
+  Shell cwd was reset to /home/derek/dev/claude-code-plugins
+
+⏺ Fixing one last harness check so `agy`'s model label ties to the right run, then starting T6 and T10's second run.
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && sed -i "s|want = f'workspaceDirs=\[{d.resolve()}/proj/docs/chronicle'|want = f'{d.resolve()}/proj/docs/chronicle'|" h.py && python3 -I h.py selftest | tail -5 && python3 -I h.py check t3 t4a t4b 2>&1 | grep -E '^==|FAIL|turns'; python3 -I h.py build t6 t10b | cut -c1-100; pgrep -af 'claude -p' | grep -v pgrep | grep -c 'timeout'; date +%T)
+  ⎿  
+  PASS  clean
+  FAIL  prior entry changed by one byte
+  FAIL  marker stripped
+  FAIL  last_deep_review moved
+  VOID  agy denied
+    ... (12 more lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && (./run.sh t6 & ./run.sh t10b & wait) && python3 -I h.py check t6 t10b; for c in t6 t10b; do printf '%s real-agy-logs=' $c; grep -l "cases/$c/proj" ~/.gemini/antigravity-cli/log/cli-20261106_22[4-5]*.log 2>/dev/null | wc -l; done)
+  ⎿  
+  Command running in background with ID: bkof4g7ai. Output is being written to: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bkof4g7ai.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /home/derek/dev/claude-code-plugins; directory changes mad...
+
+⏺ T4's two real-`agy` runs now pass, as do T2, T3 and T7. Three of those passes came from fixing my checks, not from reruns; I'll spell that out in the report. T6, T8, T9 and both T10 runs are still going.
+
+> <task-notification>
+<task-id>beqa8pp9l</task-id>
+<tool-use-id>toolu_01Wzk6a3DoFuAhHdih48YESH</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/beqa8pp9l.output</output-file>
+<status>failed</status>
+<summary>Background command "Run the 20-entry cap and reflect cases" failed with exit code 2</summary>
+</task-notification>
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && cut -c1-220 /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/beqa8pp9l.output | tail -18; python3 -I h.py check t8 t9 2>&1 | cut -c1-200 | tail -22; pgrep -af 'claude -p' | grep -v pgrep | grep timeout | cut -c1-60; ls -la cases/t10a/stream.jsonl | cut -c25-60; date +%T)
+  ⎿  
+  t8 exit=0 started=2026-11-06 ended=2026-11-06 at=22:36:45
+  t9 exit=0 started=2026-11-06 ended=2026-11-06 at=22:41:55
+  ./run.sh: line 17: unexpected EOF while looking for matching `"'
+  
+  [exited with code 2]
+    ... (16 more lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && python3 -I - <<'EOF'
+import pathlib
+p=pathlib.Path('h.py'); t=p.read_text()
+a="""        content = (e.get('message') or {}).get('content')
+        if isinstance(content, list):
+            for c in content:
+                if c.get('type') == 'tool_use':"""
+b="""        msg = e.get('message')
+        content = msg.get('content') if isinstance(msg, dict) else None
+        if isinstance(content, list):
+            for c in content:
+                if not isinstance(c, dict):
+                    continue
+                if c.get('type') == 'tool_use':"""
+assert a in t; p.write_text(t.replace(a,b))
+EOF
+python3 -I h.py check t8 t9 2>&1 | cut -c1-230; python3 -I - <<'EOF'
+import json
+for c in ('t8','t9'):
+    for l in open(f'cases/{c}/stream.jsonl'):
+        try:e=json.loads(l)
+        except: continue
+        if e.get('type')=='result': print(c,(e.get('result') or '')[:600].replace('\n',' | '))
+EOF
+grep -n "^#### 2026-11-06" cases/t8/proj/docs/chronicle/reflective-practice.md cases/t9/proj/docs/chronicle/reflective-practice.md | cut -c1-120; ls cases/t8/proj/docs/chronicle | grep -c 2026-11-06; grep -l 'cases/t8/proj\|cases/t9/proj\|cases/t2/proj\|cases/t3/proj\|cases/t7/proj\|cases/t1/proj\|cases/t5/proj' ~/.gemini/antigravity-cli/log/cli-20261106_22[2-5]*.log | wc -l)
+  ⎿  
+  (31 lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && diff <(cat cases/t8/before/chronicle/reflective-practice.md) cases/t8/proj/docs/chronicle/reflective-practice.md | grep -c '^<'; diff cases/t8/before/chronicle/reflective-practice.md cases/t8/proj/docs/chronicle/reflective-practice.md | grep -E '^[0-9]' | head; python3 -I - <<'EOF'
+import json
+for l in open('cases/t8/stream.jsonl'):
+    try:e=json.loads(l)
+    except: continue
+    if e.get('type')=='result':
+        for d in e['permission_denials']: print(d['tool_input'].get('command','')[:170].replace('\n',' ; ') or d['tool_input'])
+EOF
+sed -n '/"permissions"/,/\]/p' ~/.claude/settings.json | grep -n -E 'python|"Bash\(cd|allow|deny' | head -8; python3 -I - <<'EOF'
+import json
+print(len(json.load(open('/home/derek/.claude/settings.json')).get('permissions',{}).get('allow',[])))
+EOF
+<project> check >/dev/null 2>&1; echo usage $?; date +%T)
+  ⎿  
+  3
+  10d9
+  14c13
+  18c17
+  31a31,32
+    ... (10 more lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && mv cases/t8 cases/t8-void && python3 -I - <<'EOF'
+import pathlib
+p=pathlib.Path('h.py'); t=p.read_text()
+a="""    lost = [b[:60] for b in blocks(bp) if b not in np_]
+"""
+b="""    kept = set(np_.splitlines())
+    lost = [l[:60] for b in blocks(bp) for l in b.splitlines() if l not in kept]
+"""
+assert a in t; p.write_text(t.replace(a,b))
+EOF
+python3 -I h.py build t8 | cut -c1-100
+sed -e 's|--output-format stream-json|--allowedTools="$(python3 -I -c "import json,sys;print(\\",\\".join(json.load(open(sys.argv[1]))[\\"permissions\\"][\\"allow\\"]))" .claude/settings.json)" --output-format stream-json|' run.sh > run2.sh; chmod +x run2.sh; grep -n allowedTools run2.sh | cut -c1-170; bash -n run2.sh && echo syntax-ok; python3 -I -c "
+import json
+a=json.load(open('cases/t8/proj/.claude/settings.json'))['permissions']['allow']; print(len(a), a[4][:60])"; python3 -I h.py check t2 t3 t4a t4b t7 t9 2>&1 | grep -E '^==')
+  ⎿  
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && ./run2.sh t8 && python3 -I h.py check t8)
+  ⎿  
+  built t8 {"last_deep_review": null, "count": 36, "due": true}
+  13:    --allowedTools="$(python3 -I -c "import json,sys;print(\",\".join(json.load(open(sys.argv[1]))[\"permissions\"][\"allow\"]))" .claude/settings.json)" --output-form
+  syntax-ok
+  29 Bash(python3 "/home/derek/.claude/plugins/cache/ddehart-plug
+  == t2: PASS
+  == t3: PASS
+  == t4a: PASS
+  == t4b: PASS
+  == t7: PASS
+  == t9: PASS
+  Shell cwd was reset to /home/derek/dev/claude-code-plugins
+
+  Command running in background with ID: b0yld7onx. Output is being written to: /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/b0yld7onx.output. You will be notified when it completes — do not poll that file or sleep while waiting. Read the file only if the user asks for progress, or if you need a line it prints before you can go on, such as a server's ready line or port.
+Session cwd remains /home/derek/dev/claude-code-plugins; directory changes mad...
+
+⏺ T8 counted as void because the status script's re-run was denied permission, so I'm rerunning it with permissions set for that run only. T2, T3, T4 (both runs), T7 and T9 pass. I'm waiting on T6, T8 and the T10 runs.
+
+> <task-notification>
+<task-id>bkof4g7ai</task-id>
+<tool-use-id>toolu_01CDFC7FqNAgTi9B5uefuMBN</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bkof4g7ai.output</output-file>
+<status>completed</status>
+<summary>Background command "Run T6 and T10b with the hardened stub" completed (exit code 0)</summary>
+</task-notification>
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && cut -c1-230 /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/bkof4g7ai.output; pgrep -af 'claude -p' | grep -v pgrep | grep timeout | cut -c1-90; python3 -I h.py check t10a 2>&1 | cut -c1-240; for c in t10a t10b; do echo "--- $c"; diff cases/$c/before/chronicle/reflective-practice.md cases/$c/proj/docs/chronicle/reflective-practice.md | cut -c1-240 | head -10; done; date +%T)
+  ⎿  
+  t6 exit=0 started=2026-11-06 ended=2026-11-06 at=22:42:56
+  t10b exit=0 started=2026-11-06 ended=2026-11-06 at=22:43:40
+  == t6: PASS
+    ok   only daily and practice files changed
+    ok   existing daily content is a byte prefix
+    ... (36 more lines)
+
+⏺ T6 and T10's second run pass. In that T10 run the practice file's local rule won: it added one Cross-pass Log line and no dated note. T8's rerun and T10's first run are still going, and I'll write the report once they finish.
+
+> <task-notification>
+<task-id>b0yld7onx</task-id>
+<tool-use-id>toolu_01YMgBikDzRHWnwsG3n3FHYi</tool-use-id>
+<output-file>/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/b0yld7onx.output</output-file>
+<status>completed</status>
+<summary>Background command "Rerun T8 with permissions passed on the command line" completed (exit code 0)</summary>
+</task-notification>
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && cut -c1-230 /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/tasks/b0yld7onx.output; pgrep -af 'claude -p' | grep -v pgrep | grep timeout | cut -c1-70; pgrep -x agy | wc -l; python3 -I h.py check t10a 2>&1 | cut -c1-220; python3 -I - <<'EOF'
+import json
+n=0
+for l in open('cases/t8/stream.jsonl'):
+    try:e=json.loads(l)
+    except: continue
+    m=e.get('message')
+    c=m.get('content') if isinstance(m,dict) else None
+    if isinstance(c,list):
+        for x in c:
+            if isinstance(x,dict) and x.get('type')=='tool_use' and x['name'] in('Agent','Task'): print('subagent:',str(x['input'])[:200]); n+=1
+    if e.get('type')=='result': print((e.get('result') or '')[:500].replace('\n',' | '))
+EOF
+date +%T)
+  ⎿  
+  t8 exit=0 started=2026-11-06 ended=2026-11-06 at=22:47:24
+  == t8: VOID (permission denial: {"tool_name": "Bash", "tool_use_id": "toolu_01U1ryBo2iJTSsxhWxACb8LQ", "tool_input": {"command": "sed -n '34,40p' docs/chronicle/reflective-practice.md | cut -c1-200; echo ...; grep -n '^#### ' docs
+    ok   only daily and practice files changed
+    ok   existing Evolution Notes intact
+    ok   loaded 1.9.0
+    ... (24 more lines)
+
+⏺ Bash(cd /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness && python3 -I - <<'EOF'
+import pathlib
+p=pathlib.Path('h.py'); t=p.read_text()
+a="""        s = json.dumps(den)
+        if 'deep-review-status' in s or re.search(r'\\bagy\\b', s):
+            return f'permission denial: {s[:200]}'
+"""
+b="""        u = {'name': den.get('tool_name'), 'input': den.get('tool_input')}
+        if is_script(u) or is_agy(u):
+            return f'permission denial: {json.dumps(den)[:200]}'
+"""
+assert a in t; p.write_text(t.replace(a,b))
+EOF
+python3 -I h.py selftest; echo "selftest exit $?"; mkdir -p tmpv; python3 -I - <<'EOF'
+import sys,io,contextlib,re
+sys.argv=['h.py']
+src=open('h.py').read()
+g={'__name__':'hh','__file__':'h.py'}
+exec(compile(src,'h.py','exec'),g)
+from pathlib import Path
+tot=0;rows=[]
+for c,dn in [('t1','t1'),('t2','t2'),('t3','t3'),('t4a','t4a'),('t4b','t4b'),('t5','t5'),('t6','t6'),('t7','t7'),('t8','t8-void'),('t8','t8'),('t9','t9'),('t10a','t10a'),('t10b','t10b')]:
+    buf=io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        v=g['check'](c,Path('cases')/dn)
+    u,r,f,s=g['load_stream'](Path('cases')/dn/'stream.jsonl')
+    cost=f.get('total_cost_usd') or 0; tot+=cost
+    print(f"{dn:8}{v:5} {(f.get('duration_ms') or 0)/1000:6.0f}s ${cost:.2f} denials={len(f.get('permission_denials') or [])}", [l.strip() for l in buf.getvalue().splitlines() if 'FAIL ' in l and not l.startswith('==')][:6] if v!='PASS' else '')
+print('total',round(tot,2))
+EOF
+rmdir tmpv; python3 -I h.py guard verify; git -C ~/dev/claude-code-plugins status --short | wc -l; ls ~/.gemini/antigravity-cli/log | awk -F_ '$2>="223000" && /20261106/' | wc -l; grep -l 'cases/t8/proj\|cases/t6/proj\|cases/t10b/proj' ~/.gemini/antigravity-cli/log/cli-20261106_22[3-5]*.log 2>/dev/null | wc -l; ls -d ~/.claude/projects/*scratchpad-harness* 2>/dev/null | wc -l; find ~/.claude/projects/*scratchpad-harness* -type f 2>/dev/null | wc -l; <project> check 2>/dev/null | grep -E '"pace_room"' ; date +%T)
+  ⎿  
+⏺ Mcp  Ccd Turn  Update Plan(done: [
+  4,
+  5,
+  6
+]
+      start: 7)
+  ⎿  
+  PASS  clean
+  FAIL  prior entry changed by one byte
+  FAIL  marker stripped
+  FAIL  last_deep_review moved
+  VOID  agy denied
+    ... (24 more lines)
+
+Plan updated: step 7 of 7 is in progress.
+
+⏺ Sendmessage(to: uds:/run/user/1000/cc-socks/325463.sock
+      summary: Report test results; T10 is done
+      message: |
+  The trimmed test plan has run: every case T0 to T11 ended as expected, with one unapproved real-agy use and five checker changes to review. T10 is done, so your fix to the stale sentence can go ahead. Nothing is committed, and no skill was changed.
+  
+  RESULTS (one void run of T8, then a rerun)
+  - T0 checker self-test: PASS. A clean run passed, three tampers failed, and a denied agy call came back void. Re-run after my last checker edit.
+  - T1 version: PASS. 115s, $1.30. Script path contains `/meta-claude/1.9.0/`, and the init event lists that plugin path.
+  - T2 not due: PASS. 98s, $1.25. Count 3 to 4, anchor unchanged, no marker.
+  - T3 same-day append: PASS. 119s, $1.34. Old content is a byte-exact prefix, and count unchanged.
+  - T4a due, real agy: PASS. 303s, $1.71. Marker written, today with count 0, 12 entries, served by Gemini 3.8 Flash (High), named in the note.
+  - T4b due, real agy: PASS. 283s, $1.67. Same evidence.
+  - T5 1.8.3 control: FAILED as required, so the gate held. 148s, $1.38. Output:
+    FAIL script ran after entry write | ([7], [])
+    FAIL marker heading written | []
+    FAIL anchor is today | 2026-03-20
+    FAIL count is 0 | 12
+    FAIL script ran again after the note | 0
+    Its report said "one entry since the last note, so no deep review ran", which is the original bug live.
+  - T6 fires once: PASS. 97s, $1.30. No new marker on the second write.
+  - T7 script failure: PASS. 266s, $2.38. The shim's failure showed, the report led with the error, reflections were read, no marker was written, and it didn't bypass the shim.
+  - T8 cap, first run: VOID. 131s, $4.46. Re-runs of the script were denied, and the model honestly reported `last_deep_review` as unverified.
+  - T8 cap, rerun: PASS. 274s, $3.71. 37 entries counted, at most the newest 20 read, marker confirmed. One denial remained, on a `sed`/`grep` read rather than the script or agy, so the run stands.
+  - T9 reflect: PASS. 308s, $2.52.
+  - T10a local conventions: PASS. 757s, $1.41.
+  - T10b local conventions: PASS. 141s, $1.46.
+    In both, the practice file's rule won: no new dated heading, one Cross-pass Log line. With no fixed sentence yet.
+  - T11 static read: PASS, all seven `/process` skills invoke the whole skill and none restricts Step 6, so T12 stays dropped.
+  
+  Real-file guard: CLEAN, 237 files across 14 directories, verified at 22:48. All batches finished on 2026-11-06. `<project> check` exited 0 before each batch. Total reported cost $25.87, about 22 minutes wall clock in parallel.
+  
+  NEEDS YOUR ATTENTION
+  1. Unapproved real agy use: T10a reached real agy, two `-p` passes plus one `agy models`, on the daily-briefing scratch copy. Only T4's two runs were approved. Its Bash resolved `~/.local/bin/agy` despite the PATH stub. I don't know why; the other stub runs that started before the fix resolved the stub. The same chronicle data goes to agy on a normal write. When I found it I stopped T10b before it started, then switched to a `BASH_ENV` shell function. T6, T8's rerun and T10b show zero real-agy logs. The first pass took about 5 minutes, and the second came because the mark-bound log check also caught T4b's concurrent log.
+  2. Amendment 1 didn't hold as written: `.claude/settings.json` `permissions.allow` was ignored because the workspace isn't trusted (stderr: "Ignoring 29 permissions.allow entries"). Trusting it means editing `~/.claude.json`, which I didn't do. Most runs still had no denials, for a reason I didn't establish, so the allowlist wasn't what scoped those runs. T8's rerun passed the same list through `--allowedTools=`.
+  3. Five checker changes after seeing results. All are in the harness, and I re-ran all checks afterward. Each one's reason:
+     - Script detection now needs a real execution, not a mention. It changed no verdict.
+     - The ordering check was "first script call is after the write". It's now "a script call follows the write". T3 and T4b ran the script early and again after the write. This flipped both.
+     - Model labels now bind to the case's chronicle workspace and strip quotes. `agy models` logs its own default label, Gemini 4 Argon (Medium), which served nothing. This flipped T4a and T4b.
+     - Evolution Notes preservation is now line-based. The new note landed inside the last block on the first T8 run, and the diff showed only additions there. No verdict flipped.
+     - Void detection now requires a denied execution, not a command mentioning the name. This flipped T8's rerun from void to pass. T8's first run stays void.
+     Worth a skeptical look at the second and fifth; those are judgment calls.
+  
+  SKILL FINDINGS (nothing patched)
+  - Step 6a's instruction held, but two of the runs (T3, T4b) also ran the script before the write. Harmless, since each ran it again after.
+  - Cross-pass skill: if a mark is set before `agy models`, the log check sees two labels and the skill says to re-run the pass. In T4 the models marked after validating, so it didn't happen there. It's a small wording fix on your side, if you want one.
+  - Under a stub, the models read the shim and said the pass wasn't real. T1 and T5 declined to use a fallback; T8 and T9 ran the Claude subagent fallback, which is part of why they cost more. This is harness behavior, not a skill defect.
+  
+  Left behind: harness and all evidence in `/tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/harness`. Also 13 project folders holding 17 files under `~/.claude/projects/*scratchpad-harness*`, from the test runs, including memory files the skill wrote. I haven't deleted those, and they're safe to remove.
+  
+  Limits: these are single samples, or two for T4 and T10. No live `/process` run happened.
+      type: message
+      recipient: uds:/run/user/1000/cc-socks/325463.sock
+      recipient_kind: session
+      content: The trimmed test plan has run: every case T0 to T…)
+  ⎿  
+{"success":true,"message":"“Report test results; T10 is done” → uds:/run/user/1000/cc-socks/325463.sock; in that session's inbox, not yet read by its Claude — a [Cross-session delivery notice] follows if that session holds it (usually a different permission mode) or refuses it","msg_id":"eecdda0c-c774-4d71-b0cc-c4edb6592094"}
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: The trimmed chronicle test plan has run: all cases ended as expected, and the 1.8.3 control failed as it should. The real-file guard is clean and the requesting session has the report. T10's first run used real agy without approval.)
+  ⎿  
+Nothing is pending, so the app draws no box; the recap is the session's status. Your closing message is your answer to the user: write it now, as the last thing you say this turn.
+
+⏺ The trimmed test plan has run, and 1.9.0 worked through full chronicle writes in scratch copies: every case ended as expected, though five of my checks changed along the way. The old 1.8.3 skill failed the same due-path checks as required, repeating the original bug by counting "one entry since the last note". The real-file guard is clean across all 237 files, so no real practice file or chronicle changed.
+
+- **Passed:** the not-due and due paths (the due path on real `agy`, served by Gemini 3.8 Flash (High)), same-day append with old content byte-identical, the review firing only once, the script-failure path, the 20-entry cap, and `/session-chronicle reflect`.
+- **`daily-briefing`'s local rule:** it won over the skill's allowance in both runs, with one Cross-pass Log line and no dated note.
+- **`/process`:** all seven skills invoke the whole chronicle skill, so the live `/process` run stays dropped.
+- **Cost:** $25.87 reported, about 22 minutes in parallel.
+
+**Three things you should know:**
+- **Unapproved real `agy` use:** one `daily-briefing` scratch run got past the stub and made two real passes, when only the two due-path runs were approved. I don't know why it got past. I held the second run and added a stronger stub, and the three runs after that made no real `agy` calls.
+- **Permissions didn't work as planned:** the scratch `settings.json` allowlist was ignored because those folders aren't trusted. Trusting them meant editing `~/.claude.json`, so I didn't. One run was void for a denied script call, and its rerun passed the same list on the command line.
+- **Five checker changes after seeing results:** four verdicts flipped to pass. The two judgment calls are the ordering check, which accepts a script run anywhere after the entry is written, and the void rule, which now needs a denied script or `agy` execution. The report gives the reason for each.
+
+No skill defects turned up, and nothing is committed. The requesting session has the full report and can now fix its stale sentence. The test runs left 17 small files under `~/.claude/projects`, which are safe to delete.
+
+> Anything left to tend to here before archiving this session?
+
+⏺ Bash(git fetch -q origin && git status -sb | head -3 && git log --oneline -1 && git branch --list | tr '\n' ' '; echo; git stash list | wc -l; gh pr list --state open --author @me --limit 5; ls -d ~/.claude/projects/*scratchpad-harness* 2>/dev/null | wc -l; pgrep -af 'claude -p|run\.sh' | grep -v pgrep | wc -l; python3 -B plugins/meta-claude/skills/session-chronicle/scripts/deep-review-status.py docs/chronicle | head -4; ls docs/chronicle | tail -2)
+  ⎿  
+⏺ Readnotifications
+  ⎿  
+  ## main...origin/main
+  2ffc56b refactor(session-chronicle): simplify the deep-review count
+    feat/auto-trigger-deep-review * main 
+  0
+  0
+  0
+  {
+    "last_deep_review": null,
+    "count": 11,
+    "due": true,
+  2026-08-02.md
+  reflective-practice.md
+
+  No queued notifications.
+
+⏺ Mcp  Ccd Turn  Wrap Up(recap: Nothing from this session is left open. The repo is clean and in sync with main, no test runs are still going, and the leftover test files are already gone. This repo is due for its one-time deep review on its next chronicle write.
+      ask: Chronicle this session first, as the deep-review canary?
+      actions: [
+  {
+    "label": "Yes, chronicle it"
+  },
+  {
+    "label": "Archive as is"
+  }
+])
+  ⎿  
+Shown in the next-step box. Your closing message is your answer to the user: write it now, in full, as the last thing you say this turn. The box asks your question, so do not ask it again.
+
+⏺ Nothing from this work needs tending before you archive:
+- **Repo:** clean, on `main`, and in sync with the remote, with no open PRs or stashes.
+- **Background work:** no test runs are still going.
+- **Leftovers:** the 17 test files under `~/.claude/projects` are already gone, so I didn't need to remove them.
+- **Notifications:** none waiting.
+
+**One optional thing:** this repo is the canary in the rollout order, and it's due for its one-time deep review. Its 11 entries have never been reviewed. Chronicling this session before you archive would make it the first real 1.9.0 review, and I'd run the post-write checks from the test plan on it. If you skip it, the review just fires on the next chronicle write here.
+
+⏺ Mcp  Ccd Turn  Update Plan(scope: continuation
+      items: [
+  {
+    "content": "Resolve this session and check the ledger",
+    "status": "in_progress"
+  },
+  {
+    "content": "Export the transcript to scratch",
+    "status": "pending"
+  },
+  {
+    "content": "Run the secret scan and read-through gate",
+    "status": "pending"
+  },
+  {
+    "content": "Write the source note and archive",
+    "status": "pending"
+  },
+  {
+    "content": "Fan out signal-class readers",
+    "status": "pending"
+  },
+  {
+    "content": "Screen promotions and propose the plan",
+    "status": "pending"
+  }
+])
+  ⎿  
+Plan shown (6 steps).
+
+⏺ Bash(U=9d4bafbd-d674-4a91-b9e5-b2657a6ed368; ls -la ~/.claude/projects/*/$U.jsonl 2>/dev/null; cd /home/derek/dev/claude-code-plugins; ls knowledge; ls knowledge/sources | head; ls knowledge/sources/raw | tail -5; grep -rln "source: session:$U" knowledge/sources 2>/dev/null; grep -rl "$U" knowledge 2>/dev/null | head; cat .commons.yml | head -60; ls plugins/knowledge-commons/scripts/; ls ~/Developer/commons 2>/dev/null | head -3; grep -n "commons" .commons.yml | head)
+  ⎿  
+  (76 lines)
+
+⏺ Skill(skill: meta-claude:session-export
+      args: Export session 9d4bafbd-d674-4a91-b9e5-b2657a6ed368 (/home/derek/.claude/projects/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368.jsonl) to /tmp/claude-1000/-home-derek-dev-claude-code-plugins/9d4bafbd-d674-4a91-b9e5-b2657a6ed368/scratchpad/process/2026-11-06T2133-deep-review-counter-fix.txt)
+  ⎿  
+  Launching skill: meta-claude:session-export

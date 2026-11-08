@@ -15,11 +15,12 @@ description: prose reads as a claim and gets re-examined, a procedure step reads
 Nothing in a note's shape distinguishes "observed here" from "restated from over there." Provenance has to
 be carried deliberately, because the format will not carry it.
 
-*Two witnesses (2026-07-26, 2026-07-28). Open.*
+*Three witnesses (2026-07-26, 2026-07-28, 2026-11-06). Open.*
 
 ## evidence
 - [[a false claim propagated through four artifacts and became an executable instruction]]
 - [[the spawn-shape answer was written into five places on one session's evidence]]
+- [[a claim that another skill needed no change was repeated three times before a reviewer caught it]]
 
 ## related
 - [[justifying prose drifts from the thing it justifies]]

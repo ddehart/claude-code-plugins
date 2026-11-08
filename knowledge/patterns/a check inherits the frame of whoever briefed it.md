@@ -26,11 +26,12 @@ The practical consequence is that intent needs its own verification, and it cann
 chain — only from the requester, or from grounding the restatement against the artifact's own vocabulary
 before designing against it.
 
-*One witness (2026-07-22). Open.*
+*Two witnesses (2026-07-22, 2026-11-06). Open.*
 
 ## evidence
 - [[four independent reviews could not see a layer error because the author wrote every brief]]
 - [[the root README went stale because every brief was scoped below it]]
+- [[five checker changes after seeing results flipped four verdicts]]
 
 ## related
 - [[break the self-review chain with a different agent]]

@@ -10,8 +10,11 @@ evidence and carries a one-clause "so what"; none reaches a verdict. Entries are
 `- [[title]] — the "so what" in one clause`. All below are one-witness (2026-07-15), open.
 
 - [[a check inherits the frame of whoever briefed it]] — a different reviewer buys independence from execution, never from the author's intent or scope.
+- [[a checker changed after seeing results needs each change stated with its reason]] — a revision that fixes the checker and one that moves the line look the same; only a per-change account tells them apart.
 - [[a claim restated into several artifacts starts reading as corroborated]] — copies are shaped like independent observations, so mentions get counted as witnesses; the terminus is a copy that has become an instruction.
+- [[a fail-safe argument holds only if a miss happens once]] — the safe direction is safe only when something closes the miss; trace it through the next cycle.
 - [[a generator reproduces its template's flaws]] — generated output is wrong because its template is; fix the root cause upstream, not just the instance.
+- [[a list of negating phrasings cannot be complete, so allow what may follow]] — an unlisted denial is accepted as the thing it denies; an unlisted allowance is rejected, visibly.
 - [[a plausible story arrests the investigation before the mechanism is found]] — a fitting explanation stops the search as effectively as a fitting answer would.
 - [[a scaffolder owns its environmental blast radius]] — landing artifacts in a live repo/machine creates second-order duties (`.gitkeep`, CI triggers, commit-and-push, gap-detection) the tool must own.
 - [[a stopping rule tuned on one artifact kind measures the wrong thing on another]] — yield-per-pass means reviewer productivity on prose and input-space coverage on code; a rule tuned on one stops you early on the other.

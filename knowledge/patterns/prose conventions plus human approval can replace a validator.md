@@ -12,11 +12,12 @@ the human reading the proposed plan — rather than as code. In this graph the s
 (every evidence note must support at least one attractor) is one sentence of prose, not a validation
 module. If real drift ever appears, a small check script can earn its way in that day.
 
-*One witness (2026-07-15). Open.*
+*One witness (2026-07-15), and one boundary case (2026-11-06): a skill that writes with no human approving the write has no gate for the prose to stand in for. Open.*
 
 ## evidence
 - [[reverting the validator left graph health on approval plus conventions]]
 - [[the validator only ever caught defects in itself, its spec, and its fixtures]]
+- [[the deep-review count was untestable until it moved from prose into a script]]
 
 ## related
 - [[build enforcement against demonstrated need, not anticipated failure]]

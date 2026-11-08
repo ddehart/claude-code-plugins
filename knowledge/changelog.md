@@ -252,3 +252,39 @@ the pipeline is the session that never produced its own.
 Todoist tasks were proposed and declined at plan review; no sink ran.
 
 [entity-type-gap: template deltas]
+
+## 2026-11-08 — /process over session 9d4bafbd: the deep-review counter fix
+
+First pass over `session:9d4bafbd`, the session that shipped meta-claude 1.9.0. Approved by Derek at plan
+review. The redaction gate's four hits were resolved by him: a host name, five private project names, a
+guard hook's name, and a usage figure were redacted, and an agy model label was accepted.
+
+Created: [[session-chronicle counts entries since the newest deep review, in tested code]];
+[[a list of negating phrasings cannot be complete, so allow what may follow]];
+[[a fail-safe argument holds only if a miss happens once]];
+[[a checker changed after seeing results needs each change stated with its reason]];
+[[how should a peer-briefed session record where its instructions came from]]; 12 observations; entity
+notes for [[meta-claude plugin]] and [[session-chronicle skill]].
+
+Updated: evidence on ten existing patterns. [[prose conventions plus human approval can replace a validator]]
+got a boundary case rather than a second witness: a skill that writes with no human approving has no gate
+for prose to stand in for. One deviation from the plan: the observation about an ignored permission
+allowlist was planned as unattached, and it went under [[execution against real data catches what authoring and review miss]],
+since it was found only by running.
+
+Learned: most of the session's lessons were already in the graph. The new ones are about recognition and
+failure direction, and about checkers revised after their verdicts.
+
+Synthesis: `docs/chronicle/2026-11-08.md`, the canary for the fixed counter. Its deep review was this
+repo's first. It merged four seed questions into one, retired the texture question into a new Established
+Context section, and added prompts on reasons written before their analysis and on usable output.
+
+Sinks: two Todoist tasks in `claude code marketplace`: run the script tests in CI, and fix this graph's
+Mac-only paths (`-Users-derek-personal-…` in the process skill, `~/Developer/commons` in `.commons.yml`).
+
+Promotions: candidate 4 was skipped as already in the commons, as a claim that a check repaired after seeing
+the number it missed agrees by construction. Three others were proposed for Derek's approval.
+
+[patch-check-suggested] — the last `/graph-patch` suggestion was 2026-08-01, so this run raises it. Run
+`/graph-patch` to see whether template fixes are pending.
+

@@ -13,11 +13,12 @@ not the artifact — it is a signal to stop hardening and cut, not to keep audit
 two artifacts in-session: the validator that only ever caught bugs in itself, and a spec-audit loop that
 grew 363→990 lines while producing zero code.)
 
-*One witness (2026-07-15). Open.*
+*Two witnesses (2026-07-15, 2026-11-06). Open.*
 
 ## evidence
 - [[the validator only ever caught defects in itself, its spec, and its fixtures]]
 - [[a neutral build-it cold read measured the spec where an adversarial loop inflated it]]
+- [[a negation word list let a new phrasing through, and an allowlist replaced it]]
 
 ## related
 - [[build enforcement against demonstrated need, not anticipated failure]]

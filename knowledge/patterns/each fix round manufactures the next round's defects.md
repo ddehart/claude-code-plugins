@@ -14,3 +14,5 @@ Treating it purely as a stop-signal is how a genuinely defective artifact gets d
 ## evidence
 - [[each of four fixes in one session introduced the defect the next round found]]
 - [[a stopping rule tuned on prose review misfired on executable code]]
+- [[the fix shipped behind a failing-first commit and mutations that restored the old rule]]
+- [[a negation word list let a new phrasing through, and an allowlist replaced it]]

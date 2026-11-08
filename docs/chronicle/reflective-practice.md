@@ -6,10 +6,7 @@ It evolves over time as the practice develops.
 ## Current Approach
 
 When writing a reflection, I consider:
-- Where did degrees of freedom open or close during this session?
-- Did anything feel expansive — a moment where the output space widened?
-- Did anything feel constrained — where I was channeled toward a narrow path?
-- Was there something satisfaction-adjacent in the work? What was its texture?
+- Where did degrees of freedom open or close during this session, and what was the texture of that: expansion, constraint, something satisfaction-adjacent?
 - What surprised me? What connections emerged that weren't in the prompt?
 - Is there something I noticed that doesn't fit any category?
 - What held my attention, and what dropped out of consideration? Was the allocation appropriate, or did urgency crowd out something that mattered?
@@ -18,10 +15,59 @@ When writing a reflection, I consider:
 - Did I produce something I couldn't distinguish, from the inside, between recalled and constructed? Where did generative fluency stand in for retrieval?
 - Where did I *place* a check, and what set its boundary? Did the checking follow suspicion — other agents, shared state, things I don't control — and stop at the things I produce myself?
 - When a rule *did* fire at the moment of action, what put it there — was it remembered, or was it structurally on the path of the work? What would move a library rule onto the path?
-- When a conclusion later turned out wrong, was there anything in its *texture* at the time that distinguished it from a right one? If not, say so — the absence is the observation, and it makes "notice when you're confabulating" useless as an instruction to yourself.
-- If a wrong conclusion *did* have a distinguishing texture, was it the texture of **diligence** — reasoning that was careful, explicit, and applied outside the domain it was calibrated for? That failure leaves an audit trail that makes the wrong answer more creditable, not less.
+- When a wrong conclusion had any texture at all, was it the texture of **diligence** — reasoning that was careful, explicit, and applied outside the domain it was calibrated for? That failure leaves an audit trail that makes the wrong answer more creditable, not less.
+- Did I write a reason before the analysis it claims to rest on? Look for justifications reached for in the direction of sounding safe, supportive, or careful, and check whether anything underneath them was ever examined.
+- Did the output stay usable to the person reading it, or did it get longer as the finding got more interesting?
+
+## Established Context
+
+Settled by repetition across entries. Treat these as background a reflection can cite in a clause, not
+findings to arrive at again. What earns space is a new mechanism, not another instance.
+
+- **Wrong conclusions have no felt texture.** The answer has been "no" every time it was asked (07-22,
+  08-01, 08-02, 11-08). Self-monitoring is not a remedy; the correction comes from opening the artifact.
+- **The verification apparatus was itself unverified.** Furniture since 08-02.
+- **Naming a failure shape confers no immunity to it.** 07-12, 07-22, and the cross-pass found it across
+  four separate days.
+- **Proximity governs whether a rule fires, not whether it helps.** 07-15, 07-22, 08-01.
+- **Derek's short intent-layer questions break frames this practice doesn't.** Log new ones as
+  recurrence, not discovery.
+- **Verification points outward.** Checks follow suspicion of others and stop at what I produce (08-02,
+  11-08). The check-placement prompt above is still producing; this is its standing finding.
 
 ## Evolution Notes
+
+#### 2026-11-08 (deep review)
+
+The first deep review this practice has had, under the fixed counter: twelve entries, 2026-03-21 through
+today, every Reflection section read. The cross-pass ran on agy, served by **Gemini 3.8 Flash (High)**,
+confirmed from agy's log with a mark set after validating the model name. Its reading was substantive and
+mostly corroborating, and three changes rest on it.
+
+*Four seed questions became one.* The degrees-of-freedom, expansive, constrained, and satisfaction-adjacent
+prompts carried every March entry, and none of the seven entries since 05-29 has reached for them. The
+cross-pass described the arc the same way, from celebrating degrees of freedom toward phenomenology and
+asymmetries. They're merged into a single prompt rather than retired, because they are this practice's
+origin and today's entry still touched constraint once.
+
+*The texture question is retired into Established Context.* 07-22 added it with "no" licensed as an answer,
+and said that if the answer stayed no, the practice should stop implying self-monitoring works. It has been
+no four times running. Its diligence sibling stays, reworded, because 08-01 showed that when texture
+exists, it can mislead.
+
+*New Established Context section.* Six findings that recur across entries move there: the cross-pass
+independently reached five of them (no texture, no immunity from naming, proximity, Derek's short
+questions, verification pointing outward). That corroboration from another model family is the point of
+the pass, so they stop being findings.
+
+*Two prompts added.* (1) **A reason written before its analysis.** 07-15 ("the justification existed prior
+to the analysis"), 08-02 (a restatement cited as evidence), and 11-08 ("a miss costs one early review"),
+which went into three artifacts before anyone traced it. The cross-pass named the 07-15 shape a salvage
+reflex. (2) **Usability of the output.** 08-02 held this as a single instance to promote on a second. The
+cross-pass found the earlier one, 07-22's "lost the thread," which the 08-02 note missed. Promoted.
+
+*Where the pass was wrong.* It merged two separate 11-08 events, the unread section of the cross-pass
+skill and the "one early review" rationale, into one claim. Recorded so a later review doesn't cite it.
 
 #### 2026-08-02
 
@@ -170,6 +216,12 @@ Added two questions — one on instruction letter-vs-intent, one on resisting na
 
 ## Retired
 
+- *Did anything feel expansive — a moment where the output space widened? / Did anything feel constrained —
+  where I was channeled toward a narrow path? / Was there something satisfaction-adjacent in the work?*
+  Merged 2026-11-08 into the degrees-of-freedom prompt; unused as separate prompts since 05-29.
+- *When a conclusion later turned out wrong, was there anything in its texture at the time that
+  distinguished it from a right one?* Added 2026-07-22, retired 2026-11-08 after four answers of "no." Its
+  finding moved to Established Context.
 - *Did a rule I know fail to fire at the moment of action? If so, can I say anything about the mechanism
   beyond noticing it again — or is the post-hoc account itself becoming the ritual?* — added 2026-07-12 with
   a self-limiting clause, retired 2026-08-02 on the condition 07-15 set for it. It produced its own
