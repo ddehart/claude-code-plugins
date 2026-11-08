@@ -15,7 +15,8 @@
 > level — recommending notes for individual nouns — and that was the wrong layer; the ask was new entity
 > **types** for `.commons.yml`'s `entity:` list. Deltas `step4-entity-signal-class` and
 > `step5-entity-recommend` were removed and replaced by `step10-entity-type-gap` in v0.5.0 (PR #70). The
-> superseded note under "Initial batch" carries the detail. D1–D22 are otherwise as-built.
+> superseded note under "Initial batch" carries the detail. D1–D22 are otherwise as-built; D23 and D24
+> were added after shipping (2026-11-08, plugin 0.8.0), under "Amended after shipping."
 
 ## Problem
 
@@ -154,6 +155,9 @@ not to write the block D7 requires.
 lets an agent write the change in the project's own voice. The `satisfied-test` is load-bearing twice
 over — see D9 and D14.
 
+> **Amended 2026-11-08 (plugin 0.8.0):** `process` anchors match on title, ignoring the stage number
+> (D23), and an optional eighth field, `supersedes`, names an earlier delta this one replaces (D24).
+
 **D9. The patcher judges redundancy before proposing.** Read the target section; if the
 `satisfied-test` already passes, report *already satisfied*, record the delta as applied, and propose no
 edit. *Rationale:* a project may have hand-fixed the same defect. Consistent with the explicit-negatives
@@ -231,6 +235,44 @@ likely to miss the satisfied-test as a generated one.
 **D22. The bootstrap stamp is written to disk before the first edit.** D6 said "writes the stamp, then
 applies" without pinning ordering; making it explicit means a crashed or interrupted run still leaves
 honest state rather than edits with no record.
+
+### Amended after shipping
+
+**D23. `process` anchors match on the heading's title, ignoring the stage number** (2026-11-08, plugin
+0.8.0). The patcher drops the generated `## <N>. ` prefix from the anchor and from each heading, then
+compares the rest exactly. Authors write the anchor as the current template has it. Nothing else
+loosens: the title must match character for character, no pattern or nearest match is tried, and the
+patcher never relocates. Two headings with the same title are D18's ambiguous anchor; the template's
+stage titles are unique. `knowledge-graph` anchors carry no numbers and are unaffected.
+
+*Rationale:* 0.6.0 split the `process` heading population: graphs generated at 0.6.0 number every
+stage after `## 2. Resolve` differently from graphs patched up to it, and a third numbering exists for
+stages after the synthesize stage. The populations are recorded in the delta log's numbering-divergence
+note, not here. On 2026-11-08 the live graphs that needed `step10-entity-type-gap-direct-edit` were split
+about evenly between `## 10. Report` and `## 12. Report`. A single-string anchor would skip in about half
+of them, and with no declined state (Q3) that skip would come back on every later run. The number is
+the one part of a `process` heading the generator assigns rather than the project writes, and since
+0.6.0 it is the one part that doesn't survive across graphs, so excluding it keeps D8's reason for exact
+anchors intact. Two alternatives were weighed. Twin deltas, one per heading, leave every graph with a
+twin that can't resolve. A list of exact headings, one per known numbering (an earlier draft of this
+decision), makes every future delta's author enumerate the numberings, and a missed one becomes a
+permanent skip. Title matching needs neither, survives later renumbering, and also lets the pre-0.6.0
+anchors resolve on the bootstrap and retry paths.
+
+**D24. A delta may name an earlier delta it `supersedes`; the successor is complete, and the earlier
+one is never applied** (2026-11-08, plugin 0.8.0). When a shipped delta turns out partly wrong, its entry
+can't be edited, because graphs have its id stamped and would never see the change. So a new delta states
+the full corrected end state, with its own complete `satisfied-test`, and names the old id in
+`supersedes:`. While the old id is pending, `/graph-patch` doesn't select it, and stamps it once the
+successor verifies or is already satisfied. A graph that already applied the old delta just gets the
+successor, whose test fails only on the corrected part, so D9 confines the edit to that. The old entry
+keeps its text, with a comment pointing at the successor. *Rationale:* selection is log order, so
+without this a graph that hadn't applied the old delta would be offered the wrong content first and its
+removal second: two contradictory approvals, and a skip on the second leaves the wrong content
+standing. An earlier draft had the patcher apply the old delta as the successor amended it; that made
+the patcher merge two instructions and derive a post-condition at runtime, where an authored test is
+the whole point of D14. First used by `step10-entity-type-gap-direct-edit`, which corrects the route
+named in point (d) of `step10-entity-type-gap`.
 
 ### Keeping the log honest
 

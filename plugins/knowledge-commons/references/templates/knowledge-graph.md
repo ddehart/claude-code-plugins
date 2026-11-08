@@ -105,7 +105,10 @@ an unlinked pile. Everything else on this list is a judgment call; this one is c
 - **Attractors** — {attractor-type-list}. Accumulate evidence; each carries a "so what."
 - **Entities** — {entity-type-or-none}. Notes for the nouns worth a name in this graph. Retrieved by
   lookup, never by association — but they may accumulate curated context and a dated interaction log if
-  the domain calls for it; "lookup" describes how they're found, not how thin they must stay.
+  the domain calls for it; "lookup" describes how they're found, not how thin they must stay. A new
+  entity type is a direct edit once the graph's owner says yes, never a required `graph-init`
+  re-interview, and the edit includes a line in this list; the `process` skill's report step lists the
+  rest of the work.
 - **Reference** — {reference-type-or-none}, stored in `{reference-dir}`. Unbounded lookup facts; never an
   association surface.
 

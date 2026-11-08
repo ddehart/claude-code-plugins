@@ -126,26 +126,40 @@ set, and report which of three cases it hit:
 
 **With no argument**, take every pending delta, in log order.
 
+**A superseded delta is replaced, not applied.** A delta may carry an optional `supersedes:` naming
+an earlier delta id. The successor states the full end state with its own complete `satisfied-test`,
+so while the earlier id is pending, don't select it: applying it would propose content the successor
+then removes. Stamp it in step 5 alongside its successor, once the successor verifies or is found
+already satisfied; if the successor is skipped or fails, both stay pending. Follow a chain the same way
+(a superseded successor hands its predecessors to its own successor). If an argument names a superseded
+id, say which delta replaces it and apply that one instead.
+
 If nothing is pending, say so and stop. That is a clean, common outcome — but state it as "no
 pending deltas," and still report anything out of scope.
 
 ## 4. Apply each delta
 
-Each log entry carries seven fields: `id`, `file`, `anchor`, `version`, `instruction`,
-`rationale`, `satisfied-test`. Work one delta at a time, through the whole of this section, before
-starting the next.
+Each log entry carries seven fields: `id`, `file`, `anchor`, `version`, `instruction`, `rationale`,
+`satisfied-test`, plus an optional `supersedes` (see step 3). Work one delta at a time, through the
+whole of this section, before starting the next.
 
 ### 4a. Locate the anchor
 
-Find the `anchor` string as an **exact heading match** in the target file.
+Find the `anchor` as an **exact heading match** in the target file. For a `process` delta, compare
+**titles**: drop the generated `## <N>. ` number from the anchor and from each `##` heading in the file,
+then match the remaining text exactly, so `## 10. Report` resolves to `## 12. Report` in a graph that
+numbers its stages differently. That number is the only part removed; the rest of the heading must
+match character for character. `knowledge-graph` headings carry no numbers and are matched exactly as
+written.
 
-- **Not found → skip it, loudly.** Report the delta id, the anchor text, and the file. **Never
-  stamp it.** **Never relocate it semantically** — do not look for "where that section moved to,"
-  do not pick the nearest plausible heading, do not apply the instruction somewhere else. Guessing
-  where content went is where a patcher does real damage to hand-written prose. A delta that
-  can't find its target does nothing, loudly, rather than landing somewhere convincing.
+- **Not found → skip it, loudly.** Report the delta id, the anchor text, and the file. **Never stamp
+  it.** **Never relocate it semantically** — do not look for "where that section moved to," do not
+  pick the nearest plausible heading, do not apply the instruction somewhere else. Guessing where
+  content went is where a patcher does real damage to hand-written prose. A delta that can't find
+  its target does nothing, loudly, rather than landing somewhere convincing.
 - **Matches more than once → skip it, loudly, the same way.** An ambiguous anchor is a missing
-  anchor.
+  anchor. For a `process` delta that includes two headings whose titles match, whatever their
+  numbers.
 
 There are real, legitimate reasons an anchor is absent — a project renamed a heading, or the
 heading was templated at generation time and resolved differently here. Skipping is the correct
@@ -213,7 +227,8 @@ this and the patcher should not invent a second.
 Update the `generated:` block in `.commons.yml`:
 
 - Append to `applied:` the ids of deltas that **actually applied and verified in 4d**, plus the ids
-  found *already satisfied* in 4b. Nothing else.
+  found *already satisfied* in 4b, plus any pending ids those deltas `supersedes` (step 3). Nothing
+  else.
 - **Never stamp** a delta that was skipped, whose anchor was missing or ambiguous, or whose
   post-condition failed.
 - Set `template-version` to the highest `version` among the deltas you stamped for that file. If

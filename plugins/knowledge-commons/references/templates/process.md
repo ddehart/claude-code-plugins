@@ -422,9 +422,9 @@ will say whether any apply."*
 
 **A missing entity *type* belongs here too.** Not a missing note — a missing *kind*. If this run kept
 naming a category of thing that this graph has no declared type for, say so here. It surfaces in the
-report rather than in the plan because it is a schema change, not a note: `.commons.yml`'s `entity:`
-list belongs to `graph-init`, never to this skill, and a change to the graph's shape should not ride a
-per-run plan approval meant for the notes this run is writing.
+report rather than in the plan because it is a schema change, not a note: a change to `.commons.yml`'s
+`entity:` list needs the graph owner's own yes, never this skill's judgment, and a change to the graph's
+shape should not ride a per-run plan approval meant for the notes this run is writing.
 
 **This is not conditional on the graph already declaring an entity type.** A graph whose interview
 answered "none" is precisely the graph that may discover it needs its first one — gating the check on an
@@ -438,12 +438,16 @@ graph's own record counts: earlier notes naming the same category strengthen the
 Name the category and the instances that evidence it, so the reader can judge rather than take the
 recommendation on trust — *"this run named three MCP servers by name; no declared type covers them."*
 Then point at the work instead of doing any of it. Where this graph already has an `entity:` list in
-`.commons.yml`, the work is a new entry in it, a directory for it, a map, and whatever backfill the
-existing notes want. Where there is no `entity:` list at all — the graph answered "none" when it was
-set up — the recommendation is to *establish* the tier rather than add to it, which is the larger of
-the two asks and worth saying plainly. Either way the route is the same: `graph-init`'s sanctioned way
-to change declared types is re-interviewing block 2 of its interview, so name that as the path. This
-step recommends; it does not edit `.commons.yml`, does not add the entry, and does not create the tier.
+`.commons.yml`, the work is a new entry in it, a directory for it, a map, an atlas link, a line in the
+type list of the sibling `knowledge-graph` skill, a mention wherever this skill names the declared types
+(the inspect step's signal classes, for one), and whatever backfill the existing notes want. Where there
+is no `entity:` list at all — the graph answered "none" when it was set up — the recommendation is to
+*establish* the tier rather than add to it, which is the larger of the two asks and worth saying
+plainly. Either way the route is the same: a direct edit, made once the graph's owner says yes. A
+`graph-init` re-interview is optional, never required, and it does not rewrite already-generated skills
+like this one unless asked to, so the skill edits above are needed either way. Offer to make the edit
+after the run. This step recommends; during the run it does not edit `.commons.yml`, does not add the
+entry, and does not create the directory or the tier.
 
 Cadence, on the same reasoning as the patch suggestion above — a recommendation that repeats every run
 stops being read. When you raise a category, write a marker of the form `[entity-type-gap: <category>]`
