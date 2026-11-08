@@ -1,6 +1,7 @@
 # Spec: knowledge-commons question graduation
 
-**Status:** Draft. Interviewed 2026-11-08; not built. Phase 0 not yet run.
+**Status:** Ready to build. Interviewed 2026-11-08. Phase 0 passed the same day (5 of 5 approvable),
+and its findings are folded in (see "Phase 0 findings"). Not built.
 **Date:** 2026-11-08
 **Plugin:** `knowledge-commons` v0.6.0 → v0.7.0
 **Related:** [`knowledge-commons.md`](./knowledge-commons.md) (founding spec),
@@ -125,27 +126,49 @@ that doesn't need it.
 
 ### What a review can conclude
 
-**R4. Four outcomes: graduate, split, hold, detach**, plus "not now", which writes nothing.
+**R4. A review proposes a set of moves, not one outcome.** It partitions the question's claims into
+groups by shared mechanism and remedy (R5), then proposes one move per group, plus at most one move for
+the original note itself. The moves:
 
-| Outcome | When | Writes |
-|---|---|---|
-| **Graduate** | The R5 test passes | R6 |
-| **Split** | Claims don't share one mechanism and remedy | New question note(s); evidence lines moved; each moved claim's `supports:` repointed; map lines for the new question(s); original's map annotation updated |
-| **Hold** | Coherent but not ready, with a stated reason | Map annotation only (R8) |
-| **Detach** | One claim's attachment manufactured the eligibility (it shares wording, not mechanism) | Claim's `supports:` repointed to the right question/principle (or a new question); evidence line moved; both map annotations updated |
-| **Not now** | Reader wants to skip without deciding | Nothing. It stays in the backlog |
+| Move | Applies to | When | Writes |
+|---|---|---|---|
+| **Graduate** | The whole question, or one group | The group passes R5 and has two or more domains (R7) | R6 |
+| **Split off** | A group | It passes R5 but belongs in none of the existing notes | A new question note (R19), evidence lines moved (R20), each moved claim's `supports:` repointed, a map line for the new question |
+| **Move to an existing note** | A group of one or more claims | An existing question or principle already states the group's mechanism (checked against its text, not only its title: R5) | Evidence lines moved (R20); `supports:` repointed; both notes' map annotations updated if they no longer fit |
+| **Stay** | The group left in the original | Always exactly one, possibly empty after a full graduation | Nothing beyond R19's retitle and the split marker |
+| **Retitle** | The original note | What stays is narrower than the title, so the title would keep attracting claims that belong elsewhere | R19 |
+| **Hold** | The whole question | Coherent but not ready, with a stated reason | Map annotation only (R8) |
+| **Not now** | The whole review | The reader wants to skip without deciding | Nothing. It stays in the backlog |
 
-*Rationale (Derek, interview):* these are the four things that actually happened in the commons' first
-reviews. Offering only graduate/hold would push the two most common real outcomes, split and detach,
-out to hand edits.
+The reader approves the set at once or move by move (`y / edit / approve some / not now / stop`). Moves
+that aren't approved are dropped, and the remaining ones must still leave every claim in exactly one
+place. A group that passes R5 but isn't graduated in this review stays in the backlog under R10.
+
+*Rationale (Derek, interview and Phase 0):* the interview settled on four alternative outcomes (graduate,
+split, hold, detach). Phase 0 showed that real reviews combine them. Four of five drafts split a question
+*and* moved claims to an existing question, and the fifth moved one claim out and then graduated the
+rest, as the commons' own 2026-10-17 graduation did. The old "detach" covered only a claim whose
+attachment created the eligibility, but most misfits weren't that: the questions had many domains without
+them. Derek chose a set of moves approved together or one by one.
 
 **R5. The coherence test runs before any graduation is proposed.** State the single mechanism the
 question's claims share, and the single remedy, in one sentence each. If either takes more than one
-sentence, or a claim doesn't fit the sentence, the proposal is a split or a detach, not a graduation.
-Show both sentences in every proposal, including holds, so the reader judges the test and not just the
-verdict.
-*Rationale:* the commons' 2026-07-20 finding (see Problem). The test did real work the first time it was
-applied.
+sentence, or a claim doesn't fit the sentence, the claims are grouped and each group is tested on its
+own (R4). Three requirements keep the test from passing on generality:
+1. **The mechanism sentence must say more than the question's title.** A sentence that restates the title
+   fits every claim and excludes nothing. Name where or how the effect enters.
+2. **Each claim's own remedy must be an instance of the remedy sentence.** Read each claim's remedy. If
+   two contradict ("widen the unit" against "widening does nothing, change the question"), the test fails,
+   however the sentence is worded.
+3. **The remedy is checked against existing principles' `## so what` text**, not only their titles. A
+   group whose remedy is already a form of an existing principle is a move to that principle, not a new
+   principle.
+
+Show the sentences in every proposal, including holds and failed attempts, so the reader judges the test
+and not just the verdict.
+*Rationale:* the commons' 2026-07-20 finding (see Problem). Phase 0 added the three requirements. All five
+drafts found that a title-level sentence "passes", and three asked for the rule to be explicit. Two
+caught overlaps with an existing principle only by reading its body. Derek accepted all three.
 
 **R6. A graduation writes a new attractor note and keeps the question as its record.** Specifically:
 1. **New principle note** in the destination attractor's directory (R9). Title: a stance stated as a
@@ -169,8 +192,9 @@ applied.
 principle title are different kinds of sentence, and the question note with its history ("split once,
 then graduated") is the most useful record the commons has of how a stance formed.
 
-**R7. Distinct domains are counted from claim frontmatter.** For each `[[link]]` in the question's
-`## evidence`, open the claim and read its `domain:`. The question is eligible when there are two or more
+**R7. Distinct domains are counted from claim frontmatter.** For each item in the question's
+`## evidence` list, take the **first** `[[link]]` on the item (later links, and links inside commentary
+paragraphs, are annotations), open that claim, and read its `domain:`. The question is eligible when there are two or more
 distinct values. If an evidence line's `(domain)` suffix disagrees with the claim's `domain:`, or is
 missing, report it in the proposal and count the frontmatter. Never fix it silently. A claim with no
 `domain:` counts as unknown, is reported, and doesn't add to the count.
@@ -178,23 +202,37 @@ missing, report it in the proposal and count the frontmatter. Never fix it silen
 the authoritative value. All 650 claims carry it (checked 2026-11-08). The suffix is hand-typed
 duplication.
 
+**Families are shown, not counted.** Domain names that share their first hyphen-separated segment form a
+family (`devbox`, `devbox-daily-digest`, `devbox-log-archaeologist`, `devbox-service-health-monitor`;
+`aiwyn`, `aiwyn-macbook`). Every proposal states both numbers, e.g. "13 domain names, 9 families," and
+says when a group is eligible only because of a sibling in the same family. Eligibility and R12's
+ordering use names.
+*Rationale (Derek, Phase 0):* related projects aren't independent observers, which the commons noted on
+2026-07-20 ("projects, not observers"), and two of proposal 2's new questions were eligible only through
+a devbox sibling. Derek chose to keep counting names and make the family visible, so the reader can
+weigh it.
+
 ### State
 
-**R8. Where each outcome is recorded.**
+**R8. Where each review is recorded.**
 - **Hold:** map annotation only, appended to the question's line in `maps/questions.md`, in the existing
   form: `*(eligible; reviewed YYYY-MM-DD and held: <reason in one clause>)*`. A new review replaces any
   previous review annotation on that line; it doesn't stack. A hold with no reason given is recorded as
   `held: no reason given`.
-- **Graduate, split, detach:** the map edits and note-level marker each outcome writes (R4, R6), plus one
-  dated `changelog.md` entry in the target changelog's current style. In the commons today that is a
-  `## YYYY-MM-DD — <what happened>` heading, **prepended** (newest first; only July entries use `###`),
-  then prose naming the question, the outcome, and the R5 sentences. A `graduate` session puts all of its
-  outcomes in **one** entry, added to as each outcome lands. A `promote` run's graduation gets its own
-  entry, separate from the promotion's.
+- **Any other approved review** (one with at least one graduate, split-off, move, or retitle): the map
+  edits and note-level markers its moves write (R4, R6, R19), a review stamp on the map line of every
+  question the review touched (R10), and **one dated bullet appended at the end of `changelog.md`**, in
+  the form the commons' promotions use:
+  `- YYYY-MM-DD — reviewed [[question]]: <moves, with the notes they wrote or touched as links>. <the R5
+  sentence or sentences in a clause>.` One bullet per review, whether it ran in a `graduate` walk or in
+  `promote` §7. A `promote` run's review bullet is separate from its promotion bullet.
 
-*Rationale (Derek, interview):* matches existing commons practice. Holds are frequent and low-information,
-so they belong in the map, where the next walk reads them. Structural changes earn changelog prose, where
-the commons keeps its reasoning.
+*Rationale (Derek, interview and Phase 0):* holds are frequent and low-information, so they belong in the
+map, where the next walk reads them. The first draft of this decision said to prepend a `##` prose entry.
+Phase 0 found that wrong for current practice: the commons has two live styles, and since September 195
+dated bullets have been appended at the end of the file, including every promotion since 2026-10-31 and
+the 2026-10-17 graduation itself. Prose `##` entries at the top stop at 2026-10-30. Derek chose the
+bullet.
 
 **R9. The destination attractor is the target's attractor type other than `question`.** The commons
 declares `principle` and `question`, so it resolves to `principle`, `principles/`, `maps/principles.md`.
@@ -204,12 +242,25 @@ keys).
 *Rationale:* no config field names the graduation destination today. One unambiguous case covers the
 only receiving graph that exists.
 
-**R10. Held questions come back only when new evidence lands.** A held question re-enters the backlog,
-and becomes eligible for `promote`'s review again, when any of its claims has a `date:` later than the
-hold's review date. There is no calendar expiry.
-*Rationale (Derek, interview):* a hold records a judgment about the evidence. Only new evidence can change
-it. Claim `date:` is the promotion date (promote §2), so "claim newer than the review" is exactly
-"evidence that arrived after the review."
+**R10. A reviewed question comes back only when new evidence lands.** Every question a review touched
+carries a review stamp on its map line: the hold form in R8, or `*(reviewed YYYY-MM-DD: <one clause on
+the moves>)*` for the original, each split-off question, and each existing question that received
+claims. A newer review replaces the stamp rather than adding to it. A stamped question re-enters the
+backlog, and becomes eligible for `promote`'s review again, only when one of its claims has a `date:`
+later than the stamp, or (for a question that received moved claims) when it gains a claim it didn't
+have at the stamp. There is no calendar expiry.
+
+**Older holds written in the note body**, not on the map line (at least one: *what makes a measurement
+report its instrument instead of its subject* carries "Eligible, reviewed 2026-07-22 and held" in its
+body), count as stamps for this rule. When the walk finds one, it moves the stamp to the map line as part
+of that review.
+*Rationale (Derek, interview; widened in Phase 0):* a review records a judgment about the evidence, and
+only new evidence can change it. Claim `date:` is the promotion date (promote §2), so "claim newer than
+the review" is exactly "evidence that arrived after the review." The interview applied this to holds
+only. Phase 0 showed that a split's remainder, and a split-off group that passed R5, are immediately
+eligible again, so without a stamp a walk loops on what it just reviewed. A claim moved into an existing
+question keeps its old `date:`, so the "gains a claim" clause is what lets the receiving question come
+back.
 
 ### Running it
 
@@ -225,28 +276,35 @@ questions. The refresh comes before any read for the same reason as in `promote`
 questions that already graduated.
 
 **R12. The backlog walk.** Eligible = open (judged from the note per R15, never from the map line, whose
-graduated annotations vary in wording), two or more distinct domains (R7), and not held, or held with
-newer evidence (R10).
+graduated annotations vary in wording), two or more distinct domains (R7), and not stamped, or stamped
+with newer evidence (R10).
 1. Show the count and the first ten in order, with each one's domains and claim count.
 2. Order: distinct domains descending, then claim count descending, then title.
-3. Review one at a time: show the R5 sentences, the proposed outcome and its full writes, and wait for
-   approval. `y / edit / <other outcome> / not now / stop`.
-4. **Commit after each approved outcome** (name the paths; never blanket-stage), adding to the session's
-   changelog entry (R8). **Push when the walk ends**, whether it finished or was stopped, and say plainly
-   if the push failed. A rejected push follows `promote` §6: pull, rebase, read what came in, and
-   re-review any question it touched rather than resolving mechanically.
-5. A split's new questions join the queue in their sorted position if they're eligible. They aren't
-   reviewed out of order.
+3. Review one at a time: show the R5 sentences, the proposed moves and their full writes, and wait for
+   approval (R4).
+4. **Commit after each approved review** (name the paths; never blanket-stage), with its changelog bullet
+   (R8). **Push when the walk ends**, whether it finished or was stopped, and say plainly if the push
+   failed. A rejected push follows `promote` §6: pull, rebase, read what came in, and re-review any
+   question it touched rather than resolving mechanically.
+5. Everything a review touched is stamped (R10), so nothing it produced comes back in the same walk
+   unless new evidence arrives.
 
-*Rationale (Derek, interview):* breadth of corroboration is the strongest graduation signal, and the
-densest questions are the ones most likely to need a split, which is worth doing early. Committing per
-outcome means an interrupted walk loses nothing. Pushing once avoids a push per question across a long
-walk.
+*Rationale (Derek, interview; confirmed after Phase 0):* breadth of corroboration is the strongest
+graduation signal, and the densest questions are the ones most likely to need a split, which is worth
+doing early. Phase 0 confirmed the cost: all five of the top questions split, and none graduated whole.
+So the first walk is mostly restructuring. It produces more questions than principles at first, and each
+review took an agent 5–10 minutes. Derek kept this order anyway, to fix the big catch-all questions
+before they absorb more claims. Committing per review means an interrupted walk loses nothing. Pushing
+once avoids a push per question across a long walk.
 
 **R13. Every graduation checks the instruction tier.** Read `~/.claude/rules/*.md` and judge whether a
 rule already encodes the new principle. Record the answer in the principle's `## so what` and its map
 annotation: `**Already steering** as <rule-name>.md` or `**Not yet steering.** No rule encodes this.` For
-a not-yet-steering principle, the proposal names `promote` §4 as the next step and does not run it.
+a not-yet-steering principle, the proposal names `promote` §4 as the next step and does not run it. When a
+rule covers part of the principle, keep the binary line and add one sentence naming that rule and the
+part it covers, so the uncovered part is what §4 would be asked about. (Phase 0's one graduation wrote
+"**Not yet steering.** … `verify-first.md` covers the reader's half"; Derek preferred that to a separate
+"partly steering" form.)
 Leave the principles map's standing note alone unless this graduation contradicts what it says, in which
 case propose the edit.
 *Rationale (Derek, interview):* the commons found that three of its four principles were already
@@ -256,9 +314,11 @@ reaching for.
 **R14. `promote` gains a final section, §7 "Graduation check."** It runs after §6 has written, committed,
 and pushed the promotion, and only when all of these hold: the target is a receiving graph (R3); the
 association was outcome 2 (attached to an existing open question); and after the attachment that question
-is eligible (R7) and not held without newer evidence (R10). It then runs the review procedure for that one
-question in the same session. On approval it writes in the target, commits **separately** from the
-promotion, and pushes. "Not now" writes nothing; the backlog walk will find it.
+is eligible (R7) and not stamped without newer evidence (R10). It then runs the review procedure for that
+one question in the same session. On approval it writes the approved moves in the target, commits
+**separately** from the promotion, and pushes. "Not now" writes nothing; the backlog walk will find it.
+Groups the review created or left eligible are stamped (R10) and wait for the backlog walk or new
+evidence; §7 never chains into a second review.
 Outcome 1 (supports an existing principle) and outcome 3 (new question) never trigger it: a new question
 has one claim, and principles aren't graduated again. §4 runs never trigger it.
 *Rationale (Derek, interview):* the graduation lands while the session that produced the evidence is
@@ -279,6 +339,46 @@ marker names, or, for an in-place graduation, to that same note, which is now th
 question-note paragraph ("promoted in place to a proper attractor") to describe R6.
 *Rationale:* fixes the live bug described in Problem. Keeping the `## so what` branch costs one clause
 and covers any graph that followed the old documentation.
+
+### Splits and moves (added after Phase 0)
+
+The interview left these unspecified. Every Phase 0 draft that split or moved claims had to improvise
+them, and did so differently.
+
+**R19. A split marks the original, and may retitle it.**
+- **Split marker.** Insert under the original's `## question` (or first heading, as in R6.3), below any
+  earlier marker:
+  `> **Split YYYY-MM-DD.** <n> claims moved: <k> to [[new or existing note]], … What stays is <one clause>.`
+- **Retitle** when what stays is narrower than the title (R4). Proposal 1's draft warned that its broad
+  title "will keep pulling every future measurement claim back into this question, rebuilding the
+  conflation the split removes." The retitle:
+  - renames the note file to the new title;
+  - replaces every `[[old title]]` link in the graph with `[[new title]]`, including claims' `supports:`,
+    maps, other notes, and `changelog.md`, since a wikilink is a pointer rather than prose;
+  - adds `Formerly titled *<old title>*.` to the split marker;
+  - moves the map line to its new alphabetical position.
+
+  Before writing, list every file the rename touches. Proposal 1's question had 46 links to it: 42 in
+  claims, 2 in other questions, 1 in a map and 1 in the changelog.
+- **A split-off question** opens with one line, `Split out of [[original]] on YYYY-MM-DD.`, then its own
+  `## question` body: what the group shares and what's open about it, written fresh rather than copied
+  from the original.
+
+*Rationale (Derek, Phase 0):* the marker gives a split the same visible record a graduation has (R6.3),
+and past splits in the commons already wrote "split out of" lines. Derek chose to retitle over keeping
+the broad title, so the original stops attracting what was just split away.
+
+**R20. Moved evidence lines get annotations written for their new home. The original keeps its
+commentary.** When a claim moves, its evidence line moves with it, and its annotation is rewritten to
+make sense under the destination: no references to former neighbors ("the entry above", "the ninth
+entry", "a fourth parameter of the frame"). The original note's prose and commentary paragraphs stay
+where they are, as the record of how the question was understood before the split. Where an evidence
+item spans several lines or paragraphs, the whole item moves, and its domain suffix is read from
+wherever it ends up.
+*Rationale (Derek, Phase 0):* annotations that point at old neighbors become false when moved word for
+word. Three drafts moved them verbatim and one rewrote them, and Derek approved the rewrite. He also
+approved leaving the long commentary in the original, because it refers to entries by position and
+would break if moved.
 
 ### Packaging
 
@@ -318,7 +418,7 @@ descriptions.
 ```yaml
 ---
 name: graduate
-description: "Review a receiving graph's eligible open questions — those with evidence from two or more domains — one at a time, and graduate, split, hold, or detach each with human approval. Use when the user asks to graduate questions, review the commons backlog, see which questions are ready to become principles, or invokes /graduate. Triggers: graduate questions, /graduate, what's ready to graduate, review eligible questions, work the commons backlog."
+description: "Review a receiving graph's eligible open questions — those with evidence from two or more domains — one at a time, and graduate, split, move claims, retitle, or hold each with human approval. Use when the user asks to graduate questions, review the commons backlog, see which questions are ready to become principles, or invokes /graduate. Triggers: graduate questions, /graduate, what's ready to graduate, review eligible questions, work the commons backlog."
 argument-hint: "[graph path or question title]"
 allowed-tools: [Read, Write, Edit, Glob, Grep, Bash]
 ---
@@ -332,17 +432,27 @@ and say why if it isn't eligible.
 
 ## `references/graduation.md`: the shared review procedure
 
-Holds R4 through R8 and R13 as instructions: the coherence test, the four outcomes and exactly what each
-writes, the recording rules, the steering check, and the proposal format. Each of the two callers states
-its own trigger, target resolution, and commit or push policy, then hands off to this file for the
-review itself.
+Holds R4 through R8, R10's stamp, R13, R19 and R20 as instructions: the coherence test, the moves and
+exactly what each writes, the recording rules, the steering check, and the proposal format. Each of the
+two callers states its own trigger, target resolution, and commit or push policy, then hands off to this
+file for the review itself.
 
 **Proposal format**, shown before any write:
-1. The question title, its distinct domains (from R7) and claim count, and any suffix mismatches.
-2. The mechanism sentence and the remedy sentence (R5), or the attempt that failed.
-3. The proposed outcome and why.
-4. Every file it will write or edit, in full for new notes and as a diff for edits.
-5. For a graduation, the steering line (R13).
+1. **Counts.** The question title, its claim count, its domain names and families (R7), and any suffix
+   mismatches.
+2. **The whole-question test.** The mechanism and remedy sentences (R5), or the attempt that failed and
+   which requirement it failed.
+3. **Groups.** For each group: its claims, its own R5 sentences, its move (R4), and whether it's eligible
+   only through a family sibling.
+4. **Writes.** Every file the moves write or edit: full text for new notes, a diff for edits, and the
+   list of files a retitle touches (R19).
+5. **Steering.** For each graduation, the steering line (R13).
+6. **The calls most worth a second look.** Two to four choices the review made that the reader could
+   reasonably make differently, each with the alternative. Phase 0 found that a reviewer can't parse a
+   400-line proposal without them.
+
+Phase 0's proposals ran 280–450 lines each. Lead with sections 1–3 and 6; section 4 is for checking, not
+for reading first.
 
 ## Edge cases
 
@@ -351,14 +461,17 @@ review itself.
 - **Question note is missing `## evidence`, or a link doesn't resolve** → report it and skip that
   question. Don't review partial evidence.
 - **Principle title collides with an existing note** → stop and show both. It may be a duplicate stance,
-  which makes the right outcome "detach the claims to the existing principle."
-- **A split leaves a side with one claim** → it becomes a single-domain question, which is fine (promote
+  which makes the right move "move the claims to the existing principle."
+- **A split leaves a group with one claim** → it becomes a single-domain question, which is fine (promote
   §3: single-domain questions are the designed intermediate state).
-- **A detach drops a question below two domains** → it leaves the backlog. Say so in the changelog entry,
-  as the 2026-07-20 revert did ("single-domain again").
+- **Moves drop a question below two domains** → it leaves the backlog. Say so in the changelog bullet, as
+  the 2026-07-20 revert did ("single-domain again").
+- **Two reviews in one walk move claims into the same existing question** → expected. Phase 0's
+  proposals 1 and 3 both did. The receiving question's stamp (R10) is replaced by the later review's,
+  and it comes back once it has gained claims since the stamp.
 - **Working tree dirty in the target** → stop before writing. Don't stash someone else's work.
 - **`/process` promotion tail runs §7 for several candidates that hit the same question** → the first
-  review records its outcome; later ones see a held or graduated question and behave per R10 and R15.
+  review records its moves and stamps; later ones see a stamped or graduated question and behave per R10 and R15.
 
 ## Phase 0: test the premise before building
 
@@ -381,17 +494,63 @@ how many suffix mismatches R7 finds, and Derek's verdict per proposal.
 
 Record what was found in this spec, under a "Phase 0 findings" section.
 
+## Phase 0 findings (2026-11-08)
+
+**Result: passed, 5 of 5 approvable with light edits.** Build, with the amendments below.
+
+**What ran.** A fresh clone of the commons (`334d12f`). The top five questions in R12's order were each
+reviewed by a separate agent given only this spec and the clone, writing nothing to the commons. A
+sixth agent turned the five proposals into an interactive review page, and Derek answered 29 calls on
+it: the five spec questions below, three or four per proposal, and an overall verdict on each.
+
+| # | Question | Claims | Domain names | Proposed moves |
+|---|---|---|---|---|
+| 1 | what makes a measurement report its instrument instead of its subject | 41 | 13 | Split off 4 questions, move 2 claims to an existing question, 11 stay (Derek: retitle the original) |
+| 2 | what makes a failure invisible to the surfaces built to catch it | 31 | 13 | Overturn the 2026-07-21 hold, split off 3, move 1 to an existing question, 15 stay |
+| 3 | what can an empty result be taken to mean | 22 | 9 | Split off 2 (reader vs. producer), move 1 to an existing question, 15 stay |
+| 4 | what does the frame you examine bound about the conclusion you can draw | 16 | 9 | Move 7 to an existing question, split off 2, 4 stay |
+| 5 | what relocates a claim's authority as it moves between documents | 10 | 8 | Move 1 to an existing question, graduate 9 to *a claim takes the standing of wherever it is written unless its origin is written with it* |
+
+**Assumed vs. measured:**
+- *Eligible count.* The suffix count gave 72. R7's frontmatter count gives **73** at `334d12f`. It found
+  3 suffix mismatches (two missing, one with extra text) and no claim without `domain:`.
+- *Stance, not summary.* The one drafted principle reads as a stance. It drops the question's own
+  hypothesis (that the cause is the direction of travel) because three of its claims involve no travel.
+  Every draft also rejected the title-level mechanism sentence on its own, so the R5 test did real work.
+- *Outcome mix.* The spec assumed one outcome per review. **No review produced a single outcome.**
+  Graduation was rare: one whole question, none of the others. Twelve groups split off or remaining were
+  judged graduatable or probably graduatable, but weren't graduated because the brief said not to.
+- *Cost.* 5–10 minutes and about 165k–260k agent tokens per review.
+
+**Spec changes this produced:**
+- R4 rewritten as a set of moves.
+- R5 gained three requirements.
+- R7 counts first links and shows families.
+- R8's changelog style is corrected to an appended dated bullet.
+- R10 stamps every reviewed question, and treats holds written in the note body as stamps.
+- R12's order is kept, with its cost stated.
+- R13 gained a partial-coverage sentence.
+- R19 (split marker and retitle) and R20 (moved annotations) are new.
+- The proposal format leads with the calls worth a second look.
+
+**Not adopted.** Counting domain families instead of names: Derek kept names and made families visible.
+A separate "partly steering" form: declined in favor of R13's added sentence.
+
+The five proposals and the review page stay out of this repo, which is public. They quote commons
+content from Derek's employer and personal projects. They were working files in the session's
+scratchpad.
+
 ## Execution plan
 
 One PR on a `feat/` branch. Everything here is plugin-owned and ships together.
 
-1. `references/graduation.md`: the shared procedure (R4–R8, R13).
+1. `references/graduation.md`: the shared procedure (R4–R8, R10's stamp, R13, R19, R20, and the
+   proposal format).
 2. `skills/graduate/SKILL.md`: the backlog walk (R3, R9–R12).
-3. `skills/promote/SKILL.md`: add §7 (R14) and fix the §3 check (R15). Also correct §6's "append one
-   line to the target's `changelog.md`" to "add an entry in the changelog's own order and heading style"
-   (the commons prepends; R8). Keep the closing "A promoted note must stand alone" line last. The intro paragraph's list of
-   entry points ("at the tail of a `/process` run… mid-session… directly") is unchanged; §7 is a step,
-   not an entry point.
+3. `skills/promote/SKILL.md`: add §7 (R14) and fix the §3 check (R15). §6's "append one line to the
+   target's `changelog.md`" already matches R8 and stays. Keep the closing "A promoted note must stand
+   alone" line last. The intro paragraph's list of entry points ("at the tail of a `/process` run…
+   mid-session… directly") is unchanged; §7 is a step, not an entry point.
 4. `references/graph-conventions.md`: rewrite the question-note paragraph (R15).
 5. `skills/graph-init/SKILL.md`: the commons-generation bullet (R17).
 6. `README.md`: add `graduate` to the skills table and usage; describe the graduation shape.
@@ -407,24 +566,28 @@ One PR on a `feat/` branch. Everything here is plugin-owned and ships together.
 
 **Risk 1. The review is an unverified agent drafting a stance.** A "so what" can read well and be wrong.
 The R5 sentences shown in every proposal are the mitigation: the reader judges the reasoning, not just the
-prose. Phase 0 tests whether that's enough.
+prose. In Phase 0, Derek approved all five, but through a review page built for the purpose. In the real
+walk, the proposal format's "calls most worth a second look" have to carry that weight.
 
-**Risk 2. A 72-question walk is long, and approval fatigue is the failure mode.** "Not now" and "stop"
-exist, and committing per outcome makes stopping free. If walks stall, the next lever is a session cap
-(review N, then stop); not added until a real walk shows it's needed.
+**Risk 2. A 73-question walk is long, and approval fatigue is the failure mode.** Phase 0 measured each
+review at 5–10 minutes of agent time and 280–450 lines of proposal, and splits add questions to the
+queue. Derek found the raw proposals hard to parse and needed an interactive page to judge them. "Not now"
+and "stop" exist, and committing per review makes stopping free. If walks stall, the next levers are a
+session cap (review N, then stop) and a review page like Phase 0's. Neither is added until a real walk
+shows it's needed.
 
 **Risk 3. The R14 trigger depends on R10's date comparison.** A claim promoted with a wrong `date:`
 (older than the review) would keep a held question silent. `promote` §2 already requires the promotion
 date, so this would be a promote bug, not a graduation one.
 
-**Risk 4. Ordering by domain count may favor broad, conflated questions.** That's partly the point (they
-need splitting), but a walk could spend its energy on splits and graduate little. Watch the first walk's
-outcome mix.
+**Risk 4. Ordering by domain count favors broad, conflated questions.** Phase 0 confirmed it: the top
+five all split, and one graduated in part. Derek accepted this (R12). Watch whether the first walk ever
+reaches the questions that graduate cleanly.
 
-**Risk 5. Some past holds live only in the changelog.** The changelog records at least one question held
-on 2026-07-22 (*what makes a measurement report its instrument instead of its subject*) whose map line
-carries no review annotation, so R12 will raise it again. Accepted: re-raising a held question costs one
-"hold" and writes the annotation R8 expects. Not worth a migration pass over 3,700 lines of changelog.
+**Risk 5. Some past holds live only in the changelog.** R10 reads holds on the map line and in the note
+body. A hold recorded only in a changelog entry is invisible to it, so R12 raises that question again.
+Accepted: re-raising it costs one "hold" and writes the stamp R10 expects. Not worth a migration pass
+over 3,700 lines of changelog.
 
 **Q1. Does the commons' awareness offer earn its place at all?** R17 keeps it and repoints it at
 `graduate`. With R14 covering new evidence and `graduate` covering the backlog, the offer may be
