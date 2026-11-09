@@ -379,10 +379,6 @@ with no sources (the commons).
 For each template:
 - Replace every `{brace}` value with the concrete config value it names, rendered as natural prose
   where a literal paste would read oddly (`root: .` becomes "the project root", not a bare `.`).
-- Where a template refers to "the plugin's `references/graph-conventions.md`", stamp the resolved
-  concrete path (`${CLAUDE_PLUGIN_ROOT}/references/graph-conventions.md` resolves for *you*, the
-  generator, even though it won't for the generated skill) — a generated skill in a project has no
-  other way to find the plugin's files.
 - Write prose into every `<!-- SLOT: ... -->` block from the matching interview answers — the
   comment names which block. The example under each SLOT shows the *kind* of prose expected, not
   content to reuse; write this domain's own.
@@ -399,10 +395,7 @@ For each template:
 - **The redaction-gate subsection is conditional on `gate:`.** Generate it when any tier archiving to a
   destination is `public` or `shared`; omit it entirely — no header, no placeholder — when every such
   tier is `private`. When you generate it, say in the prose which destination assumption it was written
-  under, so a later reader can see the assumption instead of reconstructing it. Stamp the resolved path
-  to `${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh` the same way you stamp the resolved path to
-  `references/graph-conventions.md` — the generated skill lives in the project and has no other way to
-  find it.
+  under, so a later reader can see the assumption instead of reconstructing it.
 - **Three pieces are conditional on `types.synthesis`, and they are conditional *together*.** Generate
   all three or none:
   1. the **synthesize section**, which checks for an existing synthesis and decides what to do,
@@ -469,14 +462,20 @@ existing hand-built graph into promotion — the graph's actual skills stay exac
 config existed, so if `promotes-to:` was set, grep its processing/orchestrator skills for an in-band
 promotion step ("promote", "generalize"). If none exists, say so plainly: *with `promotes-to:` set but
 no promotion tail in the pipeline, promotions will only ever happen manually via `/promote` — the
-byproduct-of-work path this config exists for won't fire.* Offer the promotion-tail section of
-`${CLAUDE_PLUGIN_ROOT}/references/templates/process.md` as the model for a hand-added tail (screen the
+byproduct-of-work path this config exists for won't fire.* Offer to show this plugin's `process`
+template's promotion-tail section as the model for a hand-added tail (screen the
 run's findings, candidates in the same plan, `promote` invoked last, once per approved candidate) — but
 don't edit the existing skills yourself; surfacing the gap is this mode's job, closing it is the
 owner's.
 
 ## Never
 
+- Never write a filesystem path into this plugin's install into anything a project keeps: a generated
+  skill, SLOT prose, a suggested hand-added tail. Not a resolved literal, a glob, or a discovery command.
+  `${CLAUDE_PLUGIN_ROOT}` resolves for you but never in a project skill, so a path you write is a
+  snapshot of one version on one machine. Generated skills reach plugin files through the plugin's
+  skills, as the templates already do: `knowledge-commons:conventions` for the full conventions,
+  `knowledge-commons:scan-secrets` for the redaction gate's floor scan.
 - Never copy this plugin's own `graph-init` or `promote` skills into a project. Only the *templates*
   get instantiated, as project-owned files.
 - Never generate into a graph whose `.claude/skills/process` or `knowledge-graph` already exist

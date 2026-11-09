@@ -23,7 +23,7 @@ every project on plugin update; they must not appear here.
 |---|---|
 | `id` | Stable kebab-case identifier. Recorded in the project's `.commons.yml` `applied:` list, so it can never be renamed once shipped. |
 | `file` | `process` or `knowledge-graph`. |
-| `anchor` | The **exact `##` heading text** the change targets — not a pattern, not a section number. A delta whose anchor doesn't resolve is skipped and reported loudly, never relocated by guess. For `process`, write the heading as the current template has it (`## 12. Report`); from 0.8.0 the patcher matches on the title and ignores the stage number, because live graphs number stages differently. See "A numbering divergence" below. |
+| `anchor` | The **exact `##` heading text** the change targets — not a pattern, not a section number. May be an ordered list of such headings, tried in order, for a stage that sits in different places across graphs; see "A numbering divergence" below. A delta whose anchor doesn't resolve is skipped and reported loudly, never relocated by guess. For `process`, write the heading as the current template has it (`## 12. Report`); from 0.8.0 the patcher matches on the title and ignores the stage number, because live graphs number stages differently. See "A numbering divergence" below. |
 | `version` | The plugin version that introduced the delta. |
 | `instruction` | The semantic change, in domain-neutral terms. What must be true of the section afterward — not the words to insert. |
 | `rationale` | *Why* the change exists, including how the defect was found. This is what lets an agent adapt the edit to prose that has diverged from the template instead of pasting into it. |
@@ -42,6 +42,10 @@ One field is optional:
 | Field | Purpose |
 |---|---|
 | `supersedes` | The `id` of an earlier delta this one replaces. The successor states the full end state with its own complete `satisfied-test`, so the earlier delta never needs applying: `/graph-patch` doesn't select it while pending, and stamps it once the successor verifies. The earlier entry stays in the log unchanged, because graphs have its id stamped. |
+
+**No delta directs, and no patch writes, a filesystem path into the plugin's install.** A project skill
+never gets `${CLAUDE_PLUGIN_ROOT}`, so such a path is a snapshot of one version on one machine. Name the
+plugin's skill instead.
 
 Entries are append-only and ordered by version.
 
@@ -560,6 +564,84 @@ Entries are append-only and ordered by version.
     names graph-init or a re-interview of its block 2 as the sanctioned, required, or only route for
     a new type, or says type declarations are graph-init's to write. Naming the re-interview as an
     optional alternative passes, and so does history recording that a past type was added that way.
+
+- id: kg-conventions-by-skill
+  file: knowledge-graph
+  anchor: "## Conventions"
+  version: 0.9.0
+  instruction: >
+    Where the section points at the full graph conventions, have it name the plugin's
+    knowledge-commons:conventions skill as the way to load them, and remove every filesystem path into
+    a plugin installation: a resolved literal, a glob, or a discovery command (ls, find, sort -V over
+    the plugin cache, or similar). A repository or GitHub location offered as the way to read them is
+    replaced too. Keep the section's statement that the compact restatement covers day-to-day work,
+    and keep the restatement itself unchanged.
+  rationale: >
+    graph-init used to stamp the resolved, version-pinned path to the plugin's
+    references/graph-conventions.md into this section, because a skill in a project gets no
+    ${CLAUDE_PLUGIN_ROOT} substitution (verified live on Claude Code 2.1.319). That literal names one
+    version on one machine. Checked on devbox 2026-11-08, six of fourteen graphs pointed at a file that
+    no longer existed (pruned 0.5.0 caches, macOS paths, a Remote Control plugin directory since
+    removed), and five resolved only to the 0.6.0 copy, which differs from the 0.8.2 contract by 23
+    lines, so a session read an outdated contract with no sign it was outdated. Hand-fixes moved the
+    rot instead of removing it: a cache glob assumes one install layout, runtime discovery can't pick
+    this session's install out of the registry's many project-scoped entries at different versions,
+    and a repository path isn't readable from a session. A plugin skill gets ${CLAUDE_PLUGIN_ROOT}
+    substituted to the installed version each time it loads, so naming the skill is the one reference
+    that cannot go stale. This is the pattern Anthropic's plugin docs recommend for reaching plugin
+    files from outside the plugin, and the platform has no stable install path to use instead
+    (anthropics/claude-code#82068, closed unanswered).
+  satisfied-test: >
+    Does the section name the knowledge-commons:conventions skill as how to load the full conventions,
+    AND contain no filesystem path, glob, or discovery command into a plugin installation (any
+    directory under ~/.claude/plugins/ or ~/.claude/remote/plugins/, or a /Users/... equivalent,
+    versioned or not)? Both halves are required. A cache glob or a find command fails, as does a
+    GitHub or repository path offered as where to read the file. A section that names the skill and
+    also still carries a path fails.
+
+- id: preserve-plugin-files-by-skill
+  file: process
+  anchor: ["## 3. Preserve", "## 2. Resolve"]
+  version: 0.9.0
+  instruction: >
+    Applies to the preserve stage only: the anchored section when the anchor resolved to it, or the
+    preserve subsection inside Resolve when it fell back there. Wherever
+    that stage cites the plugin's graph conventions (typically, small sources carried inline "as the
+    conventions describe"), have it name the knowledge-commons:conventions skill as the way to load
+    the full contract when the sibling knowledge-graph skill's restatement doesn't cover it, so the
+    citation is a fallback rather than a load on every run.
+    Wherever its redaction gate runs the floor scan, have it invoke the knowledge-commons:scan-secrets
+    skill with the rendered file path(s) as arguments instead of running the script by path, and add
+    to the gate's fail-closed rule that the skill being unavailable means the scan did not run, which
+    is a stop. Remove every filesystem path into a plugin installation from the stage. A path to the
+    scanner's source inside the plugin's own repository, in the graph that is that repository, is a
+    project path and may stay. Change nothing else about the gate: the scratch-path rendering, the
+    subagent read-through, per-hit resolution, and withholding when no human can be asked all stay as
+    written. If this graph has no preserve stage, or the stage cites neither the conventions nor the
+    scanner, there is nothing to change.
+  rationale: >
+    The same generator defect as kg-conventions-by-skill, in the process skill. graph-init stamped the
+    resolved conventions path into this stage's inline-form bullet (two live graphs carry a 0.6.0 cache
+    path there), and the template stamped a resolved path to scripts/scan-secrets.sh into the redaction
+    gate. A stale scanner path fails closed, which is safe but blocks every archive until someone
+    notices, and the next gated graph generated would have received one. Running the scan through a
+    plugin skill keeps it a script with an exit code, which is the reason the floor is a script at all:
+    the skill's allowed-tools rule runs it with no permission prompt, and it reports the exit code
+    verbatim (verified live: exit 0 on a clean file, exit 1 with the finding on a planted ghp_ token).
+    The anchor is a list because live graphs carry the stage as its own section in most graphs and as
+    a subsection of Resolve in one; see "A numbering divergence" below. The one graph whose preserve
+    subsection sits under the section after Resolve cites neither file, so the Resolve fallback judging
+    it satisfied is correct there.
+  satisfied-test: >
+    In the preserve stage (the anchored section, or the preserve subsection inside it when the anchor
+    fell back to Resolve), is
+    there no filesystem path into a plugin installation (under ~/.claude/plugins/,
+    ~/.claude/remote/plugins/, or a /Users/... equivalent), does every citation of the plugin's graph
+    conventions name the knowledge-commons:conventions skill, and, if the stage has a redaction gate,
+    does its floor scan either invoke the knowledge-commons:scan-secrets skill and treat that skill
+    being unavailable as a stop, or (only in the plugin's own source repository) run the scanner by
+    its repo-relative source path? A conventions citation by bare filename with no way to load it
+    fails. A graph with no preserve stage, or whose stage cites neither file, passes.
 ```
 
 ## A numbering divergence the 0.6.0 entries introduce
@@ -571,7 +653,13 @@ renumber, which would invalidate all six pre-0.6.0 anchors at once).
 
 **Future deltas targeting the preserve or synthesize stages must anchor on the pre-existing heading,
 not on the new stage's own heading** — `## 2. Resolve` rather than `## 3. Preserve` — until this log
-records that every live graph has been patched through 0.6.0. A delta anchored on `## 3. Preserve`
+records that every live graph has been patched through 0.6.0. **From 0.9.0, write such an anchor as a
+list naming the stage first and Resolve second**, `["## 3. Preserve", "## 2. Resolve"]`. On 2026-11-08
+twelve live graphs carried the preserve stage as its own section (`## 3.`, `## 2a.`, `## 2b.`, or
+unnumbered, all of which title matching resolves), one as a subsection inside Resolve, and one as a
+subsection of the section after it. A Resolve-only anchor judges only Resolve, so in the twelve it would
+see none of the stage's text and report the graph *already satisfied*. Don't reach the stage by
+position, either: in two graphs the section after Resolve is a different inserted stage. A delta anchored on `## 3. Preserve`
 resolves in a freshly generated graph and silently fails to resolve in every patched one, which is the
 failure this log's skip-loudly rule exists to make visible rather than to rely on.
 

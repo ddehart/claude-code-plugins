@@ -146,11 +146,17 @@ whole of this section, before starting the next.
 ### 4a. Locate the anchor
 
 Find the `anchor` as an **exact heading match** in the target file. For a `process` delta, compare
-**titles**: drop the generated `## <N>. ` number from the anchor and from each `##` heading in the file,
-then match the remaining text exactly, so `## 10. Report` resolves to `## 12. Report` in a graph that
-numbers its stages differently. That number is the only part removed; the rest of the heading must
+**titles**: drop the generated stage number from the anchor and from each `##` heading in the file
+(`## 12. `, or `## 2a. ` where a patch inserted a stage; a heading with no number has nothing to
+drop), then match the remaining text exactly, so `## 10. Report` resolves to `## 12. Report` in a graph
+that numbers its stages differently. That number is the only part removed; the rest of the heading must
 match character for character. `knowledge-graph` headings carry no numbers and are matched exactly as
 written.
+
+**An `anchor` may be a list**, for a stage that sits in different places across graphs. Try the
+entries in order; the first that matches exactly one heading is the anchor, and the delta works on that
+section. An entry that matches more than once is ambiguous: skip loudly rather than trying the next.
+None matching is *not found*. A list is a fixed fallback the delta's author wrote down, not a search.
 
 - **Not found → skip it, loudly.** Report the delta id, the anchor text, and the file. **Never stamp
   it.** **Never relocate it semantically** — do not look for "where that section moved to," do not
@@ -192,6 +198,11 @@ survives nearly verbatim and can be edited near-literally. Others must weave int
 prose — *"add an entity signal class alongside this graph's existing classes in step 4"*. Both go
 through this same flow. For a weave, the `rationale` is what tells you what the change must
 accomplish; write the sentences this project would have written, not the template's.
+
+**Never write a filesystem path into the plugin's install** into the project's prose, even though this
+skill has one in context. A project skill never gets `${CLAUDE_PLUGIN_ROOT}`, so the path would be a
+snapshot of this version on this machine. Name the plugin's skill instead (`knowledge-commons:conventions`,
+`knowledge-commons:scan-secrets`).
 
 Then ask for approval: **`y` / `edit` / `skip`**, per delta. Wait for it. "Skip" and "edit" are
 both ordinary answers, not failures.

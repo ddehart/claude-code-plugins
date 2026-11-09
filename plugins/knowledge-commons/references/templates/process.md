@@ -112,7 +112,9 @@ inline, which are exactly the ones worth keeping.
 **Which form, by the size of the source.**
 
 - **Small and self-contained** (a journal entry, a fetched page, a short document): the source note
-  carries the material verbatim in its body, as `graph-conventions.md` describes. No separate archive.
+  carries the material verbatim in its body, as the plugin's graph conventions describe. The sibling
+  `knowledge-graph` skill restates what this needs; only if it doesn't cover a case, load the full
+  contract with the `knowledge-commons:conventions` skill. No separate archive.
 - **Large** (a transcript, a recording, anything that cannot live inside a note): write the raw material
   to this graph's raw archive, and the source note carries identity, date, a one-line description, the
   `processed:` stamp, and a pointer to the archived file.
@@ -153,8 +155,8 @@ reads that history and decides what this run has left to do.
 public or shared. Omit it entirely for a private, single-user destination — no placeholder, no empty
 header, and no note explaining that it was omitted. When included, state which destination assumption
 the graph was generated under (public / shared), so a reader of this skill can see the assumption
-rather than infer it, and fill the archive path and the resolved path to the plugin's
-scripts/scan-secrets.sh. -->
+rather than infer it, and fill the archive path. The scan runs through the plugin's
+knowledge-commons:scan-secrets skill; write no filesystem path to the script. -->
 
 ### The gate before anything is archived
 
@@ -169,11 +171,12 @@ there and scanned afterwards is already in the committed tree, and "withhold" th
 file rather than never writing one. Render outside the graph (a temp directory), scan there, and move
 it into the archive only once both checks pass.
 
-1. **The floor.** Run `{scan-secrets-path}` over the rendered material. It is a fixed scan for
-   credential shapes — private-key blocks, known token prefixes, credential assignments with a real
-   value, connection strings carrying a password, `Authorization:` headers with a bearer value. It exits
-   non-zero on a hit **and** non-zero on its own failure, and the two mean the same thing here: **stop.**
-   No archive, no source note pointer, nothing written. A scan that could not run is not a scan that
+1. **The floor.** Invoke the plugin's `knowledge-commons:scan-secrets` skill with the rendered file
+   path(s) as its arguments. It runs a fixed scan for credential shapes — private-key blocks, known token
+   prefixes, credential assignments with a real value, connection strings carrying a password,
+   `Authorization:` headers with a bearer value — and reports the exit code. Non-zero on a hit, non-zero
+   on the scanner's own failure, and the skill being unavailable (the plugin disabled or not installed
+   here) all mean the same thing: **stop.** No archive, no source note pointer, nothing written. A scan that could not run is not a scan that
    passed — that distinction is the whole reason this is a script with an exit code rather than a
    paragraph asking you to look carefully.
 2. **The read-through.** Send the rendered material to a subagent to read for what patterns cannot
@@ -401,8 +404,7 @@ since diverged — you own it — so a fix to that template reaches this file on
 plugin's `/graph-patch`. Suggest it here. Never auto-run it, and never claim to know whether patches are
 pending: what has been applied here is recorded in this project's `.commons.yml` under `generated:`, but
 what *exists* to apply lives in the plugin's delta log, which this skill has no path to and must not go
-looking for — any plugin path written into this file was resolved at generation time and names a version
-that has since moved on. `/graph-patch` always reads the current log; let it answer.
+looking for. `/graph-patch` always reads the current log; let it answer.
 
 Cadence, because a line on every run carries no information and gets tuned out:
 

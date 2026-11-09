@@ -259,6 +259,11 @@ decision), makes every future delta's author enumerate the numberings, and a mis
 permanent skip. Title matching needs neither, survives later renumbering, and also lets the pre-0.6.0
 anchors resolve on the bootstrap and retry paths.
 
+> **Amended 2026-11-08 (plugin 0.9.0):** title matching also drops `## 2a.`-style stage numbers and treats
+> an unnumbered heading as all title, and an `anchor` may be an ordered fallback list of titles for a stage
+> that sits in different places across graphs. See P9 in
+> [`knowledge-commons-plugin-references.md`](./knowledge-commons-plugin-references.md).
+
 **D24. A delta may name an earlier delta it `supersedes`; the successor is complete, and the earlier
 one is never applied** (2026-11-08, plugin 0.8.0). When a shipped delta turns out partly wrong, its entry
 can't be edited, because graphs have its id stamped and would never see the change. So a new delta states

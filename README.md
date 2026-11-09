@@ -70,6 +70,7 @@ Generator for per-project knowledge graphs with cross-domain promotion. Scaffold
 | `promote` | Derive a portable claim into a target graph (or a rule into the instruction tier) with association against the target's maps and per-promotion approval |
 | `graduate` | Walk a receiving graph's eligible open questions one at a time and propose moves for each (graduate to a principle, split, move claims to an existing note, retitle, or hold), with per-review approval; `promote` offers the same review when a promotion makes a question eligible |
 | `graph-patch` | Propagate template fixes into a project's already-generated, hand-sharpened skills without regenerating them — applies each pending change by judgment, verifies it landed, and records what was applied |
+| `conventions`, `scan-secrets` | Helpers generated skills invoke by name to reach the plugin's conventions doc and secret scanner at the installed version, so no plugin path is ever written into a project |
 
 ### activity-data
 
