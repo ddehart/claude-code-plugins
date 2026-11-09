@@ -34,10 +34,8 @@ where a convention or a judgment call was off.
 ## Conventions
 
 A compact restatement of the graph's structural contract; everything a writing session needs day to day is
-here. The full version is the knowledge-commons plugin's graph conventions: when a question isn't answered
-below, load them with the plugin's `knowledge-commons:conventions` skill. Don't open them by a filesystem
-path. A path into the plugin's install names one version on one machine and goes stale when the plugin
-updates, and the skill always reads the version installed for this session.
+here. When a question isn't answered below, load the full contract with the plugin's
+`knowledge-commons:conventions` skill, not by a path into the plugin's install.
 
 **Navigation.** Every note carries `genitor: "[[parent-map]]"` in its frontmatter, pointing at the map that
 indexes it, and gets an entry in that map, alphabetically. The atlas links to maps; maps link to notes.

@@ -140,17 +140,23 @@ pending deltas," and still report anything out of scope.
 ## 4. Apply each delta
 
 Each log entry carries seven fields: `id`, `file`, `anchor`, `version`, `instruction`, `rationale`,
-`satisfied-test`, plus two optional ones: `supersedes` (see step 3) and `scope` (see 4b). Work one delta at a time, through the
+`satisfied-test`, plus an optional `supersedes` (see step 3). Work one delta at a time, through the
 whole of this section, before starting the next.
 
 ### 4a. Locate the anchor
 
 Find the `anchor` as an **exact heading match** in the target file. For a `process` delta, compare
-**titles**: drop the generated `## <N>. ` number from the anchor and from each `##` heading in the file,
-then match the remaining text exactly, so `## 10. Report` resolves to `## 12. Report` in a graph that
-numbers its stages differently. That number is the only part removed; the rest of the heading must
+**titles**: drop the generated stage number from the anchor and from each `##` heading in the file
+(`## 12. `, or `## 2a. ` where a patch inserted a stage; a heading with no number has nothing to
+drop), then match the remaining text exactly, so `## 10. Report` resolves to `## 12. Report` in a graph
+that numbers its stages differently. That number is the only part removed; the rest of the heading must
 match character for character. `knowledge-graph` headings carry no numbers and are matched exactly as
 written.
+
+**An `anchor` may be a list**, for a stage that sits in different places across graphs. Try the
+entries in order; the first that matches exactly one heading is the anchor, and the delta works on that
+section. An entry that matches more than once is ambiguous: skip loudly rather than trying the next.
+None matching is *not found*. A list is a fixed fallback the delta's author wrote down, not a search.
 
 - **Not found → skip it, loudly.** Report the delta id, the anchor text, and the file. **Never stamp
   it.** **Never relocate it semantically** — do not look for "where that section moved to," do not
@@ -173,14 +179,6 @@ defect already, or wrote it correctly from the start. Report *already satisfied*
 stamping in step 5**, and move to the next one. Don't write to `.commons.yml` here — step 5 is the
 single point where state reaches disk.
 
-**"The section" is the delta's scope, which is its anchor unless it declares more.** A delta with
-`scope: next-section` covers its anchored section **plus the one `##` section immediately after it**:
-read both here, judge the test against both, edit within both in 4c, and re-read both in 4d. Nothing
-further, and never a search for where content went. The field exists for the preserve stage, which
-live graphs carry either as a subsection of `## 2. Resolve` or as its own stage right after it, so a
-delta anchored on Resolve can reach it in both shapes. A delta without the field is confined to its
-anchor exactly as before.
-
 Do not propose a cosmetic rewrite to make the section resemble the template. The test is the
 contract; matching prose is not.
 
@@ -201,6 +199,11 @@ prose — *"add an entity signal class alongside this graph's existing classes i
 through this same flow. For a weave, the `rationale` is what tells you what the change must
 accomplish; write the sentences this project would have written, not the template's.
 
+**Never write a filesystem path into the plugin's install** into the project's prose, even though this
+skill has one in context. A project skill never gets `${CLAUDE_PLUGIN_ROOT}`, so the path would be a
+snapshot of this version on this machine. Name the plugin's skill instead (`knowledge-commons:conventions`,
+`knowledge-commons:scan-secrets`).
+
 Then ask for approval: **`y` / `edit` / `skip`**, per delta. Wait for it. "Skip" and "edit" are
 both ordinary answers, not failures.
 
@@ -211,8 +214,7 @@ both ordinary answers, not failures.
 
 ### 4d. Verify — re-run the `satisfied-test`
 
-After writing the edit, re-read the delta's whole scope (its anchored section, and the next section
-too when it declares `scope: next-section`) and answer the `satisfied-test` again. The same test
+After writing the edit, re-read the section and answer the `satisfied-test` again. The same test
 that answered *"is this already here?"* before the edit answers *"did it land?"* after.
 
 - **Passes** → the delta applied. It is now eligible to be stamped.

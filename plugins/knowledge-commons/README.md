@@ -51,8 +51,7 @@ generalize?", "promote this to the commons", "what's ready to graduate?", "what 
 missing?" — not just the slash commands.
 
 Two helper skills aren't slash commands. Generated skills invoke them by name, which is how a skill
-living in a project reaches the plugin's files: a project skill gets no `${CLAUDE_PLUGIN_ROOT}`, and any
-path written into it names one version on one machine.
+living in a project reaches the plugin's files without a path into the plugin's install.
 
 | Skill | What it does |
 |-------|--------------|

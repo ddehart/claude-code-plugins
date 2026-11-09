@@ -139,8 +139,11 @@ everywhere the plugin does. Revisit if a second executable appears.
 *Rejected: copying the script into the project at generation time.* Stable, but freezes the scanner,
 and scanner improvements have no delta channel (deltas carry prose, not files).
 
-**P4. `graph-init` §6 stops stamping.** Delete both "stamp the resolved concrete path" bullets. Add one
-rule in their place stating P1, so a hand-maintained tail or future template doesn't reintroduce a path.
+**P4. `graph-init` §6 stops stamping.** Delete both "stamp the resolved concrete path" bullets. State P1
+once, in graph-init's skill-wide `## Never` list rather than as a §6 bullet, so it also covers SLOT prose
+and the hand-added tail config-only mode suggests. The same one-line rule goes in `/graph-patch` §4c and
+the delta log's preamble, since `/graph-patch` now writes prose into every existing graph and has a
+resolved plugin path in context while it does.
 `graph-init` itself keeps using `${CLAUDE_PLUGIN_ROOT}` for its own reads (it is a plugin skill).
 
 **P5. Template edits.**
@@ -152,36 +155,58 @@ rule in their place stating P1, so a hand-maintained tail or future template doe
   `knowledge-commons:scan-secrets` skill on the rendered material"; the SLOT comment drops "the resolved
   path to the plugin's scripts/scan-secrets.sh"; and the fail-closed paragraph adds "or the skill is
   unavailable."
-- `process.md` `## 12. Report` is **not** changed: its "any plugin path written into this file was
-  resolved at generation time" remains true of every file generated before 0.9.0, and its instruction
-  (don't read the delta log; suggest `/graph-patch`) is unaffected.
+- `process.md` `## 12. Report`: drop the clause "any plugin path written into this file was resolved at
+  generation time and names a version that has since moved on", which files generated from 0.9.0 make
+  false. The instruction (don't read the delta log; suggest `/graph-patch`) is unchanged, so this needs no
+  delta under the template-deltas rule's no-behavior-change exception.
+- Generated text names the helper skills and doesn't explain why paths rot: that reasoning would load on
+  every run of a skill that has no path to misuse. The explanation lives here, in graph-init's `## Never`
+  rule, and in the delta rationales.
 
 **P6. Two deltas, version 0.9.0.**
 
 | id | file | anchor | satisfied-test (substance) |
 |---|---|---|---|
 | `kg-conventions-by-skill` | knowledge-graph | `## Conventions` | The section contains no filesystem path, literal or glob or discovery command, into a plugin installation, **and** names the `knowledge-commons:conventions` skill as how to load the full contract. |
-| `preserve-plugin-files-by-skill` | process | `## 2. Resolve` with `scope: next-section` (P9) | The preserve stage contains no filesystem path into a plugin installation, **and** every reference it makes to the plugin's conventions goes through `knowledge-commons:conventions`, **and** a redaction gate's floor scan goes through `knowledge-commons:scan-secrets` (treating the skill being unavailable as a stop). A conventions citation by **bare filename**, with no way to load it, **fails**. A repo-relative path to the scanner's *source* in the plugin's own repo (this repo) is not an install path and passes. A stage that cites neither file, or no preserve stage at all, passes. |
+| `preserve-plugin-files-by-skill` | process | `["## 3. Preserve", "## 2. Resolve"]`, a fallback list (P9) | The preserve stage contains no filesystem path into a plugin installation, **and** every reference it makes to the plugin's conventions goes through `knowledge-commons:conventions`, **and** a redaction gate's floor scan goes through `knowledge-commons:scan-secrets` (treating the skill being unavailable as a stop). A conventions citation by **bare filename**, with no way to load it, **fails**. A repo-relative path to the scanner's *source* in the plugin's own repo (this repo) is not an install path and passes. A stage that cites neither file, or no preserve stage at all, passes. |
 
 "Plugin installation" in both tests means any directory Claude Code installs plugins into
 (`~/.claude/plugins/cache/…`, `~/.claude/plugins/marketplaces/…`, `~/.claude/remote/plugins/…`, or a
 macOS/other-home equivalent), versioned or not. The hand-fixed globs in devbox and wellstead and the
 commons' repo path **fail** the knowledge-graph test on purpose, so every graph converges on one form.
 
-**P9. `/graph-patch` gains a declared-neighbor scope** (found during implementation). `deltas.md`
-requires deltas aimed at the preserve stage to anchor on `## 2. Resolve`, because live graphs carry that
-stage both as its own `## 3. Preserve` (7 graphs) and as a `### Preserve` subsection of Resolve (2), and
-5 have none. But `/graph-patch` judged only the anchored section, so a Resolve-anchored delta would have
-seen no Preserve text in the 7 own-stage graphs and reported them **falsely satisfied**, which are exactly
-the graphs that need the edit. Anchoring on `## 3. Preserve` instead would skip loudly, and stay
-unstamped forever, in the other 7. The fix is a structured optional delta field, `scope: next-section`:
-a delta that sets it covers its anchored section plus the one `##` section right after it, in
-`/graph-patch`'s judgment (§4b), edit (§4c), and verification (§4d). Only that neighbor, only when
-declared; never a search. It is documented beside `supersedes` in `deltas.md`'s field table and in
-`.claude/rules/template-deltas.md`, and the numbering-divergence note now says a Resolve-anchored
-preserve delta must set it. (A first draft keyed the extension on the instruction's prose saying so;
-review replaced that with the field, which can be checked rather than inferred.) `/graph-patch` is a
-plugin skill, so this reaches every graph on plugin update with no delta.
+**P9. A delta's `anchor` may be an ordered fallback list** (found during implementation, corrected in
+review). The preserve stage sits in different places across live graphs. Counted 2026-11-08 across the 14
+graphs, all of which have one:
+
+| Shape | Graphs |
+|---|---|
+| Its own `## 3. Preserve` | persimmon-care, email-triggers, log-archaeologist, daily-digest, financial-planning, claude-usage, service-health-monitor |
+| Its own stage, other numbering: `## 2a.` / `## 2b.` / unnumbered | wellstead, osu-builder-in-residence (`2a`); devbox, obsidian (`2b`); daily-briefing (none) |
+| `### Preserve` subsection inside `## 2. Resolve` | claude-code-plugins |
+| `### Preserve` subsection inside `## 3. Find the ledger` | airbnb-prep |
+
+`deltas.md` told authors to anchor preserve deltas on `## 2. Resolve`, but `/graph-patch` judges only the
+anchored section, so a Resolve anchor would see none of the stage in the twelve own-section graphs and
+report them **falsely satisfied**. Two fixes were wrong. Anchoring on `## 3. Preserve` alone skips
+loudly, and stays unstamped forever, wherever the stage is a subsection. A `scope: next-section` field (a
+first draft) reached the stage by position, and in devbox and obsidian the section after Resolve is a
+different inserted stage (`## 2a. Session inputs`, `## 2a. A company or product`); in devbox that section
+holds the out-of-scope meta-claude cache glob, which the delta would have been told to remove.
+
+The fix keys on the stage's name:
+- **`anchor` may be a list**, tried in order; the first entry that matches exactly one heading wins, an
+  ambiguous entry skips loudly, and none matching is *not found* (`/graph-patch` §4a, `deltas.md` field
+  table, template-deltas rule). This one delta uses `["## 3. Preserve", "## 2. Resolve"]`.
+- **D23's title matching also drops `2a.`-style numbers, and handles unnumbered headings**, so the first
+  entry resolves in all twelve own-section graphs. claude-code-plugins falls back to Resolve and finds its
+  subsection there. airbnb-prep falls back to Resolve, which doesn't contain its subsection; it cites
+  neither file, so "satisfied" is the correct result there, and the delta's rationale says so.
+
+D23 rejected a list of exact headings, one per numbering, because every author would have to enumerate
+numberings. This list is different: its entries are titles, still number-blind, and it lists places a
+stage lives, which only a delta aimed at a moved stage needs. `/graph-patch` is a plugin skill, so the
+matching change reaches every graph on plugin update with no delta.
 
 **P7. Version 0.9.0 (minor).** Two new skills are new capability, per `plugin-updates.md`, though the
 motivating change is a fix. Bump `plugin.json` and `marketplace.json` together; README skill table gains

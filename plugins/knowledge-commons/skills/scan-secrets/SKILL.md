@@ -1,9 +1,8 @@
 ---
 name: scan-secrets
 description: >
-  Run the knowledge-commons credential scan, the deterministic floor of a generated process skill's
-  redaction gate, over rendered material before it is archived. Pass the rendered file path(s) as
-  arguments. Use when a generated process skill's preserve stage says to run the scan.
+  Credential scan for a generated process skill's redaction gate, run over rendered material before
+  it is archived. Only when that gate directs it.
 argument-hint: "<rendered-file> [<rendered-file>...]"
 user-invocable: false
 allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh *)"]
@@ -11,28 +10,18 @@ allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh *)"]
 
 # Secret scan
 
-The arguments you were given are the rendered file path(s): `$ARGUMENTS`
+Rendered file path(s): `$ARGUMENTS`
 
-Run the scanner once, over all of them, with **each path single-quoted** so a path containing spaces
-or glob characters reaches the script intact:
+Run the scanner once over exactly these paths, each single-quoted (a path may contain spaces or glob
+characters):
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh '<first path>' '<second path>'
+${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh '<path>' ['<path>' ...]
 ```
 
-Pass the paths exactly as given, add nothing, and leave none out. Then report the **exit code** and the **full stdout and stderr verbatim**, nothing paraphrased.
+Report the exit code and the full stdout and stderr verbatim. **Any non-zero exit means do not
+archive**; the script's header documents each code.
 
-What the exit code means to the caller:
-
-- **0**: clean. No credential shapes found.
-- **1**: hits. Each finding is listed in the output.
-- **2**: the scan could not run (bad usage, unreadable file, a pattern error).
-
-**Any non-zero exit means do not archive.** Exit 1 and exit 2 mean the same thing to the gate: a scan
-that couldn't run is not a scan that passed.
-
-This skill reports; it never judges. Don't resolve, accept, or explain away a hit, don't retry with
-different arguments or a narrower file set, and never summarize a non-zero run as clean. Resolving each
-hit (redact, withhold, or accept) belongs to the process skill that called this one, with a human.
-
-If no arguments were given, don't guess at a file. Report that the scan did not run, which is a stop.
+Report only. Don't explain away a hit, don't rerun with different arguments, and never call a non-zero
+run clean: resolving hits belongs to the calling process skill and a human. With no arguments, report
+that the scan did not run, which is a stop.

@@ -1,11 +1,8 @@
 ---
 name: conventions
 description: >
-  Load the full knowledge-commons graph conventions, the generic contract that a project's own
-  knowledge-graph skill restates and may have sharpened. Use only when a generated knowledge-graph or
-  process skill directs you to load the full conventions, or when the user asks for the full
-  knowledge-commons conventions. Not for everyday captures or note-shape questions: the project's
-  knowledge-graph skill answers those.
+  Load the full knowledge-commons graph conventions (~18 KB). Only when a generated knowledge-graph
+  or process skill directs it, or the user asks for the full conventions; not for everyday captures.
 user-invocable: false
 allowed-tools: ["Read"]
 ---
