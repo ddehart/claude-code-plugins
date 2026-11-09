@@ -112,8 +112,10 @@ inline, which are exactly the ones worth keeping.
 **Which form, by the size of the source.**
 
 - **Small and self-contained** (a journal entry, a fetched page, a short document): the source note
-  carries the material verbatim in its body, as the plugin's graph conventions describe (load them with
-  the `knowledge-commons:conventions` skill, never by a path into the plugin). No separate archive.
+  carries the material verbatim in its body, as the plugin's graph conventions describe. The sibling
+  `knowledge-graph` skill restates what this needs; only if it doesn't cover a case, load the full
+  contract with the `knowledge-commons:conventions` skill, never by a path into the plugin. No separate
+  archive.
 - **Large** (a transcript, a recording, anything that cannot live inside a note): write the raw material
   to this graph's raw archive, and the source note carries identity, date, a one-line description, the
   `processed:` stamp, and a pointer to the archived file.
@@ -406,8 +408,8 @@ since diverged — you own it — so a fix to that template reaches this file on
 plugin's `/graph-patch`. Suggest it here. Never auto-run it, and never claim to know whether patches are
 pending: what has been applied here is recorded in this project's `.commons.yml` under `generated:`, but
 what *exists* to apply lives in the plugin's delta log, which this skill has no path to and must not go
-looking for — any plugin path written into this file was resolved at generation time and names a version
-that has since moved on. `/graph-patch` always reads the current log; let it answer.
+looking for. This file carries no plugin path by design; if an older generation left one here, it names the
+version that generated this file, not the one installed now. `/graph-patch` always reads the current log; let it answer.
 
 Cadence, because a line on every run carries no information and gets tuned out:
 

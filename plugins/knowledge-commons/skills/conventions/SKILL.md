@@ -1,10 +1,11 @@
 ---
 name: conventions
 description: >
-  Load the full knowledge-commons graph conventions: the note, map, and frontmatter contract that
-  every generated knowledge-graph and process skill restates in compact form. Use when a generated
-  skill says to load the full conventions, or when a question about note shape, genitor/map rules,
-  tags, or note-type sections isn't answered by the project's own knowledge-graph skill.
+  Load the full knowledge-commons graph conventions, the generic contract that a project's own
+  knowledge-graph skill restates and may have sharpened. Use only when a generated knowledge-graph or
+  process skill directs you to load the full conventions, or when the user asks for the full
+  knowledge-commons conventions. Not for everyday captures or note-shape questions: the project's
+  knowledge-graph skill answers those.
 user-invocable: false
 allowed-tools: ["Read"]
 ---

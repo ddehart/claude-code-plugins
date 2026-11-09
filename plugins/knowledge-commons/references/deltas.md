@@ -37,10 +37,11 @@ edits, and verification starts passing on edits that did nothing. Make it a ques
 unfamiliar, heavily-rewritten version of that section can answer reliably, about substance rather than
 wording.
 
-One field is optional:
+Two fields are optional:
 
 | Field | Purpose |
 |---|---|
+| `scope` | `next-section` extends the delta to the one `##` section immediately after its anchor: `/graph-patch` judges, edits, and verifies both. Omitted, the delta is confined to its anchor. Use it for a delta aimed at the preserve stage (see "A numbering divergence" below), never as a way to reach content by guessing where it moved. |
 | `supersedes` | The `id` of an earlier delta this one replaces. The successor states the full end state with its own complete `satisfied-test`, so the earlier delta never needs applying: `/graph-patch` doesn't select it while pending, and stamps it once the successor verifies. The earlier entry stays in the log unchanged, because graphs have its id stamped. |
 
 Entries are append-only and ordered by version.
@@ -598,13 +599,15 @@ Entries are append-only and ordered by version.
 - id: preserve-plugin-files-by-skill
   file: process
   anchor: "## 2. Resolve"
+  scope: next-section
   version: 0.9.0
   instruction: >
-    Scope: this section AND the section immediately following it, because the preserve stage is
-    either a subsection of this one or its own stage directly after it (often "## 3. Preserve"),
-    wherever the preserve-stage delta put it. Apply to that preserve stage only. Wherever
+    Applies to the preserve stage only, which is either a subsection of this section or its own stage
+    directly after it (often "## 3. Preserve"), wherever the preserve-stage delta put it. Wherever
     that stage cites the plugin's graph conventions (typically, small sources carried inline "as the
-    conventions describe"), have it name the knowledge-commons:conventions skill as how to load them.
+    conventions describe"), have it name the knowledge-commons:conventions skill as the way to load
+    the full contract when the sibling knowledge-graph skill's restatement doesn't cover it, so the
+    citation is a fallback rather than a load on every run.
     Wherever its redaction gate runs the floor scan, have it invoke the knowledge-commons:scan-secrets
     skill with the rendered file path(s) as arguments instead of running the script by path, and add
     to the gate's fail-closed rule that the skill being unavailable means the scan did not run, which
@@ -626,12 +629,10 @@ Entries are append-only and ordered by version.
     The anchor is the resolve section rather than the preserve stage's own heading because live graphs
     carry that stage both as its own "## 3. Preserve" and as a subsection of "## 2. Resolve"; see "A
     numbering divergence" below. Anchoring on the preserve heading instead would skip loudly, and stay
-    unstamped forever, in every graph that has no such heading. Reaching the following stage relies on
-    graph-patch's declared-neighbor scope (added in 0.9.0), which is why the instruction states its
-    scope explicitly.
+    unstamped forever, in every graph that has no such heading. Reaching the following stage is what
+    scope: next-section (added in 0.9.0) is for.
   satisfied-test: >
-    Reading this section and the section immediately after it: in the preserve stage (a subsection
-    of this one, or its own stage directly after it), is
+    In the preserve stage (a subsection of this section, or its own stage directly after it), is
     there no filesystem path into a plugin installation (under ~/.claude/plugins/,
     ~/.claude/remote/plugins/, or a /Users/... equivalent), does every citation of the plugin's graph
     conventions name the knowledge-commons:conventions skill, and, if the stage has a redaction gate,
@@ -650,7 +651,10 @@ renumber, which would invalidate all six pre-0.6.0 anchors at once).
 
 **Future deltas targeting the preserve or synthesize stages must anchor on the pre-existing heading,
 not on the new stage's own heading** — `## 2. Resolve` rather than `## 3. Preserve` — until this log
-records that every live graph has been patched through 0.6.0. A delta anchored on `## 3. Preserve`
+records that every live graph has been patched through 0.6.0. **A preserve-stage delta anchored on
+Resolve must also set `scope: next-section`** (0.9.0). Without it `/graph-patch` judges only Resolve,
+sees none of the preserve text in graphs that carry it as its own stage, and reports those graphs
+*already satisfied*: the edit never happens and the delta is stamped anyway. A delta anchored on `## 3. Preserve`
 resolves in a freshly generated graph and silently fails to resolve in every patched one, which is the
 failure this log's skip-loudly rule exists to make visible rather than to rely on.
 

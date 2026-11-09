@@ -36,7 +36,10 @@ Seven fields, per the spec's D8:
 | `rationale` | *Why* — this is what lets the patcher adapt the edit to prose that has diverged, instead of pasting |
 | `satisfied-test` | An explicit test for "does the target already say this?" — used both to detect redundancy before the edit and to verify the edit landed after |
 
-Plus one optional field: `supersedes`, the id of an earlier delta this one replaces. Use it instead of
+Plus two optional fields. `scope: next-section` extends a delta to the one `##` section right after its
+anchor; a preserve-stage delta anchored on `## 2. Resolve` must set it, or `/graph-patch` judges only
+Resolve and falsely reports graphs with a standalone Preserve stage as already satisfied (see the
+numbering-divergence note in `deltas.md`). `supersedes` is the id of an earlier delta this one replaces. Use it instead of
 editing a shipped entry, which graphs may already have stamped. The successor must state the full end
 state with its own complete `satisfied-test`, since the earlier entry is never applied once replaced;
 leave the earlier entry's text unchanged and put a comment above it pointing at its successor.

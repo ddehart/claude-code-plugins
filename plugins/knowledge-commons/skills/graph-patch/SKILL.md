@@ -140,7 +140,7 @@ pending deltas," and still report anything out of scope.
 ## 4. Apply each delta
 
 Each log entry carries seven fields: `id`, `file`, `anchor`, `version`, `instruction`, `rationale`,
-`satisfied-test`, plus an optional `supersedes` (see step 3). Work one delta at a time, through the
+`satisfied-test`, plus two optional ones: `supersedes` (see step 3) and `scope` (see 4b). Work one delta at a time, through the
 whole of this section, before starting the next.
 
 ### 4a. Locate the anchor
@@ -168,18 +168,18 @@ behavior in every one of those cases, not a failure to work around.
 ### 4b. Judge redundancy first
 
 Read the anchored section in full, then answer the `satisfied-test` against what is actually
-written there. **If the test already passes, propose no edit.**
-
-**A delta may name one neighbor as part of its scope.** When an `instruction` explicitly says it
-applies to the section immediately following its anchor (the preserve stage after `## 2. Resolve`,
-which live graphs carry either as its own `##` stage or as a subsection of Resolve), read, judge,
-edit, and verify that following section together with the anchored one. Only the section directly
-after the anchor, and only when the instruction says so. This is a declared scope, not a search: it
-never licenses looking further for where content went, and a delta that names no neighbor is
-confined to its anchor exactly as before. The project hand-fixed this
+written there. **If the test already passes, propose no edit.** The project hand-fixed this
 defect already, or wrote it correctly from the start. Report *already satisfied*, **note it for
 stamping in step 5**, and move to the next one. Don't write to `.commons.yml` here — step 5 is the
 single point where state reaches disk.
+
+**"The section" is the delta's scope, which is its anchor unless it declares more.** A delta with
+`scope: next-section` covers its anchored section **plus the one `##` section immediately after it**:
+read both here, judge the test against both, edit within both in 4c, and re-read both in 4d. Nothing
+further, and never a search for where content went. The field exists for the preserve stage, which
+live graphs carry either as a subsection of `## 2. Resolve` or as its own stage right after it, so a
+delta anchored on Resolve can reach it in both shapes. A delta without the field is confined to its
+anchor exactly as before.
 
 Do not propose a cosmetic rewrite to make the section resemble the template. The test is the
 contract; matching prose is not.
@@ -211,7 +211,8 @@ both ordinary answers, not failures.
 
 ### 4d. Verify — re-run the `satisfied-test`
 
-After writing the edit, re-read the section and answer the `satisfied-test` again. The same test
+After writing the edit, re-read the delta's whole scope (its anchored section, and the next section
+too when it declares `scope: next-section`) and answer the `satisfied-test` again. The same test
 that answered *"is this already here?"* before the edit answers *"did it land?"* after.
 
 - **Passes** → the delta applied. It is now eligible to be stamped.

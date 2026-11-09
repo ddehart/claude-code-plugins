@@ -161,7 +161,7 @@ rule in their place stating P1, so a hand-maintained tail or future template doe
 | id | file | anchor | satisfied-test (substance) |
 |---|---|---|---|
 | `kg-conventions-by-skill` | knowledge-graph | `## Conventions` | The section contains no filesystem path, literal or glob or discovery command, into a plugin installation, **and** names the `knowledge-commons:conventions` skill as how to load the full contract. |
-| `preserve-plugin-files-by-skill` | process | `## 2. Resolve`, scope extended to the stage after it (P9) | The section contains no filesystem path into a plugin installation, **and** every reference it makes to the plugin's conventions or secret scanner goes through `knowledge-commons:conventions` / `knowledge-commons:scan-secrets`. A project-relative path to the scanner's *source* in the plugin's own repo (this repo) is not an install path and passes. A section that references neither passes vacuously. |
+| `preserve-plugin-files-by-skill` | process | `## 2. Resolve` with `scope: next-section` (P9) | The preserve stage contains no filesystem path into a plugin installation, **and** every reference it makes to the plugin's conventions goes through `knowledge-commons:conventions`, **and** a redaction gate's floor scan goes through `knowledge-commons:scan-secrets` (treating the skill being unavailable as a stop). A conventions citation by **bare filename**, with no way to load it, **fails**. A repo-relative path to the scanner's *source* in the plugin's own repo (this repo) is not an install path and passes. A stage that cites neither file, or no preserve stage at all, passes. |
 
 "Plugin installation" in both tests means any directory Claude Code installs plugins into
 (`~/.claude/plugins/cache/…`, `~/.claude/plugins/marketplaces/…`, `~/.claude/remote/plugins/…`, or a
@@ -174,10 +174,14 @@ stage both as its own `## 3. Preserve` (7 graphs) and as a `### Preserve` subsec
 5 have none. But `/graph-patch` judged only the anchored section, so a Resolve-anchored delta would have
 seen no Preserve text in the 7 own-stage graphs and reported them **falsely satisfied**, which are exactly
 the graphs that need the edit. Anchoring on `## 3. Preserve` instead would skip loudly, and stay
-unstamped forever, in the other 7. The fix is in `/graph-patch` §4b: a delta whose `instruction`
-explicitly says so may include the one section immediately after its anchor in its read, edit, and
-verification. Only that neighbor, only when declared; never a search. `/graph-patch` is a plugin skill,
-so this reaches every graph on plugin update with no delta.
+unstamped forever, in the other 7. The fix is a structured optional delta field, `scope: next-section`:
+a delta that sets it covers its anchored section plus the one `##` section right after it, in
+`/graph-patch`'s judgment (§4b), edit (§4c), and verification (§4d). Only that neighbor, only when
+declared; never a search. It is documented beside `supersedes` in `deltas.md`'s field table and in
+`.claude/rules/template-deltas.md`, and the numbering-divergence note now says a Resolve-anchored
+preserve delta must set it. (A first draft keyed the extension on the instruction's prose saying so;
+review replaced that with the field, which can be checked rather than inferred.) `/graph-patch` is a
+plugin skill, so this reaches every graph on plugin update with no delta.
 
 **P7. Version 0.9.0 (minor).** Two new skills are new capability, per `plugin-updates.md`, though the
 motivating change is a fix. Bump `plugin.json` and `marketplace.json` together; README skill table gains
@@ -205,14 +209,19 @@ entries (the `step10-pending-patches` rationale already documents the hazard and
    - `knowledge-commons:scan-secrets` on a clean file → exit 0, and on a file with a planted
      `ghp_`-shaped token → exit 1 reported verbatim (confirms `$ARGUMENTS` and the `allowed-tools` rule,
      and the failure path).
-3. Dry-read each delta's `satisfied-test` against the new template section (must pass) and against
-   `projects/airbnb-prep` and `projects/claude-usage` generated skills (must fail), so the test
-   discriminates in both directions.
+3. Dry-read each delta's `satisfied-test` against the new template section (must pass) and against a
+   live graph that still carries a stamped path (must fail), so the test discriminates in both
+   directions: `projects/airbnb-prep`'s `knowledge-graph` skill for `kg-conventions-by-skill`, and
+   `projects/claude-usage`'s `process` skill for `preserve-plugin-files-by-skill`. (airbnb-prep's
+   `process` skill cites neither file, so it passes the process test.)
 
 ## Graphs to patch afterward (`/graph-patch`)
 
 - `kg-conventions-by-skill`: commons, devbox, wellstead, osu-builder-in-residence, claude-code-plugins,
   persimmon-care, email-triggers, log-archaeologist, daily-digest, financial-planning, claude-usage,
   daily-briefing, airbnb-prep, service-health-monitor. (obsidian has no `knowledge-graph` skill.)
-- `preserve-plugin-files-by-skill`: real edits expected in claude-usage and persimmon-care; every other
-  graph with a `process` skill should report *already satisfied* and stamp.
+- `preserve-plugin-files-by-skill`: real edits expected in **6** graphs: claude-usage and persimmon-care
+  (a stamped 0.6.0 path), and email-triggers, log-archaeologist, daily-digest, and service-health-monitor
+  (cite the conventions by bare filename, which fails the test). Every other graph with a `process`
+  skill (devbox, obsidian, wellstead, osu-builder-in-residence, claude-code-plugins, financial-planning,
+  daily-briefing, airbnb-prep) should report *already satisfied* and stamp.

@@ -11,13 +11,16 @@ allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh *)"]
 
 # Secret scan
 
-Run exactly this command, once, with the arguments you were given:
+The arguments you were given are the rendered file path(s): `$ARGUMENTS`
+
+Run the scanner once, over all of them, with **each path single-quoted** so a path containing spaces
+or glob characters reaches the script intact:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh $ARGUMENTS
+${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh '<first path>' '<second path>'
 ```
 
-Then report the **exit code** and the **full stdout and stderr verbatim**, nothing paraphrased.
+Pass the paths exactly as given, add nothing, and leave none out. Then report the **exit code** and the **full stdout and stderr verbatim**, nothing paraphrased.
 
 What the exit code means to the caller:
 
