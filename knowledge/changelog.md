@@ -319,6 +319,10 @@ watch items.
 
 Sinks: none new.
 
-Promotions: two are proposed below for Derek's approval. The trigger lesson was not proposed, because the
-commons already holds it.
+Promotions: Derek approved both, and they landed in the commons as `2ea6080`. Each gave its question a
+second domain, so promote's graduation check reviewed both, and Derek approved graduating them (`706d9c4`):
+- "settle first the choice the others must adapt to"
+- "prior work is found by where the record sits, so put the look where the next work starts"
+
+Both are not yet steering. The trigger lesson was not proposed, because the commons already holds it.
 
