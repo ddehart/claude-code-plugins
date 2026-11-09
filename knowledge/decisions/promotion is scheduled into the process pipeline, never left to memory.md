@@ -14,6 +14,7 @@ effectively zero extra cost.
 
 ## evidence
 - [[seven releases in one day were each driven by a real defect from actual use]]
+- [[nothing prompted graduation because its only trigger lived in a skill promoting sessions never load]]
 
 ## related
 - [[processing is local to each domain and the commons is receive-only via promotion]]

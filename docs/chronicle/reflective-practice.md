@@ -37,6 +37,22 @@ findings to arrive at again. What earns space is a new mechanism, not another in
 
 ## Evolution Notes
 
+#### 2026-11-08
+
+Lightweight check on the 20:53 entry, the same day as the deep review, so the count stays at 0. The
+cross-pass ran on agy, served by **Gemini 3.8 Flash (High)**, confirmed from its log. It marked nine
+findings already captured, correctly, and named three as new. All three are single instances, so they are
+held here rather than made prompts:
+
+- **A checker revised after seeing its verdicts.** From inside, "this check is wrong" and "this check is
+  inconvenient" feel the same. The graph now holds a pattern for it, so the practice doesn't need to
+  duplicate it.
+- **A check's own output as the leak.** A redaction step printed what it removed, and the printout became
+  part of the record it protected. This is distinct from verification pointing outward. Promote it if a
+  second instance lands.
+- **Pre-shaped handoffs.** Work briefed by a peer session arrived narrowed, which was efficient and closed
+  off some freedom. Watch whether it recurs now that this session is also the one briefing.
+
 #### 2026-11-08 (deep review)
 
 The first deep review this practice has had, under the fixed counter: twelve entries, 2026-03-21 through

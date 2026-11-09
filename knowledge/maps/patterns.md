@@ -26,6 +26,7 @@ evidence and carries a one-clause "so what"; none reaches a verdict. Entries are
 - [[build enforcement against demonstrated need, not anticipated failure]] — machinery earns its place only against silent, compounding, or frequent errors; defer the rest to an evidence trigger.
 - [[concurrent writers are invisible until write time]] — no lock, no writer identity, and a screen minutes before a write can read a state that no longer exists.
 - [[each fix round manufactures the next round's defects]] — read it as a demand for regression tests that go red on each fix's reversal, not only as a signal to stop reviewing.
+- [[each stage of a staged pipeline needs its own trigger, and closing one gap exposes the next]] — a stage with no prompt builds a backlog that reads as a quiet system; fixing one stage moves the pile downstream.
 - [[execution against real data catches what authoring and review miss]] — run a just-authored mechanism end-to-end on real input; verify guards with a planted failure, never a happy-path pass.
 - [[justifying prose drifts from the thing it justifies]] — the instruction stays sound while its stated reason rots, and rationale travels further than the instruction.
 - [[naming a failure shape confers no immunity to it]] — the shape survived being named, specified against, and built around; fluency is not application.

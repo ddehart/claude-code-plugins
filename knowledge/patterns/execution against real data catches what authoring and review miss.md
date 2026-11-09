@@ -13,7 +13,7 @@ incapable of failing; verify a guard by feeding it a planted failure it must cat
 "guard-reports-success-it-never-earned" defect recurred four times inside a single run and was escaped
 only by testing against a known-bad input.
 
-*Three witnesses (2026-07-15, 2026-07-28, 2026-11-06). Open.*
+*Three witnesses (2026-07-15, 2026-07-28, 2026-11-06 → 11-08, one session). Open.*
 
 ## evidence
 - [[a real transcript surfaced three defects a design review had missed]]
@@ -24,6 +24,7 @@ only by testing against a known-bad input.
 - [[the old skill version failed the new checks as a negative control must]]
 - [[a test run got past a PATH stub and the rest named the stub]]
 - [[a scratch project's permission allowlist was ignored until the folder was trusted]]
+- [[the first graduation walk followed decisions the shipped procedure did not state yet]]
 
 ## related
 - [[added complexity generates its own defect supply]]

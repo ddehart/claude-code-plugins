@@ -17,6 +17,7 @@ accumulate curated context and a dated interaction log.
 ## Skills
 
 - [[dev-workflow spec-writing skill]] — interview-driven spec skill; ran in main context to converge the knowledge-commons spec.
+- [[graduate skill]] — reviews a receiving graph's eligible questions one at a time: graduate, split, move, retitle, or hold.
 - [[graph-init skill]] — scaffolds the graph and generates the project's process + knowledge-graph skills; has a `--config-only` wiring mode.
 - [[promote skill]] — uniform cross-graph promotion; `domain:`-stamps derived claims and commits-and-pushes them.
 - [[session-chronicle skill]] — writes the chronicle and evolves the reflective practice; its deep-review count is a tested script since 1.9.0.

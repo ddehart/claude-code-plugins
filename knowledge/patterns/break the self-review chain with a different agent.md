@@ -13,7 +13,7 @@ wrong" pass measures the brief and will return a long list from any artifact, in
 authoring gets the same discipline: fan work out to cheaper models, then verify every returned artifact
 against the spec and check load-bearing factual claims directly — trust nothing on report alone.
 
-*Four witnesses (2026-07-15, 2026-07-26, 2026-08-01, 2026-11-06). Open.*
+*Four witnesses (2026-07-15, 2026-07-26, 2026-08-01, 2026-11-06 → 11-08, one session). Open.*
 
 ## evidence
 - [[a neutral build-it cold read measured the spec where an adversarial loop inflated it]]
@@ -21,6 +21,7 @@ against the spec and check load-bearing factual claims directly — trust nothin
 - [[the anti-silent-loss machinery shipped four instances of the shape it was built to eliminate]] (2026-07-22)
 - [[a satisfied-test asserted a property its own template did not have]] (2026-07-22)
 - [[a claim that another skill needed no change was repeated three times before a reviewer caught it]]
+- [[a deep review moved findings an outside reader reached independently into settled context]]
 
 *Qualified 2026-07-22: a different agent is necessary but not sufficient — see
 [[a check inherits the frame of whoever briefed it]]. Where the author writes the reviewer's brief, the

@@ -13,3 +13,4 @@ know where to resume, and where should it live so a run consults it rather than 
 
 ## evidence
 - [[a processed stamp covered half a still-growing source]]
+- [[processing a live session at 08:01 needed a second export to cover its own tail]]

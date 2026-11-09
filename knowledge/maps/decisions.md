@@ -11,6 +11,7 @@ entry is annotated with the decision's upshot: `- [[title]] — what was chosen 
 - [[knowledge-commons ships at the weight of the system it generalizes]] — no validator/transactions/lifecycle; scope filtered by "has the reference needed this in a year of real use?"
 - [[processing is local to each domain and the commons is receive-only via promotion]] — domains process at home; `/promote` is the commons's only inlet, uniform and `domain:`-stamped.
 - [[promotion is scheduled into the process pipeline, never left to memory]] — the process template asks "does this generalize?" so promotion never depends on remembering.
+- [[question graduation is triggered where evidence lands, from the plugin, not from the receiving graph]] — a trigger inside the receiving graph's own skill never fires, because promoting sessions don't load it; the check runs at promote's end.
 - [[session-chronicle counts entries since the newest deep review, in tested code]] — the count anchored on any dated note, so the review never fired; the anchor is now a review, and the rule is code a test can hold.
 - [[the commons is the evidence tier beneath behavioral rules]] — consulted on demand, never ambiently injected; principles graduate to rules with approval and cross-domain evidence.
 - [[the knowledge-commons plugin generates project-owned prose, not a runtime engine]] — config drives shapes, interview fills procedures; generated skills are target-owned and expected to drift.

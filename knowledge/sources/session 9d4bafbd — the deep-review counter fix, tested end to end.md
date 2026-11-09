@@ -3,13 +3,20 @@ genitor: "[[sources]]"
 tags: [source, session]
 source: "session:9d4bafbd-d674-4a91-b9e5-b2657a6ed368"
 date: 2026-11-06
-archive: knowledge/sources/raw/2026-11-06T2133-deep-review-counter-fix.txt
+archive:
+  - knowledge/sources/raw/2026-11-08T2013-deep-review-counter-fix-augment.txt
+  - knowledge/sources/raw/2026-11-06T2133-deep-review-counter-fix.txt
 synthesis: "[[2026-11-08]]"
 processed:
   - date: 2026-11-08
     covers: transcript through 2026-11-08 08:01, the start of this run
     ran: [1 decision, 3 patterns, 1 question, 12 observations, 2 entity notes, 11 evidence links across 10 existing patterns, 6 map updates, 1 chronicle entry with this repo's first deep review, 2 Todoist tasks]
     skipped: ["operational slips (a pkill that killed its own shell, run.sh edited while running, gh pr edit leaving the body unchanged, a wrong restart claim) as not durable", "rebase-merge and version-bump mechanics as operational", "promotion candidate 4 (checker revised after verdicts), already in the commons as a claim about a repaired recompute"]
+    errored: []
+  - date: 2026-11-08
+    covers: transcript through 2026-11-08 20:13, the start of this augment run; augment export archived beside the first
+    ran: [1 decision, 1 pattern, 1 entity note, 2 entity log lines, 5 observations, 6 evidence links, 4 map updates, 1 chronicle entry (20:53) with a lightweight practice note, 2 commons promotions proposed]
+    skipped: ["the graduation session's own spec, reviews and walk, which belong to its own transcript", "a promotion's evidence label briefly reading 'second instance', already corrected", "hook timeouts and a search-tool error as operational", "this session as a briefing parent checking its child's claims, too weak an instance"]
     errored: []
 ---
 
@@ -46,4 +53,11 @@ script confirmed today with a count of 0, and every prior entry byte-identical.
 
 **Promotions.** Three claims proposed to the commons at the end of this run; see the changelog for what
 landed.
+
+**Augment, 2026-11-08 20:13.** A second full export covers the session's evening: promotions, the missing
+graduation trigger, the separate graduation session, and the promote fix for chezmoi-managed rules. The gate
+added four redactions at Derek's direction, which are part of a street address, an employer name and a
+private repository URL, all from this session's own commands. It also caught project names and a usage
+figure leaking back in through an earlier redaction script's printed output; those were redacted the same
+way as before. The chronicle's 20:53 entry is this pass's synthesis.
 

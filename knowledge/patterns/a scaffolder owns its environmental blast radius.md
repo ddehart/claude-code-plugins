@@ -14,11 +14,12 @@ it isn't — a config-only wiring mode that writes a promotion target should gre
 trigger and surface its absence, rather than leaving the human to be the detection mechanism. Touching and
 checking are different.
 
-*One witness (2026-07-15). Open.*
+*Two witnesses (2026-07-15, 2026-11-08). Open.*
 
 ## evidence
 - [[graph commits, empty dirs, and uncommitted promotions were second-order costs of scaffolding into a live repo]]
 - [[config-only wiring should surface a missing promotion trigger rather than leave the user to find it]]
+- [[promote's rule-writing step would have written into chezmoi's rendered copy]]
 
 ## related
 - [[the knowledge-commons plugin generates project-owned prose, not a runtime engine]]

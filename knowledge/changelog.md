@@ -293,3 +293,32 @@ commons as `bec4085`:
 [patch-check-suggested] — the last `/graph-patch` suggestion was 2026-08-01, so this run raises it. Run
 `/graph-patch` to see whether template fixes are pending.
 
+## 2026-11-08 — /process augment over session 9d4bafbd: the evening
+
+A second pass over `session:9d4bafbd`, covering everything after the first pass's 08:01 cut. Approved by
+Derek at plan review, with his redaction calls on four new hits.
+
+Created: [[question graduation is triggered where evidence lands, from the plugin, not from the receiving graph]];
+[[each stage of a staged pipeline needs its own trigger, and closing one gap exposes the next]]; 5
+observations; an entity note for [[graduate skill]].
+
+Updated: evidence on [[build enforcement against demonstrated need, not anticipated failure]] (its deferral
+condition met), [[a scaffolder owns its environmental blast radius]],
+[[execution against real data catches what authoring and review miss]],
+[[break the self-review chain with a different agent]], the decision
+[[promotion is scheduled into the process pipeline, never left to memory]], and the question
+[[what should a processed stamp record when the source is still open]]. Log lines on the promote and
+knowledge-commons entities.
+
+Correction: a draft of this run counted session 9d4bafbd as two pattern witnesses, once per date it spans.
+It is counted once. One session is one witness.
+
+Synthesis: a 20:53 entry appended to `docs/chronicle/2026-11-08.md`, with prior content verified
+byte-identical. Its lightweight check ran an agy cross-pass and held three single-instance findings as
+watch items.
+
+Sinks: none new.
+
+Promotions: two are proposed below for Derek's approval. The trigger lesson was not proposed, because the
+commons already holds it.
+

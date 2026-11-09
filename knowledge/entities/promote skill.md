@@ -15,3 +15,4 @@ promotion is invisible to every other machine and session. It is the commons's o
 ## interaction log
 - 2026-07-15 — two real runs disagreed on adding a date under a soft "if applicable" instruction (tightened
   to an explicit target-contract check); contract gained commit-and-push.
+- 2026-11-08 — gained a graduation check at its end (0.7.0), and its rules branch now writes through chezmoi when chezmoi manages the rules directory (0.8.2). See [[promote's rule-writing step would have written into chezmoi's rendered copy]].

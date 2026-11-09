@@ -13,12 +13,13 @@ unattended, adversarial executor the actual workflow never contains, and its wor
 trigger, not a schedule — and drop policy distinctions (tiers, postures, modes) until a concrete case
 demands them.
 
-*One witness (2026-07-15). Open.*
+*Two witnesses (2026-07-15, 2026-11-08). Open.*
 
 ## evidence
 - [[validation earns its keep only when errors are silent, compounding, or frequent]]
 - [[dropping the personal-professional promotion split removed a problem not yet encountered]]
 - [[a green tested validator PR was closed because it solved nothing real]]
+- [[nothing prompted graduation because its only trigger lived in a skill promoting sessions never load]]
 
 ## related
 - [[prose conventions plus human approval can replace a validator]]

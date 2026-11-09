@@ -14,3 +14,4 @@ reference it generalizes; see [[knowledge-commons ships at the weight of the sys
 ## interaction log
 - 2026-07-15 — designed and shipped across releases 0.1.0 → 0.1.7 in one day, each bump from a real
   defect surfaced by actual use.
+- 2026-11-08 — 0.7.0 added the [[graduate skill]] and promote's graduation check; 0.8.2 fixed promote's rules branch for chezmoi-managed rules.
