@@ -50,6 +50,15 @@ All four auto-trigger from natural phrasing too — "set up a knowledge graph", 
 generalize?", "promote this to the commons", "what's ready to graduate?", "what template fixes am I
 missing?" — not just the slash commands.
 
+Two helper skills aren't slash commands. Generated skills invoke them by name, which is how a skill
+living in a project reaches the plugin's files: a project skill gets no `${CLAUDE_PLUGIN_ROOT}`, and any
+path written into it names one version on one machine.
+
+| Skill | What it does |
+|-------|--------------|
+| `conventions` | Loads the full `references/graph-conventions.md` from the installed plugin version. |
+| `scan-secrets` | Runs `scripts/scan-secrets.sh` over rendered material for a redaction gate and reports the exit code verbatim; any non-zero exit means don't archive. |
+
 ## How it works
 
 ### The graph
@@ -173,6 +182,8 @@ plugins/knowledge-commons/
     promote/SKILL.md                  # the cross-domain derivation mechanism
     graduate/SKILL.md                 # the backlog walk — reviews eligible questions
     graph-patch/SKILL.md              # the maintainer — propagates template fixes
+    conventions/SKILL.md              # helper: loads the full conventions for generated skills
+    scan-secrets/SKILL.md             # helper: runs the floor scan for generated skills
   scripts/
     scan-secrets.sh                   # the redaction gate's deterministic floor
     test-scan-secrets.sh              # its planted-secret test

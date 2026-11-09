@@ -432,6 +432,11 @@ The generated preserve stage invokes it by the path `graph-init` resolves at gen
 generated skills already reference `references/graph-conventions.md`. Exit non-zero on any hit, non-zero on
 its own failure; the stage treats both the same way, which is what "fails closed" means here.
 
+> **Superseded 2026-11-08 (plugin 0.9.0):** generated skills no longer carry a resolved path to the
+> scanner or the conventions. Both are reached through plugin skills (`knowledge-commons:scan-secrets`,
+> `knowledge-commons:conventions`), because a stamped path names one version on one machine and goes
+> stale. See [`knowledge-commons-plugin-references.md`](./knowledge-commons-plugin-references.md).
+
 **Whether the run commits.** The preserve stage writes the archive file and stages nothing. Committing
 stays with the project's normal flow, so the archive lands in the same commit as the notes the run
 produced. The gate is what guards publication, and it runs before the file is written — not before the

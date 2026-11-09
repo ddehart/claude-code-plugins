@@ -379,10 +379,15 @@ with no sources (the commons).
 For each template:
 - Replace every `{brace}` value with the concrete config value it names, rendered as natural prose
   where a literal paste would read oddly (`root: .` becomes "the project root", not a bare `.`).
-- Where a template refers to "the plugin's `references/graph-conventions.md`", stamp the resolved
-  concrete path (`${CLAUDE_PLUGIN_ROOT}/references/graph-conventions.md` resolves for *you*, the
-  generator, even though it won't for the generated skill) — a generated skill in a project has no
-  other way to find the plugin's files.
+- **Write no filesystem path into the plugin's install** — not a resolved literal, not a glob, not a
+  discovery command. `${CLAUDE_PLUGIN_ROOT}` resolves for *you*, the generator, but a skill in a project
+  never gets it substituted, so anything you write there is a snapshot of one version on one machine.
+  It goes stale when the plugin updates and the old cache is pruned, and it is wrong outright on another
+  machine or under a Remote Control session's plugin directory. Generated skills reach plugin files
+  through the plugin's own skills instead, which Claude Code resolves to the installed version each time
+  they load: the full conventions through `knowledge-commons:conventions`, the redaction gate's floor
+  scan through `knowledge-commons:scan-secrets`. The templates already name both; keep them that way in
+  any prose you write into a SLOT.
 - Write prose into every `<!-- SLOT: ... -->` block from the matching interview answers — the
   comment names which block. The example under each SLOT shows the *kind* of prose expected, not
   content to reuse; write this domain's own.
@@ -399,10 +404,8 @@ For each template:
 - **The redaction-gate subsection is conditional on `gate:`.** Generate it when any tier archiving to a
   destination is `public` or `shared`; omit it entirely — no header, no placeholder — when every such
   tier is `private`. When you generate it, say in the prose which destination assumption it was written
-  under, so a later reader can see the assumption instead of reconstructing it. Stamp the resolved path
-  to `${CLAUDE_PLUGIN_ROOT}/scripts/scan-secrets.sh` the same way you stamp the resolved path to
-  `references/graph-conventions.md` — the generated skill lives in the project and has no other way to
-  find it.
+  under, so a later reader can see the assumption instead of reconstructing it. The floor scan is the
+  `knowledge-commons:scan-secrets` skill, named as the template names it, never a path to the script.
 - **Three pieces are conditional on `types.synthesis`, and they are conditional *together*.** Generate
   all three or none:
   1. the **synthesize section**, which checks for an existing synthesis and decides what to do,

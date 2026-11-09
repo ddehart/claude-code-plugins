@@ -168,7 +168,15 @@ behavior in every one of those cases, not a failure to work around.
 ### 4b. Judge redundancy first
 
 Read the anchored section in full, then answer the `satisfied-test` against what is actually
-written there. **If the test already passes, propose no edit.** The project hand-fixed this
+written there. **If the test already passes, propose no edit.**
+
+**A delta may name one neighbor as part of its scope.** When an `instruction` explicitly says it
+applies to the section immediately following its anchor (the preserve stage after `## 2. Resolve`,
+which live graphs carry either as its own `##` stage or as a subsection of Resolve), read, judge,
+edit, and verify that following section together with the anchored one. Only the section directly
+after the anchor, and only when the instruction says so. This is a declared scope, not a search: it
+never licenses looking further for where content went, and a delta that names no neighbor is
+confined to its anchor exactly as before. The project hand-fixed this
 defect already, or wrote it correctly from the start. Report *already satisfied*, **note it for
 stamping in step 5**, and move to the next one. Don't write to `.commons.yml` here — step 5 is the
 single point where state reaches disk.
