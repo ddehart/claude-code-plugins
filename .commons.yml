@@ -44,11 +44,12 @@ sinks:
 promotes-to: ~/Developer/commons
 generated:                                 # owned by /graph-patch — applied-delta state
   process:
-    template-version: 0.8.0
+    template-version: 0.9.0
     applied: [step4-explicit-negative, step8-collect-nonreporting, step9-stamp-gate,
               step11-pull-target, step10-pending-patches, step10-entity-type-gap,
               preserve-stage, resolve-orphaned-synthesis, extract-from-raw,
-              synthesis-in-plan, synthesis-write, step10-entity-type-gap-direct-edit]
+              synthesis-in-plan, synthesis-write, step10-entity-type-gap-direct-edit,
+              preserve-plugin-files-by-skill]
   knowledge-graph:
-    template-version: 0.8.0
-    applied: [synthesis-is-sibling, kg-types-entity-route]
+    template-version: 0.9.0
+    applied: [synthesis-is-sibling, kg-types-entity-route, kg-conventions-by-skill]

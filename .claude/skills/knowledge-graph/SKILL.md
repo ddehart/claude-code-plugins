@@ -28,10 +28,9 @@ where a convention or a judgment call was off.
 
 ## Conventions
 
-A compact restatement of the graph's structural contract. The full version lives in the knowledge-commons
-plugin at
-`/Users/derek-personal/.claude/plugins/cache/ddehart-plugins/knowledge-commons/0.1.7/references/graph-conventions.md`;
-everything a writing session needs day to day is here.
+A compact restatement of the graph's structural contract. The full version is the knowledge-commons
+plugin's graph conventions; load it by invoking the `knowledge-commons:conventions` skill when a case
+falls outside what's below. Everything a writing session needs day to day is here.
 
 **Navigation.** Every note carries `genitor: "[[parent-map]]"` in its frontmatter, pointing at the map that
 indexes it, and gets an entry in that map, alphabetically. The atlas (`principium.md`) links to maps; maps
