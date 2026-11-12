@@ -365,3 +365,16 @@ Open: two older tasks ("let /process establish an entity tier instead of deferri
 re-interview", "...instantiate entity types...") and one on version-pinned plugin paths look resolved by
 0.8.0 and 0.9.0; not closed by this run.
 
+Promotions: Derek approved all three, and they landed in the commons as `182cac0`. Two attached to open
+questions that were already multi-domain and unreviewed, so promote's graduation check ran both, and Derek
+approved each review as proposed:
+- `9fc9133`: "what does an approval cost..." graduated two claims to "an approval binds the proposal's text,
+  not the act, so the act must run on the one reading the text was written from"; the two proposal-round
+  claims, including this run's, moved under "a check cannot establish its own validity".
+- `26de749`: "where does feedback land..." graduated three claims, including this run's, to "reactions reach
+  whoever is present where the work runs, so an absent author must connect the channel on purpose"; one
+  claim moved, one dropped from the question, and the original was retitled.
+
+Both new principles are not yet steering. The third promotion joined the principle on guards written from
+lists.
+
