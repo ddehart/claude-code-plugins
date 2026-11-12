@@ -496,11 +496,9 @@ Entries are append-only and ordered by version.
     raised again.
   rationale: >
     The graph-init route was never how types were actually added. Graph owners add entity types by
-    direct edit with their own approval: financial-planning added estate-document on 2026-11-01 and
-    income-stream on 2026-11-08 that way; claude-usage added its first three types on 2026-10-05;
-    osu-builder-in-residence added program on 2026-07-28 and published copy on 2026-08-01;
-    airbnb-prep declared tool on 2026-09-27 directly at the user's instruction. None of those
-    involved a re-interview. Because generated skills repeated the graph-init route, they kept
+    direct edit with their own approval: five live graphs had added types that way between July and
+    November 2026, one of them at the user's direct instruction. None of those involved a
+    re-interview. Because generated skills repeated the graph-init route, they kept
     steering their owner toward a heavier path. The route was also incomplete. A re-interview
     rewrites .commons.yml, but graph-init won't overwrite hand-sharpened generated skills without
     asking. So a graph that followed it got a config declaring the new type and skills that still
