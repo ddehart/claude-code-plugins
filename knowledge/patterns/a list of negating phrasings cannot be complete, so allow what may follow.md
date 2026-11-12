@@ -11,10 +11,11 @@ phrasing is accepted as the thing it denies. Naming what may follow the phrase i
 unlisted phrasing is rejected instead, which is visible and recoverable when something downstream checks
 for it.
 
-*One witness (2026-11-06). Open.*
+*Two witnesses (2026-11-06, 2026-11-08). Open.*
 
 ## evidence
 - [[a negation word list let a new phrasing through, and an allowlist replaced it]]
+- [[the anchor list that enumerated stage numberings missed a third one]]
 
 ## related
 - [[a fail-safe argument holds only if a miss happens once]]

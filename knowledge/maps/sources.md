@@ -13,4 +13,5 @@ fetched URL, or — off-tier — a session UUID). Each source note carries the `
 - [[session 4475b018 — the pipeline shipped, and its gate was hardened five times]]
 - [[session 5912a7cc — four knowledge-commons bugs, the patch mechanism, and a wrong-layer correction]] — `session:5912a7cc…`; six PRs, plugin 0.1.8 → 0.5.0; first run on the session tier.
 - [[session 9d4bafbd — the deep-review counter fix, tested end to end]] — `session:9d4bafbd…`; meta-claude 1.9.0, three review passes, and an end-to-end harness with a negative control; redacted at archive.
+- [[session df62349c — the entity-type route fix, title-matched anchors, and two fleet patch runs]] — `session:df62349c…`; plugin 0.6.0 → 0.9.1 across PRs #78, #80, #83; two fleet `/graph-patch` runs over 13 graphs.
 - [[session f64160a1 — the process pipeline correction, specced not built]] — `session:f64160a1…`; diagnosed the pipeline inversion and specced the fix; **processed by the pre-fix pipeline**, so its raw tier is a bare pointer.

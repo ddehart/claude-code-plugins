@@ -22,11 +22,12 @@ The mechanism is ordinary: once a decision is made, a supporting citation is rea
 sounding supportive, and is not checked against the cited artifact. Reviews catch the instruction; the
 rationale outlives the review.
 
-*Two witnesses (2026-07-22, 2026-11-06). Open.*
+*Three witnesses (2026-07-22, 2026-11-06, 2026-11-08). Open.*
 
 ## evidence
 - [[a satisfied-test asserted a property its own template did not have]]
 - [[the claim that a missed review note costs one early review was wrong]]
+- [[the successor delta's restated cadence test required a bracket the original never did]]
 
 ## related
 - [[a plausible story arrests the investigation before the mechanism is found]]

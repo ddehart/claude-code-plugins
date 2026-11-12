@@ -17,5 +17,6 @@ unresolved matter that may have none yet. A question that accumulates enough evi
 - [[can raw material be committed in-repo when sessions span domains]] — committing raw material and excluding other-domain particulars are jointly unsatisfiable for transcripts; the resolution policy is open.
 - [[does a shared brief explain the original fanout symptom]] — **still open**; a spawn-shape answer was written and retracted the same day against contrary cross-domain evidence. Discriminator: were osu-builders-studio's 43 silent workers named teammates or plain subagents?
 - [[how should a peer-briefed session record where its instructions came from]] — settled by whether a later run needs a peer's brief to judge what an approval covered.
+- [[should graph-patch carry a multi-graph proposal-only mode]] — a third fleet run, or one driven by someone other than the plugin's author.
 - [[should the type-gap check cover attractor types, not just entity types]] — settled by whether a second graph hits the same wall in an uncovered tier.
 - [[what should a processed stamp record when the source is still open]] — a date says when a read happened, not how far it reached; a run over a live source necessarily stops short of itself.

@@ -13,7 +13,7 @@ incapable of failing; verify a guard by feeding it a planted failure it must cat
 "guard-reports-success-it-never-earned" defect recurred four times inside a single run and was escaped
 only by testing against a known-bad input.
 
-*Three witnesses (2026-07-15, 2026-07-28, 2026-11-06 → 11-08, one session). Open.*
+*Four witnesses (2026-07-15, 2026-07-28, 2026-11-06 → 11-08, 2026-11-08 → 11-11). Open.*
 
 ## evidence
 - [[a real transcript surfaced three defects a design review had missed]]
@@ -25,6 +25,9 @@ only by testing against a known-bad input.
 - [[a test run got past a PATH stub and the rest named the stub]]
 - [[a scratch project's permission allowlist was ignored until the folder was trusted]]
 - [[the first graduation walk followed decisions the shipped procedure did not state yet]]
+- [[the successor delta's restated cadence test required a bracket the original never did]]
+- [[drafting all thirteen graphs before applying any left the defective delta unstamped and fixable in place]]
+- [[a repaired pre-commit guard blocked the next run, and the workaround was another channel around it]]
 
 ## related
 - [[added complexity generates its own defect supply]]

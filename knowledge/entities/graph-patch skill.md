@@ -18,3 +18,4 @@ and whole-file replacement is its first prohibition.
 
 - **2026-07-22** — first real run, against this graph. Bootstrapped at 0.1.8, six deltas applied and
   verified, stamped to 0.5.0.
+- 2026-11-08 — 0.8.0: `process` anchors match on title, ignoring the stage number, and a delta may name an earlier one it `supersedes`; first two fleet runs across 13 graphs, see [[a fleet patch run drafts every graph before applying any, under one batched approval]].

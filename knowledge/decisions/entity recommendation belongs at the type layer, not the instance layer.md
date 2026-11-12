@@ -22,8 +22,17 @@ The correction was made by replacing the two shipped deltas in place rather than
 was legitimate only because nothing had stamped them — see
 [[in-place rewrite of a shipped delta requires that nothing has stamped it]].
 
-*Decided 2026-07-22. Shipped in knowledge-commons v0.5.0.*
+**The route, corrected 2026-11-08 (v0.8.0).** The shipped wording named re-interviewing the generator's
+type block as the sanctioned way to add a type, and its delta's test required that. Owners had never
+added types that way: they edited `.commons.yml`, the directory, the map, the atlas link, and the
+skills' type lists directly, on their own yes. A re-interview also rewrites only the config, not the
+hand-sharpened skills, so the skills' type lists go stale. The recommendation now names the direct edit,
+lists the skill lines among the work, and calls a re-interview optional, never required. The run still
+only recommends; it never makes the edit during the run.
+
+*Decided 2026-07-22. Shipped in knowledge-commons v0.5.0; route corrected in v0.8.0.*
 
 ## related
 - [[a check inherits the frame of whoever briefed it]]
 - [[in-place rewrite of a shipped delta requires that nothing has stamped it]]
+- [[the wrong route lived in a template, a delta, eleven skills, graph-init and a config comment]]

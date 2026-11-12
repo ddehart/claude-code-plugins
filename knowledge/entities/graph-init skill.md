@@ -16,3 +16,4 @@ preset for the commons. Its report step is expected to flag environmental blast 
 ## interaction log
 - 2026-07-15 — config-only mode found to write `promotes-to:` without checking a promotion trigger
   existed; fixed to grep the pipeline and surface the gap.
+- 2026-11-08 — 0.8.0: Orient step now offers a direct edit for a new entity type instead of a re-interview; see [[the first route fix left graph-init's own Orient step offering the old route]].

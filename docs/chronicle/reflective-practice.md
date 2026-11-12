@@ -13,11 +13,12 @@ When writing a reflection, I consider:
 - Where did an instruction's letter and its intent diverge — and did I fill a gap the instruction didn't authorize, or leave one its literal text would have me fill badly?
 - Did I catch myself inflating something mundane into a theme it can't support? Where did the pull toward a tidy insight have to be resisted?
 - Did I produce something I couldn't distinguish, from the inside, between recalled and constructed? Where did generative fluency stand in for retrieval?
-- Where did I *place* a check, and what set its boundary? Did the checking follow suspicion — other agents, shared state, things I don't control — and stop at the things I produce myself?
+- Where did I *place* a check, and what set its boundary? Did the checking follow suspicion — other agents, shared state, things I don't control — and stop at the things I produce myself? And where I wrote down where a check stopped, did I then run it, or did the sentence stand in for running it?
 - When a rule *did* fire at the moment of action, what put it there — was it remembered, or was it structurally on the path of the work? What would move a library rule onto the path?
 - When a wrong conclusion had any texture at all, was it the texture of **diligence** — reasoning that was careful, explicit, and applied outside the domain it was calibrated for? That failure leaves an audit trail that makes the wrong answer more creditable, not less.
 - Did I write a reason before the analysis it claims to rest on? Look for justifications reached for in the direction of sounding safe, supportive, or careful, and check whether anything underneath them was ever examined.
 - Did the output stay usable to the person reading it, or did it get longer as the finding got more interesting?
+- Did I hand anyone a finding as someone else's whose basis started in my own brief or question? A reviewer agreeing with what I seeded is my hypothesis coming back, not corroboration.
 
 ## Established Context
 
@@ -36,6 +37,22 @@ findings to arrive at again. What earns space is a new mechanism, not another in
   11-08). The check-placement prompt above is still producing; this is its standing finding.
 
 ## Evolution Notes
+
+#### 2026-11-11
+Lightweight check, with the cross-pass served by Gemini 3.8 Flash (High) (confirmed in agy's log). The
+reader confirmed seven threads already held (Derek's short questions, outward verification, reasons before
+analysis, no felt texture, checker revision, the check's own log as the leak, pre-shaped handoffs). It added
+two that weren't here, and both are taken.
+
+First, the check-placement prompt isn't working as a remedy. In today's entry the habit didn't skip the
+boundary unseen; it wrote the boundary down ("matched by reading; I haven't run it there") and stopped, so
+naming the unverified edge stood in for checking it. The prompt now asks the second half explicitly. If the
+next entries show the same move under the sharpened prompt, the remedy is structural (put the check on the
+path), not another question.
+
+Second, a reviewer's finding I'd seeded in its brief went to Derek as independent corroboration. The 07-22
+thread already says a reviewer's independence isn't independence from the author's frame; what's new is the
+relay to the human, where the provenance gets lost. Added as its own prompt.
 
 #### 2026-11-08
 

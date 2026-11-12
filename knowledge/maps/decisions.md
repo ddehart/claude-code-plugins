@@ -8,6 +8,8 @@ tags: [map]
 Settled attractors — design choices made for this project's plugins with the reasoning attached. Each
 entry is annotated with the decision's upshot: `- [[title]] — what was chosen and why, in one clause`.
 
+- [[a fleet patch run drafts every graph before applying any, under one batched approval]] — read-only drafters stop at the approval point in every graph, one review file gates them all, and nothing stamps until every graph has been drafted.
+- [[a superseding delta states the full end state and the superseded one is never applied]] — `supersedes:` replaces a stamped delta without asking the patcher to merge two instructions or derive its own test.
 - [[knowledge-commons ships at the weight of the system it generalizes]] — no validator/transactions/lifecycle; scope filtered by "has the reference needed this in a year of real use?"
 - [[processing is local to each domain and the commons is receive-only via promotion]] — domains process at home; `/promote` is the commons's only inlet, uniform and `domain:`-stamped.
 - [[promotion is scheduled into the process pipeline, never left to memory]] — the process template asks "does this generalize?" so promotion never depends on remembering.

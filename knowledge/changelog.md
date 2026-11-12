@@ -326,3 +326,42 @@ second domain, so promote's graduation check reviewed both, and Derek approved g
 
 Both are not yet steering. The trigger lesson was not proposed, because the commons already holds it.
 
+## 2026-11-11 — /process over session df62349c: the entity-type route, anchors and supersession, and two fleet patch runs
+
+Processed live, through the start of this run. All four signal classes reported, by a reader each; the
+plan was approved by Derek in one pass.
+
+Gate: the credential scan was clean. Derek ruled on the read-through's hits: redact the trimmed PR draft's
+per-graph patch list, one private graph's entity type names and the dates per-graph types were added, and a
+private repository's commit subjects, coverage figures, CI run URLs, provider and env var names, and two
+branch names. He also asked for the per-graph details removed from the plugin, where this session's own delta
+rationale had put them on public main: PR #83, knowledge-commons 0.9.1. Nothing was withheld.
+
+Created: decisions [[a superseding delta states the full end state and the superseded one is never applied]]
+and [[a fleet patch run drafts every graph before applying any, under one batched approval]]; pattern
+[[a check keyed to the template's literal surface fails copies that diverged on purpose]]; question
+[[should graph-patch carry a multi-graph proposal-only mode]]; 10 observations.
+
+Updated: [[patches are semantic instructions anchored on headings, never diffs]] (title-matched anchors,
+D23), [[entity recommendation belongs at the type layer, not the instance layer]] (the route is a direct
+edit), [[in-place rewrite of a shipped delta requires that nothing has stamped it]] (applied on the
+unstamped side). Evidence on [[each fix round manufactures the next round's defects]],
+[[execution against real data catches what authoring and review miss]],
+[[a check inherits the frame of whoever briefed it]], [[a generator reproduces its template's flaws]],
+[[a claim restated into several artifacts starts reading as corroborated]],
+[[justifying prose drifts from the thing it justifies]],
+[[a list of negating phrasings cannot be complete, so allow what may follow]], and
+[[a fail-safe argument holds only if a miss happens once]] (its second witness). Log lines on the
+graph-patch, graph-init, and knowledge-commons plugin entities.
+
+Synthesis: `docs/chronicle/2026-11-11.md`. Its lightweight check (agy, Gemini 3.8 Flash (High)) found the
+check-placement prompt producing disclaimers rather than checks, and a seeded reviewer finding relayed to
+Derek as corroboration; one prompt sharpened, one added.
+
+Sinks: 3 Todoist tasks in claude code marketplace (obsidian sync and patch; the session-export lookup in two
+graphs; airbnb-prep's config comment). A fourth was already open and the duplicate was deleted.
+
+Open: two older tasks ("let /process establish an entity tier instead of deferring to a graph-init
+re-interview", "...instantiate entity types...") and one on version-pinned plugin paths look resolved by
+0.8.0 and 0.9.0; not closed by this run.
+

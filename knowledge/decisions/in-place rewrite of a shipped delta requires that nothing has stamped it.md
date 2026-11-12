@@ -20,7 +20,16 @@ The boundary matters and was tested within the same session: a *different* defec
 delta's rationale surfaced hours later, and the exception correctly did not apply — durable state existed,
 so correcting it requires a superseding delta.
 
+Applied again on 2026-11-08, on the unstamped side: a superseding delta shipped with a satisfied-test
+stricter than the delta it replaced, the first fleet patch run's drafters found it before any graph had
+applied it, and a check of every graph's `generated:` block confirmed no graph carried the id. It was
+corrected in place (knowledge-commons 0.8.1). The delta it superseded was stamped everywhere, which is why
+the correction to *that* one had to be a new delta.
+
 *Decided 2026-07-22.*
+
+## evidence
+- [[drafting all thirteen graphs before applying any left the defective delta unstamped and fixable in place]]
 
 ## related
 - [[entity recommendation belongs at the type layer, not the instance layer]]
