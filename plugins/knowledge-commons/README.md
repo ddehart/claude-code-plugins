@@ -57,7 +57,7 @@ living in a project reaches the plugin's files without a path into the plugin's 
 |-------|--------------|
 | `conventions` | Loads the full `references/graph-conventions.md` from the installed plugin version. |
 | `scan-secrets` | Runs `scripts/scan-secrets.sh` over rendered material for a redaction gate and reports the exit code verbatim; any non-zero exit means don't archive. |
-| `check-wikilinks` | Runs `scripts/check-wikilinks.sh` over a graph root and reports the exit code verbatim: non-zero when a `[[wikilink]]` is split across a line break, which hard-wrapped prose does silently to long titles. With `--fix` it rejoins them (whitespace only) and re-checks. Generated skills run it before they report. |
+| `check-wikilinks` | Runs `scripts/check-wikilinks.sh` over a graph root and reports the exit code verbatim: non-zero when a `[[wikilink]]` is split across a line break, which hard-wrapped prose does silently to long titles. With `--fix` it rejoins them (whitespace only) and re-checks. Raw archives (each tier's `archive:` directory) are not read or written. Generated skills run it before they report. |
 
 ## How it works
 

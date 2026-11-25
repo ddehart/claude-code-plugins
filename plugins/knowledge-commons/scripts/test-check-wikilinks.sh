@@ -361,6 +361,176 @@ else
   fail "--fix rewrote a file it should have declined"
 fi
 
+# --- raw archives -----------------------------------------------------------------
+#
+# A tier's archive: directory holds verbatim raw material, not notes. These fixtures
+# are whole projects: a .commons.yml beside (or inside) the graph root, an archive
+# holding the two things a real transcript holds that a note must not (a wrapped link
+# and an unclosed fence), and a real note. The real note is what keeps "exit 0" from
+# being earned by excluding too much.
+
+printf '\narchives — a tier'"'"'s raw archive is not read, and never written\n'
+
+# $1 = project name, $2 = .commons.yml content. Graph root is <project>/knowledge.
+project() {
+  mkdir -p "$TMP/$1/knowledge/notes" "$TMP/$1/knowledge/sources/transcripts"
+  printf '%s' "$2" > "$TMP/$1/.commons.yml"
+  printf 'Assistant said: see [[some quoted\nwrapped link]] in tool output.\n\n```bash\necho "a fence the export never closed"\n' \
+    > "$TMP/$1/knowledge/sources/transcripts/2026-08-01-session.md"
+  printf 'A whole [[link]] in a real note.\n' > "$TMP/$1/knowledge/notes/real.md"
+}
+
+project blockcfg 'graph:
+  name: orchard
+  root: knowledge/
+sources:
+  - name: session
+    # archive: knowledge/   <- a commented-out value must not be read as config
+    archive: knowledge/sources/transcripts/      # committed; durable copy
+    gate: private
+'
+run "$TMP/blockcfg/knowledge"
+want_exit "an archive named in .commons.yml (block form) is not checked: exit 0" 0
+want_line "…and the run says which directory it did not read" \
+  "check-wikilinks: not read (raw archive, archive: in $TMP/blockcfg/.commons.yml): $TMP/blockcfg/knowledge/sources/transcripts"
+want_line "…and how many files that was" \
+  "check-wikilinks: 1 archived file(s) skipped; archives are verbatim raw material, not notes."
+
+printf 'A [[wrapped\nlink]] in a real note.\n' > "$TMP/blockcfg/knowledge/notes/bad.md"
+run "$TMP/blockcfg/knowledge"
+want_line "a note beside the archive is still checked" \
+  "$TMP/blockcfg/knowledge/notes/bad.md:1: [[wrapped link]]"
+[ "$(findings)" -eq 1 ] && pass "…and is the only finding" \
+  || fail "archive fixture should yield exactly 1 finding, got $(findings)"
+
+cp -R "$TMP/blockcfg" "$TMP/blockcfg-before"
+run --fix "$TMP/blockcfg/knowledge"
+want_exit "--fix on that graph exits 0" 0
+grep -q -x -F -e 'A [[wrapped link]] in a real note.' "$TMP/blockcfg/knowledge/notes/bad.md" \
+  && pass "…having rejoined the note" || fail "--fix did not rejoin the note beside the archive"
+cmp -s "$TMP/blockcfg-before/knowledge/sources/transcripts/2026-08-01-session.md" \
+       "$TMP/blockcfg/knowledge/sources/transcripts/2026-08-01-session.md" \
+  && pass "…and the archived transcript is byte-identical" \
+  || fail "--fix wrote to an archived transcript"
+
+project flowcfg 'graph: { name: orchard, root: knowledge/ }
+sources:
+  - { type: session, resolve: export, archive: "knowledge/sources/transcripts/", gate: public }
+'
+run "$TMP/flowcfg/knowledge"
+want_exit "an archive named in a flow-style, quoted entry is not checked either" 0
+
+# root: "." — the config sits inside the graph root, as it does in a commons.
+mkdir -p "$TMP/dotroot/sources/raw" "$TMP/dotroot/notes"
+printf 'graph:\n  root: .\nsources:\n  - name: session\n    archive: sources/raw/\n' > "$TMP/dotroot/.commons.yml"
+printf 'A [[quoted\nwrapped link]].\n' > "$TMP/dotroot/sources/raw/t.md"
+printf 'Whole [[link]].\n' > "$TMP/dotroot/notes/n.md"
+run "$TMP/dotroot"
+want_exit "a config inside the graph root (root: .) is found too" 0
+
+project nocfg ''
+rm "$TMP/nocfg/.commons.yml"
+run "$TMP/nocfg/knowledge"
+want_exit "with no .commons.yml the same directory IS checked: exit 1" 1
+want_line "…the wrapped link in it reported" \
+  "$TMP/nocfg/knowledge/sources/transcripts/2026-08-01-session.md:1: [[some quoted wrapped link]]"
+run --exclude "$TMP/nocfg/knowledge/sources/transcripts" "$TMP/nocfg/knowledge"
+want_exit "--exclude skips it without a config" 0
+want_line "…and is named as the reason" \
+  "check-wikilinks: not read (raw archive, --exclude): $TMP/nocfg/knowledge/sources/transcripts"
+
+project outside 'sources:
+  - name: session
+    archive: docs/transcripts/
+'
+mkdir -p "$TMP/outside/docs/transcripts"
+run "$TMP/outside/knowledge"
+want_exit "an archive outside the graph root excludes nothing inside it: exit 1" 1
+
+project covers 'sources:
+  - name: session
+    archive: knowledge/
+'
+run "$TMP/covers/knowledge"
+want_exit "an archive: that covers the whole root exits 2, never clean" 2
+project covers2 'sources:
+  - name: session
+    archive: .
+'
+run "$TMP/covers2/knowledge"
+want_exit "…and so does one naming an ancestor of the root" 2
+run --exclude "$TMP/no-such-dir" "$TMP/clean"
+want_exit "--exclude of a missing directory exits 2" 2
+
+# --- text that is not a title -----------------------------------------------------
+#
+# A multi-line shell test quoted outside a code block has the exact shape of a wrapped
+# link. The check reports it (it may be a link; a person decides), and --fix must not
+# rewrite it. The real wrapped title in the same note is what proves --fix still fixes.
+
+printf '\nnot a title — --fix declines what reads as code, and still fixes what does not\n'
+
+graph shell "notes/hook.md" 'The hook bails early: if [[ -f "$lock" &&
+  -d "$dir" ]]; then exit. A second form starts with the operator: [[ -z "$x"
+  ]] and a third with a variable: [[ $count
+  -gt 3 ]] in the same paragraph.
+
+The pattern it supports is [[guards that fail open are
+worse than no guard]] and that one is a link.
+'
+run "$TMP/shell"
+want_exit "a multi-line shell test outside code is still reported by the check" 1
+want_line "…as a finding a person decides on" \
+  "$TMP/shell/notes/hook.md:1: [[ -f \"\$lock\" && -d \"\$dir\" ]]"
+
+cp -R "$TMP/shell" "$TMP/shell-before"
+run --fix "$TMP/shell"
+want_exit "--fix exits 1 with the shell tests left in place" 1
+want_line "--fix says it left the && form alone, and why" \
+  "left alone (does not read as a note title): $TMP/shell/notes/hook.md:1: [[ -f \"\$lock\" && -d \"\$dir\" ]]"
+want_line "…and the form that starts with a test operator" \
+  "left alone (does not read as a note title): $TMP/shell/notes/hook.md:2: [[ -z \"\$x\" ]]"
+want_line "…and the form that starts with a variable" \
+  "left alone (does not read as a note title): $TMP/shell/notes/hook.md:3: [[ \$count -gt 3 ]]"
+if [ "$(sed -n 1,4p "$TMP/shell-before/notes/hook.md")" = "$(sed -n 1,4p "$TMP/shell/notes/hook.md")" ]; then
+  pass "the four lines holding the shell tests are unchanged"
+else
+  fail "--fix rewrote a quoted shell test"
+fi
+grep -q -x -F -e 'The pattern it supports is [[guards that fail open are worse than no guard]] and that one is a link.' \
+  "$TMP/shell/notes/hook.md" \
+  && pass "the real wrapped title in the same note is rejoined" \
+  || fail "--fix did not rejoin the real title beside the shell tests"
+[ "$(squash "$TMP/shell-before/notes/hook.md")" = "$(squash "$TMP/shell/notes/hook.md")" ] \
+  && pass "…and the note is whitespace-equivalent to its original" \
+  || fail "--fix changed something other than whitespace"
+
+# --- how --fix writes -------------------------------------------------------------
+#
+# By rename, from a temporary file beside the note: an interrupted run leaves the old
+# note or the new one, never a truncated one. A new inode is what shows the note was
+# replaced and not written through.
+
+printf '\nreplace by rename — --fix never writes through a note\n'
+
+graph atomic "notes/a.md" 'A [[wrapped
+link]] here.
+'
+chmod 640 "$TMP/atomic/notes/a.md"
+inode_before="$(ls -i "$TMP/atomic/notes/a.md" | awk '{print $1}')"
+mode_before="$(ls -l "$TMP/atomic/notes/a.md" | cut -c1-10)"
+run --fix "$TMP/atomic"
+want_exit "--fix on a mode-640 note exits 0" 0
+[ "$(ls -i "$TMP/atomic/notes/a.md" | awk '{print $1}')" != "$inode_before" ] \
+  && pass "the note is a new file renamed into place (inode changed)" \
+  || fail "the note was written in place (same inode): an interruption would truncate it"
+[ "$(ls -l "$TMP/atomic/notes/a.md" | cut -c1-10)" = "$mode_before" ] \
+  && pass "its mode is preserved ($mode_before)" \
+  || fail "mode changed from $mode_before to $(ls -l "$TMP/atomic/notes/a.md" | cut -c1-10)"
+[ "$(ls -A "$TMP/atomic/notes" | wc -l)" -eq 1 ] \
+  && pass "no temporary file is left beside it" \
+  || fail "leftover files beside the note: $(ls -A "$TMP/atomic/notes" | tr '\n' ' ')"
+
 # --- fail-closed ------------------------------------------------------------------
 
 printf '\nfail-closed — a check that cannot run is not a check that passed\n'

@@ -1,6 +1,7 @@
 # Spec: a mechanical check for wrapped wikilinks
 
-**Status:** Implemented on `claude/kc-wikilink-check-31628d`, draft PR for review
+**Status:** Implemented on `claude/kc-wikilink-check-31628d`, draft PR for review; amended 2026-11-25
+after review (W14 to W16, and W8 revised)
 **Date:** 2026-11-24
 **Plugin:** `knowledge-commons` v0.9.1 → v0.10.0
 **Related:** [`knowledge-commons-plugin-references.md`](./knowledge-commons-plugin-references.md) (why
@@ -59,8 +60,8 @@ checked, and a check with an unread region does not get to report clean. Measure
 **W8. `--fix` is included.** It rejoins by replacing the line break and the indentation after it with
 one space, and changes nothing else; the test proves each fixed file is whitespace-equivalent to its
 original. It declines a link whose continuation line starts with a blockquote marker (joining would
-leave or drop a `>`, which is not whitespace-only) and a link crossing more than one line break (a
-guess). Its exit code comes from re-running the check on the result. It does not re-wrap the joined
+leave or drop a `>`, which is not whitespace-only), a link crossing more than one line break (a
+guess), and text that does not read as a note title (W15). Its exit code comes from re-running the check on the result. It does not re-wrap the joined
 line, which runs long; that is the convention (W11).
 
 **W9. Reached through a helper skill, `knowledge-commons:check-wikilinks`.** Same reason as
@@ -90,16 +91,49 @@ line; let the line run long.
 `kg-wrapped-link-check`. Each `satisfied-test` fails a section that states the rule without invoking
 the check, since that is the state the delta exists to change.
 
+**W14. Raw archives are not read, and so never written.** Added after review. A source tier too large
+to inline keeps its material in a committed directory named by that tier's `archive:` key in
+`.commons.yml`, and those files are verbatim session transcripts, not notes. Run against
+`~/projects/daily-briefing/knowledge`, the first version reported two unclosed fences inside archived
+transcripts and nothing else. Once the deltas rolled out, every run there would have ended "not known
+to be clean", with the template telling it to hand-edit a verbatim archive. The location is
+configurable and differs across live graphs (`knowledge/sources/transcripts/`, `knowledge/sources/raw/`,
+and `docs/transcripts/` outside the graph), so the script reads it: the nearest `.commons.yml` at or
+above the root, every `archive:` value, by pattern (block and flow YAML both). It does not take the path
+from the calling skill, because that would put the exclusion back in prose a run has to remember.
+`--exclude <dir>` covers a graph with no config. Every skipped directory is printed, with a file count.
+An exclusion that covers the whole root is exit 2. The templates, both deltas and their
+`satisfied-test`s, and the conventions line all say archives are excluded and never edited.
+
+**W15. `--fix` declines text that does not read as a note title; the check still reports it.** Added
+after review. A multi-line shell test quoted outside a code block (`if [[ -f x &&` / `-d y ]]; then`)
+has the exact shape of a wrapped link, and rejoining it rewrites quoted code. The test: the text
+contains `&&`, `||`, `==` or `!=`, or starts with a test operator (`-f`, `-z`, …), `$`, `!`, `(` or a
+quote. It is broad on purpose and can trip on a real title (one starting with `$20`, say), which is why
+it gates only the fix. A wrongly declined fix costs one hand edit; a wrongly skipped finding is a broken
+link nobody hears about. The hand decision is to rejoin it, or to put the code in a span or fence.
+
+**W16. `--fix` replaces a note by rename.** Added after review. It writes a temporary file beside the
+note (`cp -p` first, so the mode carries over) and renames it over the original, so an interruption
+leaves the old note or the new one. The first version wrote through the note to keep hard links, which
+git working trees do not have; a truncated note is the worse failure. Hard links are not preserved.
+
 ## Verification
 
 - `scripts/test-check-wikilinks.sh`: wrapped link in body, in frontmatter, with an alias, two sharing a
   line, several files in one root, a path with spaces; clean file; backtick and tilde fences; inline
   code on adjacent lines, a wrapping code span, double backticks, an unpaired backtick; an unclosed
   fence; unclosed `[[` mid-file and at end of file; `.git` and non-markdown files skipped; `--fix`
-  results, whitespace equivalence, and both declined shapes; every exit-2 path.
-- Shown to test something: the test fails with the script absent, and with each of seven behaviors
+  results, whitespace equivalence, and the declined shapes; archives named in block and flow config,
+  with the config inside the root, with no config, outside the root, and covering the root; shell
+  tests left alone beside a real title that is fixed; replace by rename with the mode kept; every
+  exit-2 path. 86 cases.
+- Shown to test something: the test fails with the script absent, and with each of eleven behaviors
   removed from a copy (set `CHECK_WIKILINKS` to the copy), the cases for that behavior fail.
-- Real data, read-only: `~/devbox/knowledge`, repaired 2026-11-22, reads clean.
+- Real data, read-only, 2026-11-25: devbox, commons, daily-briefing, email-triggers, log-archaeologist
+  and airbnb-prep all exit 0. daily-briefing skips 22 archived files and email-triggers 2.
+- Not tested on bash 3.2 or BSD userland; the script avoids features they lack, but no macOS run backs
+  that.
 
 ## Left open
 

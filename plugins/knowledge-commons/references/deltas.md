@@ -653,9 +653,13 @@ Entries are append-only and ordered by version.
     run that wrote or edited a note, after the run's last write (the processed stamp included) and
     before the summary. Use the root as this graph's .commons.yml gives it, written the way this skill
     already refers to the graph's directory. On findings the step invokes the skill again with --fix
-    and the same root, which rejoins the links and re-checks; anything still listed is rejoined by
-    hand and the check run once more; what was rejoined is listed in the summary, including links the
-    run did not write. If the graph is still not clean, or the skill is unavailable or could not run,
+    and the same root, which rejoins the links and re-checks. Anything still listed was declined by
+    the fix and is a hand decision: a link is rejoined, and quoted code that only looks like one (a
+    multi-line shell test) goes into a code span or fence, where the check does not read; then the
+    check is run once more. What was rejoined is listed in the summary, including links the run did
+    not write. Have the step say that the check does not read this graph's raw archives (the
+    directories .commons.yml names under a source tier's archive:), and that an archived file is
+    never edited to satisfy it. If the graph is still not clean, or the skill is unavailable or could not run,
     the report says in plain words that the graph is not known to be clean, and never reads as though
     the check passed. A read-through is not a substitute for the check. Put this ahead of the
     summary's own instructions and leave them, the patch suggestion, and the entity-type
@@ -671,7 +675,13 @@ Entries are append-only and ordered by version.
     needed, and the break is made while attention is on the sentence. The check reads raw text, since
     a count taken only among resolvable targets missed a wrapped link in practice, and it reads
     frontmatter, where supports: lists wrap too. It checks the whole graph so a hand edit or an
-    earlier run's link is caught by the next run instead of waiting for a repair pass. The anchor is
+    earlier run's link is caught by the next run instead of waiting for a repair pass. Raw archives
+    are the exception, and the step has to say so: the script skips them itself by reading
+    .commons.yml, but a reader told to "rejoin whatever is listed" with no such statement will edit
+    a verbatim transcript the day a misconfigured tier lets one through. Run against a live graph
+    before this exclusion existed, the check reported two unclosed fences inside archived session
+    transcripts and nothing else, which would have ended every run in that graph "not known to be
+    clean". The anchor is
     the report step because no earlier point sees every write: the run step, the sinks, and the stamp
     all write notes, and /process commits only the export, so there is no commit to hang a hook on.
     The check runs through a plugin skill for the reason scan-secrets does: a project skill gets no
@@ -680,9 +690,11 @@ Entries are append-only and ordered by version.
   satisfied-test: >
     Does the section direct the run to invoke the knowledge-commons:check-wikilinks skill on this
     graph's root before it summarizes, on any run that wrote or edited a note; say what to do on
-    findings (re-invoke with --fix, hand-rejoin whatever remains, re-check); and require the report to
-    say the graph is not known to be clean when findings remain or the check could not run? All three
-    are required. A sentence stating that wikilinks stay on one line, with no invocation of the skill,
+    findings (re-invoke with --fix, decide by hand on whatever remains, re-check); require the report
+    to say the graph is not known to be clean when findings remain or the check could not run; and
+    say that archived raw material is not checked and is never edited to satisfy the check? All four
+    are required. A section that tells the run to rejoin or edit every listed file with no exception
+    for archives FAILS. A sentence stating that wikilinks stay on one line, with no invocation of the skill,
     FAILS: the rule without the check is the state this delta exists to change. So does an instruction
     to look over the notes for wrapped links by reading them, a check placed where later writes in the
     run (the stamp, a sink) come after it, and a filesystem path to the script in place of the skill
@@ -700,9 +712,13 @@ Entries are append-only and ordered by version.
     across a line break is no longer a link), then direct the session to invoke the plugin's
     knowledge-commons:check-wikilinks skill with this graph's root directory as the argument, after
     the workflow's last write and before the change summary. On findings it invokes the skill again
-    with --fix and the same root, which rejoins the links and re-checks; anything still listed is
-    rejoined by hand and the check run once more; what was rejoined goes in the change summary under
-    corrections. If the graph is still not clean, or the skill is unavailable or could not run, the
+    with --fix and the same root, which rejoins the links and re-checks. Anything still listed was
+    declined by the fix and is a hand decision: a link is rejoined, and quoted code that only looks
+    like one (a multi-line shell test) goes into a code span or fence, where the check does not read;
+    then the check is run once more. What was rejoined goes in the change summary under corrections.
+    Have the section say that the check does not read this graph's raw archives (the directories
+    .commons.yml names under a source tier's archive:), and that an archived file is never edited to
+    satisfy it. If the graph is still not clean, or the skill is unavailable or could not run, the
     change summary says the graph is not known to be clean and never reads as though the check
     passed. A read-through is not a substitute. If this graph's workflows have been renamed or
     extended, cover every one that writes, not only the ones the template has. Leave the query
@@ -722,9 +738,11 @@ Entries are append-only and ordered by version.
     graph's root after writing or editing notes, in a way that covers the capture workflow and every
     other workflow in the section that writes (the capture workflow naming it as a step, plus a
     statement that applies it to the rest, passes); say what to do on findings (re-invoke with --fix,
-    hand-rejoin whatever remains, re-check); and require the change summary to say the graph is not
-    known to be clean when findings remain or the check could not run? All three are required. A
-    sentence stating that wikilinks stay on one line, with no invocation of the skill, FAILS. So does
+    decide by hand on whatever remains, re-check); require the change summary to say the graph is not
+    known to be clean when findings remain or the check could not run; and say that archived raw
+    material is not checked and is never edited to satisfy the check? All four are required. A
+    section that tells the session to rejoin or edit every listed file with no exception for archives
+    FAILS. A sentence stating that wikilinks stay on one line, with no invocation of the skill, FAILS. So does
     an instruction to read the notes over for wrapped links, a check that only the capture workflow
     runs while another workflow in the section writes notes unchecked, and a filesystem path to the
     script in place of the skill name. In the plugin's own source repository, running the script by

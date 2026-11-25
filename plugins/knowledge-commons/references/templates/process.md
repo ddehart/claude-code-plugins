@@ -401,13 +401,17 @@ attention is on the sentence, so this is a check and not a reminder. Invoke the 
 `knowledge-commons:check-wikilinks` skill with `{graph.root}` as its argument, every run that wrote or
 edited a note, after the last write (the stamp included) and before the summary below. It checks the
 whole graph, not only this run's notes: a wrapped link from an earlier run or a hand edit is as broken
-as one written now.
+as one written now. It does not read this graph's raw archives, the directories `.commons.yml` names
+under a source tier's `archive:`, and names each one it skipped: an archived transcript is verbatim raw
+material, not a note. Never edit an archived file to satisfy the check.
 
 - **Clean** — carry on.
 - **Findings** — invoke it again with `--fix {graph.root}`. That rejoins each link (the line break and
-  the indentation after it become one space; nothing else changes) and re-checks. Rejoin by hand
-  anything it still lists, then check once more. List what was rejoined under corrections in the
-  summary, including links this run didn't write.
+  the indentation after it become one space; nothing else changes) and re-checks. What it still lists
+  it declined to touch, and each is a hand decision: if it is a link, rejoin it; if it is quoted code
+  (a shell test such as `[[ -f x && -d y ]]` reads exactly like a wrapped link), put it in a code span
+  or fence, where the check does not read. Then check once more. List what was rejoined under
+  corrections in the summary, including links this run didn't write.
 - **Still not clean, or the skill is unavailable or exits 2** — the graph is not known to be clean.
   Say so in the report in those words, with the findings or the error. Never write the summary as
   though the check passed, and never substitute a read-through for it.

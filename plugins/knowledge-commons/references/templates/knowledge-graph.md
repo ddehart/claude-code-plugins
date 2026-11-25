@@ -227,10 +227,14 @@ extraction, an evolve step. A wikilink stays on one line. Notes are hard-wrapped
 Obsidian shows literal brackets, nothing resolves it, and the note still reads fine in an editor. Knowing
 the rule does not prevent it, because the break is made while attention is on the sentence, so this is a
 check and not a reminder. After the last write and before the change summary, invoke the plugin's
-`knowledge-commons:check-wikilinks` skill with `{graph.root}` as its argument. It checks the whole graph.
+`knowledge-commons:check-wikilinks` skill with `{graph.root}` as its argument. It checks the whole graph,
+except the raw archives `.commons.yml` names under a source tier's `archive:`, which it names as skipped:
+archived raw material is verbatim, not a note, and is never edited to satisfy the check.
 On findings, invoke it again with `--fix {graph.root}`, which rejoins each link (the line break and the
-indentation after it become one space; nothing else changes) and re-checks; rejoin by hand anything it
-still lists, check once more, and list what was rejoined under corrections. If it is still not clean, or
+indentation after it become one space; nothing else changes) and re-checks. What it still lists it
+declined to touch, and each is a hand decision: rejoin it if it is a link; if it is quoted code (a shell
+test such as `[[ -f x && -d y ]]` reads exactly like a wrapped link), put it in a code span or fence,
+where the check does not read. Check once more, and list what was rejoined under corrections. If it is still not clean, or
 the skill is unavailable or exits 2, say in the change summary that the graph is not known to be clean.
 Never report as though the check passed, and never substitute a read-through for it.
 

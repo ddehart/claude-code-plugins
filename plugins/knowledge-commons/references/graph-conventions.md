@@ -286,7 +286,9 @@ lowercase avoids the friction entirely. Spaces are fine in filenames —
 across a line break turns it into literal brackets that nothing resolves, silently; let the line run
 long instead. The plugin's `knowledge-commons:check-wikilinks` skill fails on any link that breaks this
 rule and can rejoin it, and the generated `process` and `knowledge-graph` skills run it before they
-report.
+report. The rule is for notes. Archived raw material (a tier's `archive:` directory) is excluded from the
+check and never rewritten by it: an archive is kept verbatim, wrapped links and all, because editing it
+falsifies the record it exists to keep.
 
 **Date prefixes are for notes that are themselves a dated event**, not a stamp added out of habit.
 A source note tied to a specific day's chronicle file earns the prefix
