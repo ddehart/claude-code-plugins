@@ -475,7 +475,8 @@ owner's.
   `${CLAUDE_PLUGIN_ROOT}` resolves for you but never in a project skill, so a path you write is a
   snapshot of one version on one machine. Generated skills reach plugin files through the plugin's
   skills, as the templates already do: `knowledge-commons:conventions` for the full conventions,
-  `knowledge-commons:scan-secrets` for the redaction gate's floor scan.
+  `knowledge-commons:scan-secrets` for the redaction gate's floor scan,
+  `knowledge-commons:check-wikilinks` for the wrapped-link check.
 - Never copy this plugin's own `graph-init` or `promote` skills into a project. Only the *templates*
   get instantiated, as project-owned files.
 - Never generate into a graph whose `.claude/skills/process` or `knowledge-graph` already exist

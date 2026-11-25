@@ -640,6 +640,95 @@ Entries are append-only and ordered by version.
     being unavailable as a stop, or (only in the plugin's own source repository) run the scanner by
     its repo-relative source path? A conventions citation by bare filename with no way to load it
     fails. A graph with no preserve stage, or whose stage cites neither file, passes.
+
+- id: report-wrapped-link-check
+  file: process
+  anchor: "## 12. Report"
+  version: 0.10.0
+  instruction: >
+    Have the report step run a mechanical check for wrapped wikilinks before it summarizes the run.
+    State the rule in one sentence (a wikilink stays on one line, because a link split across a line
+    break is no longer a link), then direct the step to invoke the plugin's
+    knowledge-commons:check-wikilinks skill with this graph's root directory as the argument, on every
+    run that wrote or edited a note, after the run's last write (the processed stamp included) and
+    before the summary. Use the root as this graph's .commons.yml gives it, written the way this skill
+    already refers to the graph's directory. On findings the step invokes the skill again with --fix
+    and the same root, which rejoins the links and re-checks; anything still listed is rejoined by
+    hand and the check run once more; what was rejoined is listed in the summary, including links the
+    run did not write. If the graph is still not clean, or the skill is unavailable or could not run,
+    the report says in plain words that the graph is not known to be clean, and never reads as though
+    the check passed. A read-through is not a substitute for the check. Put this ahead of the
+    summary's own instructions and leave them, the patch suggestion, and the entity-type
+    recommendation as written. Write no filesystem path into the plugin's install.
+  rationale: >
+    Notes in these graphs are prose hard-wrapped near 110 columns, written by an agent. A long
+    [[note title]] that straddles the wrap column gets split across two lines; Obsidian then shows
+    literal brackets and no resolver follows it, while the note still reads fine in an editor, so
+    nothing surfaces it. It recurs: devbox's graph was repaired by hand in September 2026, had 32 more
+    by 2026-11-22, and five graphs carried the defect at once. No template or convention said to keep
+    a link on one line, but the fix is a check and not a sentence, because this graph family's own
+    pattern notes record that guidance which is present and read does not fire at the moment it is
+    needed, and the break is made while attention is on the sentence. The check reads raw text, since
+    a count taken only among resolvable targets missed a wrapped link in practice, and it reads
+    frontmatter, where supports: lists wrap too. It checks the whole graph so a hand edit or an
+    earlier run's link is caught by the next run instead of waiting for a repair pass. The anchor is
+    the report step because no earlier point sees every write: the run step, the sinks, and the stamp
+    all write notes, and /process commits only the export, so there is no commit to hang a hook on.
+    The check runs through a plugin skill for the reason scan-secrets does: a project skill gets no
+    ${CLAUDE_PLUGIN_ROOT}, and the skill's allowed-tools rule runs the script without a prompt and
+    reports its exit code verbatim.
+  satisfied-test: >
+    Does the section direct the run to invoke the knowledge-commons:check-wikilinks skill on this
+    graph's root before it summarizes, on any run that wrote or edited a note; say what to do on
+    findings (re-invoke with --fix, hand-rejoin whatever remains, re-check); and require the report to
+    say the graph is not known to be clean when findings remain or the check could not run? All three
+    are required. A sentence stating that wikilinks stay on one line, with no invocation of the skill,
+    FAILS: the rule without the check is the state this delta exists to change. So does an instruction
+    to look over the notes for wrapped links by reading them, a check placed where later writes in the
+    run (the stamp, a sink) come after it, and a filesystem path to the script in place of the skill
+    name. In the plugin's own source repository, running the script by its repo-relative source path
+    passes.
+
+- id: kg-wrapped-link-check
+  file: knowledge-graph
+  anchor: "## Workflows"
+  version: 0.10.0
+  instruction: >
+    Have every workflow in this section that writes or edits a note end with a mechanical check for
+    wrapped wikilinks, stated once in the section and referenced from the capture workflow as its
+    last step. State the rule in one sentence (a wikilink stays on one line, because a link split
+    across a line break is no longer a link), then direct the session to invoke the plugin's
+    knowledge-commons:check-wikilinks skill with this graph's root directory as the argument, after
+    the workflow's last write and before the change summary. On findings it invokes the skill again
+    with --fix and the same root, which rejoins the links and re-checks; anything still listed is
+    rejoined by hand and the check run once more; what was rejoined goes in the change summary under
+    corrections. If the graph is still not clean, or the skill is unavailable or could not run, the
+    change summary says the graph is not known to be clean and never reads as though the check
+    passed. A read-through is not a substitute. If this graph's workflows have been renamed or
+    extended, cover every one that writes, not only the ones the template has. Leave the query
+    workflow alone: it writes nothing. Write no filesystem path into the plugin's install.
+  rationale: >
+    The same defect as report-wrapped-link-check, on the other writing path. Direct captures through
+    this skill write notes without a /process run, so a check that lives only in the process skill's
+    report step never sees them, and one of the five graphs found carrying wrapped links has no
+    process skill at all. The check is attached to the workflows, not to the session protocol's
+    end-of-session summary, because a capture is a numbered procedure that gets followed step by step
+    at the moment a note is written, while a session rarely has an end anyone marks; guidance that
+    waits for the end of a session is the kind this graph family has recorded as present, read, and
+    not acted on. It is stated once and referenced so that a workflow a project added by hand is
+    covered by the sentence even though no template step names it.
+  satisfied-test: >
+    Does the section direct a session to invoke the knowledge-commons:check-wikilinks skill on this
+    graph's root after writing or editing notes, in a way that covers the capture workflow and every
+    other workflow in the section that writes (the capture workflow naming it as a step, plus a
+    statement that applies it to the rest, passes); say what to do on findings (re-invoke with --fix,
+    hand-rejoin whatever remains, re-check); and require the change summary to say the graph is not
+    known to be clean when findings remain or the check could not run? All three are required. A
+    sentence stating that wikilinks stay on one line, with no invocation of the skill, FAILS. So does
+    an instruction to read the notes over for wrapped links, a check that only the capture workflow
+    runs while another workflow in the section writes notes unchecked, and a filesystem path to the
+    script in place of the skill name. In the plugin's own source repository, running the script by
+    its repo-relative source path passes.
 ```
 
 ## A numbering divergence the 0.6.0 entries introduce

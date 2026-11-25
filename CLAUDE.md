@@ -83,7 +83,7 @@ Ideas and enhancements are tracked in [GitHub Issues](https://github.com/ddehart
 This is a documentation-only repository. There are:
 - No dependencies to install
 - No build process
-- No tests to run, except the script tests under `plugins/meta-claude/skills/session-export/scripts/` and `plugins/meta-claude/skills/session-chronicle/scripts/` (stdlib `unittest`; run `python3 -m unittest test_<name>.py` from that directory)
+- No tests to run, except the script tests under `plugins/meta-claude/skills/session-export/scripts/` and `plugins/meta-claude/skills/session-chronicle/scripts/` (stdlib `unittest`; run `python3 -m unittest test_<name>.py` from that directory) and `plugins/knowledge-commons/scripts/` (bash; run `./test-scan-secrets.sh` and `./test-check-wikilinks.sh`)
 - No linting configured
 
 Changes are validated by ensuring:

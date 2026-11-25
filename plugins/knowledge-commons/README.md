@@ -50,13 +50,14 @@ All four auto-trigger from natural phrasing too — "set up a knowledge graph", 
 generalize?", "promote this to the commons", "what's ready to graduate?", "what template fixes am I
 missing?" — not just the slash commands.
 
-Two helper skills aren't slash commands. Generated skills invoke them by name, which is how a skill
+Three helper skills aren't slash commands. Generated skills invoke them by name, which is how a skill
 living in a project reaches the plugin's files without a path into the plugin's install.
 
 | Skill | What it does |
 |-------|--------------|
 | `conventions` | Loads the full `references/graph-conventions.md` from the installed plugin version. |
 | `scan-secrets` | Runs `scripts/scan-secrets.sh` over rendered material for a redaction gate and reports the exit code verbatim; any non-zero exit means don't archive. |
+| `check-wikilinks` | Runs `scripts/check-wikilinks.sh` over a graph root and reports the exit code verbatim: non-zero when a `[[wikilink]]` is split across a line break, which hard-wrapped prose does silently to long titles. With `--fix` it rejoins them (whitespace only) and re-checks. Generated skills run it before they report. |
 
 ## How it works
 
@@ -183,9 +184,12 @@ plugins/knowledge-commons/
     graph-patch/SKILL.md              # the maintainer — propagates template fixes
     conventions/SKILL.md              # helper: loads the full conventions for generated skills
     scan-secrets/SKILL.md             # helper: runs the floor scan for generated skills
+    check-wikilinks/SKILL.md          # helper: runs the wrapped-link check for generated skills
   scripts/
     scan-secrets.sh                   # the redaction gate's deterministic floor
     test-scan-secrets.sh              # its planted-secret test
+    check-wikilinks.sh                # fails on a [[wikilink]] split across a line break
+    test-check-wikilinks.sh           # its fixture test
   references/
     graph-conventions.md              # the shared note/map/frontmatter contract
     graduation.md                     # the review procedure graduate and promote share
@@ -199,7 +203,9 @@ plugins/knowledge-commons/
 
 - **No verification machinery.** No validator, no write-time gates, no transactions, no
   lifecycle enforcement. Graph health is prose conventions plus plan approval. If real use ever
-  produces real structural drift, a check earns its way in that day — evidence first.
+  produces real structural drift, a check earns its way in that day — evidence first. One has:
+  `check-wikilinks` (0.10.0), after hard wrapping split links in five graphs and a hand repair
+  did not stay repaired. It runs after the writes and before the report; it is not a gate on them.
 - **Pull, not push.** No ambient injection. Consultation is "what do we know about X?" → read
   the maps, follow the links.
 - **No retrieval infrastructure.** No MCP server, embeddings, or vector search. The association

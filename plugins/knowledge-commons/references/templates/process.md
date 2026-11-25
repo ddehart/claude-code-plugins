@@ -393,6 +393,25 @@ recoverable; a complete-looking stamp over an uninspected class is not.
 
 ## 12. Report
 
+**Before summarizing, check the graph for wrapped links.** A wikilink stays on one line. Notes are
+hard-wrapped prose, and a long `[[note title]]` that lands on the wrap column gets split across two
+lines, which is no longer a link: Obsidian shows literal brackets, nothing resolves it, and the note
+still reads fine in an editor. Knowing the rule does not prevent it, because the break is made while
+attention is on the sentence, so this is a check and not a reminder. Invoke the plugin's
+`knowledge-commons:check-wikilinks` skill with `{graph.root}` as its argument, every run that wrote or
+edited a note, after the last write (the stamp included) and before the summary below. It checks the
+whole graph, not only this run's notes: a wrapped link from an earlier run or a hand edit is as broken
+as one written now.
+
+- **Clean** — carry on.
+- **Findings** — invoke it again with `--fix {graph.root}`. That rejoins each link (the line break and
+  the indentation after it become one space; nothing else changes) and re-checks. Rejoin by hand
+  anything it still lists, then check once more. List what was rejoined under corrections in the
+  summary, including links this run didn't write.
+- **Still not clean, or the skill is unavailable or exits 2** — the graph is not known to be clean.
+  Say so in the report in those words, with the findings or the error. Never write the summary as
+  though the check passed, and never substitute a read-through for it.
+
 Summarize created / updated / skipped / errored, then append a changelog entry following this graph's
 own conventions — see the "Changelog" section of the sibling `knowledge-graph` skill for this project's
 format. If the run surfaced something a skill *outside* the plan could act on, suggest it in the report
