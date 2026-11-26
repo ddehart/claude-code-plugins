@@ -323,6 +323,129 @@ LC_ALL=en_US.UTF-8 "$SCAN" "$TMP/badutf.txt" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 1 ] && pass "a stray byte inside a value does not hide it" \
   || fail "a value containing an invalid UTF-8 byte must exit 1, got $rc"
 
+# --- 5. Values the scan used to look straight past --------------------------------
+#
+# Every case in this section exited 0 before it was fixed. FAKE is a value the scan
+# reports when it stands alone (the first case pins that), so a 0 below is the shape
+# around it defeating the scan, not the value being unremarkable.
+FAKE='Zq7NotARealSecret4Kd9Lm2Xp'
+
+printf '\nJSON inside JSON — quotes escaped with backslashes\n'
+
+expect_exit "the fake value on its own"            1 "PROD_PASSWORD=$FAKE"
+expect_exit "escaped key and value"                1 "{\\\"API_KEY\\\": \\\"$FAKE\\\"}"
+expect_exit "escaped Authorization header"         1 "\\\"Authorization\\\": \\\"Bearer $FAKE\\\""
+expect_exit "escaped twice"                        1 "\\\\\\\"API_KEY\\\\\\\": \\\\\\\"$FAKE\\\\\\\""
+expect_exit "escaped placeholder stays clean"      0 '{\"API_KEY\": \"<your-key-here>\"}'
+expect_exit "escaped bearer placeholder stays clean" 0 '\"Authorization\": \"Bearer <your-token-here>\"'
+
+# An earlier value on the line that takes the real assignment with it.
+printf '\na real assignment inside an earlier value\n'
+
+expect_exit "quoted note opening with <…>"         1 "NOTE_KEY='<see below> and then PROD_PASSWORD=$FAKE isn't shown"
+expect_exit "quoted note opening with \${…}"       1 "{\"note_key\": \"\${X} PROD_PASSWORD=$FAKE\"}"
+expect_exit "no separator between assignments"     1 "DEBUG_SECRET=<x>PROD_PASSWORD=$FAKE"
+expect_exit "key inside a JSON object"             1 "{\"credentials\": {\"password\": \"$FAKE\"}}"
+expect_exit "key inside an escaped JSON object"    1 "{\\\"credentials\\\": {\\\"password\\\": \\\"$FAKE\\\"}}"
+expect_exit "JSON object of placeholders is clean" 0 '{"credentials": {"password": "<redacted>"}}'
+
+# A value that only STARTS like a placeholder.
+printf '\nreal values that merely begin like a placeholder\n'
+
+expect_exit "begins <"                             1 "PROD_PASSWORD=<$FAKE"
+expect_exit "begins \$"                            1 "PROD_PASSWORD=\$$FAKE"
+expect_exit "begins {"                             1 "PROD_PASSWORD={$FAKE"
+expect_exit "begins xxx"                           1 "PROD_PASSWORD=xxx$FAKE"
+expect_exit "begins ***"                           1 "PROD_PASSWORD=***$FAKE"
+expect_exit "begins ..."                           1 "PROD_PASSWORD=...$FAKE"
+expect_exit "leading space inside quotes"          1 "PROD_PASSWORD=\" $FAKE\""
+expect_exit "leading vertical tab inside quotes"   1 "PROD_PASSWORD=\"$(printf '\v')$FAKE\""
+expect_exit "dummy word, dash, real value"         1 "PROD_PASSWORD=example-$FAKE"
+expect_exit "dummy word, colon, real value"        1 "PROD_PASSWORD=none:$FAKE"
+expect_exit "dummy word, dollar, real value"       1 "PROD_PASSWORD=my\$$FAKE"
+expect_exit "bearer value beginning \$"            1 "Authorization: Bearer \$$FAKE"
+expect_exit "bearer dummy word, dot, real value"   1 "Authorization: Bearer example.$FAKE"
+expect_exit "a default inside \${…:-…}"            1 "PROD_PASSWORD=\"\${DB_PASSWORD:-$FAKE}\""
+expect_exit "a real value after <…>"               1 "PROD_PASSWORD=\"<prod> $FAKE\""
+
+# The other side of the same rule: every one of these is a placeholder and must stay
+# one. A gate that stops on them trains its reader to click through.
+printf '\nplaceholders that must still read as placeholders\n'
+
+expect_exit "<your-key-here>"                      0 'API_KEY=<your-key-here>'
+expect_exit "<YOUR_API_KEY>"                       0 'API_KEY=<YOUR_API_KEY>'
+expect_exit "quoted <…> with spaces"               0 'API_KEY="<your key goes here>"'
+expect_exit "unquoted <…> cut at a space"          0 'API_KEY=<your-long-key goes here>'
+expect_exit "<…> in backticks with a comma"        0 'set `API_KEY=<your-key-here>`, then run it'
+expect_exit "\${VAR}"                              0 'API_TOKEN=${GITHUB_TOKEN}'
+expect_exit "\$VAR"                                0 'API_TOKEN=$GITHUB_TOKEN'
+expect_exit "\$VAR with a digit"                   0 'API_TOKEN=$OAUTH2_CLIENT_TOKEN'
+expect_exit "\${VAR:-} with an empty default"      0 'API_TOKEN="${GITHUB_TOKEN:-}"'
+expect_exit "\$(command)"                          0 'API_TOKEN="$(gh auth token --hostname example)"'
+expect_exit "a path under \$HOME"                  0 'SSH_KEY_FILE="$HOME/.ssh/id_rsa"'
+expect_exit "{{ template }}"                       0 'api_password: "{{ vault_database_password }}"'
+expect_exit "\${{ secrets.X }}"                    0 'GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"'
+expect_exit "{name} in a format string"            0 'url = f"https://host/?api_token={api_token_value}"'
+expect_exit "xxxxxxxx"                             0 'API_KEY=xxxxxxxx'
+expect_exit "XXXXXXXXXXXX"                         0 'API_KEY=XXXXXXXXXXXX'
+expect_exit "********"                             0 'PASSWORD=********'
+expect_exit "a row of dots"                        0 'PASSWORD=........'
+expect_exit "masked with the last four shown"      0 'API_KEY=************a1b2'
+expect_exit "xxxx-xxxx-xxxx groups"                0 'LICENSE_KEY=xxxx-xxxx-xxxx-xxxx'
+expect_exit "your-api-key-here"                    0 'API_KEY=your-api-key-here'
+expect_exit "YOUR_API_KEY_HERE"                    0 'API_KEY=YOUR_API_KEY_HERE'
+expect_exit "bearer \${accessToken}"               0 'Authorization: Bearer ${accessToken}'
+expect_exit "bearer \$TOKEN"                       0 'Authorization: Bearer $GITHUB_TOKEN'
+expect_exit "bearer YOUR_TOKEN_HERE"               0 'Authorization: Bearer YOUR_TOKEN_HERE'
+expect_exit "bearer xxxxxxxxxxxx"                  0 'Authorization: Bearer xxxxxxxxxxxx'
+
+# Each dictionary word, as the whole value and leading a phrase of plain words.
+for word in your my some insert placeholder example changeme change redacted dummy fake sample todo fixme none null nil true false; do
+  expect_exit "dummy word alone: $word"            0 "API_SECRET=$word"
+  expect_exit "dummy word leading a phrase: $word" 0 "API_SECRET=$word-value-goes-here"
+done
+
+# --- 6. Text with NUL bytes in it -------------------------------------------------
+#
+# UTF-16 puts a NUL after (or before) every ASCII character, so no pattern matched and
+# a token in plain sight read as clean. The same happens to a UTF-16 fragment pasted
+# into a UTF-8 transcript. Files with NULs are scanned from a copy without them.
+printf '\ntext with NUL bytes\n'
+
+# $1 = le|be, $2 = text. Writes the text as UTF-16 without a byte-order mark.
+utf16() {
+  local order="$1" s="$2" i=0 c
+  while [ "$i" -lt "${#s}" ]; do
+    c="${s:$i:1}"
+    if [ "$order" = le ]; then printf '%s\0' "$c"; else printf '\0%s' "$c"; fi
+    i=$((i + 1))
+  done
+  if [ "$order" = le ]; then printf '\n\0'; else printf '\0\n'; fi
+}
+utf16_token="token gh""p_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"
+
+utf16 le "$utf16_token" > "$TMP/utf16.txt"
+"$SCAN" "$TMP/utf16.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a token in a UTF-16LE file is found" || fail "a token in a UTF-16LE file must exit 1, got $rc"
+
+{ printf '\376\377'; utf16 be "$utf16_token"; } > "$TMP/utf16.txt"
+"$SCAN" "$TMP/utf16.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a token in a UTF-16BE file with a byte-order mark is found" || fail "a token in a UTF-16BE file must exit 1, got $rc"
+
+{ printf 'an ordinary UTF-8 line\n'; utf16 le "$utf16_token"; printf 'and another\n'; } > "$TMP/utf16.txt"
+out="$("$SCAN" "$TMP/utf16.txt" 2>&1)"; rc=$?
+[ "$rc" -eq 1 ] && pass "a UTF-16 fragment inside a UTF-8 file is found" || fail "a UTF-16 fragment in a UTF-8 file must exit 1, got $rc"
+printf '%s' "$out" | grep -q "utf16.txt:2\$" && pass "and it is reported on its own line number" \
+  || fail "a finding in a file with NUL bytes must keep its line number"
+
+printf 'PROD_PASSWORD=x\0x\0x\0%s\n' "$FAKE" > "$TMP/nul.txt"
+"$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "NUL bytes cannot assemble a placeholder prefix" || fail "a value behind NUL-separated x's must exit 1, got $rc"
+
+printf 'an ordinary line with a stray \0 byte\nand nothing else\n' > "$TMP/nul.txt"
+"$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "a stray NUL in clean text is still clean" || fail "a stray NUL in clean text must exit 0, got $rc"
+
 # --- result -----------------------------------------------------------------------
 
 printf '\n'
