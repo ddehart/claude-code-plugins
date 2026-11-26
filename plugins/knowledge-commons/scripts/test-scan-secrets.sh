@@ -197,17 +197,106 @@ printf '\nfail-closed — a scan that cannot run is not a scan that passed\n'
 # reach the real pattern, report the secret and exit 1 — so the test wants 2, and 1 is
 # a failure rather than an acceptable near-miss. (The file's secret is caught by the
 # real pattern too; the ordering, not the secret's uniqueness, is what this pins.)
-BROKEN="$TMP/broken-scan.sh"
-sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" 'sk_live_[A-Za-z0-9(]{20,'|" \
-  "$SCAN" > "$BROKEN"
-chmod +x "$BROKEN"
+#
+# The pattern is broken by an UNMATCHED PARENTHESIS, which every grep rejects. It used
+# to be broken by an unterminated interval ('…{20,'), and that is not an error
+# everywhere: BSD grep (macOS, where this was written) refuses it, GNU grep compiles it
+# with the brace taken literally and exits 1 for "no match". On Linux the scan then ran
+# correctly to the real pattern and exited 1, and this case failed with a message that
+# said the gate was reporting clean when the gate was fine and the fixture was not
+# broken. So the fixture is now checked before it is used: if this machine's grep
+# accepts the pattern, the case says so instead of blaming the scanner.
+BROKEN_RE='sk_live_([A-Za-z0-9]{20,}'
 printf 'pasted from the dashboard: %s\n' "sk""_live_abcdefghijklmnopqrstuvwxyz012345" > "$TMP/bare-secret.txt"
-"$BROKEN" "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
-if [ "$rc" -eq 2 ]; then
-  pass "a pattern that fails to compile exits 2, with the secret still unreported"
+printf 'DB_PASSWORD=Tr0ub4dor3notaplaceholder\n' > "$TMP/bare-assign.txt"
+printf 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz\n' > "$TMP/bare-auth.txt"
+
+grep -E -e "$BROKEN_RE" -- "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
+if [ "$rc" -gt 1 ]; then
+  BROKEN="$TMP/broken-scan.sh"
+  sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" '$BROKEN_RE'|" \
+    "$SCAN" > "$BROKEN"
+  chmod +x "$BROKEN"
+  if grep -q 'Deliberately broken' "$BROKEN"; then
+    "$BROKEN" "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
+    if [ "$rc" -eq 2 ]; then
+      pass "a pattern that fails to compile exits 2, with the secret still unreported"
+    else
+      fail "a pattern that fails to compile must exit 2, got $rc (0 = reported clean, 1 = scanned on past the failure)"
+    fi
+  else
+    fail "could not inject the broken pattern — the line this test rewrites has moved"
+  fi
+
+  # The same failure in the two value-checked scans, which do not go through the
+  # pattern arrays and so are not covered by the case above.
+  for target in ASSIGN_RE:bare-assign.txt AUTH_RE:bare-auth.txt; do
+    var="${target%%:*}"; fixture="${target#*:}"
+    sed "s|^readonly $var='|readonly $var='(|" "$SCAN" > "$BROKEN"
+    if grep -q "^readonly $var='(" "$BROKEN"; then
+      "$BROKEN" "$TMP/$fixture" >/dev/null 2>&1; rc=$?
+      [ "$rc" -eq 2 ] && pass "a broken $var exits 2" || fail "a broken $var must exit 2, got $rc"
+    else
+      fail "could not break $var — the line this test rewrites has moved"
+    fi
+  done
 else
-  fail "a broken pattern must exit 2, got $rc — a failed scan is reporting clean"
+  fail "this machine's grep accepts the deliberately broken pattern (exit $rc) — the fixture, not the scanner, needs a pattern this grep rejects"
 fi
+
+# A grep that fails on the SECOND pass. The two value-checked scans run grep twice: once
+# over the file, then once per matching line (-o) to pull out each value. The first was
+# checked and the second was not, so a failure there left an empty result, the line was
+# skipped as "no value", and a credential the first pass had already found was reported
+# clean with exit 0. The stand-in grep below is the real one except that it fails
+# whenever it is asked for -o.
+SHIM="$TMP/shim"
+mkdir -p "$SHIM"
+REAL_GREP="$(command -v grep)"
+printf '#!/usr/bin/env bash\nfor a in "$@"; do [ "$a" = "-o" ] && exit 2; done\nexec "%s" "$@"\n' "$REAL_GREP" > "$SHIM/grep"
+chmod +x "$SHIM/grep"
+PATH="$SHIM:$PATH" "$SCAN" "$TMP/bare-assign.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "grep failing on the per-line pass exits 2 (assignment)" \
+  || fail "grep failing on the per-line pass must exit 2, got $rc (assignment)"
+PATH="$SHIM:$PATH" "$SCAN" "$TMP/bare-auth.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "grep failing on the per-line pass exits 2 (authorization)" \
+  || fail "grep failing on the per-line pass must exit 2, got $rc (authorization)"
+
+# Matches that were found and then never read. The scanner feeds each grep result to a
+# loop through a here-document, and bash backs a large one with a temp file. If that
+# file cannot be written (a full or read-only temp directory) the loop is skipped with
+# an error on stderr and the script carries on: every match in that result is lost, and
+# the run used to end "clean" with exit 0.
+#
+# Simulated with a zero file-size limit and SIGXFSZ ignored, so the temp-file write
+# fails instead of killing the shell. Each fixture line is far longer than a pipe
+# buffer, which is what makes bash reach for a temp file — and is also what a rendered
+# transcript looks like. Exit 1 here means the limit did not bite on this platform and
+# the scan simply worked; that is reported as a skip, not a pass. Only 0 is the defect.
+long_tail="$(head -c 200000 /dev/zero | tr '\0' 'a')"
+for target in "prefix pattern:bare-secret.txt" "assignment:bare-assign.txt" "authorization:bare-auth.txt"; do
+  name="${target%%:*}"; fixture="${target#*:}"
+  printf '%s %s\n' "$(cat "$TMP/$fixture")" "$long_tail" > "$TMP/long.txt"
+  ( trap '' XFSZ; ulimit -f 0; "$SCAN" "$TMP/long.txt" >/dev/null 2>&1 ); rc=$?
+  case "$rc" in
+    2) pass "matches that cannot be read back exit 2 ($name)" ;;
+    1) printf '  skip  — could not simulate an unwritable temp file here (%s)\n' "$name" ;;
+    *) fail "matches that cannot be read back must exit 2, got $rc ($name)" ;;
+  esac
+done
+
+# --- 4. Bytes that are not text ---------------------------------------------------
+#
+# In a UTF-8 locale a byte that is not valid UTF-8 matches no bracket expression, not
+# even a negated one, so it ended the value: DB_PASSWORD=abcd<FF>efgh… measured as the
+# four characters before the stray byte and was dropped as too short. The scanner now
+# runs in the C locale, where every byte is a character.
+printf '\nbytes that are not valid UTF-8\n'
+
+printf 'DB_PASSWORD=Tr0u\377b4dor3notaplaceholder\n' > "$TMP/badutf.txt"
+LC_ALL=en_US.UTF-8 "$SCAN" "$TMP/badutf.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a stray byte inside a value does not hide it" \
+  || fail "a value containing an invalid UTF-8 byte must exit 1, got $rc"
 
 # --- result -----------------------------------------------------------------------
 

@@ -14,7 +14,8 @@
 # Exit codes:
 #   0  clean — no credential shapes found
 #   1  hits  — at least one finding, listed on stdout
-#   2  the scan could not run (bad usage, unreadable file, missing grep, bad pattern)
+#   2  the scan could not run (bad usage, unreadable file, missing grep, bad pattern,
+#      a grep that failed, or matches that could not be read back)
 #
 # Exit 1 and exit 2 mean the same thing to the caller: do not archive. The preserve
 # stage fails closed on any non-zero exit. A scan that cannot run is not a pass, and
@@ -23,6 +24,14 @@
 
 set -uo pipefail
 shopt -s nocasematch
+
+# The C locale, so that every byte is a character. In a UTF-8 locale a byte that is not
+# valid UTF-8 matches no bracket expression — not even a negated one — in grep or in
+# bash's =~, so one stray byte ended a value early: DB_PASSWORD=abcd<FF>efgh… measured
+# as four characters, fell under the length floor, and was reported clean. Every
+# pattern here is ASCII, so nothing is lost; lengths are counted in bytes, which only
+# ever errs toward reporting.
+export LC_ALL=C
 
 readonly EXIT_CLEAN=0
 readonly EXIT_HITS=1
@@ -204,9 +213,29 @@ is_placeholder() {
 # in the file. That is the precise failure this gate exists to prevent, so the grep
 # and its status check are inlined in the main shell below, where die() can actually
 # stop the process. Do not refactor them into a function invoked via $( ).
+#
+# Two more places where a failure used to read as "nothing here", both closed below.
+#
+#   The per-line grep. The value-checked scans run grep a second time, with -o, over
+#   each line the first pass matched. Its status went unchecked, so when it failed the
+#   empty result skipped the line and a credential the first pass had already found was
+#   dropped. It is checked now; and if it runs but finds nothing on a line the first
+#   pass matched, the line is reported, because a value that could not be extracted
+#   cannot be shown to be a placeholder.
+#
+#   The here-documents. Each loop reads grep's output from a here-document, and bash
+#   backs a large one with a temp file. If that file cannot be written (a full or
+#   read-only temp directory) bash prints an error, skips the loop, and carries on, so
+#   every match in that result vanished and the run ended clean. Each loop therefore
+#   sets a flag on its first pass, and must_have_read() stops the scan if a loop that
+#   had input never ran. Any new loop over grep output needs the same pair of lines.
+
+must_have_read() {
+  [ "$1" -eq 1 ] || die "matches were found in $2 but could not be read back (is the temp directory writable?) while scanning for: $3"
+}
 
 scan_file() {
-  local file="$1" i label re out rc line lineno text value matches m
+  local file="$1" i label re out rc line lineno text value matches m read_any read_inner
 
   i=0
   while [ "$i" -lt "${#REGEXES[@]}" ]; do
@@ -219,7 +248,9 @@ scan_file() {
     [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $label"
 
     [ -z "$out" ] && continue
+    read_any=0
     while IFS= read -r line; do
+      read_any=1
       [ -z "$line" ] && continue
       lineno="${line%%:*}"
       text="${line#*:}"
@@ -227,6 +258,7 @@ scan_file() {
     done <<EOF
 $out
 EOF
+    must_have_read "$read_any" "$file" "$label"
   done
 
   # Credential assignments, with placeholder values rejected.
@@ -234,7 +266,9 @@ EOF
   rc=$?
   [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $ASSIGN_LABEL"
   if [ -n "$out" ]; then
+    read_any=0
     while IFS= read -r line; do
+      read_any=1
       [ -z "$line" ] && continue
       lineno="${line%%:*}"
       text="${line#*:}"
@@ -243,8 +277,15 @@ EOF
       # PROD_PASSWORD=Tr0ub4dor3xyz` discarded the whole line because the leading match
       # was a placeholder, and reported clean with a real credential still in it.
       matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$ASSIGN_RE")"
-      [ -z "$matches" ] && continue
+      rc=$?
+      [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file line $lineno for: $ASSIGN_LABEL"
+      if [ -z "$matches" ]; then
+        report "$ASSIGN_LABEL" "$file" "$lineno" "$text"
+        continue
+      fi
+      read_inner=0
       while IFS= read -r m; do
+        read_inner=1
         [ -z "$m" ] && continue
         extract_value "$m"; value="$EXTRACTED"
         [ -z "$value" ] && continue
@@ -256,9 +297,11 @@ EOF
       done <<INNER
 $matches
 INNER
+      must_have_read "$read_inner" "$file" "$ASSIGN_LABEL"
     done <<EOF
 $out
 EOF
+    must_have_read "$read_any" "$file" "$ASSIGN_LABEL"
   fi
 
   # Authorization headers, same placeholder rejection.
@@ -266,14 +309,23 @@ EOF
   rc=$?
   [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $AUTH_LABEL"
   if [ -n "$out" ]; then
+    read_any=0
     while IFS= read -r line; do
+      read_any=1
       [ -z "$line" ] && continue
       lineno="${line%%:*}"
       text="${line#*:}"
       # Same reasoning as the assignment scan above: every match on the line.
       matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$AUTH_RE")"
-      [ -z "$matches" ] && continue
+      rc=$?
+      [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file line $lineno for: $AUTH_LABEL"
+      if [ -z "$matches" ]; then
+        report "$AUTH_LABEL" "$file" "$lineno" "$text"
+        continue
+      fi
+      read_inner=0
       while IFS= read -r m; do
+        read_inner=1
         [ -z "$m" ] && continue
         # Bash's own =~ rather than sed's s///I. The I flag is a GNU extension; it
         # happens to work on the macOS sed this was written against, but the failure it
@@ -290,9 +342,11 @@ EOF
       done <<INNER
 $matches
 INNER
+      must_have_read "$read_inner" "$file" "$AUTH_LABEL"
     done <<EOF
 $out
 EOF
+    must_have_read "$read_any" "$file" "$AUTH_LABEL"
   fi
 
   return 0
