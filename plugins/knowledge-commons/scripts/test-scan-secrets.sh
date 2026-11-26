@@ -203,14 +203,8 @@ printf '\nfail-closed — a scan that cannot run is not a scan that passed\n'
 # a failure rather than an acceptable near-miss. (The file's secret is caught by the
 # real pattern too; the ordering, not the secret's uniqueness, is what this pins.)
 #
-# The pattern is broken by an UNMATCHED PARENTHESIS, which every grep rejects. It used
-# to be broken by an unterminated interval ('…{20,'), and that is not an error
-# everywhere: BSD grep (macOS, where this was written) refuses it, GNU grep compiles it
-# with the brace taken literally and exits 1 for "no match". On Linux the scan then ran
-# correctly to the real pattern and exited 1, and this case failed with a message that
-# said the gate was reporting clean when the gate was fine and the fixture was not
-# broken. So the fixture is now checked before it is used: if this machine's grep
-# accepts the pattern, the case says so instead of blaming the scanner.
+# Unmatched parenthesis: every grep rejects it. (GNU grep accepts an unterminated
+# interval.)
 BROKEN_RE='sk_live_([A-Za-z0-9]{20,}'
 printf 'pasted from the dashboard: %s\n' "sk""_live_abcdefghijklmnopqrstuvwxyz012345" > "$TMP/bare-secret.txt"
 printf 'DB_PASSWORD=Tr0ub4dor3notaplaceholder\n' > "$TMP/bare-assign.txt"
@@ -260,12 +254,11 @@ mkdir -p "$SHIM"
 REAL_GREP="$(command -v grep)"
 printf '#!/usr/bin/env bash\nfor a in "$@"; do [ "$a" = "-o" ] && exit 2; done\nexec "%s" "$@"\n' "$REAL_GREP" > "$SHIM/grep"
 chmod +x "$SHIM/grep"
-PATH="$SHIM:$PATH" "$SCAN" "$TMP/bare-assign.txt" >/dev/null 2>&1; rc=$?
-[ "$rc" -eq 2 ] && pass "grep failing on the per-line pass exits 2 (assignment)" \
-  || fail "grep failing on the per-line pass must exit 2, got $rc (assignment)"
-PATH="$SHIM:$PATH" "$SCAN" "$TMP/bare-auth.txt" >/dev/null 2>&1; rc=$?
-[ "$rc" -eq 2 ] && pass "grep failing on the per-line pass exits 2 (authorization)" \
-  || fail "grep failing on the per-line pass must exit 2, got $rc (authorization)"
+for fixture in bare-assign.txt bare-auth.txt; do
+  PATH="$SHIM:$PATH" "$SCAN" "$TMP/$fixture" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 2 ] && pass "grep failing on the per-line pass exits 2 ($fixture)" \
+    || fail "grep failing on the per-line pass must exit 2, got $rc ($fixture)"
+done
 
 # Matches that were found and then never read. The scanner used to feed each grep
 # result to a loop through a here-document, and bash backs a large one with a temp
@@ -301,10 +294,10 @@ done
 # scan. Nothing in normal operation makes a pipe fail on demand, so each loop's input is
 # rewritten to a file that does not exist — bash reports the failed redirection, skips
 # the loop, and carries on, which is the exact shape the backstop exists for. The outer
-# loops (one per scan) and the inner per-match loops are broken separately, so each
-# guard is reached on its own.
-for target in 'outer:"$out":bare-secret.txt:3' 'outer:"$out":bare-assign.txt:3' 'outer:"$out":bare-auth.txt:3' \
-              'inner:"$matches":bare-assign.txt:2' 'inner:"$matches":bare-auth.txt:2'; do
+# loops (prefix patterns, value-checked scans) and the inner per-match loop are broken
+# separately, so each guard is reached on its own.
+for target in 'outer:"$out":bare-secret.txt:2' 'outer:"$out":bare-assign.txt:2' 'outer:"$out":bare-auth.txt:2' \
+              'inner:"$matches":bare-assign.txt:1' 'inner:"$matches":bare-auth.txt:1'; do
   IFS=: read -r which var fixture want_n <<<"$target"
   sed "s|done < <(printf '%s\\\\n' $var)|done < \"$TMP/no-such-input\"|" "$SCAN" > "$BROKEN"
   n="$(grep -c "done < \"$TMP/no-such-input\"" "$BROKEN")"
