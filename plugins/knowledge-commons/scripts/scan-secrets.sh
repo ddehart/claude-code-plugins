@@ -14,7 +14,8 @@
 # Exit codes:
 #   0  clean — no credential shapes found
 #   1  hits  — at least one finding, listed on stdout
-#   2  the scan could not run (bad usage, unreadable file, missing grep, bad pattern)
+#   2  the scan could not run (bad usage, unreadable file, missing grep, bad pattern,
+#      a grep that failed, or matches that could not be read back)
 #
 # Exit 1 and exit 2 mean the same thing to the caller: do not archive. The preserve
 # stage fails closed on any non-zero exit. A scan that cannot run is not a pass, and
@@ -23,6 +24,10 @@
 
 set -uo pipefail
 shopt -s nocasematch
+
+# C locale: every byte is a character. In UTF-8 an invalid byte matches no bracket
+# expression and ends a value early. Patterns are ASCII.
+export LC_ALL=C
 
 readonly EXIT_CLEAN=0
 readonly EXIT_HITS=1
@@ -170,17 +175,32 @@ report() {
 # rendered transcript is one enormous JSON line after another. The printf|sed form cost
 # three subshells per match and took nine minutes on a 4.5 MB transcript — long enough
 # that a preserve stage would start looking hung.
+#
+# Both value_of_* functions set EXTRACTED; "" means "not a credential".
 EXTRACTED=""
-extract_value() {
+value_of_assignment() {
   local v="$1"
   v="${v#*[:=]}"
   while [ "$v" != "${v#[[:space:]]}" ]; do v="${v#[[:space:]]}"; done
   v="${v#[\"\']}"
   v="${v%[\"\']}"
+  # A value shorter than 8 characters is not a credential worth stopping a run over.
+  [ "${#v}" -lt 8 ] && v=""
   EXTRACTED="$v"
 }
 
-# Bash's own =~ instead of a grep subshell, for the same reason as extract_value.
+# Bash's own =~ rather than sed's s///I. The I flag is a GNU extension; it happens to
+# work on the macOS sed this was written against, but the failure it would cause
+# elsewhere is the shape this file exists to avoid — sed errors, the command
+# substitution yields nothing, and the empty-value guard drops a real finding with no
+# error and no non-zero exit. nocasematch is already set.
+value_of_authorization() {
+  EXTRACTED=""
+  [[ "$1" =~ (bearer|basic|token)[[:space:]]+(.*) ]] && EXTRACTED="${BASH_REMATCH[2]}"
+  EXTRACTED="${EXTRACTED#[\"\']}"
+}
+
+# Bash's own =~ instead of a grep subshell, for the same reason as value_of_assignment.
 # nocasematch is set once at the top; the case statements elsewhere compare fixed
 # label and path strings, which case-insensitivity does not affect.
 is_placeholder() {
@@ -204,9 +224,63 @@ is_placeholder() {
 # in the file. That is the precise failure this gate exists to prevent, so the grep
 # and its status check are inlined in the main shell below, where die() can actually
 # stop the process. Do not refactor them into a function invoked via $( ).
+#
+# Three rules for any loop over grep output:
+#   - Check every grep's status, including the per-line -o pass. If -o finds nothing
+#     on a line the first pass matched, report the line.
+#   - Feed the loop with `done < <(printf ...)`. A here-document can need a temp file,
+#     and `printf ... | while` puts die() in a subshell.
+#   - Set a flag inside the loop and call must_have_read after it.
+
+must_have_read() {
+  [ "$1" -eq 1 ] || die "matches were found in $2 but could not be read back while scanning for: $3"
+}
+
+# The two value-checked scans: find the shape, then reject placeholder values. $4 names
+# the function that pulls the value out of one match. Call this as a plain command,
+# never through $( ) or a pipe — it must be able to die().
+scan_valued() {
+  local file="$1" label="$2" re="$3" value_fn="$4" out rc line lineno text matches m read_any read_inner
+
+  out="$(grep -a -n -i -E -e "$re" -- "$file")"
+  rc=$?
+  [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $label"
+  [ -z "$out" ] && return 0
+
+  read_any=0
+  while IFS= read -r line; do
+    read_any=1
+    [ -z "$line" ] && continue
+    lineno="${line%%:*}"
+    text="${line#*:}"
+    # EVERY match on the line, not just the first. Checking only the first and skipping
+    # the line on its verdict is fail-open: `DEBUG_SECRET=todo
+    # PROD_PASSWORD=Tr0ub4dor3xyz` discarded the whole line because the leading match
+    # was a placeholder, and reported clean with a real credential still in it.
+    matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$re")"
+    rc=$?
+    [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file line $lineno for: $label"
+    if [ -z "$matches" ]; then
+      report "$label" "$file" "$lineno" "$text"
+      continue
+    fi
+    read_inner=0
+    while IFS= read -r m; do
+      read_inner=1
+      [ -z "$m" ] && continue
+      "$value_fn" "$m"
+      [ -z "$EXTRACTED" ] && continue
+      is_placeholder "$EXTRACTED" && continue
+      report "$label" "$file" "$lineno" "$text"
+      break
+    done < <(printf '%s\n' "$matches")
+    must_have_read "$read_inner" "$file" "$label"
+  done < <(printf '%s\n' "$out")
+  must_have_read "$read_any" "$file" "$label"
+}
 
 scan_file() {
-  local file="$1" i label re out rc line lineno text value matches m
+  local file="$1" i label re out rc line lineno text read_any
 
   i=0
   while [ "$i" -lt "${#REGEXES[@]}" ]; do
@@ -219,81 +293,19 @@ scan_file() {
     [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $label"
 
     [ -z "$out" ] && continue
+    read_any=0
     while IFS= read -r line; do
+      read_any=1
       [ -z "$line" ] && continue
       lineno="${line%%:*}"
       text="${line#*:}"
       report "$label" "$file" "$lineno" "$text"
-    done <<EOF
-$out
-EOF
+    done < <(printf '%s\n' "$out")
+    must_have_read "$read_any" "$file" "$label"
   done
 
-  # Credential assignments, with placeholder values rejected.
-  out="$(grep -a -n -i -E -e "$ASSIGN_RE" -- "$file")"
-  rc=$?
-  [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $ASSIGN_LABEL"
-  if [ -n "$out" ]; then
-    while IFS= read -r line; do
-      [ -z "$line" ] && continue
-      lineno="${line%%:*}"
-      text="${line#*:}"
-      # EVERY assignment on the line, not just the first. Checking only the first and
-      # skipping the line on its verdict is fail-open: `DEBUG_SECRET=todo
-      # PROD_PASSWORD=Tr0ub4dor3xyz` discarded the whole line because the leading match
-      # was a placeholder, and reported clean with a real credential still in it.
-      matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$ASSIGN_RE")"
-      [ -z "$matches" ] && continue
-      while IFS= read -r m; do
-        [ -z "$m" ] && continue
-        extract_value "$m"; value="$EXTRACTED"
-        [ -z "$value" ] && continue
-        is_placeholder "$value" && continue
-        # A value shorter than 8 characters is not a credential worth stopping a run over.
-        [ "${#value}" -lt 8 ] && continue
-        report "$ASSIGN_LABEL" "$file" "$lineno" "$text"
-        break
-      done <<INNER
-$matches
-INNER
-    done <<EOF
-$out
-EOF
-  fi
-
-  # Authorization headers, same placeholder rejection.
-  out="$(grep -a -n -i -E -e "$AUTH_RE" -- "$file")"
-  rc=$?
-  [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $AUTH_LABEL"
-  if [ -n "$out" ]; then
-    while IFS= read -r line; do
-      [ -z "$line" ] && continue
-      lineno="${line%%:*}"
-      text="${line#*:}"
-      # Same reasoning as the assignment scan above: every match on the line.
-      matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$AUTH_RE")"
-      [ -z "$matches" ] && continue
-      while IFS= read -r m; do
-        [ -z "$m" ] && continue
-        # Bash's own =~ rather than sed's s///I. The I flag is a GNU extension; it
-        # happens to work on the macOS sed this was written against, but the failure it
-        # would cause elsewhere is the shape this file exists to avoid — sed errors, the
-        # command substitution yields nothing, and the empty-value guard below drops a
-        # real finding with no error and no non-zero exit. nocasematch is already set.
-        value=""
-        [[ "$m" =~ (bearer|basic|token)[[:space:]]+(.*) ]] && value="${BASH_REMATCH[2]}"
-        value="${value#[\"\']}"
-        [ -z "$value" ] && continue
-        is_placeholder "$value" && continue
-        report "$AUTH_LABEL" "$file" "$lineno" "$text"
-        break
-      done <<INNER
-$matches
-INNER
-    done <<EOF
-$out
-EOF
-  fi
+  scan_valued "$file" "$ASSIGN_LABEL" "$ASSIGN_RE" value_of_assignment
+  scan_valued "$file" "$AUTH_LABEL" "$AUTH_RE" value_of_authorization
 
   return 0
 }

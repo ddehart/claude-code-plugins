@@ -45,8 +45,13 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 failures=0
+passes=0
+skips=0
 
-pass() { printf '  ok    — %s\n' "$1"; }
+pass() { printf '  ok    — %s\n' "$1"; passes=$((passes + 1)); }
+# A case that could not be exercised on this machine. Counted and printed in the
+# closing line, so a run with skipped cases cannot be read as full coverage.
+skip() { printf '  skip  — %s\n' "$1"; skips=$((skips + 1)); }
 fail() { printf '  FAIL  — %s\n' "$1"; failures=$((failures + 1)); }
 
 [ -x "$SCAN" ] || { printf 'scan-secrets.sh is not executable at %s\n' "$SCAN" >&2; exit 1; }
@@ -197,24 +202,130 @@ printf '\nfail-closed — a scan that cannot run is not a scan that passed\n'
 # reach the real pattern, report the secret and exit 1 — so the test wants 2, and 1 is
 # a failure rather than an acceptable near-miss. (The file's secret is caught by the
 # real pattern too; the ordering, not the secret's uniqueness, is what this pins.)
-BROKEN="$TMP/broken-scan.sh"
-sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" 'sk_live_[A-Za-z0-9(]{20,'|" \
-  "$SCAN" > "$BROKEN"
-chmod +x "$BROKEN"
+#
+# Unmatched parenthesis: every grep rejects it. (GNU grep accepts an unterminated
+# interval.)
+BROKEN_RE='sk_live_([A-Za-z0-9]{20,}'
 printf 'pasted from the dashboard: %s\n' "sk""_live_abcdefghijklmnopqrstuvwxyz012345" > "$TMP/bare-secret.txt"
-"$BROKEN" "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
-if [ "$rc" -eq 2 ]; then
-  pass "a pattern that fails to compile exits 2, with the secret still unreported"
+printf 'DB_PASSWORD=Tr0ub4dor3notaplaceholder\n' > "$TMP/bare-assign.txt"
+printf 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz\n' > "$TMP/bare-auth.txt"
+
+grep -E -e "$BROKEN_RE" -- "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
+BROKEN="$TMP/broken-scan.sh"
+: > "$BROKEN"; chmod +x "$BROKEN"
+if [ "$rc" -gt 1 ]; then
+  sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" '$BROKEN_RE'|" \
+    "$SCAN" > "$BROKEN"
+  if grep -q 'Deliberately broken' "$BROKEN"; then
+    "$BROKEN" "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
+    if [ "$rc" -eq 2 ]; then
+      pass "a pattern that fails to compile exits 2, with the secret still unreported"
+    else
+      fail "a pattern that fails to compile must exit 2, got $rc (0 = reported clean, 1 = scanned on past the failure)"
+    fi
+  else
+    fail "could not inject the broken pattern — the line this test rewrites has moved"
+  fi
+
+  # The same failure in the two value-checked scans, which do not go through the
+  # pattern arrays and so are not covered by the case above.
+  for target in ASSIGN_RE:bare-assign.txt AUTH_RE:bare-auth.txt; do
+    var="${target%%:*}"; fixture="${target#*:}"
+    sed "s|^readonly $var='|readonly $var='(|" "$SCAN" > "$BROKEN"
+    if grep -q "^readonly $var='(" "$BROKEN"; then
+      "$BROKEN" "$TMP/$fixture" >/dev/null 2>&1; rc=$?
+      [ "$rc" -eq 2 ] && pass "a broken $var exits 2" || fail "a broken $var must exit 2, got $rc"
+    else
+      fail "could not break $var — the line this test rewrites has moved"
+    fi
+  done
 else
-  fail "a broken pattern must exit 2, got $rc — a failed scan is reporting clean"
+  fail "this machine's grep accepts the deliberately broken pattern (exit $rc) — the fixture, not the scanner, needs a pattern this grep rejects"
 fi
+
+# A grep that fails on the SECOND pass. The two value-checked scans run grep twice: once
+# over the file, then once per matching line (-o) to pull out each value. The first was
+# checked and the second was not, so a failure there left an empty result, the line was
+# skipped as "no value", and a credential the first pass had already found was reported
+# clean with exit 0. The stand-in grep below is the real one except that it fails
+# whenever it is asked for -o.
+SHIM="$TMP/shim"
+mkdir -p "$SHIM"
+REAL_GREP="$(command -v grep)"
+printf '#!/usr/bin/env bash\nfor a in "$@"; do [ "$a" = "-o" ] && exit 2; done\nexec "%s" "$@"\n' "$REAL_GREP" > "$SHIM/grep"
+chmod +x "$SHIM/grep"
+for fixture in bare-assign.txt bare-auth.txt; do
+  PATH="$SHIM:$PATH" "$SCAN" "$TMP/$fixture" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 2 ] && pass "grep failing on the per-line pass exits 2 ($fixture)" \
+    || fail "grep failing on the per-line pass must exit 2, got $rc ($fixture)"
+done
+
+# Matches that were found and then never read. The scanner used to feed each grep
+# result to a loop through a here-document, and bash backs a large one with a temp
+# file. If that file cannot be written (a full or read-only temp directory) the loop is
+# skipped with an error on stderr and the script carries on: every match in that result
+# was lost, and the run ended "clean" with exit 0. The loops read from a pipe now, so
+# with no writable temp file the scan must simply still work and report the secret.
+#
+# Simulated with a zero file-size limit and SIGXFSZ ignored, so a temp-file write fails
+# instead of killing the shell. Each fixture line is far longer than a pipe buffer,
+# which is what makes bash reach for a temp file — and is also what a rendered
+# transcript looks like. The simulation is checked first, with a here-document of the
+# same size in this shell: where it does not bite, the cases are SKIPPED, because a
+# pass there would prove nothing.
+long_tail="$(head -c 200000 /dev/zero | tr '\0' 'a')"
+( trap '' XFSZ; ulimit -f 0; cat >/dev/null <<PROBE
+$long_tail
+PROBE
+) 2>/dev/null; probe_rc=$?
+for target in "prefix pattern:bare-secret.txt" "assignment:bare-assign.txt" "authorization:bare-auth.txt"; do
+  name="${target%%:*}"; fixture="${target#*:}"
+  if [ "$probe_rc" -eq 0 ]; then
+    skip "no way to simulate an unwritable temp file here, so this is untested ($name)"
+    continue
+  fi
+  printf '%s %s\n' "$(cat "$TMP/$fixture")" "$long_tail" > "$TMP/long.txt"
+  ( trap '' XFSZ; ulimit -f 0; "$SCAN" "$TMP/long.txt" >/dev/null 2>&1 ); rc=$?
+  [ "$rc" -eq 1 ] && pass "with no writable temp file the secret is still reported ($name)" \
+    || fail "with no writable temp file the scan must still exit 1, got $rc ($name)"
+done
+
+# The backstop behind that: a loop that had matches to read and never ran must stop the
+# scan. Nothing in normal operation makes a pipe fail on demand, so each loop's input is
+# rewritten to a file that does not exist — bash reports the failed redirection, skips
+# the loop, and carries on, which is the exact shape the backstop exists for. The outer
+# loops (prefix patterns, value-checked scans) and the inner per-match loop are broken
+# separately, so each guard is reached on its own.
+for target in 'outer:"$out":bare-secret.txt:2' 'outer:"$out":bare-assign.txt:2' 'outer:"$out":bare-auth.txt:2' \
+              'inner:"$matches":bare-assign.txt:1' 'inner:"$matches":bare-auth.txt:1'; do
+  IFS=: read -r which var fixture want_n <<<"$target"
+  sed "s|done < <(printf '%s\\\\n' $var)|done < \"$TMP/no-such-input\"|" "$SCAN" > "$BROKEN"
+  n="$(grep -c "done < \"$TMP/no-such-input\"" "$BROKEN")"
+  if [ "$n" -ne "$want_n" ]; then
+    fail "could not break the $which loops ($n rewritten, wanted $want_n) — the lines this test rewrites have moved"
+    continue
+  fi
+  "$BROKEN" "$TMP/$fixture" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 2 ] && pass "an $which loop that never ran exits 2 ($fixture)" \
+    || fail "an $which loop that never ran must exit 2, got $rc ($fixture)"
+done
+
+# --- 4. Bytes that are not text ---------------------------------------------------
+#
+# In a UTF-8 locale a byte that is not valid UTF-8 matches no bracket expression, not
+# even a negated one, so it ended the value: DB_PASSWORD=abcd<FF>efgh… measured as the
+# four characters before the stray byte and was dropped as too short. The scanner now
+# runs in the C locale, where every byte is a character.
+printf '\nbytes that are not valid UTF-8\n'
+
+printf 'DB_PASSWORD=Tr0u\377b4dor3notaplaceholder\n' > "$TMP/badutf.txt"
+LC_ALL=en_US.UTF-8 "$SCAN" "$TMP/badutf.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a stray byte inside a value does not hide it" \
+  || fail "a value containing an invalid UTF-8 byte must exit 1, got $rc"
 
 # --- result -----------------------------------------------------------------------
 
 printf '\n'
-if [ "$failures" -eq 0 ]; then
-  printf 'all cases passed.\n'
-  exit 0
-fi
-printf '%d case(s) failed.\n' "$failures"
+printf '%d passed, %d failed, %d skipped.\n' "$passes" "$failures" "$skips"
+[ "$failures" -eq 0 ] && exit 0
 exit 1
