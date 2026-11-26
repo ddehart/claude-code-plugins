@@ -69,9 +69,6 @@ want_no_finding() {
 
 findings() { printf '%s\n' "$OUT" | grep -c -E '^.+:[0-9]+: '; }
 
-# Whitespace-normalized form of a file: every run of whitespace becomes one space.
-squash() { tr -s '[:space:]' ' ' < "$1"; }
-
 # --- detection --------------------------------------------------------------------
 
 printf 'detection — a wikilink whose text contains a newline\n'
@@ -127,6 +124,42 @@ link]] too.
 run "$TMP/with space"
 want_line "a path containing spaces is scanned and reported intact" \
   "$TMP/with space/sub dir/a note.md:1: [[wrapped link]]"
+
+graph quote "notes/q.md" '> A quoted passage with a [[wrapped
+> link]] inside a blockquote.
+'
+run "$TMP/quote"
+want_line "a link wrapped inside a blockquote is reported, marker and all" \
+  "$TMP/quote/notes/q.md:1: [[wrapped > link]]"
+
+graph long "notes/l.md" 'A span that crosses [[more
+than
+one]] line break.
+'
+run "$TMP/long"
+want_line "a link crossing more than one line break is reported once, where it opens" \
+  "$TMP/long/notes/l.md:1: [[more than one]]"
+[ "$(findings)" -eq 1 ] && pass "…and only once" || fail "multi-break fixture should yield 1 finding, got $(findings)"
+
+# The scanner runs in the C locale and counts bytes. Multibyte text before, inside and
+# after a wrapped link must not shift the line it is reported on or mangle its text.
+graph utf8 "notes/café — naïve.md" 'Zażółć gęślą jaźń — 日本語のテキスト, “curly quotes”, and an em dash — before the link.
+Then résumé [[größe und maß — the long
+  title with ünïcödé]] and after it: ✓ done.
+'
+run "$TMP/utf8"
+want_line "multibyte text around and inside a wrapped link: right line, text intact" \
+  "$TMP/utf8/notes/café — naïve.md:2: [[größe und maß — the long title with ünïcödé]]"
+[ "$(findings)" -eq 1 ] && pass "…and it is the only finding" || fail "utf8 fixture should yield 1 finding, got $(findings)"
+
+# A multi-line shell test quoted outside a code block has the shape of a wrapped link.
+# It is reported; whether it is a link to rejoin or code to fence is a person's call.
+graph shell "notes/hook.md" 'The hook bails early: if [[ -f "$lock" &&
+  -d "$dir" ]]; then exit.
+'
+run "$TMP/shell"
+want_line "a multi-line shell test outside code is reported like any other" \
+  "$TMP/shell/notes/hook.md:1: [[ -f \"\$lock\" && -d \"\$dir\" ]]"
 
 # Several files in one root. Every other fixture root holds a single note, and a scanner
 # that reads many files in one pass can name the wrong one: the first version of this
@@ -257,6 +290,29 @@ and a stray closer ]] in the next are not a link: a blank line ends a link.
 run "$TMP/para"
 want_exit "[[ and ]] in different paragraphs exits 0" 0
 
+# A [[ that stays open past 1000 bytes is not a link, however the paragraph ends.
+filler="$(printf 'word %.0s' $(seq 1 150))"
+graph toolong "notes/m.md" "A stray opener [[ and then
+$filler
+$filler
+and a stray closer ]] far below it in the same paragraph.
+"
+run "$TMP/toolong"
+want_exit "a [[ not closed within 1000 bytes is not a link: exit 0" 0
+
+# Size. One paragraph of 50,000 one-line links and code spans, then a real finding
+# after it. The scanner is one pass; this is here so a regression to re-copying the
+# paragraph per link shows up as a test that takes minutes, and so the finding after
+# a very long paragraph is still on the right line.
+mkdir -p "$TMP/big/notes"
+awk 'BEGIN { for (i = 1; i <= 50000; i++) printf "- [[note %d]] and `code %d` [[\n", i, i;
+             printf "\nA [[wrapped\nlink]] after it.\n" }' > "$TMP/big/notes/map.md"
+run "$TMP/big"
+want_line "a finding after a 50,000-line paragraph is on the right line" \
+  "$TMP/big/notes/map.md:50002: [[wrapped link]]"
+[ "$(findings)" -eq 1 ] && pass "…and nothing in the paragraph itself is reported" \
+  || fail "big fixture should yield 1 finding, got $(findings)"
+
 # --- what is scanned --------------------------------------------------------------
 
 printf '\nscope — which files are read\n'
@@ -275,92 +331,6 @@ run "$TMP/scope"
 want_line "…while a note beside them is still read" "$TMP/scope/notes/bad.md:1: [[wrapped link]]"
 [ "$(findings)" -eq 1 ] && pass "…and is the only finding" || fail "scope fixture should yield 1 finding, got $(findings)"
 
-# --- --fix ------------------------------------------------------------------------
-
-printf '\n--fix — rejoin, changing whitespace and nothing else\n'
-
-FIXROOT="$TMP/fix"
-graph fix "observations/a.md" '---
-genitor: "[[observations]]"
-supports: ["[[thin before petal fall not after]]", "[[fixed calendar window versus
-  triggered timing]]"]
----
-A finding, see [[pruning window sets
-   the whole season'"'"'s timing]] for the claim, and [[thin before petal fall|the thinning
-pattern]] too.
-
-```
-a fenced [[quoted
-example]] stays wrapped
-```
-'
-graph fix "observations/nonl.md" 'No trailing newline after this [[wrapped
-link]] at all.'
-graph fix "observations/clean.md" 'Whole [[link]] only.
-'
-cp -R "$FIXROOT" "$TMP/fix-before"
-
-run --fix "$FIXROOT"
-want_exit "--fix exits 0 once every wrapped link is rejoined" 0
-
-run "$FIXROOT"
-want_exit "…and a plain re-check of the fixed graph is clean" 0
-
-same=1
-for rel in observations/a.md observations/nonl.md observations/clean.md; do
-  [ "$(squash "$TMP/fix-before/$rel")" = "$(squash "$FIXROOT/$rel")" ] || same=0
-done
-[ "$same" -eq 1 ] && pass "every fixed file is whitespace-equivalent to its original" \
-  || fail "--fix changed something other than whitespace"
-
-grep -q -x -F -e 'A finding, see [[pruning window sets the whole season'"'"'s timing]] for the claim, and [[thin before petal fall|the thinning pattern]] too.' \
-  "$FIXROOT/observations/a.md" \
-  && pass "the newline and its indentation became exactly one space" \
-  || fail "rejoined body line is not what was expected"
-
-grep -q -x -F -e 'supports: ["[[thin before petal fall not after]]", "[[fixed calendar window versus triggered timing]]"]' \
-  "$FIXROOT/observations/a.md" \
-  && pass "the frontmatter link is rejoined on one line" \
-  || fail "rejoined frontmatter line is not what was expected"
-
-if grep -q -x -F -e 'a fenced [[quoted' "$FIXROOT/observations/a.md" \
-   && grep -q -x -F -e 'example]] stays wrapped' "$FIXROOT/observations/a.md"; then
-  pass "the fenced example is left wrapped"
-else
-  fail "--fix rewrote text inside a code fence"
-fi
-
-cmp -s "$TMP/fix-before/observations/clean.md" "$FIXROOT/observations/clean.md" \
-  && pass "a file with nothing to fix is byte-identical" \
-  || fail "--fix touched a clean file"
-
-[ "$(tail -c 1 "$FIXROOT/observations/nonl.md" | wc -l)" -eq 0 ] \
-  && pass "a file with no trailing newline still has none" \
-  || fail "--fix added a trailing newline"
-
-# What --fix declines. Joining these lines would not be a whitespace-only change, or
-# would be a guess, so they are reported and left for a hand repair.
-graph nofix "notes/quote.md" '> A quoted passage with a [[wrapped
-> link]] inside a blockquote.
-'
-graph nofix "notes/long.md" 'A span that crosses [[more
-than
-one]] line break.
-'
-cp -R "$TMP/nofix" "$TMP/nofix-before"
-run --fix "$TMP/nofix"
-want_exit "--fix exits 1 when something is left unjoined" 1
-want_line "a link wrapped inside a blockquote is still reported after --fix" \
-  "$TMP/nofix/notes/quote.md:1: [[wrapped > link]]"
-want_line "a link crossing more than one line break is still reported after --fix" \
-  "$TMP/nofix/notes/long.md:1: [[more than one]]"
-if cmp -s "$TMP/nofix-before/notes/quote.md" "$TMP/nofix/notes/quote.md" \
-   && cmp -s "$TMP/nofix-before/notes/long.md" "$TMP/nofix/notes/long.md"; then
-  pass "…and both files are byte-identical"
-else
-  fail "--fix rewrote a file it should have declined"
-fi
-
 # --- raw archives -----------------------------------------------------------------
 #
 # A tier's archive: directory holds verbatim raw material, not notes. These fixtures
@@ -369,7 +339,7 @@ fi
 # and an unclosed fence), and a real note. The real note is what keeps "exit 0" from
 # being earned by excluding too much.
 
-printf '\narchives — a tier'"'"'s raw archive is not read, and never written\n'
+printf '\narchives — a tier'"'"'s raw archive is not read\n'
 
 # $1 = project name, $2 = .commons.yml content. Graph root is <project>/knowledge.
 project() {
@@ -392,7 +362,7 @@ sources:
 run "$TMP/blockcfg/knowledge"
 want_exit "an archive named in .commons.yml (block form) is not checked: exit 0" 0
 want_line "…and the run says which directory it did not read" \
-  "check-wikilinks: not read (raw archive, archive: in $TMP/blockcfg/.commons.yml): $TMP/blockcfg/knowledge/sources/transcripts"
+  "check-wikilinks: not read (raw archive, named by archive: in $TMP/blockcfg/.commons.yml): $TMP/blockcfg/knowledge/sources/transcripts"
 want_line "…and how many files that was" \
   "check-wikilinks: 1 archived file(s) skipped; archives are verbatim raw material, not notes."
 
@@ -402,16 +372,6 @@ want_line "a note beside the archive is still checked" \
   "$TMP/blockcfg/knowledge/notes/bad.md:1: [[wrapped link]]"
 [ "$(findings)" -eq 1 ] && pass "…and is the only finding" \
   || fail "archive fixture should yield exactly 1 finding, got $(findings)"
-
-cp -R "$TMP/blockcfg" "$TMP/blockcfg-before"
-run --fix "$TMP/blockcfg/knowledge"
-want_exit "--fix on that graph exits 0" 0
-grep -q -x -F -e 'A [[wrapped link]] in a real note.' "$TMP/blockcfg/knowledge/notes/bad.md" \
-  && pass "…having rejoined the note" || fail "--fix did not rejoin the note beside the archive"
-cmp -s "$TMP/blockcfg-before/knowledge/sources/transcripts/2026-08-01-session.md" \
-       "$TMP/blockcfg/knowledge/sources/transcripts/2026-08-01-session.md" \
-  && pass "…and the archived transcript is byte-identical" \
-  || fail "--fix wrote to an archived transcript"
 
 project flowcfg 'graph: { name: orchard, root: knowledge/ }
 sources:
@@ -434,11 +394,6 @@ run "$TMP/nocfg/knowledge"
 want_exit "with no .commons.yml the same directory IS checked: exit 1" 1
 want_line "…the wrapped link in it reported" \
   "$TMP/nocfg/knowledge/sources/transcripts/2026-08-01-session.md:1: [[some quoted wrapped link]]"
-run --exclude "$TMP/nocfg/knowledge/sources/transcripts" "$TMP/nocfg/knowledge"
-want_exit "--exclude skips it without a config" 0
-want_line "…and is named as the reason" \
-  "check-wikilinks: not read (raw archive, --exclude): $TMP/nocfg/knowledge/sources/transcripts"
-
 project outside 'sources:
   - name: session
     archive: docs/transcripts/
@@ -459,77 +414,6 @@ project covers2 'sources:
 '
 run "$TMP/covers2/knowledge"
 want_exit "…and so does one naming an ancestor of the root" 2
-run --exclude "$TMP/no-such-dir" "$TMP/clean"
-want_exit "--exclude of a missing directory exits 2" 2
-
-# --- text that is not a title -----------------------------------------------------
-#
-# A multi-line shell test quoted outside a code block has the exact shape of a wrapped
-# link. The check reports it (it may be a link; a person decides), and --fix must not
-# rewrite it. The real wrapped title in the same note is what proves --fix still fixes.
-
-printf '\nnot a title — --fix declines what reads as code, and still fixes what does not\n'
-
-graph shell "notes/hook.md" 'The hook bails early: if [[ -f "$lock" &&
-  -d "$dir" ]]; then exit. A second form starts with the operator: [[ -z "$x"
-  ]] and a third with a variable: [[ $count
-  -gt 3 ]] in the same paragraph.
-
-The pattern it supports is [[guards that fail open are
-worse than no guard]] and that one is a link.
-'
-run "$TMP/shell"
-want_exit "a multi-line shell test outside code is still reported by the check" 1
-want_line "…as a finding a person decides on" \
-  "$TMP/shell/notes/hook.md:1: [[ -f \"\$lock\" && -d \"\$dir\" ]]"
-
-cp -R "$TMP/shell" "$TMP/shell-before"
-run --fix "$TMP/shell"
-want_exit "--fix exits 1 with the shell tests left in place" 1
-want_line "--fix says it left the && form alone, and why" \
-  "left alone (does not read as a note title): $TMP/shell/notes/hook.md:1: [[ -f \"\$lock\" && -d \"\$dir\" ]]"
-want_line "…and the form that starts with a test operator" \
-  "left alone (does not read as a note title): $TMP/shell/notes/hook.md:2: [[ -z \"\$x\" ]]"
-want_line "…and the form that starts with a variable" \
-  "left alone (does not read as a note title): $TMP/shell/notes/hook.md:3: [[ \$count -gt 3 ]]"
-if [ "$(sed -n 1,4p "$TMP/shell-before/notes/hook.md")" = "$(sed -n 1,4p "$TMP/shell/notes/hook.md")" ]; then
-  pass "the four lines holding the shell tests are unchanged"
-else
-  fail "--fix rewrote a quoted shell test"
-fi
-grep -q -x -F -e 'The pattern it supports is [[guards that fail open are worse than no guard]] and that one is a link.' \
-  "$TMP/shell/notes/hook.md" \
-  && pass "the real wrapped title in the same note is rejoined" \
-  || fail "--fix did not rejoin the real title beside the shell tests"
-[ "$(squash "$TMP/shell-before/notes/hook.md")" = "$(squash "$TMP/shell/notes/hook.md")" ] \
-  && pass "…and the note is whitespace-equivalent to its original" \
-  || fail "--fix changed something other than whitespace"
-
-# --- how --fix writes -------------------------------------------------------------
-#
-# By rename, from a temporary file beside the note: an interrupted run leaves the old
-# note or the new one, never a truncated one. A new inode is what shows the note was
-# replaced and not written through.
-
-printf '\nreplace by rename — --fix never writes through a note\n'
-
-graph atomic "notes/a.md" 'A [[wrapped
-link]] here.
-'
-chmod 640 "$TMP/atomic/notes/a.md"
-inode_before="$(ls -i "$TMP/atomic/notes/a.md" | awk '{print $1}')"
-mode_before="$(ls -l "$TMP/atomic/notes/a.md" | cut -c1-10)"
-run --fix "$TMP/atomic"
-want_exit "--fix on a mode-640 note exits 0" 0
-[ "$(ls -i "$TMP/atomic/notes/a.md" | awk '{print $1}')" != "$inode_before" ] \
-  && pass "the note is a new file renamed into place (inode changed)" \
-  || fail "the note was written in place (same inode): an interruption would truncate it"
-[ "$(ls -l "$TMP/atomic/notes/a.md" | cut -c1-10)" = "$mode_before" ] \
-  && pass "its mode is preserved ($mode_before)" \
-  || fail "mode changed from $mode_before to $(ls -l "$TMP/atomic/notes/a.md" | cut -c1-10)"
-[ "$(ls -A "$TMP/atomic/notes" | wc -l)" -eq 1 ] \
-  && pass "no temporary file is left beside it" \
-  || fail "leftover files beside the note: $(ls -A "$TMP/atomic/notes" | tr '\n' ' ')"
 
 # --- fail-closed ------------------------------------------------------------------
 
@@ -545,6 +429,34 @@ run "$TMP/clean" "$TMP/body"
 want_exit "two roots exits 2" 2
 run --frobnicate "$TMP/clean"
 want_exit "an unknown option exits 2" 2
+run --fix "$TMP/body"
+want_exit "--fix is not an option: exit 2, never a rewrite" 2
+
+# A finding is one line that starts with a path, so a name holding a newline could
+# forge one. Refused, in a file name or a directory name.
+graph nlfile "notes/ok.md" 'Whole [[link]].
+'
+printf 'Whole [[link]].\n' > "$TMP/nlfile/notes/evil
+ok.md:1: [[forged]].md"
+run "$TMP/nlfile"
+want_exit "a file name containing a newline exits 2" 2
+want_line "…naming the directory it is in" \
+  "check-wikilinks: a file or directory name under $TMP/nlfile/notes contains a newline; rename it, nothing was checked"
+want_no_finding "…and prints no finding line it could have forged" "forged"
+mkdir -p "$TMP/nldir/a
+b"
+printf 'Whole [[link]].\n' > "$TMP/nldir/a
+b/x.md"
+run "$TMP/nldir"
+want_exit "a directory name containing a newline exits 2" 2
+
+# Read-only. The graphs with findings above were all checked at least once; none of
+# their files may have changed, and nothing may have been created beside them.
+before="$(cd "$TMP" && find body front alias two shell quote long -type f -exec cksum {} + | sort)"
+for r in body front alias two shell quote long; do "$CHECK" "$TMP/$r" >/dev/null 2>&1; done
+after="$(cd "$TMP" && find body front alias two shell quote long -type f -exec cksum {} + | sort)"
+[ "$before" = "$after" ] && pass "checking a graph with findings changes no file and creates none" \
+  || fail "the check wrote inside a graph"
 
 mkdir -p "$TMP/empty"
 run "$TMP/empty"

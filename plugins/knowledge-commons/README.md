@@ -57,7 +57,7 @@ living in a project reaches the plugin's files without a path into the plugin's 
 |-------|--------------|
 | `conventions` | Loads the full `references/graph-conventions.md` from the installed plugin version. |
 | `scan-secrets` | Runs `scripts/scan-secrets.sh` over rendered material for a redaction gate and reports the exit code verbatim; any non-zero exit means don't archive. |
-| `check-wikilinks` | Runs `scripts/check-wikilinks.sh` over a graph root and reports the exit code verbatim: non-zero when a `[[wikilink]]` is split across a line break, which hard-wrapped prose does silently to long titles. With `--fix` it rejoins them (whitespace only) and re-checks. Raw archives (each tier's `archive:` directory) are not read or written. Generated skills run it before they report. |
+| `check-wikilinks` | Runs `scripts/check-wikilinks.sh` over a graph root and reports the exit code verbatim: non-zero when a `[[wikilink]]` is split across a line break, which hard-wrapped prose does silently to long titles. Read-only. Raw archives (each tier's `archive:` directory) are not read. Generated skills run it before they report. |
 
 ## How it works
 
@@ -205,7 +205,8 @@ plugins/knowledge-commons/
   lifecycle enforcement. Graph health is prose conventions plus plan approval. If real use ever
   produces real structural drift, a check earns its way in that day — evidence first. One has:
   `check-wikilinks` (0.10.0), after hard wrapping split links in five graphs and a hand repair
-  did not stay repaired. It runs after the writes and before the report; it is not a gate on them.
+  did not stay repaired. It runs after the writes and before the report, and it only reads: it is
+  not a gate on a write and it never makes one.
 - **Pull, not push.** No ambient injection. Consultation is "what do we know about X?" → read
   the maps, follow the links.
 - **No retrieval infrastructure.** No MCP server, embeddings, or vector search. The association

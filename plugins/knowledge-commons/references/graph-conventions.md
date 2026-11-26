@@ -282,13 +282,11 @@ assumption against the wrong region.
 lowercase avoids the friction entirely. Spaces are fine in filenames —
 `[[thin before petal fall not after]]` is a valid, readable wikilink.
 
-**A wikilink stays on one line**, in body prose and in frontmatter alike. Hard-wrapping a long title
-across a line break turns it into literal brackets that nothing resolves, silently; let the line run
-long instead. The plugin's `knowledge-commons:check-wikilinks` skill fails on any link that breaks this
-rule and can rejoin it, and the generated `process` and `knowledge-graph` skills run it before they
-report. The rule is for notes. Archived raw material (a tier's `archive:` directory) is excluded from the
-check and never rewritten by it: an archive is kept verbatim, wrapped links and all, because editing it
-falsifies the record it exists to keep.
+**A wikilink stays on one line**, in body prose and in frontmatter alike; let the line run long instead
+of wrapping inside a link. The plugin's `knowledge-commons:check-wikilinks` skill fails on any link
+that breaks this, and the generated `process` and `knowledge-graph` skills run it before they report.
+It reads notes only: a tier's `archive:` directory is verbatim raw material and is never checked or
+edited.
 
 **Date prefixes are for notes that are themselves a dated event**, not a stamp added out of habit.
 A source note tied to a specific day's chronicle file earns the prefix

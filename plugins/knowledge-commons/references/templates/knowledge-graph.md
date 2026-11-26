@@ -222,21 +222,15 @@ directly in `changelog.md`; at the first session of a new month, move the prior 
 5. Run the wrapped-link check below.
 
 **The wrapped-link check ends every workflow here that writes or edits a note** — a capture, an
-extraction, an evolve step. A wikilink stays on one line. Notes are hard-wrapped prose, and a long
-`[[note title]]` that lands on the wrap column gets split across two lines, which is no longer a link:
-Obsidian shows literal brackets, nothing resolves it, and the note still reads fine in an editor. Knowing
-the rule does not prevent it, because the break is made while attention is on the sentence, so this is a
-check and not a reminder. After the last write and before the change summary, invoke the plugin's
-`knowledge-commons:check-wikilinks` skill with `{graph.root}` as its argument. It checks the whole graph,
-except the raw archives `.commons.yml` names under a source tier's `archive:`, which it names as skipped:
-archived raw material is verbatim, not a note, and is never edited to satisfy the check.
-On findings, invoke it again with `--fix {graph.root}`, which rejoins each link (the line break and the
-indentation after it become one space; nothing else changes) and re-checks. What it still lists it
-declined to touch, and each is a hand decision: rejoin it if it is a link; if it is quoted code (a shell
-test such as `[[ -f x && -d y ]]` reads exactly like a wrapped link), put it in a code span or fence,
-where the check does not read. Check once more, and list what was rejoined under corrections. If it is still not clean, or
-the skill is unavailable or exits 2, say in the change summary that the graph is not known to be clean.
-Never report as though the check passed, and never substitute a read-through for it.
+extraction, an evolve step. A wikilink stays on one line; split across a line break it is no longer a
+link. After the last write and before the change summary, invoke the plugin's
+`knowledge-commons:check-wikilinks` skill with `{graph.root}` as its argument. It reads the whole graph
+and changes nothing. Rejoin by hand each listed link in a note this session wrote or edited (the line
+break and the indentation after it become one space), then run the check once more. Don't edit a finding
+in a note this session did not touch: list it in the change summary for the user, and say the graph is
+not known to be clean. Never edit an archived file. If the skill is unavailable or exits 2, say in the
+change summary that the wrapped-link check could not run; never report as though it passed, and never
+substitute a read-through for it.
 
 See "Extraction Workflow" above for how this graph turns a `{source-type}` into notes end to end.
 
