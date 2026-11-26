@@ -323,6 +323,354 @@ LC_ALL=en_US.UTF-8 "$SCAN" "$TMP/badutf.txt" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 1 ] && pass "a stray byte inside a value does not hide it" \
   || fail "a value containing an invalid UTF-8 byte must exit 1, got $rc"
 
+# --- 5. Values the scan used to look straight past --------------------------------
+#
+# Every case here that expects 1 exited 0 before it was fixed, apart from the first,
+# which pins that FAKE is reported when it stands alone — so a 0 below is the shape
+# around it defeating the scan, not the value being unremarkable.
+FAKE='Zq7NotARealSecret4Kd9Lm2Xp'
+
+printf '\nJSON inside JSON — quotes escaped with backslashes\n'
+
+expect_exit "the fake value on its own"            1 "PROD_PASSWORD=$FAKE"
+expect_exit "escaped key and value"                1 "{\\\"API_KEY\\\": \\\"$FAKE\\\"}"
+expect_exit "escaped Authorization header"         1 "\\\"Authorization\\\": \\\"Bearer $FAKE\\\""
+expect_exit "escaped twice"                        1 "\\\\\\\"API_KEY\\\\\\\": \\\\\\\"$FAKE\\\\\\\""
+expect_exit "escaped placeholder stays clean"      0 '{\"API_KEY\": \"<your-key-here>\"}'
+expect_exit "escaped bearer placeholder stays clean" 0 '\"Authorization\": \"Bearer <your-token-here>\"'
+
+# An earlier value on the line that takes the real assignment with it.
+printf '\na real assignment inside an earlier value\n'
+
+expect_exit "quoted note opening with <…>"         1 "NOTE_KEY='<see below> and then PROD_PASSWORD=$FAKE isn't shown"
+expect_exit "quoted note opening with \${…}"       1 "{\"note_key\": \"\${X} PROD_PASSWORD=$FAKE\"}"
+expect_exit "no separator between assignments"     1 "DEBUG_SECRET=<x>PROD_PASSWORD=$FAKE"
+expect_exit "key inside a JSON object"             1 "{\"credentials\": {\"password\": \"$FAKE\"}}"
+expect_exit "key inside an escaped JSON object"    1 "{\\\"credentials\\\": {\\\"password\\\": \\\"$FAKE\\\"}}"
+expect_exit "JSON object of placeholders is clean" 0 '{"credentials": {"password": "<redacted>"}}'
+
+# A value that only STARTS like a placeholder.
+printf '\nreal values that merely begin like a placeholder\n'
+
+expect_exit "begins <"                             1 "PROD_PASSWORD=<$FAKE"
+expect_exit "begins \$"                            1 "PROD_PASSWORD=\$$FAKE"
+expect_exit "begins {"                             1 "PROD_PASSWORD={$FAKE"
+expect_exit "begins xxx"                           1 "PROD_PASSWORD=xxx$FAKE"
+expect_exit "begins ***"                           1 "PROD_PASSWORD=***$FAKE"
+expect_exit "begins ..."                           1 "PROD_PASSWORD=...$FAKE"
+expect_exit "leading space inside quotes"          1 "PROD_PASSWORD=\" $FAKE\""
+expect_exit "leading vertical tab inside quotes"   1 "PROD_PASSWORD=\"$(printf '\v')$FAKE\""
+expect_exit "dummy word, dash, real value"         1 "PROD_PASSWORD=example-$FAKE"
+expect_exit "dummy word, colon, real value"        1 "PROD_PASSWORD=none:$FAKE"
+expect_exit "dummy word, dollar, real value"       1 "PROD_PASSWORD=my\$$FAKE"
+expect_exit "bearer value beginning \$"            1 "Authorization: Bearer \$$FAKE"
+expect_exit "bearer dummy word, dot, real value"   1 "Authorization: Bearer example.$FAKE"
+expect_exit "a default inside \${…:-…}"            1 "PROD_PASSWORD=\"\${DB_PASSWORD:-$FAKE}\""
+expect_exit "a real value after <…>"               1 "PROD_PASSWORD=\"<prod> $FAKE\""
+
+# The other side of the same rule: every one of these is a placeholder and must stay
+# one. A gate that stops on them trains its reader to click through.
+printf '\nplaceholders that must still read as placeholders\n'
+
+expect_exit "<your-key-here>"                      0 'API_KEY=<your-key-here>'
+expect_exit "<YOUR_API_KEY>"                       0 'API_KEY=<YOUR_API_KEY>'
+expect_exit "quoted <…> with spaces"               0 'API_KEY="<your key goes here>"'
+expect_exit "unquoted <…> cut at a space"          0 'API_KEY=<your-long-key goes here>'
+expect_exit "<…> in backticks with a comma"        0 'set `API_KEY=<your-key-here>`, then run it'
+expect_exit "\${VAR}"                              0 'API_TOKEN=${GITHUB_TOKEN}'
+expect_exit "\$VAR"                                0 'API_TOKEN=$GITHUB_TOKEN'
+expect_exit "\$VAR with a digit"                   0 'API_TOKEN=$OAUTH2_CLIENT_TOKEN'
+expect_exit "\${VAR:-} with an empty default"      0 'API_TOKEN="${GITHUB_TOKEN:-}"'
+expect_exit "\$(command)"                          0 'API_TOKEN="$(gh auth token --hostname example)"'
+expect_exit "a path under \$HOME"                  0 'SSH_KEY_FILE="$HOME/.ssh/id_rsa"'
+expect_exit "{{ template }}"                       0 'api_password: "{{ vault_database_password }}"'
+expect_exit "\${{ secrets.X }}"                    0 'GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"'
+expect_exit "{name} in a format string"            0 'url = f"https://host/?api_token={api_token_value}"'
+expect_exit "xxxxxxxx"                             0 'API_KEY=xxxxxxxx'
+expect_exit "XXXXXXXXXXXX"                         0 'API_KEY=XXXXXXXXXXXX'
+expect_exit "********"                             0 'PASSWORD=********'
+expect_exit "a row of dots"                        0 'PASSWORD=........'
+expect_exit "masked with the last four shown"      0 'API_KEY=************a1b2'
+expect_exit "xxxx-xxxx-xxxx groups"                0 'LICENSE_KEY=xxxx-xxxx-xxxx-xxxx'
+expect_exit "x mask with the last four shown"      0 'CARD_TOKEN=xxxxxxxxxxxx1234'
+expect_exit "your-api-key-here"                    0 'API_KEY=your-api-key-here'
+expect_exit "YOUR_API_KEY_HERE"                    0 'API_KEY=YOUR_API_KEY_HERE'
+expect_exit "bearer \${accessToken}"               0 'Authorization: Bearer ${accessToken}'
+expect_exit "bearer \$TOKEN"                       0 'Authorization: Bearer $GITHUB_TOKEN'
+expect_exit "bearer YOUR_TOKEN_HERE"               0 'Authorization: Bearer YOUR_TOKEN_HERE'
+expect_exit "bearer xxxxxxxxxxxx"                  0 'Authorization: Bearer xxxxxxxxxxxx'
+
+# Each dictionary word, as the whole value and leading a phrase of plain words.
+for word in your my some insert placeholder example changeme change redacted dummy fake sample todo fixme none null nil true false; do
+  expect_exit "dummy word alone: $word"            0 "API_SECRET=$word"
+  expect_exit "dummy word leading a phrase: $word" 0 "API_SECRET=$word-value-goes-here"
+done
+
+# --- 6. Text with NUL bytes in it -------------------------------------------------
+#
+# UTF-16 puts a NUL after (or before) every ASCII character, so no pattern matched and
+# a token in plain sight read as clean. The same happens to a UTF-16 fragment pasted
+# into a UTF-8 transcript. Files with NULs are scanned from a copy without them.
+printf '\ntext with NUL bytes\n'
+
+# $1 = le|be, $2 = text. Writes the text as UTF-16 without a byte-order mark.
+utf16() {
+  local order="$1" s="$2" i=0 c
+  while [ "$i" -lt "${#s}" ]; do
+    c="${s:$i:1}"
+    if [ "$order" = le ]; then printf '%s\0' "$c"; else printf '\0%s' "$c"; fi
+    i=$((i + 1))
+  done
+  if [ "$order" = le ]; then printf '\n\0'; else printf '\0\n'; fi
+}
+utf16_token="token gh""p_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"
+
+utf16 le "$utf16_token" > "$TMP/utf16.txt"
+"$SCAN" "$TMP/utf16.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a token in a UTF-16LE file is found" || fail "a token in a UTF-16LE file must exit 1, got $rc"
+
+{ printf '\376\377'; utf16 be "$utf16_token"; } > "$TMP/utf16.txt"
+"$SCAN" "$TMP/utf16.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a token in a UTF-16BE file with a byte-order mark is found" || fail "a token in a UTF-16BE file must exit 1, got $rc"
+
+{ printf 'an ordinary UTF-8 line\n'; utf16 le "$utf16_token"; printf 'and another\n'; } > "$TMP/utf16.txt"
+out="$("$SCAN" "$TMP/utf16.txt" 2>&1)"; rc=$?
+[ "$rc" -eq 1 ] && pass "a UTF-16 fragment inside a UTF-8 file is found" || fail "a UTF-16 fragment in a UTF-8 file must exit 1, got $rc"
+printf '%s' "$out" | grep -q "utf16.txt:2\$" && pass "and it is reported on its own line number" \
+  || fail "a finding in a file with NUL bytes must keep its line number"
+
+printf 'PROD_PASSWORD=x\0x\0x\0%s\n' "$FAKE" > "$TMP/nul.txt"
+"$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "NUL bytes cannot assemble a placeholder prefix" || fail "a value behind NUL-separated x's must exit 1, got $rc"
+
+printf 'an ordinary line with a stray \0 byte\nand nothing else\n' > "$TMP/nul.txt"
+"$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "a stray NUL in clean text is still clean" || fail "a stray NUL in clean text must exit 0, got $rc"
+
+# --- 7. What a review of sections 5 and 6 found ------------------------------------
+#
+# The first version of those fixes was attacked by reviewers who had not seen the
+# reasoning behind it. Each case below is something they broke, or a test they showed
+# could not fail.
+
+# grep -o returns matches that do not overlap, so a name inside another match's value
+# is never matched itself. When the outer value is a placeholder the inner one was
+# never judged. The line is now judged again from the start of an unreported value.
+printf '\na credential whose name sits inside another match\n'
+
+PLAIN='correcthorsebatterystaple'
+expect_exit "words-only secret in a quoted note"          1 "A_KEY=\"my B_PASSWORD=$PLAIN\""
+expect_exit "the same, quotes escaped"                    1 "A_KEY=\\\"my B_PASSWORD=$PLAIN\\\""
+expect_exit "the same, in escaped JSON"                   1 "{\\\"api_key\\\": \\\"your password=$PLAIN\\\"}"
+expect_exit "hint string inside a JSON object"            1 "\"credentials\": {\"password_hint\": \"example PASSWORD=$PLAIN\"}"
+expect_exit "JSON held in a JSON string"                  1 "\"credentials\": \"{\\\"password\\\": \\\"$FAKE\\\"}\""
+expect_exit "JSON held in a JSON string, a level down"    1 "\\\"credentials\\\": \\\"{\\\\\\\"password\\\\\\\": \\\\\\\"$FAKE\\\\\\\"}\\\""
+expect_exit "a second key after the swallowed one"        1 "\"SecretString\": \"{\\\"password\\\": \\\"$FAKE\\\", \\\"username\\\": \\\"admin\\\"}\""
+expect_exit "escaped outer key, bare inner key"           1 "{\\\"credentials\\\": {password: \\\"$FAKE\\\"}}"
+expect_exit "YAML flow mapping"                           1 "credentials: {password: $FAKE}"
+expect_exit "object literal"                              1 "const credentials = {password: \"$FAKE\"}"
+expect_exit "three names deep"                            1 "{\"secrets\": {\"credentials\": {\"password\": \"$FAKE\"}}}"
+# Every level here is a placeholder holding the next, so nothing but the depth limit
+# reports the deep one. The shallow one shows the same shape is clean when followed.
+chain=""; i=0; while [ "$i" -lt 30 ]; do chain="${chain}A_KEY=<"; i=$((i + 1)); done
+expect_exit "a chain too deep to follow is reported"      1 "${chain}changeme"
+expect_exit "a short chain of placeholders is clean"      0 "A_KEY=<A_KEY=<A_KEY=<changeme"
+
+# The same re-scan must not turn structure into findings.
+expect_exit "nested counters stay clean"                  0 '"token_usage": {"prompt_tokens": 100, "completion_tokens": 20}'
+expect_exit "a default in \${VAR:-…} is not an assignment" 0 'DB_PASSWORD="${DB_PASSWORD:-changeme}"'
+expect_exit "a placeholder naming another key is clean"   0 'API_KEY="<copy the value of SECRET_KEY: from the console>"'
+expect_exit "nested placeholders stay clean"              0 '{"secrets": {"credentials": {"password": "<redacted>"}}}'
+
+# A closed <…> or {{…}}, or a $name, used to be removed whole before the value was
+# judged, so whatever sat inside was never looked at.
+printf '\na real value inside placeholder punctuation\n'
+
+expect_exit "inside closed <…>"                           1 "PROD_PASSWORD=<$FAKE>"
+expect_exit "inside {{…}}"                                1 "PROD_PASSWORD=\"{{$FAKE}}\""
+expect_exit "bearer inside closed <…>"                    1 "Authorization: Bearer <$FAKE>"
+expect_exit "hex after \$"                                1 'PROD_PASSWORD=$deadbeef0123456789abcdef01234567'
+expect_exit "a word and a year after \$"                  1 'PROD_PASSWORD=$ummertime2024'
+expect_exit "\$-separated groups"                         1 'PROD_PASSWORD=$a1b2$c3d4$e5f6$a7b8$c9d0'
+expect_exit "escaped quotes around closed <…>"            1 "PROD_PASSWORD=\\\"<$FAKE>\\\""
+# No digits anywhere: only the case test can catch this one.
+expect_exit "mixed case with no digits"                   1 'PROD_PASSWORD=example-ZqNotARealSecretKdLmXp'
+
+expect_exit "your-key-123"                                0 'API_KEY=your-key-123'
+expect_exit "example-token-1234"                          0 'API_TOKEN=example-token-1234'
+expect_exit "a path with a digit under \$HOME"            0 'KEY_PATH="$HOME/.config/app2/token"'
+expect_exit "\${VAR:-default123}"                         0 'API_KEY=${API_KEY:-default123}'
+expect_exit "\${camelCase2}"                              0 'PASSWORD=${databasePassword2}'
+expect_exit "unclosed <paste-your-32-char-key"            0 'API_KEY=<paste-your-32-char-key'
+expect_exit "<your-api-key-v2>"                           0 'API_KEY=<your-api-key-v2>'
+expect_exit "escaped quotes around \$VAR"                 0 'DB_PASSWORD=\"$DB_PASSWORD\"'
+
+# The placeholder test switches case-insensitive matching off and must switch it back
+# on: the Authorization extractor and the dictionary words depend on it. Every other
+# fixture is one line, so none of them could see state carried from one match to the
+# next.
+printf '\nstate carried from one match to the next\n'
+
+printf 'API_KEY=<your-key-here>\nAuthorization: Bearer %s\n' "$FAKE" > "$TMP/two.txt"
+"$SCAN" "$TMP/two.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a bearer value after a placeholder is still found" || fail "a bearer value after a placeholder must exit 1, got $rc"
+printf 'API_KEY=<your-key-here>\nAPI_SECRET=CHANGEME-PLEASE-NOW\n' > "$TMP/two.txt"
+"$SCAN" "$TMP/two.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "an upper-case dummy word after a placeholder is still one" || fail "CHANGEME after a placeholder must exit 0, got $rc"
+
+# Taking NULs out joins their neighbors. A file with NULs is scanned both ways.
+printf '\nmore text with NUL bytes\n'
+
+printf 'tool\0--key\0sk-%s\0--host\0x\n' "$FAKE" > "$TMP/nul.txt"
+"$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a key set off only by NUL bytes is found" || fail "a key between NUL bytes must exit 1, got $rc"
+
+# The two below go through the value-checked scan; the token cases in section 6 do not.
+utf16 le "PROD_PASSWORD=$FAKE" > "$TMP/utf16.txt"
+"$SCAN" "$TMP/utf16.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "an assignment in a UTF-16 file is found" || fail "an assignment in a UTF-16 file must exit 1, got $rc"
+utf16 be "Authorization: Bearer $FAKE" > "$TMP/utf16.txt"
+"$SCAN" "$TMP/utf16.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a bearer value in a UTF-16 file is found" || fail "a bearer value in a UTF-16 file must exit 1, got $rc"
+
+# tr and wc are needed now, and each way they can fail must stop the scan.
+printf '\ntr and wc\n'
+
+printf 'nothing here\n' > "$TMP/plain.txt"
+printf 'a stray \0 byte\n' > "$TMP/nul.txt"
+for tool in tr wc; do
+  NOTOOL="$TMP/no-$tool"
+  mkdir -p "$NOTOOL"
+  for keep in grep tr wc; do
+    [ "$keep" = "$tool" ] || ln -s "$(command -v "$keep")" "$NOTOOL/$keep"
+  done
+  PATH="$NOTOOL" "$(command -v bash)" "$SCAN" "$TMP/plain.txt" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 2 ] && pass "no $tool on PATH exits 2" || fail "no $tool on PATH must exit 2, got $rc"
+done
+
+REAL_TR="$(command -v tr)"
+printf '#!/usr/bin/env bash\nexit 1\n' > "$SHIM/tr"
+chmod +x "$SHIM/tr"
+PATH="$SHIM:$PATH" "$SCAN" "$TMP/plain.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "a tr that fails exits 2" || fail "a tr that fails must exit 2, got $rc"
+# Works for the byte count, fails when asked for the NUL-free copy.
+printf '#!/usr/bin/env bash\nif [ -e "%s/tr-called" ]; then exit 1; fi\n: > "%s/tr-called"\nexec "%s" "$@"\n' "$TMP" "$TMP" "$REAL_TR" > "$SHIM/tr"
+PATH="$SHIM:$PATH" "$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "a tr that fails on the NUL-free copy exits 2" || fail "a tr failing on its second call must exit 2, got $rc"
+rm -f "$SHIM/tr" "$TMP/tr-called"
+printf '#!/usr/bin/env bash\nexit 1\n' > "$SHIM/wc"
+chmod +x "$SHIM/wc"
+PATH="$SHIM:$PATH" "$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "a wc that fails exits 2" || fail "a wc that fails must exit 2, got $rc"
+rm -f "$SHIM/wc"
+
+# Long values. Each of these took from 20 seconds to several minutes, which a caller
+# reads as a hung gate. The bound is loose on purpose: they finish in about a second.
+printf '\nlong values finish\n'
+
+pad="$(head -c 200000 /dev/zero | tr '\0' ' ')"
+masks=""; i=0; while [ "$i" -lt 8000 ]; do masks="${masks}xxx "; i=$((i + 1)); done
+for target in "8000 masks in one value:0:NOTE_KEY=\"$masks\"" \
+              "200 KB of spaces before the value:1:PROD_PASSWORD=\"$pad$FAKE\"" \
+              "200 KB of spaces after the value:1:PROD_PASSWORD=\"$FAKE$pad\""; do
+  name="${target%%:*}"; rest="${target#*:}"; want="${rest%%:*}"
+  printf '%s\n' "${rest#*:}" > "$TMP/long.txt"
+  started=$SECONDS
+  "$SCAN" "$TMP/long.txt" >/dev/null 2>&1; rc=$?
+  took=$((SECONDS - started))
+  if [ "$rc" -eq "$want" ] && [ "$took" -lt 30 ]; then
+    pass "$name"
+  else
+    fail "$name (wanted exit $want in under 30 s, got $rc in $took s)"
+  fi
+done
+
+# --- 8. Placeholders the re-scan reported ----------------------------------------
+#
+# A second review found the fix in section 7 over-reporting. Each expect-0 case below
+# exited 1 before it was fixed.
+
+# The re-scan followed the NEXT assignment on the line as if it were nested in the
+# value, one per step, so the 21st placeholder on a line hit the depth limit.
+printf '\nmany placeholders on one line\n'
+
+sibling='"api_key": "<your-api-key>"'
+line=""; i=0; while [ "$i" -lt 21 ]; do line="$line${line:+, }$sibling"; i=$((i + 1)); done
+expect_exit "21 quoted placeholders"                      0 "$line"
+while [ "$i" -lt 199 ]; do line="$line, $sibling"; i=$((i + 1)); done
+expect_exit "199 quoted placeholders"                     0 "$line"
+expect_exit "a real value as the 200th"                   1 "$line, \"api_key\": \"$FAKE\""
+line=""; i=0; while [ "$i" -lt 21 ]; do line="$line${line:+ }SERVICE${i}_TOKEN=\$SERVICE${i}_TOKEN"; i=$((i + 1)); done
+expect_exit "21 references to their own name"             0 "$line"
+# Here each value ENDS in a credential word, so each one is looked at again; the
+# next assignment is then the first thing found, and it must not count as nested.
+line=""; i=0; while [ "$i" -lt 21 ]; do line="$line${line:+, }API_KEY=your-api-key"; i=$((i + 1)); done
+expect_exit "21 values that end in a credential word"     0 "$line"
+expect_exit "a real value after those"                    1 "$line, API_KEY=$FAKE"
+# A name at the very END of a value has its separator in the rest of the line, so the
+# re-scan must still reach it there.
+expect_exit "nested name whose separator follows a space" 1 "{\"credentials\": {\"password\" : \"$FAKE\"}}"
+
+# An env file inside a JSON string: entries joined by a literal backslash-n. The n
+# glued onto the next name, and nSECRET is not a plain word.
+printf '\nplaceholders joined by an escaped newline\n'
+
+expect_exit "three placeholders, upper-case names"        0 'API_KEY=<your-api-key>\nSECRET_TOKEN=<your-token>\nDB_PASSWORD=changeme'
+expect_exit "the same inside a JSON string"               0 '{"content": "API_KEY=<your-api-key>\nSECRET_TOKEN=<your-token>\nDB_PASSWORD=changeme"}'
+expect_exit "joined by \\r\\n and \\t"                     0 'API_KEY=<your-api-key>\r\nSECRET_TOKEN=<your-token>\tDB_PASSWORD=changeme'
+expect_exit "a real value in the middle"                  1 "API_KEY=<your-api-key>\\nSECRET_TOKEN=$FAKE\\nDB_PASSWORD=changeme"
+expect_exit "a real value at the end"                     1 "API_KEY=<your-api-key>\\nSECRET_TOKEN=<your-token>\\nDB_PASSWORD=$FAKE"
+expect_exit "a real value after one placeholder"          1 "DB_PASSWORD=<your-key>\\nPROD_PASSWORD=$FAKE"
+# Not a placeholder to begin with, so the escapes in it change nothing: reported, as
+# it always was.
+expect_exit "a Windows path is still reported"            1 'KEY_FILE=C:\new\temp\rsa'
+
+# The 8-character floor is measured before whitespace is trimmed, as it always was.
+printf '\nthe length floor and padding\n'
+
+expect_exit "seven characters and a trailing space"       1 'KEY="abcdefg "'
+expect_exit "seven characters, no padding"                0 'KEY="abcdefg"'
+
+# --- 9. Shell defaults ------------------------------------------------------------
+#
+# ${NAME:-default} reads as NAME, a colon, and the value "-default", which does not
+# open like a placeholder. Under a key of its own it was hidden inside that key's
+# value; after an escaped newline, or under a key that is not a credential's, it was
+# reported. The default is now judged as the value it is.
+printf '\nshell defaults\n'
+
+for first in '<your-api-key>' '$GITHUB_TOKEN' 'changeme' 'example' 'xxxxxxxxxxxx' '********' \
+             'your-password-here' '<token>' 'none' 'my-secret-value'; do
+  expect_exit "a default after $first"                    0 "API_KEY=$first\\nDB_PASSWORD=\${DB_PASSWORD:-changeme}"
+done
+
+line=""; i=0
+while [ "$i" -lt 30 ]; do
+  case "$i" in
+    7)  entry="DB_PASSWORD=\${DB_PASSWORD:-changeme}" ;;
+    19) entry="REDIS_TOKEN=\${REDIS_TOKEN:=example-token}" ;;
+    *)  entry="SERVICE${i}_KEY=<your-key-$i>" ;;
+  esac
+  line="$line${line:+\\n}$entry"
+  i=$((i + 1))
+done
+expect_exit "30 entries joined by \\n, two with defaults" 0 "$line"
+expect_exit "the same list with one real value"           1 "$line\\nPROD_PASSWORD=$FAKE"
+
+expect_exit "a default under a key that is not a credential's" 0 '{"comment": "${DB_PASSWORD:-changeme}"}'
+expect_exit "the same, escaped"                           0 '{\"comment\": \"${DB_PASSWORD:-changeme}\"}'
+expect_exit "an empty default"                            0 'run with ${API_TOKEN:-} unset'
+
+# A default is a value. A real-looking one is a credential wherever it stands.
+expect_exit "a real default under its own key"            1 'DB_PASSWORD=${DB_PASSWORD:-Zq7xR2mK9pLw4TnB8vYc}'
+expect_exit "a real default under another key"            1 '{"comment": "${DB_PASSWORD:-Zq7xR2mK9pLw4TnB8vYc}"}'
+expect_exit "a real default after an escaped newline"     1 'API_KEY=<your-api-key>\nDB_PASSWORD=${DB_PASSWORD:-Zq7xR2mK9pLw4TnB8vYc}'
+expect_exit "a real assignment after a reference"         1 "API_TOKEN=\${API_TOKEN:-changeme} PROD_PASSWORD=$FAKE"
+# $name = value is an assignment in PowerShell and PHP. Only the braced default form
+# is rewritten, so these are untouched.
+expect_exit "\$name = value is still an assignment"       1 "\$apiKey = \"$FAKE\""
+expect_exit "\$env:NAME = value is still an assignment"   1 "\$env:API_KEY = \"$FAKE\""
+
 # --- result -----------------------------------------------------------------------
 
 printf '\n'

@@ -14,8 +14,8 @@
 # Exit codes:
 #   0  clean — no credential shapes found
 #   1  hits  — at least one finding, listed on stdout
-#   2  the scan could not run (bad usage, unreadable file, missing grep, bad pattern,
-#      a grep that failed, or matches that could not be read back)
+#   2  the scan could not run (bad usage, unreadable file, grep, tr or wc missing,
+#      bad pattern, a command that failed, or matches that could not be read back)
 #
 # Exit 1 and exit 2 mean the same thing to the caller: do not archive. The preserve
 # stage fails closed on any non-zero exit. A scan that cannot run is not a pass, and
@@ -40,7 +40,9 @@ die() {
 
 # --- preflight -------------------------------------------------------------------
 
-command -v grep >/dev/null 2>&1 || die "grep not found on PATH; cannot scan"
+for tool in grep tr wc; do
+  command -v "$tool" >/dev/null 2>&1 || die "$tool not found on PATH; cannot scan"
+done
 
 if [ "$#" -eq 0 ]; then
   printf 'usage: scan-secrets.sh <file> [<file>...]\n' >&2
@@ -56,33 +58,52 @@ done
 # --- what counts as a placeholder ------------------------------------------------
 #
 # A bracketed value (<your-key-here>), a shell or template reference ($VAR, ${VAR},
-# {{var}}), or a well-known dummy word is not a credential, and a gate that stops on
-# those trains its reader to click through.
+# {{var}}), a masked value (xxxx, ****), or a well-known dummy word is not a
+# credential, and a gate that stops on those trains its reader to click through.
 #
-# Quote characters are deliberately NOT in this list. They were, and it inverted the
-# gate: the value extracted from KEY="realsecret" begins with a quote, matched the
-# placeholder test, and was dropped — so quoting a credential made it invisible, which
-# is how most secrets are actually written in .env, YAML, JSON, and source. Quotes are
-# stripped from the value before this test instead.
+# Quote characters are deliberately NOT a placeholder marker. They were, and it
+# inverted the gate: the value extracted from KEY="realsecret" begins with a quote,
+# matched the placeholder test, and was dropped — so quoting a credential made it
+# invisible, which is how most secrets are actually written. Quotes are stripped from
+# the value before this test instead. Both halves are load-bearing; keep both.
 #
-# Both halves are load-bearing on purpose and either one alone prevents the defect, so
-# removing the "redundant" one looks safe and passes the suite. Keep both.
+# A value is a placeholder only if BOTH of these hold.
 #
-# TWO GROUPS, matched differently, and the difference is the whole point.
+#   1. It starts like one: a structural marker (PLACEHOLDER_LEAD) or a dictionary word
+#      (PLACEHOLDER_WORD) that is the whole value or is followed by a non-alphanumeric
+#      character. This was once the entire test, and it is a hole on its own: anything
+#      could follow the marker. PASSWORD=$Zq7…, PASSWORD=<Zq7…>, PASSWORD=xxxZq7…,
+#      PASSWORD=example-Zq7… and a quoted note that merely opened with <see below>
+#      before a real assignment all read as clean.
 #
-#   LEAD  — structural markers. A value that *begins* with one is a placeholder however
-#           it continues: <your-key-here>, ${VAR}, xxxx, ***, ….
-#   WORD  — dictionary words. These must be the WHOLE value, or be followed by a
-#           non-alphanumeric character. Matching them as a prefix is a hole: a real
-#           credential that happens to start with one is silently suppressed, and
-#           "starts with a common English word" is not rare in a random key.
-#           API_KEY=nullXk29LpQr7Wm3Zt8Vc1Bh6Ny4 read as clean under the prefix form,
-#           as did values beginning true…, nil…, fake…, none…. Same shape as the two
-#           defects already fixed here: a legitimate value defeating the heuristic
-#           because the check was looser than the thing it was checking for.
+#   2. Nothing in it looks like a credential. It must have fewer than 8 letters and
+#      digits — not counting x's when it holds a run of three or more, so that
+#      xxxxxxxx1234 is still a mask — or
+#      be WORDLIKE: every run of letters and digits is a plain word — lower, UPPER,
+#      Capitalized or camelCase, with at most three digits after it — or a number of
+#      at most four digits. your-api-key-here, <YOUR_API_KEY_2>, $HOME/.ssh/id_rsa and
+#      ${process.env.accessToken} are; a random key changes case mid-run or mixes
+#      digits through its letters, so it is not, wherever it sits: after the marker,
+#      inside <…> or {{…}}, or as the default in ${VAR:-…}.
+#
+# Rule 2 is only applied to a value rule 1 accepted, so on its own it only turns
+# placeholders into findings. Known limits, all of which rule 1 had too: a secret of
+# plain words behind a placeholder opening (none:correcthorsebattery), and one under
+# 8 letters and digits (<x>hunter2).
 
-readonly PLACEHOLDER_LEAD='[<{$[:space:]]|x{3,}|X{3,}|\*{3,}|\.\.\.'
+readonly PLACEHOLDER_LEAD='[<{$]|x{3,}|X{3,}|\*{3,}|\.\.\.'
 readonly PLACEHOLDER_WORD='your|my|some|insert|placeholder|example|changeme|change|redacted|dummy|fake|sample|todo|fixme|none|null|nil|true|false'
+readonly MASK_RUN='x{3,}|X{3,}'
+# Eight letters and digits anywhere in the value; and the same not counting x.
+readonly EIGHT_ALNUM='([A-Za-z0-9][^A-Za-z0-9]*){8}'
+readonly EIGHT_ALNUM_NOT_X='([A-WYZa-wyz0-9]([^A-Za-z0-9]|[xX])*){8}'
+readonly WORDLIKE_SEG='(([A-Z]+|[A-Z]?[a-z]+([A-Z][a-z]+)*)[0-9]{0,3}|[0-9]{1,4})'
+# What separates plain words: anything that is not a letter or digit, and the escapes
+# \n, \r and \t taken whole. An env file inside a JSON string reads
+# KEY=<a>\nOTHER_KEY=<b>, and without the escape as a unit the n glues onto the next
+# name: nOTHER is not a plain word, and a line of placeholders was reported.
+readonly WORDLIKE_SEP='(\\[nrt]|[^A-Za-z0-9])'
+readonly WORDLIKE_RE="^${WORDLIKE_SEP}*(${WORDLIKE_SEG}${WORDLIKE_SEP}+)*${WORDLIKE_SEG}?\$"
 
 # --- patterns --------------------------------------------------------------------
 #
@@ -113,16 +134,25 @@ add_pattern "OpenAI-style API key (sk-)" '(^|[^A-Za-z0-9_-])sk-[A-Za-z0-9_-]{20,
 add_pattern "JWT" 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'
 add_pattern "connection string carrying a password" '[a-zA-Z][a-zA-Z0-9+.-]*://[^[:space:]/:@"]+:[^[:space:]/:@"]+@[^[:space:]/"]+'
 
-# These two carry a value that has to be checked against the placeholder groups, so
+# These two carry a value that has to be checked against the placeholder rules, so
 # they are scanned separately below rather than from the arrays above.
 #
-# Both are case-insensitive and both tolerate a quote between the name and the
-# separator, because the material being scanned is rendered from JSON: a credential
-# appears as "ANTHROPIC_API_KEY": "…" far more often than as ANTHROPIC_API_KEY=….
+# Both are case-insensitive, and both tolerate a quote between the name and the
+# separator, and any number of backslashes before each quote, because the material
+# being scanned is rendered from JSON that itself contains JSON: a credential appears
+# as "API_KEY": "…" or {\"API_KEY\": \"…\"} far more often than as API_KEY=….
+#
+# CRED_WORD is the part of a name that makes it a credential's. It is also how
+# judge() below tells that a value has another assignment inside it.
+readonly CRED_WORD='(KEY|TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|CREDENTIAL)'
+# A name with its separator inside a value, or a name at the very end of one (its
+# separator then follows on the line). A value that merely mentions a credential word,
+# as <your-api-key> does, matches neither.
+readonly NESTED_NAME_RE="$CRED_WORD"'[A-Za-z0-9_.-]*\\*["'"'"']?[[:space:]]*([:=]|$)'
 readonly ASSIGN_LABEL="credential assignment with a real value"
-readonly ASSIGN_RE='[A-Za-z0-9_.-]*(KEY|TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|CREDENTIAL)[A-Za-z0-9_.-]*["'"'"']?[[:space:]]*[:=][[:space:]]*("[^"]*"|'"'"'[^'"'"']*'"'"'|[^[:space:],;}]+)'
+readonly ASSIGN_RE='[A-Za-z0-9_.-]*'"$CRED_WORD"'[A-Za-z0-9_.-]*\\*["'"'"']?[[:space:]]*[:=][[:space:]]*(\\*"[^"]*"|\\*'"'"'[^'"'"']*'"'"'|[^[:space:],;}]+)'
 readonly AUTH_LABEL="Authorization header with a bearer value"
-readonly AUTH_RE='authorization["'"'"']?[[:space:]]*[:=][[:space:]]*["'"'"']?(bearer|basic|token)[[:space:]]+[^[:space:]"'"'"',;}]{8,}'
+readonly AUTH_RE='authorization\\*["'"'"']?[[:space:]]*[:=][[:space:]]*\\*["'"'"']?(bearer|basic|token)[[:space:]]+[^[:space:]"'"'"',;}]{8,}'
 
 # --- scan ------------------------------------------------------------------------
 
@@ -178,14 +208,36 @@ report() {
 #
 # Both value_of_* functions set EXTRACTED; "" means "not a credential".
 EXTRACTED=""
+# Anchored regexes for the trims in value_of_assignment. Each takes a whole run in
+# one match: one character per pass, and ${v##*[! ]}, are both quadratic, and a value
+# padded with 200 KB of spaces took minutes.
+readonly RE_LEAD_WS='^[[:space:]]+'
+readonly RE_LEAD_BS='^\\+'
+readonly RE_BODY_WS='^(.*[^[:space:]])?[[:space:]]*$'
+readonly RE_BODY_BS='^(.*[^\\])?\\*$'
+
 value_of_assignment() {
-  local v="$1"
+  local v="$1" q
   v="${v#*[:=]}"
-  while [ "$v" != "${v#[[:space:]]}" ]; do v="${v#[[:space:]]}"; done
-  v="${v#[\"\']}"
-  v="${v%[\"\']}"
+  [[ "$v" =~ $RE_LEAD_WS ]] && v="${v:${#BASH_REMATCH[0]}}"
+  # The opening quote with any backslashes escaping it, then the closing one likewise.
+  q="$v"
+  [[ "$q" =~ $RE_LEAD_BS ]] && q="${q:${#BASH_REMATCH[0]}}"
+  [ "$q" != "${q#[\"\']}" ] && v="${q#[\"\']}"
+  if [ "$v" != "${v%[\"\']}" ]; then
+    v="${v%[\"\']}"
+    [[ "$v" =~ $RE_BODY_BS ]] && v="${BASH_REMATCH[1]-}"
+  fi
   # A value shorter than 8 characters is not a credential worth stopping a run over.
-  [ "${#v}" -lt 8 ] && v=""
+  # Measured before the trim below, as it always was: KEY="abcdefg " counts as eight.
+  if [ "${#v}" -lt 8 ]; then
+    EXTRACTED=""
+    return 0
+  fi
+  # Whitespace inside the quotes is not part of the value, and is not a placeholder:
+  # KEY=" realsecret" used to be dropped for its leading space.
+  [[ "$v" =~ $RE_LEAD_WS ]] && v="${v:${#BASH_REMATCH[0]}}"
+  [[ "$v" =~ $RE_BODY_WS ]] && v="${BASH_REMATCH[1]-}"
   EXTRACTED="$v"
 }
 
@@ -202,12 +254,26 @@ value_of_authorization() {
 
 # Bash's own =~ instead of a grep subshell, for the same reason as value_of_assignment.
 # nocasematch is set once at the top; the case statements elsewhere compare fixed
-# label and path strings, which case-insensitivity does not affect.
+# label and path strings, which case-insensitivity does not affect. The rules
+# themselves are stated above PLACEHOLDER_LEAD.
 is_placeholder() {
-  [[ "$1" =~ ^($PLACEHOLDER_LEAD) ]] && return 0
-  # Whole value, or the word followed by a separator (changeme, change-me, your-key…) —
-  # never merely a prefix of a longer alphanumeric run.
-  [[ "$1" =~ ^($PLACEHOLDER_WORD)([^A-Za-z0-9]|$) ]] && return 0
+  local v="$1" enough
+  # Rule 1: starts like a placeholder. Case-insensitive, for the dictionary words.
+  [[ "$v" =~ ^($PLACEHOLDER_LEAD) ]] || [[ "$v" =~ ^($PLACEHOLDER_WORD)([^A-Za-z0-9]|$) ]] || return 1
+  # Rule 2: nothing in it looks like a credential. Case is the whole distinction
+  # here, so nocasematch is off until every return — and must come back on: the
+  # Authorization extractor and the dictionary test above both depend on it.
+  shopt -u nocasematch
+  # Regex tests only. Stripping characters with ${v//…/} is quadratic in bash 3.2 —
+  # five minutes on a 32 KB value — and a loop that removed masks one at a time was
+  # no better.
+  enough="$EIGHT_ALNUM"
+  [[ "$v" =~ $MASK_RUN ]] && enough="$EIGHT_ALNUM_NOT_X"
+  if ! [[ "$v" =~ $enough ]] || [[ "$v" =~ $WORDLIKE_RE ]]; then
+    shopt -s nocasematch
+    return 0
+  fi
+  shopt -s nocasematch
   return 1
 }
 
@@ -226,8 +292,8 @@ is_placeholder() {
 # stop the process. Do not refactor them into a function invoked via $( ).
 #
 # Three rules for any loop over grep output:
-#   - Check every grep's status, including the per-line -o pass. If -o finds nothing
-#     on a line the first pass matched, report the line.
+#   - Check every grep's status, including the per-line -o pass in judge(). If -o
+#     finds nothing on a line the first pass matched, report the line.
 #   - Feed the loop with `done < <(printf ...)`. A here-document can need a temp file,
 #     and `printf ... | while` puts die() in a subshell.
 #   - Set a flag inside the loop and call must_have_read after it.
@@ -236,15 +302,146 @@ must_have_read() {
   [ "$1" -eq 1 ] || die "matches were found in $2 but could not be read back while scanning for: $3"
 }
 
+# Shell references are not assignments, and two things here keep them from being read
+# as one. Both walk the text left to right by offset; see judge() for why.
+#
+# normalize_defaults: ${NAME:-default} and ${NAME:=default} (with or without the
+# colon) become ${NAME=default}, into NORMALIZED. As written, the name is followed by
+# a colon, so it matched as NAME, separator, and the value "-default" — which does not
+# open like a placeholder, and ${DB_PASSWORD:-changeme} was reported wherever it stood
+# outside a quoted value of its own. Rewritten, the default is judged as the value it
+# is: changeme is a placeholder, a real-looking default is still reported.
+NORMALIZED=""
+readonly DEFAULT_REF_RE='\$\{[A-Za-z_][A-Za-z0-9_]*:?[-=]'
+normalize_defaults() {
+  local rest="$1" kept="" m before
+  while [[ "$rest" =~ $DEFAULT_REF_RE ]]; do
+    m="${BASH_REMATCH[0]}"
+    before="${rest%%"$m"*}"
+    rest="${rest:$(( ${#before} + ${#m} ))}"
+    m="${m%[-=]}"
+    kept="$kept$before${m%:}="
+  done
+  NORMALIZED="$kept$rest"
+}
+
+# blank_references: $NAME and ${NAME lose the name and keep the sigil, into BLANKED.
+# Used on a value about to be looked at again for a name nested in it, where the
+# name inside a reference is not one. The sigil stays because what follows may be a
+# value in its own right: with it gone, KEY=${NAME:-changeme} left "KEY= :-changeme".
+BLANKED=""
+readonly ANY_REF_RE='\$\{?[A-Za-z_][A-Za-z0-9_]*'
+blank_references() {
+  local rest="$1" kept="" m before
+  while [[ "$rest" =~ $ANY_REF_RE ]]; do
+    m="${BASH_REMATCH[0]}"
+    before="${rest%%"$m"*}"
+    rest="${rest:$(( ${#before} + ${#m} ))}"
+    kept="$kept$before${m%%[A-Za-z_]*}"
+  done
+  BLANKED="$kept$rest"
+}
+
+# Does $1 (a line, or what is left of one) carry a real value? Answers in JUDGED:
+# 0 yes, 1 no, 2 the -o pass found nothing at all.
+#
+# EVERY match is judged, not just the first. Checking only the first and skipping the
+# line on its verdict is fail-open: `DEBUG_SECRET=todo PROD_PASSWORD=Tr0ub4dor3xyz`
+# discarded the whole line because the leading match was a placeholder.
+#
+# A match that is not reported can still be hiding one. grep -o hands back matches
+# that do not overlap, so a name inside another match's value is never matched itself:
+#   "credentials": {"password": "…"}      the value is {"password": and stops there
+#   NOTE_KEY="example PROD_PASSWORD=…"    the value is the whole quoted note
+# In both the outer value is a placeholder and the real one was never looked at. So
+# when an unreported value has a name inside it (NESTED_NAME_RE), the line is judged
+# again from the start of that value: $1 is then the value followed by the rest of the
+# line, and $8 is the value's length.
+#
+# On that second look only a match that BEGINS INSIDE THE VALUE is new. One that
+# begins after it is the next assignment on the line, which the outer loop judges
+# anyway; following it made the chain walk along the line one sibling per step, and
+# 21 placeholders on one line hit the depth limit and were reported. So this is a
+# chain with one step per level of real nesting, and one deeper than 20 is reported
+# rather than followed.
+#
+# Called as a plain command, and it calls itself: die() must reach the main shell.
+JUDGED=1
+judge() {
+  local text="$1" file="$2" lineno="$3" label="$4" re="$5" value_fn="$6" depth="$7" inside="$8"
+  local matches rc m vp before rest read_inner verdict=1 rewritten=0
+
+  # Once, on the whole line; every re-scan is handed text cut from it.
+  if [ "$depth" -eq 0 ] && [[ "$text" =~ $DEFAULT_REF_RE ]]; then
+    normalize_defaults "$text"
+    text="$NORMALIZED"
+    rewritten=1
+  fi
+  matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$re")"
+  rc=$?
+  [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file line $lineno for: $label"
+  if [ -z "$matches" ]; then
+    # Nothing to extract. On a line as it was read that is unexplained (2). On one
+    # rewritten above it is what an empty default looks like: ${API_TOKEN:-} matched
+    # in the file as a name, a colon and "-", and has no value at all once rewritten.
+    JUDGED=2
+    [ "$rewritten" -eq 1 ] && JUDGED=1
+    return 0
+  fi
+  # What is left of the line after the last match followed into. Found by offset,
+  # and only when needed: ${text#*"$m"} is slow on a long line, very slow in bash 3.2.
+  rest="$text"
+  read_inner=0
+  while IFS= read -r m; do
+    read_inner=1
+    [ -z "$m" ] && continue
+    if [ "$depth" -gt 0 ]; then
+      before="${rest%%"$m"*}"
+      [ "${#before}" -ge "$inside" ] && break
+    fi
+    "$value_fn" "$m"
+    if [ -n "$EXTRACTED" ] && ! is_placeholder "$EXTRACTED"; then
+      verdict=0
+      break
+    fi
+    vp="${m#*[:=]}"
+    if [[ "$vp" =~ $CRED_WORD ]]; then
+      blank_references "$vp"
+      if [[ "$BLANKED" =~ $NESTED_NAME_RE ]]; then
+        if [ "$depth" -ge 20 ]; then
+          verdict=0
+          break
+        fi
+        before="${rest%%"$m"*}"
+        rest="${rest:$(( ${#before} + ${#m} ))}"
+        judge "$BLANKED$rest" "$file" "$lineno" "$label" "$re" "$value_fn" "$((depth + 1))" "${#BLANKED}"
+        if [ "$JUDGED" -eq 0 ]; then
+          verdict=0
+          break
+        fi
+      fi
+    fi
+    [ "$depth" -gt 0 ] && break
+  done < <(printf '%s\n' "$matches")
+  must_have_read "$read_inner" "$file" "$label"
+  JUDGED="$verdict"
+}
+
 # The two value-checked scans: find the shape, then reject placeholder values. $4 names
 # the function that pulls the value out of one match. Call this as a plain command,
 # never through $( ) or a pipe — it must be able to die().
 scan_valued() {
-  local file="$1" label="$2" re="$3" value_fn="$4" out rc line lineno text matches m read_any read_inner
+  local file="$1" label="$2" re="$3" value_fn="$4" out more rc line lineno text read_any
 
   out="$(grep -a -n -i -E -e "$re" -- "$file")"
   rc=$?
   [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $label"
+  if [ "$HAS_NUL" -eq 1 ]; then
+    more="$(printf '%s\n' "$STRIPPED" | grep -a -n -i -E -e "$re")"
+    rc=$?
+    [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file without its NUL bytes for: $label"
+    [ -n "$more" ] && out="${out:+$out$NEWLINE}$more"
+  fi
   [ -z "$out" ] && return 0
 
   read_any=0
@@ -253,34 +450,40 @@ scan_valued() {
     [ -z "$line" ] && continue
     lineno="${line%%:*}"
     text="${line#*:}"
-    # EVERY match on the line, not just the first. Checking only the first and skipping
-    # the line on its verdict is fail-open: `DEBUG_SECRET=todo
-    # PROD_PASSWORD=Tr0ub4dor3xyz` discarded the whole line because the leading match
-    # was a placeholder, and reported clean with a real credential still in it.
-    matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$re")"
-    rc=$?
-    [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file line $lineno for: $label"
-    if [ -z "$matches" ]; then
-      report "$label" "$file" "$lineno" "$text"
-      continue
-    fi
-    read_inner=0
-    while IFS= read -r m; do
-      read_inner=1
-      [ -z "$m" ] && continue
-      "$value_fn" "$m"
-      [ -z "$EXTRACTED" ] && continue
-      is_placeholder "$EXTRACTED" && continue
-      report "$label" "$file" "$lineno" "$text"
-      break
-    done < <(printf '%s\n' "$matches")
-    must_have_read "$read_inner" "$file" "$label"
+    judge "$text" "$file" "$lineno" "$label" "$re" "$value_fn" 0 0
+    # 2: the first pass matched this line and the -o pass found nothing on it. A value
+    # that could not be extracted cannot be shown to be a placeholder.
+    case "$JUDGED" in
+      0|2) report "$label" "$file" "$lineno" "$text" ;;
+    esac
   done < <(printf '%s\n' "$out")
   must_have_read "$read_any" "$file" "$label"
 }
 
+# NUL bytes. grep -a treats NUL as one more character, so text with NULs through it
+# matches nothing: a whole UTF-16 file, or a UTF-16 fragment pasted into a UTF-8
+# transcript (both occur), read as clean with a token in plain sight. A file that has
+# any is therefore scanned twice: as it is, and from a copy with the NULs taken out,
+# held in a variable — no temp file — and fed to grep on stdin. Both, because taking
+# a NUL out joins its neighbors, and a NUL can be the only thing separating a token
+# from the text before it. Line numbers are the same in both. The copy is made by a
+# plain assignment so that a tr that fails is seen and stops the scan.
+readonly NEWLINE='
+'
+HAS_NUL=0
+STRIPPED=""
+
 scan_file() {
-  local file="$1" i label re out rc line lineno text read_any
+  local file="$1" i label re out more rc line lineno text read_any bytes kept
+
+  HAS_NUL=0
+  STRIPPED=""
+  bytes="$(wc -c < "$file")" && kept="$(tr -d '\000' < "$file" | wc -c)" && [ "$bytes" -ge "$kept" ] 2>/dev/null \
+    || die "could not count the bytes in $file"
+  if [ "$bytes" -ne "$kept" ]; then
+    STRIPPED="$(tr -d '\000' < "$file")" || die "could not read $file past its NUL bytes"
+    HAS_NUL=1
+  fi
 
   i=0
   while [ "$i" -lt "${#REGEXES[@]}" ]; do
@@ -291,6 +494,12 @@ scan_file() {
     out="$(grep -a -n -E -e "$re" -- "$file")"
     rc=$?
     [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file for: $label"
+    if [ "$HAS_NUL" -eq 1 ]; then
+      more="$(printf '%s\n' "$STRIPPED" | grep -a -n -E -e "$re")"
+      rc=$?
+      [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file without its NUL bytes for: $label"
+      [ -n "$more" ] && out="${out:+$out$NEWLINE}$more"
+    fi
 
     [ -z "$out" ] && continue
     read_any=0
