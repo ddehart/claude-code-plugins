@@ -325,8 +325,8 @@ LC_ALL=en_US.UTF-8 "$SCAN" "$TMP/badutf.txt" >/dev/null 2>&1; rc=$?
 
 # --- 5. Values the scan used to look straight past --------------------------------
 #
-# Every case in this section exited 0 before it was fixed. FAKE is a value the scan
-# reports when it stands alone (the first case pins that), so a 0 below is the shape
+# Every case here that expects 1 exited 0 before it was fixed, apart from the first,
+# which pins that FAKE is reported when it stands alone — so a 0 below is the shape
 # around it defeating the scan, not the value being unremarkable.
 FAKE='Zq7NotARealSecret4Kd9Lm2Xp'
 
@@ -392,6 +392,7 @@ expect_exit "********"                             0 'PASSWORD=********'
 expect_exit "a row of dots"                        0 'PASSWORD=........'
 expect_exit "masked with the last four shown"      0 'API_KEY=************a1b2'
 expect_exit "xxxx-xxxx-xxxx groups"                0 'LICENSE_KEY=xxxx-xxxx-xxxx-xxxx'
+expect_exit "x mask with the last four shown"      0 'CARD_TOKEN=xxxxxxxxxxxx1234'
 expect_exit "your-api-key-here"                    0 'API_KEY=your-api-key-here'
 expect_exit "YOUR_API_KEY_HERE"                    0 'API_KEY=YOUR_API_KEY_HERE'
 expect_exit "bearer \${accessToken}"               0 'Authorization: Bearer ${accessToken}'
@@ -445,6 +446,144 @@ printf 'PROD_PASSWORD=x\0x\0x\0%s\n' "$FAKE" > "$TMP/nul.txt"
 printf 'an ordinary line with a stray \0 byte\nand nothing else\n' > "$TMP/nul.txt"
 "$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "a stray NUL in clean text is still clean" || fail "a stray NUL in clean text must exit 0, got $rc"
+
+# --- 7. What a review of sections 5 and 6 found ------------------------------------
+#
+# The first version of those fixes was attacked by reviewers who had not seen the
+# reasoning behind it. Each case below is something they broke, or a test they showed
+# could not fail.
+
+# grep -o returns matches that do not overlap, so a name inside another match's value
+# is never matched itself. When the outer value is a placeholder the inner one was
+# never judged. The line is now judged again from the start of an unreported value.
+printf '\na credential whose name sits inside another match\n'
+
+PLAIN='correcthorsebatterystaple'
+expect_exit "words-only secret in a quoted note"          1 "A_KEY=\"my B_PASSWORD=$PLAIN\""
+expect_exit "the same, quotes escaped"                    1 "A_KEY=\\\"my B_PASSWORD=$PLAIN\\\""
+expect_exit "the same, in escaped JSON"                   1 "{\\\"api_key\\\": \\\"your password=$PLAIN\\\"}"
+expect_exit "hint string inside a JSON object"            1 "\"credentials\": {\"password_hint\": \"example PASSWORD=$PLAIN\"}"
+expect_exit "JSON held in a JSON string"                  1 "\"credentials\": \"{\\\"password\\\": \\\"$FAKE\\\"}\""
+expect_exit "JSON held in a JSON string, a level down"    1 "\\\"credentials\\\": \\\"{\\\\\\\"password\\\\\\\": \\\\\\\"$FAKE\\\\\\\"}\\\""
+expect_exit "a second key after the swallowed one"        1 "\"SecretString\": \"{\\\"password\\\": \\\"$FAKE\\\", \\\"username\\\": \\\"admin\\\"}\""
+expect_exit "escaped outer key, bare inner key"           1 "{\\\"credentials\\\": {password: \\\"$FAKE\\\"}}"
+expect_exit "YAML flow mapping"                           1 "credentials: {password: $FAKE}"
+expect_exit "object literal"                              1 "const credentials = {password: \"$FAKE\"}"
+expect_exit "three names deep"                            1 "{\"secrets\": {\"credentials\": {\"password\": \"$FAKE\"}}}"
+# Every level here is a placeholder holding the next, so nothing but the depth limit
+# reports the deep one. The shallow one shows the same shape is clean when followed.
+chain=""; i=0; while [ "$i" -lt 30 ]; do chain="${chain}A_KEY=<"; i=$((i + 1)); done
+expect_exit "a chain too deep to follow is reported"      1 "${chain}changeme"
+expect_exit "a short chain of placeholders is clean"      0 "A_KEY=<A_KEY=<A_KEY=<changeme"
+
+# The same re-scan must not turn structure into findings.
+expect_exit "nested counters stay clean"                  0 '"token_usage": {"prompt_tokens": 100, "completion_tokens": 20}'
+expect_exit "a default in \${VAR:-…} is not an assignment" 0 'DB_PASSWORD="${DB_PASSWORD:-changeme}"'
+expect_exit "a placeholder naming another key is clean"   0 'API_KEY="<copy the value of SECRET_KEY: from the console>"'
+expect_exit "nested placeholders stay clean"              0 '{"secrets": {"credentials": {"password": "<redacted>"}}}'
+
+# A closed <…> or {{…}}, or a $name, used to be removed whole before the value was
+# judged, so whatever sat inside was never looked at.
+printf '\na real value inside placeholder punctuation\n'
+
+expect_exit "inside closed <…>"                           1 "PROD_PASSWORD=<$FAKE>"
+expect_exit "inside {{…}}"                                1 "PROD_PASSWORD=\"{{$FAKE}}\""
+expect_exit "bearer inside closed <…>"                    1 "Authorization: Bearer <$FAKE>"
+expect_exit "hex after \$"                                1 'PROD_PASSWORD=$deadbeef0123456789abcdef01234567'
+expect_exit "a word and a year after \$"                  1 'PROD_PASSWORD=$ummertime2024'
+expect_exit "\$-separated groups"                         1 'PROD_PASSWORD=$a1b2$c3d4$e5f6$a7b8$c9d0'
+expect_exit "escaped quotes around closed <…>"            1 "PROD_PASSWORD=\\\"<$FAKE>\\\""
+# No digits anywhere: only the case test can catch this one.
+expect_exit "mixed case with no digits"                   1 'PROD_PASSWORD=example-ZqNotARealSecretKdLmXp'
+
+expect_exit "your-key-123"                                0 'API_KEY=your-key-123'
+expect_exit "example-token-1234"                          0 'API_TOKEN=example-token-1234'
+expect_exit "a path with a digit under \$HOME"            0 'KEY_PATH="$HOME/.config/app2/token"'
+expect_exit "\${VAR:-default123}"                         0 'API_KEY=${API_KEY:-default123}'
+expect_exit "\${camelCase2}"                              0 'PASSWORD=${databasePassword2}'
+expect_exit "unclosed <paste-your-32-char-key"            0 'API_KEY=<paste-your-32-char-key'
+expect_exit "<your-api-key-v2>"                           0 'API_KEY=<your-api-key-v2>'
+expect_exit "escaped quotes around \$VAR"                 0 'DB_PASSWORD=\"$DB_PASSWORD\"'
+
+# The placeholder test switches case-insensitive matching off and must switch it back
+# on: the Authorization extractor and the dictionary words depend on it. Every other
+# fixture is one line, so none of them could see state carried from one match to the
+# next.
+printf '\nstate carried from one match to the next\n'
+
+printf 'API_KEY=<your-key-here>\nAuthorization: Bearer %s\n' "$FAKE" > "$TMP/two.txt"
+"$SCAN" "$TMP/two.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a bearer value after a placeholder is still found" || fail "a bearer value after a placeholder must exit 1, got $rc"
+printf 'API_KEY=<your-key-here>\nAPI_SECRET=CHANGEME-PLEASE-NOW\n' > "$TMP/two.txt"
+"$SCAN" "$TMP/two.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "an upper-case dummy word after a placeholder is still one" || fail "CHANGEME after a placeholder must exit 0, got $rc"
+
+# Taking NULs out joins their neighbors. A file with NULs is scanned both ways.
+printf '\nmore text with NUL bytes\n'
+
+printf 'tool\0--key\0sk-%s\0--host\0x\n' "$FAKE" > "$TMP/nul.txt"
+"$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a key set off only by NUL bytes is found" || fail "a key between NUL bytes must exit 1, got $rc"
+
+# The two below go through the value-checked scan; the token cases in section 6 do not.
+utf16 le "PROD_PASSWORD=$FAKE" > "$TMP/utf16.txt"
+"$SCAN" "$TMP/utf16.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "an assignment in a UTF-16 file is found" || fail "an assignment in a UTF-16 file must exit 1, got $rc"
+utf16 be "Authorization: Bearer $FAKE" > "$TMP/utf16.txt"
+"$SCAN" "$TMP/utf16.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 1 ] && pass "a bearer value in a UTF-16 file is found" || fail "a bearer value in a UTF-16 file must exit 1, got $rc"
+
+# tr and wc are needed now, and each way they can fail must stop the scan.
+printf '\ntr and wc\n'
+
+printf 'nothing here\n' > "$TMP/plain.txt"
+printf 'a stray \0 byte\n' > "$TMP/nul.txt"
+for tool in tr wc; do
+  NOTOOL="$TMP/no-$tool"
+  mkdir -p "$NOTOOL"
+  for keep in grep tr wc; do
+    [ "$keep" = "$tool" ] || ln -s "$(command -v "$keep")" "$NOTOOL/$keep"
+  done
+  PATH="$NOTOOL" "$(command -v bash)" "$SCAN" "$TMP/plain.txt" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 2 ] && pass "no $tool on PATH exits 2" || fail "no $tool on PATH must exit 2, got $rc"
+done
+
+REAL_TR="$(command -v tr)"
+printf '#!/usr/bin/env bash\nexit 1\n' > "$SHIM/tr"
+chmod +x "$SHIM/tr"
+PATH="$SHIM:$PATH" "$SCAN" "$TMP/plain.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "a tr that fails exits 2" || fail "a tr that fails must exit 2, got $rc"
+# Works for the byte count, fails when asked for the NUL-free copy.
+printf '#!/usr/bin/env bash\nif [ -e "%s/tr-called" ]; then exit 1; fi\n: > "%s/tr-called"\nexec "%s" "$@"\n' "$TMP" "$TMP" "$REAL_TR" > "$SHIM/tr"
+PATH="$SHIM:$PATH" "$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "a tr that fails on the NUL-free copy exits 2" || fail "a tr failing on its second call must exit 2, got $rc"
+rm -f "$SHIM/tr" "$TMP/tr-called"
+printf '#!/usr/bin/env bash\nexit 1\n' > "$SHIM/wc"
+chmod +x "$SHIM/wc"
+PATH="$SHIM:$PATH" "$SCAN" "$TMP/nul.txt" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "a wc that fails exits 2" || fail "a wc that fails must exit 2, got $rc"
+rm -f "$SHIM/wc"
+
+# Long values. Each of these took from 20 seconds to several minutes, which a caller
+# reads as a hung gate. The bound is loose on purpose: they finish in about a second.
+printf '\nlong values finish\n'
+
+pad="$(head -c 200000 /dev/zero | tr '\0' ' ')"
+masks=""; i=0; while [ "$i" -lt 8000 ]; do masks="${masks}xxx "; i=$((i + 1)); done
+for target in "8000 masks in one value:0:NOTE_KEY=\"$masks\"" \
+              "200 KB of spaces before the value:1:PROD_PASSWORD=\"$pad$FAKE\"" \
+              "200 KB of spaces after the value:1:PROD_PASSWORD=\"$FAKE$pad\""; do
+  name="${target%%:*}"; rest="${target#*:}"; want="${rest%%:*}"
+  printf '%s\n' "${rest#*:}" > "$TMP/long.txt"
+  started=$SECONDS
+  "$SCAN" "$TMP/long.txt" >/dev/null 2>&1; rc=$?
+  took=$((SECONDS - started))
+  if [ "$rc" -eq "$want" ] && [ "$took" -lt 30 ]; then
+    pass "$name"
+  else
+    fail "$name (wanted exit $want in under 30 s, got $rc in $took s)"
+  fi
+done
 
 # --- result -----------------------------------------------------------------------
 
