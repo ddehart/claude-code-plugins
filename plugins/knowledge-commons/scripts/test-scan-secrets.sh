@@ -45,8 +45,13 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 failures=0
+passes=0
+skips=0
 
-pass() { printf '  ok    — %s\n' "$1"; }
+pass() { printf '  ok    — %s\n' "$1"; passes=$((passes + 1)); }
+# A case that could not be exercised on this machine. Counted and printed in the
+# closing line, so a run with skipped cases cannot be read as full coverage.
+skip() { printf '  skip  — %s\n' "$1"; skips=$((skips + 1)); }
 fail() { printf '  FAIL  — %s\n' "$1"; failures=$((failures + 1)); }
 
 [ -x "$SCAN" ] || { printf 'scan-secrets.sh is not executable at %s\n' "$SCAN" >&2; exit 1; }
@@ -212,11 +217,11 @@ printf 'DB_PASSWORD=Tr0ub4dor3notaplaceholder\n' > "$TMP/bare-assign.txt"
 printf 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz\n' > "$TMP/bare-auth.txt"
 
 grep -E -e "$BROKEN_RE" -- "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
+BROKEN="$TMP/broken-scan.sh"
+: > "$BROKEN"; chmod +x "$BROKEN"
 if [ "$rc" -gt 1 ]; then
-  BROKEN="$TMP/broken-scan.sh"
   sed "s|add_pattern \"Google API key (AIza)\".*|add_pattern \"Deliberately broken\" '$BROKEN_RE'|" \
     "$SCAN" > "$BROKEN"
-  chmod +x "$BROKEN"
   if grep -q 'Deliberately broken' "$BROKEN"; then
     "$BROKEN" "$TMP/bare-secret.txt" >/dev/null 2>&1; rc=$?
     if [ "$rc" -eq 2 ]; then
@@ -262,27 +267,54 @@ PATH="$SHIM:$PATH" "$SCAN" "$TMP/bare-auth.txt" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "grep failing on the per-line pass exits 2 (authorization)" \
   || fail "grep failing on the per-line pass must exit 2, got $rc (authorization)"
 
-# Matches that were found and then never read. The scanner feeds each grep result to a
-# loop through a here-document, and bash backs a large one with a temp file. If that
-# file cannot be written (a full or read-only temp directory) the loop is skipped with
-# an error on stderr and the script carries on: every match in that result is lost, and
-# the run used to end "clean" with exit 0.
+# Matches that were found and then never read. The scanner used to feed each grep
+# result to a loop through a here-document, and bash backs a large one with a temp
+# file. If that file cannot be written (a full or read-only temp directory) the loop is
+# skipped with an error on stderr and the script carries on: every match in that result
+# was lost, and the run ended "clean" with exit 0. The loops read from a pipe now, so
+# with no writable temp file the scan must simply still work and report the secret.
 #
-# Simulated with a zero file-size limit and SIGXFSZ ignored, so the temp-file write
-# fails instead of killing the shell. Each fixture line is far longer than a pipe
-# buffer, which is what makes bash reach for a temp file — and is also what a rendered
-# transcript looks like. Exit 1 here means the limit did not bite on this platform and
-# the scan simply worked; that is reported as a skip, not a pass. Only 0 is the defect.
+# Simulated with a zero file-size limit and SIGXFSZ ignored, so a temp-file write fails
+# instead of killing the shell. Each fixture line is far longer than a pipe buffer,
+# which is what makes bash reach for a temp file — and is also what a rendered
+# transcript looks like. The simulation is checked first, with a here-document of the
+# same size in this shell: where it does not bite, the cases are SKIPPED, because a
+# pass there would prove nothing.
 long_tail="$(head -c 200000 /dev/zero | tr '\0' 'a')"
+( trap '' XFSZ; ulimit -f 0; cat >/dev/null <<PROBE
+$long_tail
+PROBE
+) 2>/dev/null; probe_rc=$?
 for target in "prefix pattern:bare-secret.txt" "assignment:bare-assign.txt" "authorization:bare-auth.txt"; do
   name="${target%%:*}"; fixture="${target#*:}"
+  if [ "$probe_rc" -eq 0 ]; then
+    skip "no way to simulate an unwritable temp file here, so this is untested ($name)"
+    continue
+  fi
   printf '%s %s\n' "$(cat "$TMP/$fixture")" "$long_tail" > "$TMP/long.txt"
   ( trap '' XFSZ; ulimit -f 0; "$SCAN" "$TMP/long.txt" >/dev/null 2>&1 ); rc=$?
-  case "$rc" in
-    2) pass "matches that cannot be read back exit 2 ($name)" ;;
-    1) printf '  skip  — could not simulate an unwritable temp file here (%s)\n' "$name" ;;
-    *) fail "matches that cannot be read back must exit 2, got $rc ($name)" ;;
-  esac
+  [ "$rc" -eq 1 ] && pass "with no writable temp file the secret is still reported ($name)" \
+    || fail "with no writable temp file the scan must still exit 1, got $rc ($name)"
+done
+
+# The backstop behind that: a loop that had matches to read and never ran must stop the
+# scan. Nothing in normal operation makes a pipe fail on demand, so each loop's input is
+# rewritten to a file that does not exist — bash reports the failed redirection, skips
+# the loop, and carries on, which is the exact shape the backstop exists for. The outer
+# loops (one per scan) and the inner per-match loops are broken separately, so each
+# guard is reached on its own.
+for target in 'outer:"$out":bare-secret.txt:3' 'outer:"$out":bare-assign.txt:3' 'outer:"$out":bare-auth.txt:3' \
+              'inner:"$matches":bare-assign.txt:2' 'inner:"$matches":bare-auth.txt:2'; do
+  IFS=: read -r which var fixture want_n <<<"$target"
+  sed "s|done < <(printf '%s\\\\n' $var)|done < \"$TMP/no-such-input\"|" "$SCAN" > "$BROKEN"
+  n="$(grep -c "done < \"$TMP/no-such-input\"" "$BROKEN")"
+  if [ "$n" -ne "$want_n" ]; then
+    fail "could not break the $which loops ($n rewritten, wanted $want_n) — the lines this test rewrites have moved"
+    continue
+  fi
+  "$BROKEN" "$TMP/$fixture" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 2 ] && pass "an $which loop that never ran exits 2 ($fixture)" \
+    || fail "an $which loop that never ran must exit 2, got $rc ($fixture)"
 done
 
 # --- 4. Bytes that are not text ---------------------------------------------------
@@ -301,9 +333,6 @@ LC_ALL=en_US.UTF-8 "$SCAN" "$TMP/badutf.txt" >/dev/null 2>&1; rc=$?
 # --- result -----------------------------------------------------------------------
 
 printf '\n'
-if [ "$failures" -eq 0 ]; then
-  printf 'all cases passed.\n'
-  exit 0
-fi
-printf '%d case(s) failed.\n' "$failures"
+printf '%d passed, %d failed, %d skipped.\n' "$passes" "$failures" "$skips"
+[ "$failures" -eq 0 ] && exit 0
 exit 1

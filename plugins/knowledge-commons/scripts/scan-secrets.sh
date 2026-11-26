@@ -223,15 +223,22 @@ is_placeholder() {
 #   pass matched, the line is reported, because a value that could not be extracted
 #   cannot be shown to be a placeholder.
 #
-#   The here-documents. Each loop reads grep's output from a here-document, and bash
-#   backs a large one with a temp file. If that file cannot be written (a full or
-#   read-only temp directory) bash prints an error, skips the loop, and carries on, so
-#   every match in that result vanished and the run ended clean. Each loop therefore
-#   sets a flag on its first pass, and must_have_read() stops the scan if a loop that
-#   had input never ran. Any new loop over grep output needs the same pair of lines.
+#   Reading the matches back. Each loop used to read grep's output from a
+#   here-document, and bash backs a large one with a temp file. If that file could not
+#   be written (a full or read-only temp directory) bash printed an error, skipped the
+#   loop, and carried on, so every match in that result vanished and the run ended
+#   clean. The loops now read from process substitution, which is a pipe: there is no
+#   temp file to fail. It sits on the INPUT side of `while`, so the loop body still runs
+#   in the main shell and die() still stops the process — unlike `printf … | while`,
+#   which would put the body in a subshell and reopen the hole described above.
+#
+#   A backstop stays behind it. Each loop sets a flag on its first pass, and
+#   must_have_read() stops the scan if a loop that had input never ran, whatever the
+#   reason (a pipe or a fork that could not be had). Any new loop over grep output
+#   needs the same pair of lines.
 
 must_have_read() {
-  [ "$1" -eq 1 ] || die "matches were found in $2 but could not be read back (is the temp directory writable?) while scanning for: $3"
+  [ "$1" -eq 1 ] || die "matches were found in $2 but could not be read back while scanning for: $3"
 }
 
 scan_file() {
@@ -255,9 +262,7 @@ scan_file() {
       lineno="${line%%:*}"
       text="${line#*:}"
       report "$label" "$file" "$lineno" "$text"
-    done <<EOF
-$out
-EOF
+    done < <(printf '%s\n' "$out")
     must_have_read "$read_any" "$file" "$label"
   done
 
@@ -294,13 +299,9 @@ EOF
         [ "${#value}" -lt 8 ] && continue
         report "$ASSIGN_LABEL" "$file" "$lineno" "$text"
         break
-      done <<INNER
-$matches
-INNER
+      done < <(printf '%s\n' "$matches")
       must_have_read "$read_inner" "$file" "$ASSIGN_LABEL"
-    done <<EOF
-$out
-EOF
+    done < <(printf '%s\n' "$out")
     must_have_read "$read_any" "$file" "$ASSIGN_LABEL"
   fi
 
@@ -339,13 +340,9 @@ EOF
         is_placeholder "$value" && continue
         report "$AUTH_LABEL" "$file" "$lineno" "$text"
         break
-      done <<INNER
-$matches
-INNER
+      done < <(printf '%s\n' "$matches")
       must_have_read "$read_inner" "$file" "$AUTH_LABEL"
-    done <<EOF
-$out
-EOF
+    done < <(printf '%s\n' "$out")
     must_have_read "$read_any" "$file" "$AUTH_LABEL"
   fi
 
