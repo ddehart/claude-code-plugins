@@ -585,6 +585,52 @@ for target in "8000 masks in one value:0:NOTE_KEY=\"$masks\"" \
   fi
 done
 
+# --- 8. Placeholders the re-scan reported ----------------------------------------
+#
+# A second review found the fix in section 7 over-reporting. Each expect-0 case below
+# exited 1 before it was fixed.
+
+# The re-scan followed the NEXT assignment on the line as if it were nested in the
+# value, one per step, so the 21st placeholder on a line hit the depth limit.
+printf '\nmany placeholders on one line\n'
+
+sibling='"api_key": "<your-api-key>"'
+line=""; i=0; while [ "$i" -lt 21 ]; do line="$line${line:+, }$sibling"; i=$((i + 1)); done
+expect_exit "21 quoted placeholders"                      0 "$line"
+while [ "$i" -lt 199 ]; do line="$line, $sibling"; i=$((i + 1)); done
+expect_exit "199 quoted placeholders"                     0 "$line"
+expect_exit "a real value as the 200th"                   1 "$line, \"api_key\": \"$FAKE\""
+line=""; i=0; while [ "$i" -lt 21 ]; do line="$line${line:+ }SERVICE${i}_TOKEN=\$SERVICE${i}_TOKEN"; i=$((i + 1)); done
+expect_exit "21 references to their own name"             0 "$line"
+# Here each value ENDS in a credential word, so each one is looked at again; the
+# next assignment is then the first thing found, and it must not count as nested.
+line=""; i=0; while [ "$i" -lt 21 ]; do line="$line${line:+, }API_KEY=your-api-key"; i=$((i + 1)); done
+expect_exit "21 values that end in a credential word"     0 "$line"
+expect_exit "a real value after those"                    1 "$line, API_KEY=$FAKE"
+# A name at the very END of a value has its separator in the rest of the line, so the
+# re-scan must still reach it there.
+expect_exit "nested name whose separator follows a space" 1 "{\"credentials\": {\"password\" : \"$FAKE\"}}"
+
+# An env file inside a JSON string: entries joined by a literal backslash-n. The n
+# glued onto the next name, and nSECRET is not a plain word.
+printf '\nplaceholders joined by an escaped newline\n'
+
+expect_exit "three placeholders, upper-case names"        0 'API_KEY=<your-api-key>\nSECRET_TOKEN=<your-token>\nDB_PASSWORD=changeme'
+expect_exit "the same inside a JSON string"               0 '{"content": "API_KEY=<your-api-key>\nSECRET_TOKEN=<your-token>\nDB_PASSWORD=changeme"}'
+expect_exit "joined by \\r\\n and \\t"                     0 'API_KEY=<your-api-key>\r\nSECRET_TOKEN=<your-token>\tDB_PASSWORD=changeme'
+expect_exit "a real value in the middle"                  1 "API_KEY=<your-api-key>\\nSECRET_TOKEN=$FAKE\\nDB_PASSWORD=changeme"
+expect_exit "a real value at the end"                     1 "API_KEY=<your-api-key>\\nSECRET_TOKEN=<your-token>\\nDB_PASSWORD=$FAKE"
+expect_exit "a real value after one placeholder"          1 "DB_PASSWORD=<your-key>\\nPROD_PASSWORD=$FAKE"
+# Not a placeholder to begin with, so the escapes in it change nothing: reported, as
+# it always was.
+expect_exit "a Windows path is still reported"            1 'KEY_FILE=C:\new\temp\rsa'
+
+# The 8-character floor is measured before whitespace is trimmed, as it always was.
+printf '\nthe length floor and padding\n'
+
+expect_exit "seven characters and a trailing space"       1 'KEY="abcdefg "'
+expect_exit "seven characters, no padding"                0 'KEY="abcdefg"'
+
 # --- result -----------------------------------------------------------------------
 
 printf '\n'

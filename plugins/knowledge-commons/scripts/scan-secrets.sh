@@ -98,7 +98,12 @@ readonly MASK_RUN='x{3,}|X{3,}'
 readonly EIGHT_ALNUM='([A-Za-z0-9][^A-Za-z0-9]*){8}'
 readonly EIGHT_ALNUM_NOT_X='([A-WYZa-wyz0-9]([^A-Za-z0-9]|[xX])*){8}'
 readonly WORDLIKE_SEG='(([A-Z]+|[A-Z]?[a-z]+([A-Z][a-z]+)*)[0-9]{0,3}|[0-9]{1,4})'
-readonly WORDLIKE_RE="^[^A-Za-z0-9]*(${WORDLIKE_SEG}[^A-Za-z0-9]+)*${WORDLIKE_SEG}?\$"
+# What separates plain words: anything that is not a letter or digit, and the escapes
+# \n, \r and \t taken whole. An env file inside a JSON string reads
+# KEY=<a>\nOTHER_KEY=<b>, and without the escape as a unit the n glues onto the next
+# name: nOTHER is not a plain word, and a line of placeholders was reported.
+readonly WORDLIKE_SEP='(\\[nrt]|[^A-Za-z0-9])'
+readonly WORDLIKE_RE="^${WORDLIKE_SEP}*(${WORDLIKE_SEG}${WORDLIKE_SEP}+)*${WORDLIKE_SEG}?\$"
 
 # --- patterns --------------------------------------------------------------------
 #
@@ -140,6 +145,10 @@ add_pattern "connection string carrying a password" '[a-zA-Z][a-zA-Z0-9+.-]*://[
 # CRED_WORD is the part of a name that makes it a credential's. It is also how
 # judge() below tells that a value has another assignment inside it.
 readonly CRED_WORD='(KEY|TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|CREDENTIAL)'
+# A name with its separator inside a value, or a name at the very end of one (its
+# separator then follows on the line). A value that merely mentions a credential word,
+# as <your-api-key> does, matches neither.
+readonly NESTED_NAME_RE="$CRED_WORD"'[A-Za-z0-9_.-]*\\*["'"'"']?[[:space:]]*([:=]|$)'
 readonly ASSIGN_LABEL="credential assignment with a real value"
 readonly ASSIGN_RE='[A-Za-z0-9_.-]*'"$CRED_WORD"'[A-Za-z0-9_.-]*\\*["'"'"']?[[:space:]]*[:=][[:space:]]*(\\*"[^"]*"|\\*'"'"'[^'"'"']*'"'"'|[^[:space:],;}]+)'
 readonly AUTH_LABEL="Authorization header with a bearer value"
@@ -219,12 +228,16 @@ value_of_assignment() {
     v="${v%[\"\']}"
     [[ "$v" =~ $RE_BODY_BS ]] && v="${BASH_REMATCH[1]-}"
   fi
+  # A value shorter than 8 characters is not a credential worth stopping a run over.
+  # Measured before the trim below, as it always was: KEY="abcdefg " counts as eight.
+  if [ "${#v}" -lt 8 ]; then
+    EXTRACTED=""
+    return 0
+  fi
   # Whitespace inside the quotes is not part of the value, and is not a placeholder:
   # KEY=" realsecret" used to be dropped for its leading space.
   [[ "$v" =~ $RE_LEAD_WS ]] && v="${v:${#BASH_REMATCH[0]}}"
   [[ "$v" =~ $RE_BODY_WS ]] && v="${BASH_REMATCH[1]-}"
-  # A value shorter than 8 characters is not a credential worth stopping a run over.
-  [ "${#v}" -lt 8 ] && v=""
   EXTRACTED="$v"
 }
 
@@ -316,16 +329,22 @@ blank_references() {
 #   "credentials": {"password": "…"}      the value is {"password": and stops there
 #   NOTE_KEY="example PROD_PASSWORD=…"    the value is the whole quoted note
 # In both the outer value is a placeholder and the real one was never looked at. So
-# when an unreported value contains a credential word, the line is judged again from
-# the start of that value. On that second look only the first match is new — the rest
-# are the outer loop's — which keeps this a chain, one step per nested name, and a
-# chain deeper than 20 is reported rather than followed.
+# when an unreported value has a name inside it (NESTED_NAME_RE), the line is judged
+# again from the start of that value: $1 is then the value followed by the rest of the
+# line, and $8 is the value's length.
+#
+# On that second look only a match that BEGINS INSIDE THE VALUE is new. One that
+# begins after it is the next assignment on the line, which the outer loop judges
+# anyway; following it made the chain walk along the line one sibling per step, and
+# 21 placeholders on one line hit the depth limit and were reported. So this is a
+# chain with one step per level of real nesting, and one deeper than 20 is reported
+# rather than followed.
 #
 # Called as a plain command, and it calls itself: die() must reach the main shell.
 JUDGED=1
 judge() {
-  local text="$1" file="$2" lineno="$3" label="$4" re="$5" value_fn="$6" depth="$7"
-  local matches rc m vp before read_inner verdict=1
+  local text="$1" file="$2" lineno="$3" label="$4" re="$5" value_fn="$6" depth="$7" inside="$8"
+  local matches rc m vp before rest read_inner verdict=1
 
   matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$re")"
   rc=$?
@@ -334,10 +353,17 @@ judge() {
     JUDGED=2
     return 0
   fi
+  # What is left of the line after the last match followed into. Found by offset,
+  # and only when needed: ${text#*"$m"} is slow on a long line, very slow in bash 3.2.
+  rest="$text"
   read_inner=0
   while IFS= read -r m; do
     read_inner=1
     [ -z "$m" ] && continue
+    if [ "$depth" -gt 0 ]; then
+      before="${rest%%"$m"*}"
+      [ "${#before}" -ge "$inside" ] && break
+    fi
     "$value_fn" "$m"
     if [ -n "$EXTRACTED" ] && ! is_placeholder "$EXTRACTED"; then
       verdict=0
@@ -345,18 +371,19 @@ judge() {
     fi
     vp="${m#*[:=]}"
     if [[ "$vp" =~ $CRED_WORD ]]; then
-      if [ "$depth" -ge 20 ]; then
-        verdict=0
-        break
-      fi
       blank_references "$vp"
-      # What follows this match on the line, by offset: ${text#*"$m"} is slow on a
-      # long line, and very slow in bash 3.2.
-      before="${text%%"$m"*}"
-      judge "$BLANKED${text:$(( ${#before} + ${#m} ))}" "$file" "$lineno" "$label" "$re" "$value_fn" "$((depth + 1))"
-      if [ "$JUDGED" -eq 0 ]; then
-        verdict=0
-        break
+      if [[ "$BLANKED" =~ $NESTED_NAME_RE ]]; then
+        if [ "$depth" -ge 20 ]; then
+          verdict=0
+          break
+        fi
+        before="${rest%%"$m"*}"
+        rest="${rest:$(( ${#before} + ${#m} ))}"
+        judge "$BLANKED$rest" "$file" "$lineno" "$label" "$re" "$value_fn" "$((depth + 1))" "${#BLANKED}"
+        if [ "$JUDGED" -eq 0 ]; then
+          verdict=0
+          break
+        fi
       fi
     fi
     [ "$depth" -gt 0 ] && break
@@ -388,7 +415,7 @@ scan_valued() {
     [ -z "$line" ] && continue
     lineno="${line%%:*}"
     text="${line#*:}"
-    judge "$text" "$file" "$lineno" "$label" "$re" "$value_fn" 0
+    judge "$text" "$file" "$lineno" "$label" "$re" "$value_fn" 0 0
     # 2: the first pass matched this line and the -o pass found nothing on it. A value
     # that could not be extracted cannot be shown to be a placeholder.
     case "$JUDGED" in
