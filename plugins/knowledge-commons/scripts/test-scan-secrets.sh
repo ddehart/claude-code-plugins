@@ -631,6 +631,46 @@ printf '\nthe length floor and padding\n'
 expect_exit "seven characters and a trailing space"       1 'KEY="abcdefg "'
 expect_exit "seven characters, no padding"                0 'KEY="abcdefg"'
 
+# --- 9. Shell defaults ------------------------------------------------------------
+#
+# ${NAME:-default} reads as NAME, a colon, and the value "-default", which does not
+# open like a placeholder. Under a key of its own it was hidden inside that key's
+# value; after an escaped newline, or under a key that is not a credential's, it was
+# reported. The default is now judged as the value it is.
+printf '\nshell defaults\n'
+
+for first in '<your-api-key>' '$GITHUB_TOKEN' 'changeme' 'example' 'xxxxxxxxxxxx' '********' \
+             'your-password-here' '<token>' 'none' 'my-secret-value'; do
+  expect_exit "a default after $first"                    0 "API_KEY=$first\\nDB_PASSWORD=\${DB_PASSWORD:-changeme}"
+done
+
+line=""; i=0
+while [ "$i" -lt 30 ]; do
+  case "$i" in
+    7)  entry="DB_PASSWORD=\${DB_PASSWORD:-changeme}" ;;
+    19) entry="REDIS_TOKEN=\${REDIS_TOKEN:=example-token}" ;;
+    *)  entry="SERVICE${i}_KEY=<your-key-$i>" ;;
+  esac
+  line="$line${line:+\\n}$entry"
+  i=$((i + 1))
+done
+expect_exit "30 entries joined by \\n, two with defaults" 0 "$line"
+expect_exit "the same list with one real value"           1 "$line\\nPROD_PASSWORD=$FAKE"
+
+expect_exit "a default under a key that is not a credential's" 0 '{"comment": "${DB_PASSWORD:-changeme}"}'
+expect_exit "the same, escaped"                           0 '{\"comment\": \"${DB_PASSWORD:-changeme}\"}'
+expect_exit "an empty default"                            0 'run with ${API_TOKEN:-} unset'
+
+# A default is a value. A real-looking one is a credential wherever it stands.
+expect_exit "a real default under its own key"            1 'DB_PASSWORD=${DB_PASSWORD:-Zq7xR2mK9pLw4TnB8vYc}'
+expect_exit "a real default under another key"            1 '{"comment": "${DB_PASSWORD:-Zq7xR2mK9pLw4TnB8vYc}"}'
+expect_exit "a real default after an escaped newline"     1 'API_KEY=<your-api-key>\nDB_PASSWORD=${DB_PASSWORD:-Zq7xR2mK9pLw4TnB8vYc}'
+expect_exit "a real assignment after a reference"         1 "API_TOKEN=\${API_TOKEN:-changeme} PROD_PASSWORD=$FAKE"
+# $name = value is an assignment in PowerShell and PHP. Only the braced default form
+# is rewritten, so these are untouched.
+expect_exit "\$name = value is still an assignment"       1 "\$apiKey = \"$FAKE\""
+expect_exit "\$env:NAME = value is still an assignment"   1 "\$env:API_KEY = \"$FAKE\""
+
 # --- result -----------------------------------------------------------------------
 
 printf '\n'

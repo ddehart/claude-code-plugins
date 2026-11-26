@@ -302,17 +302,42 @@ must_have_read() {
   [ "$1" -eq 1 ] || die "matches were found in $2 but could not be read back while scanning for: $3"
 }
 
-# $NAME and ${NAME with the name blanked out, into BLANKED. A reference is not an
-# assignment: without this, the re-scan in judge() reads "${DB_PASSWORD:-changeme}"
-# as DB_PASSWORD, a separator, and a value.
-BLANKED=""
-blank_references() {
+# Shell references are not assignments, and two things here keep them from being read
+# as one. Both walk the text left to right by offset; see judge() for why.
+#
+# normalize_defaults: ${NAME:-default} and ${NAME:=default} (with or without the
+# colon) become ${NAME=default}, into NORMALIZED. As written, the name is followed by
+# a colon, so it matched as NAME, separator, and the value "-default" — which does not
+# open like a placeholder, and ${DB_PASSWORD:-changeme} was reported wherever it stood
+# outside a quoted value of its own. Rewritten, the default is judged as the value it
+# is: changeme is a placeholder, a real-looking default is still reported.
+NORMALIZED=""
+readonly DEFAULT_REF_RE='\$\{[A-Za-z_][A-Za-z0-9_]*:?[-=]'
+normalize_defaults() {
   local rest="$1" kept="" m before
-  while [[ "$rest" =~ \$\{?[A-Za-z_][A-Za-z0-9_]* ]]; do
+  while [[ "$rest" =~ $DEFAULT_REF_RE ]]; do
     m="${BASH_REMATCH[0]}"
     before="${rest%%"$m"*}"
-    kept="$kept$before "
     rest="${rest:$(( ${#before} + ${#m} ))}"
+    m="${m%[-=]}"
+    kept="$kept$before${m%:}="
+  done
+  NORMALIZED="$kept$rest"
+}
+
+# blank_references: $NAME and ${NAME lose the name and keep the sigil, into BLANKED.
+# Used on a value about to be looked at again for a name nested in it, where the
+# name inside a reference is not one. The sigil stays because what follows may be a
+# value in its own right: with it gone, KEY=${NAME:-changeme} left "KEY= :-changeme".
+BLANKED=""
+readonly ANY_REF_RE='\$\{?[A-Za-z_][A-Za-z0-9_]*'
+blank_references() {
+  local rest="$1" kept="" m before
+  while [[ "$rest" =~ $ANY_REF_RE ]]; do
+    m="${BASH_REMATCH[0]}"
+    before="${rest%%"$m"*}"
+    rest="${rest:$(( ${#before} + ${#m} ))}"
+    kept="$kept$before${m%%[A-Za-z_]*}"
   done
   BLANKED="$kept$rest"
 }
@@ -344,13 +369,23 @@ blank_references() {
 JUDGED=1
 judge() {
   local text="$1" file="$2" lineno="$3" label="$4" re="$5" value_fn="$6" depth="$7" inside="$8"
-  local matches rc m vp before rest read_inner verdict=1
+  local matches rc m vp before rest read_inner verdict=1 rewritten=0
 
+  # Once, on the whole line; every re-scan is handed text cut from it.
+  if [ "$depth" -eq 0 ] && [[ "$text" =~ $DEFAULT_REF_RE ]]; then
+    normalize_defaults "$text"
+    text="$NORMALIZED"
+    rewritten=1
+  fi
   matches="$(printf '%s' "$text" | grep -a -o -i -E -e "$re")"
   rc=$?
   [ "$rc" -gt 1 ] && die "grep failed (exit $rc) while scanning $file line $lineno for: $label"
   if [ -z "$matches" ]; then
+    # Nothing to extract. On a line as it was read that is unexplained (2). On one
+    # rewritten above it is what an empty default looks like: ${API_TOKEN:-} matched
+    # in the file as a name, a colon and "-", and has no value at all once rewritten.
     JUDGED=2
+    [ "$rewritten" -eq 1 ] && JUDGED=1
     return 0
   fi
   # What is left of the line after the last match followed into. Found by offset,
