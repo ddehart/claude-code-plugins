@@ -279,8 +279,14 @@ assumption against the wrong region.
 
 **Filenames are lowercase natural language, because the filename is the link target.** A note titled
 "Thin Before Petal Fall Not After" would force every wikilink to it to reproduce that exact casing;
-lowercase avoids the friction entirely. Spaces are fine in filenames — `[[thin before petal fall not
-after]]` is a valid, readable wikilink.
+lowercase avoids the friction entirely. Spaces are fine in filenames —
+`[[thin before petal fall not after]]` is a valid, readable wikilink.
+
+**A wikilink stays on one line**, in body prose and in frontmatter alike; let the line run long instead
+of wrapping inside a link. The plugin's `knowledge-commons:check-wikilinks` skill fails on any link
+that breaks this, and the generated `process` and `knowledge-graph` skills run it before they report.
+It reads notes only: a tier's `archive:` directory is verbatim raw material and is never checked or
+edited.
 
 **Date prefixes are for notes that are themselves a dated event**, not a stamp added out of habit.
 A source note tied to a specific day's chronicle file earns the prefix

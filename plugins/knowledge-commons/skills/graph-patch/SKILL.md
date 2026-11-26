@@ -202,7 +202,7 @@ accomplish; write the sentences this project would have written, not the templat
 **Never write a filesystem path into the plugin's install** into the project's prose, even though this
 skill has one in context. A project skill never gets `${CLAUDE_PLUGIN_ROOT}`, so the path would be a
 snapshot of this version on this machine. Name the plugin's skill instead (`knowledge-commons:conventions`,
-`knowledge-commons:scan-secrets`).
+`knowledge-commons:scan-secrets`, `knowledge-commons:check-wikilinks`).
 
 Then ask for approval: **`y` / `edit` / `skip`**, per delta. Wait for it. "Skip" and "edit" are
 both ordinary answers, not failures.

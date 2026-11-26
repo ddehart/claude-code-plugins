@@ -393,6 +393,19 @@ recoverable; a complete-looking stamp over an uninspected class is not.
 
 ## 12. Report
 
+**Before summarizing, check the graph for wrapped links.** A wikilink stays on one line; split across
+a line break it is no longer a link. On every run that wrote or edited a note, after the last write (the
+stamp included), invoke the plugin's `knowledge-commons:check-wikilinks` skill with `{graph.root}` as its
+argument. It reads the whole graph and changes nothing.
+
+- **Clean** — carry on.
+- **Findings in notes this run wrote or edited** — rejoin each listed link by hand (the line break and
+  the indentation after it become one space), then run the check once more.
+- **Findings in notes this run did not touch** — don't edit them. List each in the summary for the
+  user, and say the graph is not known to be clean. Never edit an archived file.
+- **The skill is unavailable or exits 2** — say in the summary that the wrapped-link check could not
+  run. Never write the summary as though it passed, and never substitute a read-through for it.
+
 Summarize created / updated / skipped / errored, then append a changelog entry following this graph's
 own conventions — see the "Changelog" section of the sibling `knowledge-graph` skill for this project's
 format. If the run surfaced something a skill *outside* the plan could act on, suggest it in the report

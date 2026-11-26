@@ -219,6 +219,18 @@ directly in `changelog.md`; at the first session of a new month, move the prior 
 3. Add a map entry in alphabetical position.
 4. Scan for cross-references — does this note relate closely enough to another recent one to link them
    directly?
+5. Run the wrapped-link check below.
+
+**The wrapped-link check ends every workflow here that writes or edits a note** — a capture, an
+extraction, an evolve step. A wikilink stays on one line; split across a line break it is no longer a
+link. After the last write and before the change summary, invoke the plugin's
+`knowledge-commons:check-wikilinks` skill with `{graph.root}` as its argument. It reads the whole graph
+and changes nothing. Rejoin by hand each listed link in a note this session wrote or edited (the line
+break and the indentation after it become one space), then run the check once more. Don't edit a finding
+in a note this session did not touch: list it in the change summary for the user, and say the graph is
+not known to be clean. Never edit an archived file. If the skill is unavailable or exits 2, say in the
+change summary that the wrapped-link check could not run; never report as though it passed, and never
+substitute a read-through for it.
 
 See "Extraction Workflow" above for how this graph turns a `{source-type}` into notes end to end.
 
